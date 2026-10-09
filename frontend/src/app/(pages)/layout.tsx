@@ -11,6 +11,8 @@ import { AppSidebar } from "@/app/components/shared/AppSidebar";
 import { FullScreenLoader } from "@/app/components/shared/FullScreenLoader";
 import { HeaderButtonUI, HeaderButtonsUI } from "@/shared/ui/HeaderButtonsUI";
 import { cn } from "@/app/lib/utils";
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { PilotNotice } from "@/app/components/courtos/PilotNotice";
 
 export default function MikeLayout({
     children,
@@ -162,7 +164,8 @@ export default function MikeLayout({
                                     />
                                 </div>
                                 <main className="flex h-full w-full flex-1 flex-col overflow-y-auto md:overflow-hidden">
-                                    {children}
+                                    {COURTOS_PILOT_MODE && <PilotNotice />}
+                                    <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
                                 </main>
                             </div>
                         </div>

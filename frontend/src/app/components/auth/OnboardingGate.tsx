@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FullScreenLoader } from "@/app/components/shared/FullScreenLoader";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useUserProfile } from "@/app/contexts/UserProfileContext";
+import { COURTOS_CLOUDFLARE_AUTH, COURTOS_HOME, COURTOS_PILOT_MODE } from "@/app/lib/courtos";
 
 export function OnboardingGate({ children }: { children: ReactNode }) {
     const pathname = usePathname();
@@ -26,8 +27,20 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
         pathname === "/reset-password" ||
         pathname === "/verify-mfa";
     const needsOnboarding = profile?.onboardingComplete === false;
+    const usesManagedAccess = COURTOS_CLOUDFLARE_AUTH && [
+        "/signup", "/signup/check-email", "/login/sso", "/forgot-password",
+        "/reset-password", "/auth/callback",
+    ].includes(pathname);
 
     useEffect(() => {
+        if (usesManagedAccess) {
+            router.replace("/login");
+            return;
+        }
+        if (COURTOS_PILOT_MODE) {
+            if (user && isOnboardingRoute) router.replace(COURTOS_HOME);
+            return;
+        }
         if (!user || loading || !profile) return;
 
         if (needsOnboarding && !isOnboardingRoute && !isAuthTransitionRoute) {
@@ -45,8 +58,13 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
         profile,
         router,
         user,
+        usesManagedAccess,
     ]);
 
+    if (usesManagedAccess) return <FullScreenLoader />;
+    if (COURTOS_PILOT_MODE) {
+        return user && isOnboardingRoute ? <FullScreenLoader /> : <>{children}</>;
+    }
     if (!user) return <>{children}</>;
     if (loading || !profile) return <FullScreenLoader />;
     if (needsOnboarding && !isOnboardingRoute && !isAuthTransitionRoute) {

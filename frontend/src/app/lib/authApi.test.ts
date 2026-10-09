@@ -11,6 +11,7 @@ import {
     getMfaAssurance,
     listMfaFactors,
     login,
+    loginWithCloudflare,
     logout,
     requestPasswordReset,
     signup,
@@ -40,6 +41,16 @@ describe("cookie auth client", () => {
 
     afterEach(() => {
         vi.unstubAllGlobals();
+    });
+
+    it("starts the CourtOS Access bridge without sending a client identity or bearer token", async () => {
+        fetchMock.mockResolvedValue(new Response(JSON.stringify({ user }), {
+            status: 200, headers: { "Content-Type": "application/json" },
+        }));
+        await expect(loginWithCloudflare()).resolves.toEqual({ user });
+        expect(fetchMock).toHaveBeenCalledWith("/api/auth/cloudflare", {
+            method: "POST", credentials: "include", cache: "no-store", headers: {},
+        });
     });
 
     it("carries the request id off an auth failure, body first", async () => {

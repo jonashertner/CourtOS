@@ -1,3 +1,4 @@
+import { currentCourtosQuota } from "./courtosQuota";
 import type { Response } from "express";
 import { streamRunDeadlines } from "./runtimeConfig";
 
@@ -200,7 +201,12 @@ export function startStreamRun<Meta = Record<string, unknown>>(args: {
 }): StreamRun<Meta> | null {
     const current = runsByKey.get(args.key);
     if (current && !current.finished) return null;
+    const quota = currentCourtosQuota();
+    quota?.signal.throwIfAborted();
+    quota?.attachRun();
     const controller = new AbortController();
+    const abortForQuota = () => run.stop("max_lifetime");
+    quota?.signal.addEventListener("abort", abortForQuota, { once: true });
     let seq = 0;
     let finished = false;
     let stopped = false;
@@ -277,6 +283,8 @@ export function startStreamRun<Meta = Record<string, unknown>>(args: {
         finish() {
             if (finished) return;
             finished = true;
+            quota?.signal.removeEventListener("abort", abortForQuota);
+            void quota?.release();
             for (const subscriber of [...run.subscribers]) {
                 try {
                     subscriber.end();

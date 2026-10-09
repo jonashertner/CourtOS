@@ -147,6 +147,9 @@ export type StreamChatParams = {
 
 export type StreamChatResult = {
     fullText: string;
+    /** Explicit completion state; pilot surfaces must not infer it from EOF. */
+    finishReason?: string;
+    stopReason?: "output_limit" | "step_limit";
 };
 
 // ---------------------------------------------------------------------------

@@ -5,7 +5,8 @@ import Image from "next/image";
 import { MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useUserProfile } from "@/app/contexts/UserProfileContext";
-import { MikeIcon } from "@/shared/ui/MikeIconUI";
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { CourtOSTaskStarters } from "@/app/components/courtos/CourtOSTaskStarters";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import type { Document, Message, QuickAction } from "../shared/types";
 import {
@@ -78,8 +79,8 @@ export function InitialView({
     }
 
     return (
-        <div className="grid h-full w-full grid-rows-[minmax(0,1fr)_auto_minmax(0,1fr)] px-6">
-            <div className="flex min-h-0 items-end justify-center pb-6">
+        <div className={COURTOS_PILOT_MODE ? "flex h-full w-full flex-col gap-2 overflow-y-auto px-5 pt-10 md:px-6 md:pt-16" : "grid h-full w-full grid-rows-[minmax(0,1fr)_auto_minmax(0,1fr)] px-6"}>
+            <div className="flex min-h-10 shrink-0 items-end justify-center pb-6">
                 <div className="relative h-10 w-full max-w-4xl px-0 xl:px-8">
                     <div
                         className="absolute h-[30px] w-[30px]"
@@ -93,11 +94,11 @@ export function InitialView({
                                 "transform 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                         }}
                     >
-                        <MikeIcon size={ICON_SIZE} />
+                        <span aria-hidden="true" className="font-serif text-3xl text-foreground">C</span>
                     </div>
                     <h1
                         ref={textRef}
-                        className="absolute text-4xl font-serif font-light text-gray-900 whitespace-nowrap"
+                        className={`absolute ${COURTOS_PILOT_MODE ? "text-3xl" : "text-4xl"} font-serif font-light text-gray-900 whitespace-nowrap`}
                         style={{
                             left: "50%",
                             top: "50%",
@@ -109,12 +110,12 @@ export function InitialView({
                                 "transform 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 800ms ease-in-out 300ms",
                         }}
                     >
-                        Hi, {username}
+                        {COURTOS_PILOT_MODE ? "Ihr nächster Auftrag" : `Hallo, ${username}`}
                     </h1>
                 </div>
             </div>
 
-            <div className="w-full max-w-4xl justify-self-center px-0 xl:px-8">
+            <div className="mx-auto w-full max-w-4xl justify-self-center px-0 xl:px-8">
                 <ChatInput
                     ref={chatInputRef}
                     onSubmit={onSubmit}
@@ -124,14 +125,16 @@ export function InitialView({
                 />
             </div>
 
-            <div className="min-h-0 w-full max-w-4xl justify-self-center px-0 pt-1 xl:px-8">
+            <div className="mx-auto min-h-0 w-full max-w-4xl justify-self-center px-0 pt-1 xl:px-8">
                 <div className="text-center">
-                    <p className="text-xs py-2 mb-12 text-gray-500">
-                        AI can make mistakes. Answers are not legal advice.
+                    <p className="text-xs py-2 mb-4 text-gray-500">
+                        {COURTOS_PILOT_MODE ? "Nur synthetische Daten. Antworten und Quellen selbst prüfen." : "KI kann Fehler machen. Antworten und Quellen selbst prüfen."}
                     </p>
                 </div>
 
-                {profile?.quickActionsVisible !== false && (
+                {COURTOS_PILOT_MODE && <CourtOSTaskStarters prepareDraft={(prompt) => chatInputRef.current?.prepareDraft?.(prompt) ?? false} />}
+
+                {!COURTOS_PILOT_MODE && profile?.quickActionsVisible !== false && (
                     <div className="flex flex-col items-center">
                         <div className="group relative flex h-5 items-center justify-center">
                             <span className="flex items-center gap-1.5 text-xs font-medium text-gray-800">

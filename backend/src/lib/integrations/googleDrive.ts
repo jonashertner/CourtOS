@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../courtosPilot";
 /**
  * Native Google Drive integration — first-party tools over the GA Drive REST
  * API with a per-user OAuth token.
@@ -1070,6 +1071,7 @@ export async function buildGoogleDriveTools(
     userId: string,
     db: Db = createServerSupabase(),
 ): Promise<unknown[]> {
+    if (courtosPilotEnabled()) return [];
     try {
         const row = await loadTokenRow(userId, db);
         if (!row?.encrypted_access_token || row.enabled === false) return [];

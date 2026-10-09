@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The tool loop is the second door into a project's documents. Standing in a
 // CHAT (its creator, or an email on its share list) is not standing in the
@@ -90,6 +90,8 @@ const WRITERS = [
   "generate_excel",
   "generate_ppt",
 ];
+
+afterEach(() => vi.unstubAllEnvs());
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -219,5 +221,35 @@ describe("runLLMStream document-mutation gating", () => {
       (call) => call.function.name,
     );
     expect(dispatched).toEqual(["edit_document"]);
+  });
+});
+
+
+describe("CourtOS pilot tool execution boundary", () => {
+  it("rejects hallucinated external, writing and client tools before dispatch", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    let toolResults: { tool_use_id: string; content: string }[] | undefined;
+    const executeClient = vi.fn();
+    streamChatWithTools.mockImplementationOnce(async (params) => {
+      toolResults = await params.runTools?.([
+        { id: "external", name: "google_drive_search", input: { query: "PRIVATE_CANARY" } },
+        { id: "writer", name: "generate_docx", input: {} },
+        { id: "reader", name: "read_document", input: { doc_id: "doc-0" } },
+        { id: "client", name: "word_client", input: {} },
+      ]);
+      return { fullText: "" };
+    });
+    await runLLMStream({
+      ...baseParams(), model: "courtos-local", includeResearchTools: true,
+      clientTools: {
+        schemas: [{ type: "function", function: { name: "word_client", description: "client", parameters: { type: "object", properties: {} } } }],
+        owns: (name) => name === "word_client", execute: executeClient,
+      },
+    });
+    expect(advertisedToolNames().sort()).toEqual(["find_in_document", "list_documents", "list_workflows", "read_document", "read_workflow"]);
+    expect(runToolCalls.mock.calls[0]![0].map((call) => call.function.name)).toEqual(["read_document"]);
+    expect(executeClient).not.toHaveBeenCalled();
+    expect(toolResults?.filter((result) => result.content.includes("is not available")).map((r) => r.tool_use_id)).toEqual(expect.arrayContaining(["external", "writer", "client"]));
+    expect(streamChatWithTools.mock.calls[0]?.[0]).toMatchObject({ maxIterations: 3, reasoning: "none" });
   });
 });

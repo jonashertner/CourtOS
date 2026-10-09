@@ -1,3 +1,4 @@
+import { assertCourtosExternalAccess } from "../courtosPilot";
 import crypto from "crypto";
 import dns from "dns/promises";
 import net from "net";
@@ -465,6 +466,7 @@ export async function guardedFetch(
         label?: string;
     } = {},
 ): Promise<Response> {
+    assertCourtosExternalAccess();
     const label = options.label ?? DEFAULT_GUARD_LABEL;
     try {
         return await guardedFetchUnlabelled(input, init, label);

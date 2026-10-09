@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
 import { createServerSupabase, type Db } from "../../lib/supabase";
 import { type UserApiKeys } from "../../lib/llm";
 import { type ReasoningLevel } from "../../lib/llm";
@@ -170,7 +171,7 @@ export async function getUserModelSettings(
         last_selected_reasoning_level: normalizeReasoningLevel(
             data?.last_selected_reasoning_level,
         ),
-        legal_research_us:
+        legal_research_us: !courtosPilotEnabled() &&
             (data as { legal_research_us?: boolean | null } | null)
                 ?.legal_research_us !== false,
         personalisation: {

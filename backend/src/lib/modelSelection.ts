@@ -1,3 +1,4 @@
+import { courtosPilotModel } from "./courtosPilot";
 import {
     CLAUDE_LOW_MODELS,
     GEMINI_LOW_MODELS,
@@ -57,6 +58,7 @@ export function resolveEffectiveReasoningLevel(args: {
     chatReasoningLevel?: unknown;
     lastSelectedReasoningLevel?: unknown;
 }): ReasoningLevel {
+    if (courtosPilotModel()) return "none";
     const selected =
         normalizeReasoningLevel(args.requested) ??
         normalizeReasoningLevel(args.chatReasoningLevel) ??
@@ -78,6 +80,8 @@ export function normalizeOptionalModelPreference(
     value: string | null | undefined,
     routerModels: RouterModelSelections,
 ): string | null {
+    const pilot = courtosPilotModel();
+    if (pilot) return pilot.id;
     const resolved = resolveModel(value, "");
     if (!resolved || !isRouterModelSelected(resolved, routerModels)) return null;
     return resolved;
@@ -88,6 +92,8 @@ export function hasApiKeyForModel(
     model: string,
     apiKeys: UserApiKeys,
 ): boolean {
+    const pilot = courtosPilotModel();
+    if (pilot) return model === pilot.id;
     const provider = providerForModel(model);
     if (apiKeys.disabledProviders?.includes(provider)) return false;
     if (provider === "ollama") return true;
@@ -137,6 +143,11 @@ export async function resolveEffectiveChatModel(args: {
     userId: string;
     db: Db;
 }): Promise<EffectiveChatModelResult> {
+    const pilot = courtosPilotModel();
+    if (pilot) {
+        if (args.requested?.trim() && args.requested.trim() !== pilot.id) return { ok: false, status: 422, code: "model_unavailable", detail: "This CourtOS pilot uses only its configured local model." };
+        return { ok: true, model: pilot.id, source: args.requested?.trim() ? "request" : "last_selected" };
+    }
     const requestedText = args.requested?.trim() ?? "";
     if (requestedText) {
         const requested = resolveModel(requestedText, "");
@@ -225,6 +236,8 @@ export function titleModelForChat(
     chatModel: string,
     titleOverride?: string | null,
 ): string {
+    const pilot = courtosPilotModel();
+    if (pilot) return pilot.id;
     const override = resolveModel(titleOverride, "");
     if (override) return override;
 

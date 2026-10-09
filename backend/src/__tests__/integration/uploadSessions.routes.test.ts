@@ -1,6 +1,6 @@
 import express from "express";
 import request from "supertest";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
@@ -61,6 +61,8 @@ vi.mock("../../lib/storage", () => ({
 }));
 
 import { uploadSessionsRouter } from "../../modules/uploads/uploads.routes";
+
+afterEach(() => vi.unstubAllEnvs());
 
 const app = express();
 app.use(express.json());
@@ -395,5 +397,51 @@ describe("upload session workflow destination", () => {
       .send(workflowManifest());
 
     expect(response.status).toBe(201);
+  });
+});
+
+
+describe("CourtOS pilot upload admission", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    mocks.rpc.mockResolvedValue({ data: { expires_at: new Date(Date.now() + 600000).toISOString() }, error: null });
+    mocks.getSignedUploadUrl.mockResolvedValue("https://upload.example/signed");
+  });
+
+  it("uses authenticated owner and all server limits before issuing a signed URL", async () => {
+    const response = await request(app).post("/upload-sessions").send(manifest(2));
+    expect(response.status).toBe(201);
+    expect(mocks.rpc).toHaveBeenCalledWith("create_courtos_upload_session", expect.objectContaining({
+      target_user_id: "11111111-1111-4111-8111-111111111111",
+      target_max_file_bytes: 5242880, target_max_batch_files: 5,
+      target_user_total_bytes: 20971520, target_global_total_bytes: 524288000,
+    }));
+    expect(mocks.rpc.mock.invocationCallOrder[0]).toBeLessThan(mocks.getSignedUploadUrl.mock.invocationCallOrder[0]);
+  });
+
+  it("rejects forged owner metadata and oversize/count excess before DB or storage", async () => {
+    const forged = await request(app).post("/upload-sessions").send({ ...manifest(), user_id: DOCUMENT_ID });
+    expect(forged.status).toBe(400);
+    expect((await request(app).post("/upload-sessions").send(manifest(6))).status).toBe(400);
+    const large = manifest(); large.files[0].size_bytes = 5242881;
+    expect((await request(app).post("/upload-sessions").send(large)).status).toBe(413);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.getSignedUploadUrl).not.toHaveBeenCalled();
+  });
+
+  it.each(["courtos_upload_user_budget_exceeded", "courtos_upload_global_budget_exceeded"])("denies %s without signing", async (message) => {
+    mocks.rpc.mockResolvedValue({ error: { message } });
+    const response = await request(app).post("/upload-sessions").send(manifest());
+    expect(response.status).toBe(429);
+    expect(response.body.code).toBe("courtos_upload_budget_exceeded");
+    expect(mocks.getSignedUploadUrl).not.toHaveBeenCalled();
+  });
+
+  it("fails closed on a missing database reservation receipt", async () => {
+    mocks.rpc.mockResolvedValue({ error: null });
+    const response = await request(app).post("/upload-sessions").send(manifest());
+    expect(response.status).toBe(500);
+    expect(mocks.getSignedUploadUrl).not.toHaveBeenCalled();
   });
 });

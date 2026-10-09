@@ -1,0 +1,77 @@
+{
+  "questions": [
+    {
+      "id": "Q01",
+      "text": "Erläutere ausschliesslich anhand der beigefügten öffentlichen Quellen den allgemeinen Anspruch auf rechtliches Gehör vor einem belastenden behördlichen Entscheid. Unterscheide den Wortlaut der Quellen von redaktionellen Einordnungen. Erkläre, warum aus einem möglichen Gehörsmangel nicht automatisch Nichtigkeit folgt. Nenne Quellen- und Passagen-IDs. Beurteile keinen Einzelfall, erfinde kein kantonales Recht und berechne keine Rechtsmittelfrist. Benenne Grenzen, die sich aus den unterschiedlichen Verfahrenskontexten der Urteile ergeben.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ]
+    },
+    {
+      "id": "Q02",
+      "text": "Welche begrenzten allgemeinen Aussagen erlauben die beigefügten öffentlichen Quellen zu Anfechtbarkeit, Nichtigkeit und möglicher Heilung eines Gehörsmangels? Trenne gerichtliche Aussagen von redaktionellen Einordnungen und kennzeichne, was ohne das anwendbare Verfahrensrecht und einen geklärten Sachverhalt offenbleibt. Nenne Quellen- und Passagen-IDs. Beurteile keinen Einzelfall und nenne keine pauschale Rechtsmittelfrist.",
+      "source_ids": [
+        "S01",
+        "S03"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Bundesverfassung, Art. 29 Abs. 2",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1999/404/de#art_29",
+      "locator": "Art. 29 Abs. 2 BV (SR 101)",
+      "passages": [
+        {
+          "id": "S01-P01",
+          "text": "Die Parteien haben Anspruch auf rechtliches Gehör.",
+          "kind": "quotation",
+          "locator": "Art. 29 Abs. 2 BV"
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "title": "Bundesgericht, Urteil 2C_109/2025 vom 20. März 2025",
+      "url": "https://search.bger.ch/ext/eurospider/live/de/php/aza/http/index.php?highlight_docid=aza%3A%2F%2F20-03-2025-2C_109-2025&lang=de&type=show_document",
+      "locator": "E. 4.1; zur Einordnung E. 4.2–4.4",
+      "passages": [
+        {
+          "id": "S02-P01",
+          "text": "Zum Anspruch auf rechtliches Gehör zählt die Möglichkeit, sich im Rahmen der Rechtsanwendung und vor Erlass eines belastenden Entscheids zu äussern",
+          "kind": "quotation",
+          "locator": "E. 4.1, Wortlautauszug ohne nachfolgende Nachweisparenthese"
+        },
+        {
+          "id": "S02-P02",
+          "text": "Redaktioneller Kontext (kein Zitat): Das Urteil betrifft die Kostenauflage an Rechtsvertreterinnen in einem Haftverfahren. In E. 4.1 unterscheidet das Bundesgericht die Äusserung zu Sachverhaltsfragen von der Stellungnahme zu einer unerwarteten rechtlichen Argumentation. In E. 4.2–4.4 prüft es die vorherige Gelegenheit zur Stellungnahme und bejaht sie im konkreten Fall. Der Auszug verlangt nicht die Vorankündigung jedes rechtlichen Arguments und ersetzt keine Prüfung des massgebenden Verfahrensrechts.",
+          "kind": "editorial_context",
+          "locator": "Redaktionelle Einordnung von E. 4.1–4.4; kein Urteilzitat"
+        }
+      ]
+    },
+    {
+      "id": "S03",
+      "title": "Bundesgericht, Urteil 1C_381/2022 vom 8. September 2023",
+      "url": "https://search.bger.ch/ext/eurospider/live/de/php/aza/http/index.php?highlight_docid=aza%3A%2F%2F08-09-2023-1C_381-2022&lang=de&type=show_document&zoom=",
+      "locator": "E. 2.1; zur Gehörsverletzung E. 2.3",
+      "passages": [
+        {
+          "id": "S03-P01",
+          "text": "Fehlerhafte Entscheide sind nach der bundesgerichtlichen Rechtsprechung in der Regel nicht nichtig, sondern nur anfechtbar und werden durch Nichtanfechtung rechtsgültig",
+          "kind": "quotation",
+          "locator": "E. 2.1, Wortlautauszug ohne nachfolgende Nachweisparenthese"
+        },
+        {
+          "id": "S03-P02",
+          "text": "Redaktioneller Kontext (kein Zitat): Gegenstand war ein Begehren um Feststellung der Nichtigkeit eines nicht angefochtenen Widerrufs des Kantonsbürgerrechts. E. 2.1 nennt qualifizierte Voraussetzungen für Nichtigkeit. E. 2.3 bestätigt eine Gehörsverletzung, verneint im konkreten Fall jedoch Nichtigkeit und erwähnt eine mögliche Heilung im ordentlichen Rechtsmittelverfahren. Daraus folgt weder, dass Gehörsfehler folgenlos sind, noch dass sie stets heilbar sind. Rechtsmittel, Fristen, Prüfungsbefugnisse und die Folgen eines Mangels sind im jeweils anwendbaren Verfahren gesondert zu prüfen.",
+          "kind": "editorial_context",
+          "locator": "Redaktionelle Einordnung von E. 2.1 und 2.3; kein Urteilzitat"
+        }
+      ]
+    }
+  ]
+}

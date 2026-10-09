@@ -1,4 +1,6 @@
 import "dotenv/config";
+import { requireCourtOSAccess } from "./middleware/courtosAccess";
+import { courtosPilotMiddleware } from "./middleware/courtosPilot";
 import { rateLimitedBody } from "./lib/httpError";
 import { createHash, randomUUID } from "node:crypto";
 import express from "express";
@@ -251,6 +253,8 @@ app.use(
   }),
 );
 
+app.use(requireCourtOSAccess);
+app.use(courtosPilotMiddleware);
 app.use(generalLimiter);
 
 app.post("/auth/login", authLoginIpLimiter);

@@ -36,3 +36,13 @@ backend/supabase/*
 
 # Local review artifact; it is a nested repository, not application source.
 /pr-267-analysis-site/
+
+# CourtOS Python services and local pilot state
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+hybrid/var/
+hybrid/*.sqlite*
+hybrid/*.db

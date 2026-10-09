@@ -2,6 +2,7 @@
 // and document (PDF/DOCX/Office) text extraction.
 
 import { docxToPdf, normalizeDocxZipPaths } from "../../lib/convert";
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
 import {
     isPresentationDocumentType,
     isSpreadsheetDocumentType,
@@ -94,6 +95,7 @@ export async function generateChatTitle(
     context?: { reviewTitle?: string | null; projectName?: string | null },
     apiKeys?: UserApiKeys,
 ): Promise<string | null> {
+    if (courtosPilotEnabled()) return firstUserMessage.trim().replace(/\s+/g, " ").slice(0, 80) || null;
     try {
         const contextLines: string[] = [];
         if (context?.projectName)

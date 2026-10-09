@@ -1,3 +1,4 @@
+import { assertCourtosExternalAccess } from "../courtosPilot";
 import { mkdtemp, open, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -37,6 +38,7 @@ async function consumeGoogleResponse(
         onResponse?: (response: Response) => void;
     },
 ): Promise<number> {
+    assertCourtosExternalAccess();
     const controller = new AbortController();
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
     const totalTimer = setTimeout(() => controller.abort(), options.totalMs);

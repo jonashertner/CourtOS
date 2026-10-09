@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
 // user profile serialization — implementation behind the module facade.
 import { normalizeOptionalModelPreference, normalizeReasoningLevel } from "../../lib/modelSelection";
 import { type ApiKeyStatus } from "./user.apiKeyStore";
@@ -50,11 +51,11 @@ export function serializeProfile(
             row.last_selected_chat_model,
             routerModels,
         ),
-        lastSelectedReasoningLevel:
+        lastSelectedReasoningLevel: courtosPilotEnabled() ? "none" :
             normalizeReasoningLevel(row.last_selected_reasoning_level) ??
             "high",
         mfaOnLogin: row.mfa_on_login === true,
-        legalResearchUs: row.legal_research_us !== false,
+        legalResearchUs: !courtosPilotEnabled() && row.legal_research_us !== false,
         quickActionsVisible: row.quick_actions_visible !== false,
         darkMode: row.dark_mode === true,
         projectMemoryDefault: row.project_memory_default !== false,

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Declaring the stub's parameter (rather than a zero-arity `vi.fn`) is what
 // lets tsc check the `mock.calls[0][0]` lookup below; with an empty call tuple
@@ -26,7 +26,9 @@ vi.mock("../tools/toolDispatcher", () => ({
   runToolCalls: vi.fn(),
 }));
 
-import { runLLMStream } from "../streaming";
+import { runLLMStream, assistantStreamErrorPayload } from "../streaming";
+
+afterEach(() => vi.unstubAllEnvs());
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -136,5 +138,57 @@ describe("runLLMStream reasoning persistence", () => {
       type: "reasoning",
       text: "Half a thought",
     });
+  });
+});
+
+
+describe("CourtOS incomplete output is not a completed answer", () => {
+  it("keeps the token-limit warning visible even inside an unfinished citation block", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    const partial = 'A fact [1].<CITATIONS>[{"ref":1,"doc_id":"doc-0","quotes":[';
+    streamChatWithTools.mockImplementationOnce(async (params) => {
+      (params.callbacks as ReasoningCallbacks).onContentDelta(partial);
+      return { fullText: partial, finishReason: "length", stopReason: "output_limit" };
+    });
+    const args = { ...streamArgs(), model: "courtos-local" };
+    const failure = await runLLMStream(args).catch((e: unknown) => e);
+    expect((failure as { events: unknown[] }).events).toContainEqual({ type: "content", text: "A fact [1]." });
+    expect((failure as { events: unknown[] }).events).toContainEqual(expect.objectContaining({ type: "error", safe_to_display: true, message: expect.stringContaining("Tokenlimit") }));
+    const frames = args.write.mock.calls.map((call) => String(call[0])).join("");
+    // Routes emit this payload independently of the hidden citation stream
+    // and persist the error event above, so it survives a page reload.
+    expect(assistantStreamErrorPayload(failure)).toMatchObject({ safe_to_display: true, message: expect.stringContaining("Tokenlimit") });
+    expect(frames).not.toContain("[DONE]");
+  });
+
+  it("rejects unlinked reference numbers even when the provider reports a normal stop", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    streamChatWithTools.mockImplementationOnce(async (params) => {
+      (params.callbacks as ReasoningCallbacks).onContentDelta("A fact [1].");
+      return { fullText: "A fact [1].", finishReason: "stop" };
+    });
+    const failure = await runLLMStream({ ...streamArgs(), model: "courtos-local" }).catch((e: unknown) => e);
+    expect((failure as { events: unknown[] }).events).toContainEqual(expect.objectContaining({ type: "error", safe_to_display: true, message: expect.stringContaining("Quellenverweise") }));
+  });
+
+  it("retains native citation metadata for a complete, source-matched answer", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    const answer = 'Eingang am Montag [1].<CITATIONS>[{"ref":1,"doc_id":"doc-0","quotes":[{"quote":"Eingang am Montag"}]}]</CITATIONS>';
+    streamChatWithTools.mockImplementationOnce(async (params) => {
+      (params.callbacks as ReasoningCallbacks).onContentDelta(answer);
+      return { fullText: answer, finishReason: "stop" };
+    });
+    const args = { ...streamArgs(), model: "courtos-local", docStore: new Map([["doc-0", { storage_path: "", file_type: "txt", filename: "demo.txt", inline_text: "Eingang am Montag" }]]), docIndex: { "doc-0": { document_id: "synthetic-document", filename: "demo.txt" } } };
+    const result = await runLLMStream(args);
+    expect(result.citations).toHaveLength(1);
+    expect(result.events.some((event) => event.type === "error")).toBe(false);
+    expect(args.write.mock.calls.map((call) => String(call[0])).join("")).toContain('"status":"final"');
+  });
+
+  it("marks an exhausted tool budget as incomplete", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    streamChatWithTools.mockImplementationOnce(async () => ({ fullText: "", finishReason: "tool-calls", stopReason: "step_limit" }));
+    const failure = await runLLMStream({ ...streamArgs(), model: "courtos-local" }).catch((e: unknown) => e);
+    expect((failure as { events: unknown[] }).events).toContainEqual(expect.objectContaining({ type: "error", safe_to_display: true, message: expect.stringContaining("Verarbeitungsschritte") }));
   });
 });

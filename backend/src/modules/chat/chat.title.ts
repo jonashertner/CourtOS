@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
 import { abortable } from "../../lib/abortable";
 import { completeText, type UserApiKeys } from "../../lib/llm";
 import { providerFailureStatus } from "../../lib/llm/providerErrors";
@@ -94,6 +95,7 @@ export async function generateAssistantChatTitle(args: {
     apiKeys?: UserApiKeys;
     abortSignal?: AbortSignal;
 }): Promise<string> {
+    if (courtosPilotEnabled()) return normalizeGeneratedTitle(args.message);
     const controller = new AbortController();
     const abort = () => controller.abort(args.abortSignal?.reason);
     if (args.abortSignal?.aborted) abort();

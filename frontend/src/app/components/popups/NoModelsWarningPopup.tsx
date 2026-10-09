@@ -7,6 +7,7 @@ import {
     type NoModelsReason,
 } from "@/shared/lib/modelCatalog";
 import { WarningPopup } from "./WarningPopup";
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
 
 export function NoModelsWarningPopup({
     reason,
@@ -33,16 +34,16 @@ function VisibleNoModelsWarning({
         <WarningPopup
             open
             onClose={onClose}
-            title="No models available"
-            message={NO_MODELS_MESSAGES[reason]}
+            title={COURTOS_PILOT_MODE ? "Kein Testmodell verfügbar" : "No models available"}
+            message={COURTOS_PILOT_MODE ? "Das eingerichtete Modell ist noch nicht verfügbar. Versuchen Sie es später erneut. Eigene API-Schlüssel sind für diesen Pilot nicht nötig." : NO_MODELS_MESSAGES[reason]}
             icon={
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600" />
             }
             primaryAction={{
-                label: "Open Bring Your Own Keys",
+                label: COURTOS_PILOT_MODE ? "Zum Einstieg" : "Open Bring Your Own Keys",
                 onClick: () => {
                     onClose();
-                    router.push("/settings/byok");
+                    router.push(COURTOS_PILOT_MODE ? "/pilot" : "/settings/byok");
                 },
             }}
         />

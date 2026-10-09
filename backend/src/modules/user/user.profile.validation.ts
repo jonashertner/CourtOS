@@ -1,3 +1,4 @@
+import { courtosPilotModel } from "../../lib/courtosPilot";
 // user profile validation — implementation behind the module facade.
 // User profile: load, serialize, validate, bootstrap, read + update.
 //
@@ -168,6 +169,14 @@ export function validateProfilePayload(body: unknown):
     }
 
     const raw = body as Record<string, unknown>;
+    const pilot = courtosPilotModel();
+    if (pilot) {
+        const modelFields = ["titleModel", "tabularModel", "memoryCuratorModel", "lastSelectedChatModel"];
+        if (modelFields.some((field) => field in raw && raw[field] !== pilot.id) || raw.legalResearchUs === true ||
+            Object.values(ROUTER_PROFILE_FIELDS).some((field) => field in raw)) {
+            return { ok: false, detail: "Model and research settings are fixed in this CourtOS pilot." };
+        }
+    }
     const allowedFields = new Set([
         "displayName",
         "organisation",

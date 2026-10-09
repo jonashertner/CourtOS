@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
 // Business logic + data-access for the models module.
 //
 // Service layer behind models.routes.ts. Each function takes an explicit
@@ -95,6 +96,7 @@ async function upstreamFailure(
  * ModelOption. Returns [] when Ollama is unreachable so the app still works.
  */
 export async function listOllamaModels(): Promise<LocalModel[]> {
+    if (courtosPilotEnabled()) return [];
     const base = (
         process.env.OLLAMA_BASE_URL?.trim() || "http://localhost:11434/v1"
     ).replace(/\/$/, "");

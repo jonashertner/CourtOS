@@ -1,0 +1,20 @@
+{
+  "origin": "https://courtos.example.org",
+  "access_issuer": "https://REPLACE.cloudflareaccess.com",
+  "access_audience": "REPLACE_WITH_ACCESS_APPLICATION_AUDIENCE",
+  "allowed_emails": [
+    "replace-with-invited-person@example.org"
+  ],
+  "release_dir": "/srv/courtos/release",
+  "config_dir": "/etc/courtos-pilot",
+  "state_dir": "/var/lib/courtos-pilot",
+  "runtime_dir": "/opt/courtos-runtime",
+  "model_file": "/srv/courtos-models/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf",
+  "service_prefix": "courtos-pilot",
+  "nginx": "/usr/sbin/nginx",
+  "python": "/usr/bin/python3",
+  "external_enabled": false,
+  "self_registration": false,
+  "denied_emails": [],
+  "hybrid_self_registration": false
+}

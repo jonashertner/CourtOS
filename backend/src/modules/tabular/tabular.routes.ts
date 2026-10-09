@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
 // HTTP layer of the tabular-review module. Handlers parse and validate the
 // request, call the module's service files, and map their typed results onto
 // status codes. No handler queries the database.
@@ -387,7 +388,7 @@ tabularRouter.post("/:reviewId/generate", requireAuth, asyncRoute(async (req, re
     // path keeps it, because there the request is only a view over the queue.
     const requestAbort = new AbortController();
     const generationId = randomUUID();
-    const asyncPath = process.env.ASYNC_TABULAR_EXTRACTION === "true";
+    const asyncPath = !courtosPilotEnabled() && process.env.ASYNC_TABULAR_EXTRACTION === "true";
     let leaseHeartbeat: ReturnType<typeof setInterval> | null = null;
     req.on("aborted", () => requestAbort.abort());
 

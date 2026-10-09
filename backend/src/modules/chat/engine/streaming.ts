@@ -1,3 +1,4 @@
+import { courtosPilotEnabled, courtosPilotToolAllowed } from "../../../lib/courtosPilot";
 import { buildGoogleWorkspaceTools } from "../../../lib/integrations/googleWorkspace";
 import {
   streamChatWithTools,
@@ -295,7 +296,7 @@ export async function runLLMStream(params: {
   } = params;
   const write = (chunk: string) =>
     unsafeWrite(sanitizeAssistantSseChunk(chunk));
-  const researchTools = includeResearchTools ? COURTLISTENER_TOOLS : [];
+  const researchTools = includeResearchTools && !courtosPilotEnabled() ? COURTLISTENER_TOOLS : [];
   const mcpTools = await buildUserMcpTools(userId, db);
   const googleDriveTools = await buildGoogleDriveTools(userId, db);
   const conversationTools = includeAskInputs
@@ -314,9 +315,14 @@ export async function runLLMStream(params: {
   // never shown is a tool it will not plan around. The second half is in
   // `runTools` below, because "not advertised" is not "not callable" — a
   // model can name a tool from memory.
+  const pilotTools = advertisedTools.filter((tool) => {
+    if (!courtosPilotEnabled()) return true;
+    const name = (tool as { function?: { name?: unknown } } | null)?.function?.name;
+    return typeof name === "string" && courtosPilotToolAllowed(name) && !clientTools?.owns(name);
+  });
   const activeTools = allowDocumentMutation
-    ? advertisedTools
-    : withoutDocumentMutatingTools(advertisedTools);
+    ? pilotTools
+    : withoutDocumentMutatingTools(pilotTools);
 
   // Extract system prompt; pass remaining turns to the adapter as
   // plain user/assistant messages (assistant turns may carry stored
@@ -512,7 +518,7 @@ export async function runLLMStream(params: {
       db,
       "throw",
     );
-    await streamChatWithTools({
+    const completion = await streamChatWithTools({
       model: selectedModel,
       systemPrompt,
       messages: chatMessages,
@@ -521,9 +527,9 @@ export async function runLLMStream(params: {
       // a literal, not an import: tests mock the "../llm" barrel, and reaching
       // past it into llm/aiSdk loads the real SDK module into suites that only
       // ever wanted the mock, which broke unrelated tests at random.
-      maxIterations: params.maxIterations ?? 16,
+      maxIterations: courtosPilotEnabled() ? Math.min(params.maxIterations ?? 3, 3) : params.maxIterations ?? 16,
       apiKeys,
-      reasoning: params.reasoning ?? "high",
+      reasoning: courtosPilotEnabled() ? "none" : params.reasoning ?? "high",
       abortSignal: signal,
       conversationId,
       callbacks: {
@@ -577,9 +583,11 @@ export async function runLLMStream(params: {
         // "Tool 'x' is not available." answer below, which every tool_use
         // without a result already gets, so the model is told plainly rather
         // than left waiting on a call that silently did nothing.
+        const pilotCalls = calls.filter((c) => courtosPilotToolAllowed(c.name) &&
+          !(courtosPilotEnabled() && clientTools?.owns(c.name)));
         const permittedCalls = allowDocumentMutation
-          ? calls
-          : calls.filter((c) => !isDocumentMutatingTool(c.name));
+          ? pilotCalls
+          : pilotCalls.filter((c) => !isDocumentMutatingTool(c.name));
         const serverCalls = clientTools
           ? permittedCalls.filter((c) => !clientTools.owns(c.name))
           : permittedCalls;
@@ -734,6 +742,23 @@ export async function runLLMStream(params: {
         }));
       },
     });
+    if (courtosPilotEnabled()) {
+      if (completion.finishReason === "length" || completion.stopReason === "output_limit") {
+        throw new UserFacingError("Ausgabe am Tokenlimit beendet. Dieser Entwurf ist unvollständig; auch Quellenverweise können fehlen. Bitte auf eine engere Teilfrage begrenzen.");
+      }
+      if (completion.stopReason === "step_limit") {
+        throw new UserFacingError("Die verfügbaren Verarbeitungsschritte sind aufgebraucht. Dieser Entwurf ist unvollständig. Bitte eine engere Teilfrage stellen.");
+      }
+      // A bare [1] is no evidence link. Catch missing/malformed citation JSON
+      // even when the provider reports a normal stop, before declaring success.
+      const draft = fullText + iterText;
+      const visible = draft.split(CITATIONS_OPEN_TAG)[0];
+      const refs = [...visible.matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1]));
+      const parsed = parseCitationsWithDiagnostics(draft);
+      if (refs.some((ref) => !parsed.citations.some((c) => c.ref === ref))) {
+        throw new UserFacingError("Die Quellenverweise wurden nicht vollständig erzeugt. Nummern in diesem Entwurf sind keine geprüften Fundstellen. Bitte eine engere Teilfrage mit höchstens drei Belegen stellen und die Quellen selbst prüfen.");
+      }
+    }
   } catch (err) {
     if (isAskInputsPause(err)) {
       // The ask_inputs event has already been emitted and persisted in `events`.

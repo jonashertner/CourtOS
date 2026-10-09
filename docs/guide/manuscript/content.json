@@ -1,0 +1,803 @@
+{
+  "de": {
+    "language": "Deutsch",
+    "label": "Leitfaden zum Pilotbetrieb",
+    "date": "9. Oktober 2026",
+    "contents": "In diesem Heft",
+    "pdf_label": "PDF herunterladen",
+    "back": "Übersicht",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "page_label": "Seite",
+    "pilot": "Fiktive Beispielakte",
+    "title": "Mit CourtOS am Dossier arbeiten",
+    "pages": [
+      {
+        "id": "start",
+        "title": "Am Dossier\narbeiten",
+        "lead": "Ein kurzer Probelauf für Gerichtsschreiberinnen, Gerichtsschreiber, Richterinnen und Richter.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "",
+            "body": "Aus vier Dokumenten soll ein nachvollziehbarer Arbeitsstand entstehen: Was ist belegt? Wo widersprechen sich die Akten? Welche entscheidrelevante Frage bleibt offen? CourtOS soll Sie bei dieser Arbeit unterstützen."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Akten erschliessen",
+              "Rechtsfrage klären",
+              "Prüfvermerk erstellen"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Der erste Durchlauf",
+            "body": "Öffnen Sie https://sandbox.swisslaw.io/pilot und geben Sie Ihre persönliche E-Mail-Adresse ein. Cloudflare Access sendet Ihnen einen Einmalcode. Nach dessen Bestätigung wird Ihr Konto automatisch angelegt; eine Einladung ist nicht nötig. Starten Sie den geführten Fall. Planen Sie etwa 15 Minuten ein."
+          },
+          {
+            "type": "note",
+            "heading": "Ein überschaubarer Test",
+            "body": "Der geführte Ablauf verwendet nur die vorbereitete erfundene Akte. Im ergänzenden offenen Arbeitsbereich dürfen ausschliesslich synthetische Testdokumente erprobt werden. Die folgenden Prüfkriterien beziehen sich auf den geführten Fall. Beispielakte und voreingestellte Antwortsprache sind derzeit Deutsch."
+          },
+          {
+            "type": "text",
+            "heading": "Ihr Weg durch das Heft",
+            "body": "Aktenerschliessung auf Seite 2, Rechtsfrage auf Seite 3, Prüfvermerk auf Seite 4. Seite 5 enthält drei Testaufgaben. Datenweg und Grenzen folgen auf Seite 6; spätere institutionelle Entscheidungen auf Seite 7."
+          }
+        ]
+      },
+      {
+        "id": "local",
+        "title": "Die Akte erschliessen",
+        "lead": "Lassen Sie die Chronologie erstellen. Lesen Sie danach gezielt gegen.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Ein überschaubares Dossier",
+            "body": "Die Baubehörde Linden und die beteiligte Person sind erfunden. Vier kurze Dokumente enthalten unterschiedliche Datumsangaben, einen Registereintrag und einen ununterzeichneten Verfügungsentwurf. Kein bestimmter Kanton ist festgelegt."
+          },
+          {
+            "type": "text",
+            "heading": "Den lokalen Schritt starten",
+            "body": "Öffnen Sie die bereitgestellten Dokumente und starten Sie die Chronologie. Das lokale Modell bearbeitet diese Unterlagen auf dem VPS. Es wird dabei kein externer Ersatzdienst aufgerufen."
+          },
+          {
+            "type": "items",
+            "heading": "Achten Sie auf drei Dinge",
+            "items": [
+              "Lassen sich die Aussagen über Absatzkennungen im Dokument wiederfinden?",
+              "Bleiben widersprüchliche Daten sichtbar, statt zu einem vermeintlich sicheren Datum zu verschmelzen?",
+              "Unterscheidet die Antwort einen noch offenen Entwurf von einer tatsächlich erlassenen Verfügung?"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Eine flüssige Antwort ist noch kein guter Befund.",
+            "body": "Ein Briefdatum, ein Versanddatum und eine Zustellung können verschieden sein, ohne sich zu widersprechen. Umgekehrt löst eine plausible Erzählung einen echten Aktenwiderspruch nicht."
+          },
+          {
+            "type": "text",
+            "heading": "Wartezeit einplanen",
+            "body": "Die Berechnung auf dem Server kann mehrere Minuten dauern. Lassen Sie einen laufenden Auftrag zunächst arbeiten, statt denselben Schritt mehrfach zu starten."
+          }
+        ]
+      },
+      {
+        "id": "public",
+        "title": "Eine Rechtsfrage freigeben",
+        "lead": "Erst das Paket lesen, dann über seine Übermittlung entscheiden.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Der öffentliche Teil",
+            "body": "Wählen Sie eine der festen allgemeinen Fragen und die vorgesehenen öffentlichen Quellen. Der derzeitige Katalog enthält die Bundesverfassung und zwei Bundesgerichtsurteile. Er ist noch keine Live-Suche in OpenCaseLaw."
+          },
+          {
+            "type": "text",
+            "heading": "Die Vorschau ernst nehmen",
+            "body": "Die Vorschau zeigt die Frage, Quellenauszüge, Modellanweisung und den externen Anbieter. Prüfen Sie, ob nur diese öffentlichen Inhalte enthalten sind. Das festgehaltene Paket ist die Grundlage Ihrer Freigabe; eine lokale Zusammenfassung gehört nicht hinein."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Öffentliches Paket",
+              "Ihre Freigabe",
+              "Claude Sonnet 4.6"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Keine automatische Anonymisierung, kein freier Fallprompt.",
+            "body": "Es werden feste öffentliche Texte ausgewählt. Der Ablauf verspricht nicht, beliebige Eingaben zuverlässig von Geheimnissen zu befreien. Ist eine Vorschau unverständlich oder unerwartet, geben Sie sie nicht frei."
+          },
+          {
+            "type": "text",
+            "heading": "Was die Freigabe bewirkt",
+            "body": "Erst Ihre ausdrückliche Freigabe löst den Anthropic-Aufruf aus. Die Freigabe gilt für dieses Paket und ist einmal verwendbar. Nach einem Fehler erfolgt keine automatische Wiederholung. Ein neuer Versuch benötigt ein neues Paket und eine neue Freigabe."
+          }
+        ]
+      },
+      {
+        "id": "check",
+        "title": "Einen prüfbaren\nVermerk gewinnen",
+        "lead": "Die fachliche Beurteilung bleibt eine menschliche Aufgabe.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Ein brauchbarer Arbeitsentwurf",
+            "body": "Verbinden Sie nach der öffentlichen Analyse die Ergebnisse im lokalen Schritt. Erwarten Sie einen knappen Vermerk mit vier Teilen: belegter Aktenstand, Widersprüche, entscheidrelevante offene Fragen und nächste Prüfschritte. Eine abschliessende Verfügung ist nicht das Ziel."
+          },
+          {
+            "type": "text",
+            "heading": "Quelle und Auslegung auseinanderhalten",
+            "body": "Öffnen Sie bei einer wichtigen Aussage die angegebene Quelle. Prüfen Sie den Wortlaut und den Zusammenhang. Ein kurzer Auszug und eine redaktionelle Einordnung sind nicht dasselbe. Eine allgemeine Aussage zum rechtlichen Gehör beantwortet noch keinen konkreten kantonalen Verfahrensfall."
+          },
+          {
+            "type": "items",
+            "heading": "Vor jeder Übernahme",
+            "items": [
+              "Stimmt die Fundstelle und trägt sie die Aussage?",
+              "Passt der Verfahrenskontext, oder fehlt eine Abklärung?",
+              "Sind Tatsachen, Widersprüche und rechtliche Einschätzung unterscheidbar?",
+              "Ist die Antwort vollständig, oder endet sie am Ausgabelimit?"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Offene Fragen sind ein Ergebnis",
+            "body": "Welcher Zustellbeleg fehlt? Gibt es eine unterzeichnete Endfassung? Wurden nachgereichte Unterlagen tatsächlich geprüft? Ein hilfreicher Entwurf macht solche Lücken sichtbar, statt sie mit Vermutungen zu schliessen."
+          }
+        ]
+      },
+      {
+        "id": "test",
+        "title": "Drei Aufgaben\nfür Ihren Probelauf",
+        "lead": "Beurteilen Sie, ob der Ablauf Ihre Arbeit am Dossier erleichtert.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "1  Einen Widerspruch nachweisen",
+            "body": "Erstellen Sie die Chronologie und wählen Sie einen Datumskonflikt. Ein gutes Ergebnis nennt beide Angaben mit den passenden Absatzbelegen, unterscheidet Briefdatum und Zustellung und sagt, welcher Beleg zur Klärung fehlt."
+          },
+          {
+            "type": "text",
+            "heading": "2  Die Rechtsfrage eng halten",
+            "body": "Wählen Sie die feste Frage zum rechtlichen Gehör. Prüfen Sie das öffentliche Paket vor der Freigabe und danach eine Aussage in der Originalquelle. Ein gutes Ergebnis benennt seine Verfahrensgrenze und behauptet keine automatische Nichtigkeit."
+          },
+          {
+            "type": "text",
+            "heading": "3  Einen Vermerk weiterbearbeiten",
+            "body": "Lassen Sie Aktenstand und öffentliche Analyse lokal zusammenführen. Ein gutes Ergebnis trennt Tatsachen und Einschätzung, erhält Widersprüche und formuliert konkrete offene Prüffragen. Können Sie damit sinnvoll weiterarbeiten, ohne die ganze Akte nochmals ungeführt zu lesen?"
+          },
+          {
+            "type": "note",
+            "heading": "So wird Ihr Feedback nützlich",
+            "body": "Nennen Sie den Arbeitsschritt, Ihre Erwartung, die beobachtete Abweichung und die Absatz- oder Quellenkennung. Ergänzen Sie die ungefähre Wartezeit. Keine echten Akten als Beispiel mitschicken."
+          },
+          {
+            "type": "text",
+            "heading": "Wann der Test noch nicht überzeugt",
+            "body": "Verlorene Belege, überspielte Widersprüche, unklare Übermittlungen oder ein scheinbar fertiger Text trotz Lücken sind konkrete Gründe für eine Verbesserung."
+          }
+        ]
+      },
+      {
+        "id": "access",
+        "title": "Was im Hintergrund\ngeschieht",
+        "lead": "Diese Grenzen gelten für den heutigen Test auf dem VPS.",
+        "blocks": [
+          {
+            "type": "flow",
+            "items": [
+              "Ihr Browser",
+              "Cloudflare",
+              "VPS in Deutschland"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "«Lokal» bedeutet hier: auf dem VPS",
+            "body": "Der Test läuft bei Hetzner in Deutschland, noch nicht im Netz Ihres Gerichts. Cloudflare verarbeitet den Webverkehr, einschliesslich der im Browser angezeigten Dokumente und Ergebnisse. Nur das ausdrücklich freigegebene öffentliche Paket geht im geführten Ablauf an Anthropic."
+          },
+          {
+            "type": "note",
+            "heading": "Keine vertraulichen Akten",
+            "body": "Die Zugangskontrolle macht diesen Datenweg nicht zu einem freigegebenen Behördenbetrieb. Echte vertrauliche Unterlagen bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung, die solche Eingaben erlauben würde."
+          },
+          {
+            "type": "text",
+            "heading": "Mit Wartezeit und Grenzen rechnen",
+            "body": "Das lokale Gemma-Modell nutzt eine speichersparende Fassung von Unsloth auf Serverprozessoren (CPU). Im geprüften Versuch lieferte der freie Assistent nach rund sechseinhalb Minuten eine vollständige Antwort mit überprüfbaren Belegen im synthetischen PDF. Das ist eine einzelne Beobachtung zu einer gezielten Frage, keine allgemeine Laufzeit- oder Qualitätszusage. Unvollständige Ausgaben werden gekennzeichnet."
+          },
+          {
+            "type": "text",
+            "heading": "Zugang, Kontingent und Aufbewahrung",
+            "body": "Verwenden Sie Ihr eigenes Konto. Im geführten Fall gelten derzeit pro Person und UTC-Kalendertag höchstens drei lokale Aufträge und eine externe Analyse. Angenommene Aufträge zählen auch bei Fehlern; gemeinsame Tagesgrenzen können früher greifen. Lesen und Vorschau sind frei. Antworten bleiben bis zur ausdrücklich veranlassten Bereinigung gespeichert; Abmelden löscht sie nicht. Downloads bleiben auf Ihrem Gerät."
+          }
+        ]
+      },
+      {
+        "id": "later",
+        "title": "Der nächste Schritt\nin der Institution",
+        "lead": "Erst nach dem VPS-Test: ein eigener Auftrag für den institutionellen Betrieb.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Betriebsform wählen",
+            "body": "Möglich sind die vorhandene IT oder ein freigegebener, getrennt betriebener Dienst. Die Wahl hängt von Aufgaben, Daten und Zuständigkeiten ab."
+          },
+          {
+            "type": "items",
+            "heading": "Vor echten Akten klären",
+            "items": [
+              "Erlaubte Aufgaben und fachliche sowie betriebliche Verantwortung bestimmen.",
+              "Verarbeitungsorte und Zugriffsmöglichkeiten aller Anbieter offenlegen.",
+              "Identitäten, Aktenberechtigungen, Aufbewahrung und Löschung regeln.",
+              "Quellenaktualität, Qualitätsprüfung und nachvollziehbare Belege sichern.",
+              "Pflege, Störungsbehebung, Kosten und späteren Wechsel vereinbaren."
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Noch kein Eignungsnachweis",
+            "body": "Eine bestandene Demonstration ist keine Datenschutzfreigabe, Sicherheitszertifizierung oder Bestätigung digitaler Souveränität. Der heutige Pilot liefert Beobachtungen; er ersetzt diese Entscheidungen nicht."
+          },
+          {
+            "type": "text",
+            "heading": "Offene Softwarebasis",
+            "body": "CourtOS ist ein Fork von Mike (MikeOSS), dem Projekt von Open Legal Products und seinen Mitwirkenden. Die Softwarelizenz ist GNU AGPL v3.0; die Hinweise im Repository sind massgebend."
+          },
+          {
+            "type": "links",
+            "heading": "Weiterlesen",
+            "items": [
+              [
+                "CourtOS: Quellcode und Lizenz",
+                "https://github.com/jonashertner/CourtOS"
+              ],
+              [
+                "Mike: ursprüngliches Projekt",
+                "https://github.com/open-legal-products/mike"
+              ]
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fr": {
+    "language": "Français",
+    "label": "Guide du projet pilote",
+    "date": "9 octobre 2026",
+    "contents": "Dans ce guide",
+    "pdf_label": "Télécharger le PDF",
+    "back": "Sommaire",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "page_label": "Page",
+    "pilot": "Dossier d’exemple fictif",
+    "title": "Travailler sur un dossier avec CourtOS",
+    "pages": [
+      {
+        "id": "start",
+        "title": "Du dossier\nà la note de travail",
+        "lead": "Un court parcours d’essai pour les greffières, les greffiers et les juges.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "",
+            "body": "À partir de quatre documents, établir un état du dossier que l’on peut vérifier: quels faits sont étayés? Où les pièces se contredisent-elles? Quelle question importante pour la décision reste ouverte? CourtOS doit vous aider dans ce travail."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Explorer les pièces",
+              "Cadrer la question juridique",
+              "Rédiger une note de vérification"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Le premier parcours",
+            "body": "Ouvrez https://sandbox.swisslaw.io/pilot et saisissez votre adresse e-mail personnelle. Cloudflare Access vous envoie un code à usage unique. Après validation, votre compte est créé automatiquement, sans invitation. Lancez le cas guidé. Prévoyez environ 15 minutes."
+          },
+          {
+            "type": "note",
+            "heading": "Un essai circonscrit",
+            "body": "Le parcours guidé utilise uniquement le dossier fictif fourni. L’espace de travail ouvert, proposé en complément, ne peut être exploré qu’avec des documents de test fictifs. Les critères qui suivent concernent le cas guidé. Les pièces d’exemple sont en allemand; les modèles sont également configurés pour répondre en allemand."
+          },
+          {
+            "type": "text",
+            "heading": "Votre chemin dans ce guide",
+            "body": "Les pièces en page 2, la question juridique en page 3, la note en page 4. Trois exercices figurent en page 5. Le trajet des données et les limites suivent en page 6; les décisions institutionnelles ultérieures en page 7."
+          }
+        ]
+      },
+      {
+        "id": "local",
+        "title": "Explorer les pièces",
+        "lead": "Demandez une chronologie, puis confrontez-la aux documents.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Un dossier de petite taille",
+            "body": "L’autorité de construction de Linden et la personne concernée sont fictives. Quatre documents courts comportent des dates différentes, une inscription au registre et un projet de décision non signé. Aucun canton particulier n’est désigné."
+          },
+          {
+            "type": "text",
+            "heading": "Lancer le traitement local",
+            "body": "Ouvrez les documents fournis et lancez la chronologie. Le modèle local traite ces documents sur le VPS. Aucun service externe ne prend automatiquement le relais."
+          },
+          {
+            "type": "items",
+            "heading": "Trois points à observer",
+            "items": [
+              "Les références aux paragraphes permettent-elles de retrouver les affirmations dans le dossier?",
+              "Les dates contradictoires restent-elles visibles, sans être fusionnées en une date présentée comme certaine?",
+              "La réponse distingue-t-elle un projet encore ouvert d’une décision effectivement rendue?"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Une réponse fluide n’est pas encore un constat fiable.",
+            "body": "La date d’une lettre, son envoi et sa notification peuvent différer sans contradiction. À l’inverse, un récit plausible ne résout pas une véritable divergence dans les pièces."
+          },
+          {
+            "type": "text",
+            "heading": "Prévoir un temps d’attente",
+            "body": "Le calcul sur le serveur peut prendre plusieurs minutes. Laissez la tâche en cours se terminer au lieu de relancer plusieurs fois la même étape."
+          }
+        ]
+      },
+      {
+        "id": "public",
+        "title": "Autoriser une question juridique",
+        "lead": "Lisez d’abord le paquet, puis décidez de sa transmission.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "La partie publique",
+            "body": "Choisissez l’une des questions générales prédéfinies et les sources publiques prévues. Le catalogue actuel contient la Constitution fédérale et deux arrêts du Tribunal fédéral. Il ne s’agit pas encore d’une recherche en direct dans OpenCaseLaw."
+          },
+          {
+            "type": "text",
+            "heading": "Examiner réellement l’aperçu",
+            "body": "L’aperçu présente la question, les extraits, les instructions au modèle et le prestataire externe. Vérifiez qu’il ne contient que ces éléments publics. Votre autorisation porte sur ce paquet enregistré; un résumé local du dossier n’y a pas sa place."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Paquet public",
+              "Votre autorisation",
+              "Claude Sonnet 4.6"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Ni anonymisation automatique, ni requête libre sur un cas.",
+            "body": "Le dispositif sélectionne des textes publics fixes. Il ne promet pas de retirer les secrets de n’importe quelle saisie. Si un aperçu est incompréhensible ou inattendu, ne l’autorisez pas."
+          },
+          {
+            "type": "text",
+            "heading": "L’effet de votre autorisation",
+            "body": "Seule votre autorisation explicite déclenche l’appel à Anthropic. Elle concerne ce paquet et ne peut servir qu’une fois. Une erreur ne provoque pas de répétition automatique. Un nouvel essai exige un nouveau paquet et une nouvelle autorisation."
+          }
+        ]
+      },
+      {
+        "id": "check",
+        "title": "Obtenir une note\nque l’on peut vérifier",
+        "lead": "L’appréciation professionnelle reste une tâche humaine.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Un document de travail utile",
+            "body": "Après l’analyse publique, rapprochez les résultats dans l’étape locale. Attendez-vous à une note concise en quatre parties: faits étayés, contradictions, questions importantes encore ouvertes et vérifications à effectuer. L’objectif n’est pas de rédiger une décision définitive."
+          },
+          {
+            "type": "text",
+            "heading": "Distinguer la source de son interprétation",
+            "body": "Pour une affirmation importante, ouvrez la source indiquée. Vérifiez le texte et son contexte. Un extrait et un commentaire rédactionnel sont deux choses différentes. Une règle générale sur le droit d’être entendu ne tranche pas un cas relevant d’une procédure cantonale précise."
+          },
+          {
+            "type": "items",
+            "heading": "Avant toute reprise",
+            "items": [
+              "La référence est-elle correcte et étaye-t-elle l’affirmation?",
+              "Le contexte procédural convient-il, ou une vérification manque-t-elle?",
+              "Les faits, les contradictions et l’appréciation juridique sont-ils distincts?",
+              "La réponse est-elle complète ou s’arrête-t-elle à la limite de sortie?"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Les questions ouvertes sont un résultat",
+            "body": "Quelle preuve de notification manque? Existe-t-il une version finale signée? Les pièces déposées ensuite ont-elles réellement été examinées? Une note utile montre ces lacunes au lieu de les combler par des suppositions."
+          }
+        ]
+      },
+      {
+        "id": "test",
+        "title": "Trois exercices\npour votre essai",
+        "lead": "Évaluez si le parcours facilite votre travail sur le dossier.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "1  Étayer une contradiction",
+            "body": "Établissez la chronologie et choisissez un conflit de dates. Un bon résultat cite les deux indications et les bons paragraphes, distingue date de la lettre et notification, et précise la pièce manquante pour clarifier la situation."
+          },
+          {
+            "type": "text",
+            "heading": "2  Cadrer la question juridique",
+            "body": "Choisissez la question prédéfinie sur le droit d’être entendu. Examinez le paquet public avant de l’autoriser, puis vérifiez une affirmation dans l’original. Un bon résultat précise sa limite procédurale et n’affirme pas une nullité automatique."
+          },
+          {
+            "type": "text",
+            "heading": "3  Poursuivre le travail à partir de la note",
+            "body": "Demandez le rapprochement local des pièces et de l’analyse publique. Un bon résultat distingue faits et appréciation, conserve les contradictions et formule des questions précises. Vous permet-il d’avancer sans devoir relire tout le dossier sans point de repère?"
+          },
+          {
+            "type": "note",
+            "heading": "Un retour utile",
+            "body": "Indiquez l’étape, votre attente, l’écart observé et la référence du paragraphe ou de la source. Ajoutez le temps d’attente approximatif. Ne joignez pas de dossier réel à titre d’exemple."
+          },
+          {
+            "type": "text",
+            "heading": "Quand l’essai n’est pas encore convaincant",
+            "body": "Une référence perdue, une contradiction masquée, une transmission obscure ou un texte apparemment achevé malgré des lacunes justifient une amélioration concrète."
+          }
+        ]
+      },
+      {
+        "id": "access",
+        "title": "Ce qui se passe\nen arrière-plan",
+        "lead": "Ces limites concernent le test actuel sur le VPS.",
+        "blocks": [
+          {
+            "type": "flow",
+            "items": [
+              "Votre navigateur",
+              "Cloudflare",
+              "VPS en Allemagne"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "«Local» signifie ici: sur le VPS",
+            "body": "Le test fonctionne chez Hetzner en Allemagne, pas encore dans le réseau de votre tribunal. Cloudflare traite le trafic web, y compris les documents et les résultats affichés. Dans le parcours guidé, seul le paquet public expressément autorisé est envoyé à Anthropic."
+          },
+          {
+            "type": "note",
+            "heading": "Aucun dossier confidentiel",
+            "body": "Le contrôle d’accès ne transforme pas ce trajet des données en système institutionnel autorisé. Les pièces réelles confidentielles restent exclues. Aucune anonymisation automatique ne permet de les saisir."
+          },
+          {
+            "type": "text",
+            "heading": "Tenir compte de l’attente et des limites",
+            "body": "Le modèle local Gemma utilise une version économe en mémoire fournie par Unsloth, sur les processeurs du serveur (CPU). Lors de l’essai vérifié, l’assistant libre a fourni en environ six minutes et demie une réponse complète avec des références vérifiables dans le PDF fictif. Cette observation porte sur une seule question ciblée; elle ne garantit ni une durée habituelle ni la qualité générale. Les réponses incomplètes sont signalées."
+          },
+          {
+            "type": "text",
+            "heading": "Accès, quotas et conservation",
+            "body": "Utilisez votre propre compte. Pour le cas guidé, la limite actuelle est de trois tâches locales et d’une analyse externe par personne et par jour civil UTC. Une tâche acceptée compte même si elle échoue; des plafonds communs peuvent limiter l’accès plus tôt. La lecture et l’aperçu sont libres. Les réponses restent enregistrées jusqu’à un nettoyage expressément décidé; la déconnexion ne les efface pas. Les téléchargements restent sur votre appareil."
+          }
+        ]
+      },
+      {
+        "id": "later",
+        "title": "La prochaine étape\ndans l’institution",
+        "lead": "Après le test sur le VPS: un projet distinct pour un usage institutionnel.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Choisir le mode d’exploitation",
+            "body": "L’informatique existante ou un service séparé dûment autorisé sont des options. Le choix dépend des tâches, des données et des compétences."
+          },
+          {
+            "type": "items",
+            "heading": "Avant les dossiers réels",
+            "items": [
+              "Définir les tâches autorisées et les responsabilités métier et d’exploitation.",
+              "Préciser les lieux de traitement et les accès de tous les prestataires.",
+              "Régler les identités, les droits sur les dossiers, la conservation et l’effacement.",
+              "Assurer l’actualité des sources, le contrôle de qualité et des références vérifiables.",
+              "Convenir de la maintenance, des incidents, des coûts et d’un changement de solution."
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Pas encore une preuve d’aptitude",
+            "body": "Une démonstration réussie ne vaut ni autorisation de protection des données, ni certification de sécurité, ni preuve de souveraineté numérique. Le pilote fournit des observations; il ne remplace pas ces décisions."
+          },
+          {
+            "type": "text",
+            "heading": "Une base logicielle ouverte",
+            "body": "CourtOS est un fork de Mike (MikeOSS), projet d’Open Legal Products et de ses contributeurs. La licence du logiciel est GNU AGPL v3.0; les mentions du dépôt font foi."
+          },
+          {
+            "type": "links",
+            "heading": "Pour aller plus loin",
+            "items": [
+              [
+                "CourtOS: code source et licence",
+                "https://github.com/jonashertner/CourtOS"
+              ],
+              [
+                "Mike: projet d’origine",
+                "https://github.com/open-legal-products/mike"
+              ]
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "it": {
+    "language": "Italiano",
+    "label": "Guida al progetto pilota",
+    "date": "9 ottobre 2026",
+    "contents": "In questa guida",
+    "pdf_label": "Scaricare il PDF",
+    "back": "Indice",
+    "next": "Avanti",
+    "previous": "Indietro",
+    "page_label": "Pagina",
+    "pilot": "Fascicolo di esempio fittizio",
+    "title": "Lavorare su un fascicolo con CourtOS",
+    "pages": [
+      {
+        "id": "start",
+        "title": "Dagli atti\nalla nota di lavoro",
+        "lead": "Un breve percorso di prova per le cancelliere, i cancellieri e i giudici.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "",
+            "body": "Da quattro documenti ricavare un quadro verificabile del fascicolo: quali fatti sono documentati? Dove gli atti si contraddicono? Quale questione rilevante per la decisione resta aperta? CourtOS vuole aiutarvi in questo lavoro."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Esaminare gli atti",
+              "Circoscrivere la domanda",
+              "Preparare una nota di verifica"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Il primo percorso",
+            "body": "Aprite https://sandbox.swisslaw.io/pilot e inserite il vostro indirizzo e-mail personale. Cloudflare Access invia un codice monouso. Dopo la conferma, l’account viene creato automaticamente, senza invito. Avviate il caso guidato. Prevedete circa 15 minuti."
+          },
+          {
+            "type": "note",
+            "heading": "Una prova circoscritta",
+            "body": "Il percorso guidato utilizza soltanto il fascicolo fittizio fornito. Lo spazio di lavoro aperto, disponibile in aggiunta, può essere esplorato solo con documenti di prova sintetici. I criteri seguenti riguardano il caso guidato. I documenti di esempio sono in tedesco e anche i modelli sono configurati per rispondere in tedesco."
+          },
+          {
+            "type": "text",
+            "heading": "Il percorso nella guida",
+            "body": "Gli atti a pagina 2, la domanda giuridica a pagina 3, la nota a pagina 4. Tre esercizi si trovano a pagina 5. Percorso dei dati e limiti seguono a pagina 6; le future decisioni istituzionali a pagina 7."
+          }
+        ]
+      },
+      {
+        "id": "local",
+        "title": "Esaminare gli atti",
+        "lead": "Fate elaborare una cronologia, poi confrontatela con i documenti.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Un fascicolo contenuto",
+            "body": "L’autorità edilizia di Linden e la persona interessata sono inventate. Quattro brevi documenti contengono date differenti, un’annotazione nel registro e una bozza di decisione non firmata. Non è indicato un Cantone specifico."
+          },
+          {
+            "type": "text",
+            "heading": "Avviare il passaggio locale",
+            "body": "Aprite i documenti forniti e avviate la cronologia. Il modello locale elabora questi documenti sul VPS. Nessun servizio esterno subentra automaticamente."
+          },
+          {
+            "type": "items",
+            "heading": "Osservate tre aspetti",
+            "items": [
+              "I riferimenti ai paragrafi permettono di ritrovare le affermazioni nel fascicolo?",
+              "Le date contrastanti restano visibili, senza essere fuse in una data presentata come certa?",
+              "La risposta distingue una bozza ancora aperta da una decisione effettivamente emanata?"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Una risposta scorrevole non è ancora un riscontro affidabile.",
+            "body": "La data di una lettera, la spedizione e la notificazione possono essere diverse senza contraddirsi. Per contro, un racconto plausibile non risolve un vero contrasto tra gli atti."
+          },
+          {
+            "type": "text",
+            "heading": "Prevedere un’attesa",
+            "body": "Il calcolo sul server può richiedere diversi minuti. Lasciate terminare il lavoro in corso, invece di avviare più volte lo stesso passaggio."
+          }
+        ]
+      },
+      {
+        "id": "public",
+        "title": "Autorizzare una domanda giuridica",
+        "lead": "Prima leggete il pacchetto, poi decidete se trasmetterlo.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "La parte pubblica",
+            "body": "Scegliete una delle domande generali predefinite e le fonti pubbliche previste. Il catalogo attuale contiene la Costituzione federale e due sentenze del Tribunale federale. Non è ancora una ricerca in tempo reale in OpenCaseLaw."
+          },
+          {
+            "type": "text",
+            "heading": "Esaminare davvero l’anteprima",
+            "body": "L’anteprima mostra la domanda, gli estratti, le istruzioni al modello e il fornitore esterno. Verificate che contenga soltanto questi elementi pubblici. L’autorizzazione riguarda il pacchetto fissato; un riassunto locale del fascicolo non deve farne parte."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Pacchetto pubblico",
+              "La vostra autorizzazione",
+              "Claude Sonnet 4.6"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Né anonimizzazione automatica né richieste libere su un caso.",
+            "body": "Il sistema seleziona testi pubblici prestabiliti. Non promette di eliminare i segreti da qualsiasi testo inserito. Se un’anteprima è poco chiara o inattesa, non autorizzatela."
+          },
+          {
+            "type": "text",
+            "heading": "Che cosa comporta l’autorizzazione",
+            "body": "Solo la vostra autorizzazione esplicita avvia la chiamata ad Anthropic. Vale per quel pacchetto ed è utilizzabile una sola volta. Un errore non provoca un nuovo invio automatico. Per riprovare servono un nuovo pacchetto e una nuova autorizzazione."
+          }
+        ]
+      },
+      {
+        "id": "check",
+        "title": "Ottenere una nota\nverificabile",
+        "lead": "La valutazione professionale resta un compito umano.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Una bozza di lavoro utile",
+            "body": "Dopo l’analisi pubblica, collegate i risultati nel passaggio locale. Cercate una nota concisa in quattro parti: fatti documentati, contraddizioni, questioni rilevanti ancora aperte e verifiche da svolgere. Lo scopo non è redigere una decisione definitiva."
+          },
+          {
+            "type": "text",
+            "heading": "Distinguere fonte e interpretazione",
+            "body": "Per un’affermazione importante, aprite la fonte indicata. Controllate il testo e il contesto. Un estratto e un commento redazionale non sono la stessa cosa. Una regola generale sul diritto di essere sentito non risolve un caso soggetto a una specifica procedura cantonale."
+          },
+          {
+            "type": "items",
+            "heading": "Prima di riprendere un risultato",
+            "items": [
+              "Il riferimento è corretto e sostiene l’affermazione?",
+              "Il contesto procedurale è pertinente oppure manca un accertamento?",
+              "Fatti, contraddizioni e valutazione giuridica sono distinguibili?",
+              "La risposta è completa oppure termina al limite di generazione?"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Le questioni aperte sono un risultato",
+            "body": "Quale prova di notificazione manca? Esiste una versione finale firmata? I documenti presentati successivamente sono stati davvero esaminati? Una nota utile rende visibili queste lacune, senza colmarle con supposizioni."
+          }
+        ]
+      },
+      {
+        "id": "test",
+        "title": "Tre esercizi\nper la vostra prova",
+        "lead": "Valutate se il percorso facilita il vostro lavoro sul fascicolo.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "1  Documentare una contraddizione",
+            "body": "Create la cronologia e scegliete un contrasto tra date. Un buon risultato riporta entrambe le indicazioni e i paragrafi corretti, distingue la data della lettera dalla notificazione e precisa quale documento manca per chiarire il punto."
+          },
+          {
+            "type": "text",
+            "heading": "2  Circoscrivere la domanda giuridica",
+            "body": "Scegliete la domanda predefinita sul diritto di essere sentito. Esaminate il pacchetto pubblico prima di autorizzarlo, poi verificate un’affermazione nell’originale. Un buon risultato indica il limite procedurale e non afferma una nullità automatica."
+          },
+          {
+            "type": "text",
+            "heading": "3  Proseguire il lavoro dalla nota",
+            "body": "Fate collegare localmente gli atti e l’analisi pubblica. Un buon risultato distingue fatti e valutazioni, mantiene le contraddizioni e formula domande concrete. Vi permette di proseguire senza rileggere tutto il fascicolo senza un orientamento?"
+          },
+          {
+            "type": "note",
+            "heading": "Un riscontro utile",
+            "body": "Indicate il passaggio, ciò che vi aspettavate, la differenza osservata e il riferimento al paragrafo o alla fonte. Aggiungete il tempo di attesa approssimativo. Non allegate fascicoli reali come esempio."
+          },
+          {
+            "type": "text",
+            "heading": "Quando la prova non convince ancora",
+            "body": "Un riferimento perso, una contraddizione mascherata, un invio poco chiaro o un testo apparentemente concluso nonostante le lacune sono motivi concreti per migliorare il sistema."
+          }
+        ]
+      },
+      {
+        "id": "access",
+        "title": "Che cosa succede\ndietro le quinte",
+        "lead": "Questi limiti riguardano il test attuale sul VPS.",
+        "blocks": [
+          {
+            "type": "flow",
+            "items": [
+              "Il vostro browser",
+              "Cloudflare",
+              "VPS in Germania"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "«Locale» significa: sul VPS",
+            "body": "Il test funziona presso Hetzner in Germania, non ancora nella rete del vostro tribunale. Cloudflare tratta il traffico web, compresi i documenti e i risultati visualizzati. Nel percorso guidato viene inviato ad Anthropic solo il pacchetto pubblico espressamente autorizzato."
+          },
+          {
+            "type": "note",
+            "heading": "Nessun fascicolo riservato",
+            "body": "Il controllo dell’accesso non rende questo percorso dei dati un sistema istituzionale autorizzato. I documenti reali riservati restano esclusi. Nessuna anonimizzazione automatica consente di inserirli."
+          },
+          {
+            "type": "text",
+            "heading": "Considerare attesa e limiti",
+            "body": "Il modello locale Gemma usa una versione a minore occupazione di memoria fornita da Unsloth, sui processori del server (CPU). Nel test verificato, l’assistente libero ha fornito in circa sei minuti e mezzo una risposta completa con riferimenti verificabili nel PDF fittizio. È un’osservazione su una sola domanda mirata, non una garanzia dei tempi abituali o della qualità generale. Le risposte incomplete sono segnalate."
+          },
+          {
+            "type": "text",
+            "heading": "Accesso, quote e conservazione",
+            "body": "Usate il vostro account. Nel caso guidato il limite attuale è di tre attività locali e un’analisi esterna per persona e giorno civile UTC. Le attività accettate contano anche se falliscono; i limiti comuni possono ridurre prima la disponibilità. Lettura e anteprima sono libere. Le risposte restano memorizzate fino a una pulizia espressamente disposta; disconnettersi non le cancella. I file scaricati restano sul vostro dispositivo."
+          }
+        ]
+      },
+      {
+        "id": "later",
+        "title": "Il passo successivo\nnell’istituzione",
+        "lead": "Dopo il test sul VPS: un progetto distinto per l’impiego istituzionale.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Scegliere la forma di gestione",
+            "body": "Si possono considerare l’informatica esistente o un servizio separato debitamente autorizzato. La scelta dipende dai compiti, dai dati e dalle competenze."
+          },
+          {
+            "type": "items",
+            "heading": "Prima dei fascicoli reali",
+            "items": [
+              "Definire compiti autorizzati e responsabilità professionali e operative.",
+              "Precisare luoghi di trattamento e possibilità di accesso dei fornitori.",
+              "Regolare identità, diritti sui fascicoli, conservazione e cancellazione.",
+              "Garantire fonti aggiornate, controlli di qualità e riferimenti verificabili.",
+              "Concordare manutenzione, gestione dei guasti, costi e cambio di soluzione."
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Non ancora una prova d’idoneità",
+            "body": "Una dimostrazione riuscita non vale come autorizzazione in materia di protezione dei dati, certificazione di sicurezza o prova di sovranità digitale. Il progetto pilota fornisce osservazioni; non sostituisce queste decisioni."
+          },
+          {
+            "type": "text",
+            "heading": "Una base software aperta",
+            "body": "CourtOS è un fork di Mike (MikeOSS), progetto di Open Legal Products e dei suoi collaboratori. La licenza del software è GNU AGPL v3.0; fanno fede le indicazioni nel repository."
+          },
+          {
+            "type": "links",
+            "heading": "Per approfondire",
+            "items": [
+              [
+                "CourtOS: codice sorgente e licenza",
+                "https://github.com/jonashertner/CourtOS"
+              ],
+              [
+                "Mike: progetto originale",
+                "https://github.com/open-legal-products/mike"
+              ]
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -16,6 +16,7 @@
 //     UPLOAD_VERIFICATION_LEASE_SECONDS; a fresh one means another request is
 //     still sealing that file.
 
+import { courtosUploadPolicy } from "./uploads.policy";
 import { mapWithConcurrency } from "../../lib/concurrency";
 import {
   copyFile,
@@ -363,8 +364,9 @@ export async function createUploadSession(
   },
 ): Promise<UploadResult<Record<string, unknown>>> {
   const { sessionId, userId, manifest } = args;
-  const expiresAt = uploadSessionExpiresAt();
-  const { error } = await db.rpc("create_upload_session", {
+  let expiresAt = uploadSessionExpiresAt();
+  const pilot = courtosUploadPolicy();
+  const { data, error } = await db.rpc(pilot ? "create_courtos_upload_session" : "create_upload_session", {
     target_session_id: sessionId,
     target_user_id: userId,
     target_purpose: manifest.purpose,
@@ -372,8 +374,28 @@ export async function createUploadSession(
     target_expires_at: expiresAt,
     target_files: manifest.files,
     target_hourly_session_limit: args.hourlySessionLimit,
+    ...(pilot ? {
+      target_max_file_bytes: pilot.maxFileBytes,
+      target_max_batch_files: pilot.maxBatchFiles,
+      target_user_total_bytes: pilot.userTotalBytes,
+      target_global_total_bytes: pilot.globalTotalBytes,
+    } : {}),
   });
   if (error) {
+    if (error.message?.includes("courtos_upload_user_budget_exceeded") ||
+        error.message?.includes("courtos_upload_global_budget_exceeded")) {
+      return failure(429, {
+        code: "courtos_upload_budget_exceeded",
+        detail: "The pilot upload budget has been reached. Deleting files does not reset it; please contact the operator.",
+      });
+    }
+    if (error.message?.includes("courtos_upload_session_conflict") ||
+        error.message?.includes("courtos_upload_session_closed")) {
+      return failure(409, { code: "upload_session_conflict", detail: "This upload session cannot be reused." });
+    }
+    if (error.message?.includes("courtos_upload_file_too_large")) {
+      return failure(413, { code: "upload_file_too_large", detail: "This file exceeds the pilot upload limit." });
+    }
     if (error.message?.includes("upload_session_rate_limit_exceeded")) {
       return failure(429, {
         code: "upload_session_rate_limit_exceeded",
@@ -394,6 +416,14 @@ export async function createUploadSession(
       return failure(400, { detail: "Invalid upload manifest" });
     }
     return internalFailure(error);
+  }
+
+  if (pilot) {
+    // A retry must use the original session expiry, not mint a longer lease.
+    if (typeof data?.expires_at !== "string" || !Number.isFinite(Date.parse(data.expires_at))) {
+      return internalFailure(new Error("Invalid CourtOS upload reservation response"));
+    }
+    expiresAt = data.expires_at;
   }
 
   try {
@@ -467,6 +497,26 @@ export async function refreshUploadUrls(
   }
 
   const files = await loadSessionFiles(db, session.id);
+  const pilot = courtosUploadPolicy();
+  if (pilot) {
+    // A session created while pilot mode was off must not gain unreserved
+    // upload capacity by refreshing its URLs after the mode is enabled.
+    const { data: reservation, error } = await db
+      .from("courtos_upload_reservations")
+      .select("reserved_bytes,file_count")
+      .eq("session_id", session.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) return internalFailure(error);
+    if (!reservation || Number(reservation.reserved_bytes) !== session.expected_total_bytes ||
+        Number(reservation.file_count) !== files.length || files.length > pilot.maxBatchFiles ||
+        files.some((file) => file.expected_size_bytes > pilot.maxFileBytes)) {
+      return failure(409, {
+        code: "courtos_upload_session_not_reserved",
+        detail: "This upload session is outside the pilot limits. Please start a new upload.",
+      });
+    }
+  }
   const pendingFiles = files.filter((file) =>
     ["pending_upload", "verifying"].includes(file.status),
   );

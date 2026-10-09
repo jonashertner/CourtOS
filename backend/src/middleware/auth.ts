@@ -1,3 +1,5 @@
+import { enterCourtosQuota } from "./courtosQuota";
+import { courtosAccessEnabled, courtosIdentityMatches } from "../lib/courtosAccess";
 import { Request, Response, NextFunction } from "express";
 import type { ParamsFlatDictionary } from "express-serve-static-core";
 import { createServerSupabase, type Db } from "../lib/supabase";
@@ -160,6 +162,10 @@ export async function requireAuth(
     return;
   }
 
+  if (courtosAccessEnabled() && !courtosIdentityMatches(res.locals.courtosIdentity, user.email)) {
+    res.status(401).json({ code: "courtos_identity_mismatch", detail: "Bitte öffnen Sie eine neue CourtOS-Sitzung." });
+    return;
+  }
   res.locals.userId = user.id;
   // `userEmail` is an AUTHORIZATION input, not a display value: direct grants
   // (projects, chats, reviews, workflows) and organization invitations are
@@ -189,7 +195,7 @@ export async function requireAuth(
   if (!(await enforceLoginMfaIfEnabled(req, res, admin, token))) {
     return;
   }
-  next();
+  await enterCourtosQuota(req, res, next, admin, user.id);
 }
 
 export async function requireMfaIfEnrolled(

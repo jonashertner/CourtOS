@@ -1,3 +1,4 @@
+import { courtosPilotEnabled, assertCourtosExternalAccess } from "../../lib/courtosPilot";
 import crypto from "crypto";
 import { createServerSupabase } from "../../lib/supabase";
 import type { Db } from "../../lib/supabase";
@@ -271,6 +272,8 @@ export async function getUserApiKeyStatus(
         enabled: {},
     };
 
+    if (courtosPilotEnabled()) return status;
+
     for (const provider of PROVIDERS) {
         if (hasEnvApiKey(provider)) {
             status[provider] = true;
@@ -316,6 +319,7 @@ export async function getUserApiKeys(
     userId: string,
     db: Db = createServerSupabase(),
 ): Promise<UserApiKeys> {
+    if (courtosPilotEnabled()) return {};
     const apiKeys: UserApiKeys = {
         claude: envApiKey("claude"),
         gemini: envApiKey("gemini"),
@@ -396,6 +400,7 @@ export async function saveUserApiKey(
     db: Db = createServerSupabase(),
     settings: ProviderSettings = {},
 ): Promise<void> {
+    assertCourtosExternalAccess();
     const normalized = value?.trim() || null;
     if (!normalized) {
         const { error } = await db
@@ -456,6 +461,7 @@ export async function updateUserApiKeySettings(
     settings: ProviderSettings,
     db: Db = createServerSupabase(),
 ): Promise<boolean> {
+    assertCourtosExternalAccess();
     const value = settings[provider];
     if (!value) throw new Error(`Missing ${provider} settings`);
     const { data, error } = await db

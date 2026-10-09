@@ -1,3 +1,4 @@
+import { courtosPilotModel } from "../../lib/courtosPilot";
 import { randomUUID } from "node:crypto";
 import { checkProjectAccess, ensureChatAccess, ensureReviewAccess, projectHasSharedAudience } from "../../lib/access";
 import { hasDirectContentGrants } from "../../lib/contentAccess";
@@ -103,6 +104,8 @@ export function memoryCuratorModelForChat(args: {
    */
   apiKeys?: UserApiKeys;
 }): string {
+  const pilot = courtosPilotModel();
+  if (pilot) return pilot.id;
   const preferred =
     args.environmentOverride?.trim() ||
     args.memoryCuratorModel ||

@@ -20,6 +20,7 @@ import { requireAuth } from "../../middleware/auth";
 import { asyncRoute, routerErrorHandler } from "../../middleware/asyncRoute";
 import { requireTrustedOrigin } from "../../middleware/trustedOrigin";
 import {
+  establishCloudflareSession,
   applyHandoffSession,
   buildCallbackUrl,
   challengeAndVerifyMfa,
@@ -56,6 +57,9 @@ import {
   describeAuthProviderError,
   describeAuthValidationIssues,
 } from "./auth.messages";
+
+import { courtosAccessEnabled } from "../../lib/courtosAccess";
+import { createServerSupabase } from "../../lib/supabase";
 
 export const authRouter = Router();
 
@@ -111,6 +115,20 @@ function cookieClient(req: Request, res: Response): SupabaseClient | null {
   }
   return client;
 }
+
+authRouter.post("/cloudflare", asyncRoute(async (req, res) => {
+  if (!courtosAccessEnabled() || !res.locals.courtosIdentity) {
+    res.status(401).json({ code: "courtos_access_required", detail: "Bitte melden Sie sich über den CourtOS-Codezugang an." });
+    return;
+  }
+  if (req.body && Object.keys(req.body).length) return invalidBody(res);
+  try {
+    const user = await establishCloudflareSession(createServerSupabase(), createRequestSupabase(req, res), res.locals.courtosIdentity);
+    res.json({ user: publicAuthUser(user) });
+  } catch {
+    res.status(503).json({ code: "courtos_session_unavailable", detail: "CourtOS kann die Sitzung gerade nicht öffnen. Bitte versuchen Sie es erneut." });
+  }
+}));
 
 authRouter.post("/login", asyncRoute(async (req, res) => {
   const parsed = credentialsSchema.safeParse(req.body);

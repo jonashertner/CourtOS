@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { settingsTabButtonClassName } from "./settingsStyles";
+import { COURTOS_CLOUDFLARE_AUTH, COURTOS_PILOT_MODE, isPilotManagedSettingsPath } from "@/app/lib/courtos";
 
 interface TabDef {
     id: string;
@@ -44,7 +45,8 @@ export default function SettingsLayout({
 }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { isAuthenticated, authLoading } = useAuth();
+    const { user, isAuthenticated, authLoading } = useAuth();
+    const managedIdentity = COURTOS_CLOUDFLARE_AUTH && (pathname === "/settings" || pathname === "/settings/security");
 
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
@@ -81,7 +83,7 @@ export default function SettingsLayout({
                         <div className="-m-1 min-w-0 p-1">
                             <div className="-m-1 min-w-0 overflow-x-auto overflow-y-hidden p-1">
                                 <ul className="mb-0 flex gap-1 @min-[52rem]/settings:flex-col">
-                                    {TABS.map((tab) => {
+                                    {TABS.filter((tab) => !COURTOS_PILOT_MODE || !isPilotManagedSettingsPath(tab.href)).map((tab) => {
                                         const active =
                                             pathname === tab.href ||
                                             (tab.href !== "/settings" &&
@@ -112,7 +114,21 @@ export default function SettingsLayout({
                         </div>
                     </nav>
 
-                    <div className="min-w-0 outline-none">{children}</div>
+                    <div className="min-w-0 outline-none">
+                        {managedIdentity ? (
+                            <section className="space-y-3 text-sm leading-relaxed">
+                                <h2 className="font-serif text-2xl">Ihr CourtOS-Zugang</h2>
+                                <p className="[overflow-wrap:anywhere]">{user?.email}</p>
+                                <p>Sie melden sich mit dem E-Mail-Code des freigegebenen Zugangs an. CourtOS benötigt dafür kein zusätzliches Passwort. Änderungen am Zugang verwaltet der Betreiber.</p>
+                            </section>
+                        ) : COURTOS_PILOT_MODE && isPilotManagedSettingsPath(pathname) ? (
+                            <section className="space-y-3 text-sm leading-relaxed">
+                                <h2 className="font-serif text-2xl">Im Testbetrieb zentral eingerichtet</h2>
+                                <p>Modelle, Anbieterzugänge und externe Konnektoren werden für diesen Pilot vom Betreiber festgelegt. Eigene Schlüssel sind nicht nötig.</p>
+                                <a href="/pilot" className="underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Zurück zum Einstieg</a>
+                            </section>
+                        ) : children}
+                    </div>
                 </div>
             </main>
         </div>

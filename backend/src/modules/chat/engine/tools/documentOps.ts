@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../../../../lib/courtosPilot";
 import { createDocumentVersion, activateDocumentVersion, updateDocumentVersion } from "../../../documents/documents.service";
 import {
   downloadFile,
@@ -50,6 +51,9 @@ export function citationReminder(
   const shapeLine = isSpreadsheet
     ? `Use this citation object shape for this spreadsheet: {"ref": 1, "doc_id": "${docLabel}", "quotes": [{"sheet": "Sheet name", "cell": "B7", "quote": "plain cell value"}]}. Cite by "sheet" + "cell" (A1 address or range), not by page.`
     : `Use this citation object shape: {"ref": 1, "doc_id": "${docLabel}", "quotes": [{"page": 1, "quote": "exact verbatim text from the document"}]}. Include top-level "page" and "quote" too only if they match the first quote.`;
+  if (courtosPilotEnabled()) {
+    return `[Belegregel fuer ${docLabel}]: Antworte in hoechstens 150 Woertern mit hoechstens drei zentralen Befunden. Verwende [1] bis maximal [3] und schliesse mit einem vollstaendigen <CITATIONS>-JSON-Block. Je Beleg genau ein Originalauszug mit hoechstens acht Woertern. ${shapeLine} Verwende doc_id exakt "${docLabel}". Fehlende Belege offen benennen; keine Fundstellen erfinden.`;
+  }
   return [
     `[Citation requirement for ${docLabel}]:`,
     `Document filename: ${promptFilename}`,

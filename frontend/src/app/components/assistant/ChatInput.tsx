@@ -68,12 +68,15 @@ import {
 } from "@/app/lib/documentUploadValidation";
 import { userFacingApiError } from "@/app/lib/userFacingError";
 import { useConfiguredModels } from "@/app/hooks/useConfiguredModels";
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
 import {
     routerSelections,
     type NoModelsReason,
 } from "@/shared/lib/modelCatalog";
 
 export interface ChatInputHandle {
+    /** Prepare a visible draft only; refuses to replace an existing draft. */
+    prepareDraft?: (prompt: string) => boolean;
     addDoc: (doc: Document) => void;
     addFiles: (files: File[]) => void;
     startWorkflow: (
@@ -146,6 +149,12 @@ function placeholderFor({
     chatLoading: boolean;
     isLoading: boolean;
 }): string {
+    if (COURTOS_PILOT_MODE) {
+        if (canSend === null) return "Wird geladen…";
+        if (!canSend) return "Nur Lesezugriff – zum Senden ist ein Bearbeitungsrecht nötig";
+        if (!chatLoading) return "Ihr Auftrag zum synthetischen Testfall…";
+        return isLoading ? "Die Antwort wird noch erstellt…" : "Gespräch wird geladen…";
+    }
     if (canSend === null) return "Loading…";
     if (!canSend) return "Viewing only — sending needs edit access";
     if (!chatLoading) return "How can I help?";
@@ -464,6 +473,17 @@ function ChatInputForChatImpl(
     );
 
     useImperativeHandle(ref, () => ({
+        prepareDraft: (prompt: string) => {
+            if (!composerOpen || value.trim()) return false;
+            setValue(prompt);
+            requestAnimationFrame(() => {
+                if (!textareaRef.current) return;
+                textareaRef.current.style.height = "auto";
+                textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+                textareaRef.current.focus();
+            });
+            return true;
+        },
         addDoc: (doc: Document) => {
             setAttachedDocs((prev) => {
                 if (prev.some((d) => d.id === doc.id)) return prev;

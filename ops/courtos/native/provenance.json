@@ -1,0 +1,40 @@
+{
+  "observed_date": "2026-10-09",
+  "platform": "Linux x86_64; Ubuntu 24.04 host; CPU inference",
+  "node": {
+    "version": "22.23.3",
+    "url": "https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz",
+    "sha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de"
+  },
+  "docker": {
+    "version": "29.9.0",
+    "url": "https://download.docker.com/linux/static/stable/x86_64/docker-29.9.0.tgz",
+    "sha256": "33e1ab8b63d14bca449f7a3d30d7f6aa669daa544e60a86b17fec87f61afe2b4"
+  },
+  "containers": {
+    "postgres": "supabase/postgres:17.6.1.136@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00",
+    "auth": "supabase/gotrue:v2.189.0@sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf",
+    "rest": "postgrest/postgrest:v14.12@sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c"
+  },
+  "llama_cpp": {
+    "tag": "b11429",
+    "commit": "d81235049384534c167caea52b85a694f6103d14",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-x64.tar.gz",
+    "sha256": "f6d25dde8f51133143d1453da4fd5f73b145127177612a283bf7995957af3392",
+    "deployed_launcher_sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d"
+  },
+  "model": {
+    "repository": "unsloth/gemma-4-12B-it-qat-GGUF",
+    "revision": "980b060c40a8539ac159e0501a3e0f66a6365af3",
+    "filename": "gemma-4-12B-it-qat-UD-Q4_K_XL.gguf",
+    "url": "https://huggingface.co/unsloth/gemma-4-12B-it-qat-GGUF/resolve/980b060c40a8539ac159e0501a3e0f66a6365af3/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf",
+    "bytes": 6716356800,
+    "sha256": "90fd44e29e0d7cffeb0fd00dc73cfdab9ed0b0e95306ecf7821ea634c940c370",
+    "served_alias": "gemma-4-12b-qat",
+    "source": "https://huggingface.co/unsloth/gemma-4-12B-it-qat-GGUF/tree/980b060c40a8539ac159e0501a3e0f66a6365af3"
+  },
+  "python": "3.12.3",
+  "python_direct_packages": "hybrid/requirements.txt",
+  "javascript_packages": "frontend/package-lock.json and backend/package-lock.json",
+  "cloudflared": "2026.10.0; separately operated tunnel, no credentials distributed"
+}

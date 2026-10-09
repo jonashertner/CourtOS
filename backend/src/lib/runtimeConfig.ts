@@ -1,3 +1,4 @@
+import { courtosPilotModel } from "./courtosPilot";
 function required(env: NodeJS.ProcessEnv, names: readonly string[]): string {
   for (const name of names) {
     const value = env[name]?.trim();
@@ -199,6 +200,7 @@ export function authHandoffEncryptionSecret(
 export function validateRuntimeConfiguration(
   env: NodeJS.ProcessEnv = process.env,
 ): void {
+  courtosPilotModel(env);
   const errors: string[] = [];
   const session = supabaseSessionConfiguration(env);
 

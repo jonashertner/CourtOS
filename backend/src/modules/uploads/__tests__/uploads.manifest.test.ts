@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   MAX_UPLOAD_SIZE_BYTES,
@@ -7,6 +7,8 @@ import {
   parseUploadSessionRequest,
   UploadSessionValidationError,
 } from "../uploads.manifest";
+
+afterEach(() => vi.unstubAllEnvs());
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const SESSION_ID = "22222222-2222-4222-8222-222222222222";
@@ -175,5 +177,33 @@ describe("parseUploadSessionRequest", () => {
         ),
       ).toThrow("filename is invalid");
     }
+  });
+});
+
+
+describe("CourtOS pilot upload limits", () => {
+  it("accepts the exact 5 MiB and five-file boundary, rejecting either excess", () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    expect(parseUploadSessionRequest(documentRequest(5, 5 * 1024 * 1024), USER_ID).files).toHaveLength(5);
+    expect(() => parseUploadSessionRequest(documentRequest(6), USER_ID)).toThrow("at most 5 files");
+    expect(() => parseUploadSessionRequest(documentRequest(1, 5 * 1024 * 1024 + 1), USER_ID)).toThrow("bytes or smaller");
+  });
+
+  it("also limits Word replacements and legacy workflow attachments", () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    for (const body of [
+      { purpose: "document_version_replace", destination: { document_id: USER_ID, version_id: SESSION_ID }, files: documentRequest(1, 5242881).files },
+      { purpose: "workflow_reference_create", destination: { workflow_id: USER_ID }, files: documentRequest(6).files },
+    ]) expect(() => parseUploadSessionRequest(body, USER_ID)).toThrow(UploadSessionValidationError);
+  });
+
+  it("uses operator limits, fails closed on invalid limits, and ignores them outside pilot mode", () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    vi.stubEnv("COURTOS_UPLOAD_MAX_FILE_BYTES", "100");
+    expect(() => parseUploadSessionRequest(documentRequest(1, 101), USER_ID)).toThrow("100 bytes");
+    vi.stubEnv("COURTOS_UPLOAD_USER_TOTAL_BYTES", "-1");
+    expect(() => parseUploadSessionRequest(documentRequest(1, 1), USER_ID)).toThrow("COURTOS_UPLOAD_USER_TOTAL_BYTES");
+    vi.stubEnv("COURTOS_PILOT_MODE", "false");
+    expect(parseUploadSessionRequest(documentRequest(50), USER_ID).files).toHaveLength(50);
   });
 });

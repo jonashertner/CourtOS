@@ -1,117 +1,29 @@
-# Mike
+# CourtOS
 
-![Mike](docs/assets/link-image.jpg)
+A practical workspace for judges and judicial clerks: understand a file, locate contradictions, identify the questions that matter, and prepare a draft that can be checked against its sources.
 
-Mike (MikeOSS) is an open-source legal AI platform for document review,
-drafting, and legal research.
+CourtOS is a fork of [MikeOSS](https://github.com/open-legal-products/mike), developed by Jonas Hertner in connection with [OpenCaseLaw](https://opencaselaw.ch). Mike's contributors built the underlying document workspace. CourtOS adds a Swiss judicial pilot profile and a deliberately separate hybrid analysis workflow. See the [upstream README](README.upstream.md) for the original project's features and documentation.
 
-It combines a Next.js frontend, an Express backend, Supabase Auth/Postgres,
-and Cloudflare R2-compatible object storage.
+## Current pilot
 
-Website: [mikeoss.com](https://mikeoss.com)
+The pilot runs on the operator's Hetzner VPS in Germany, reached through Cloudflare Access email-code authentication. Explicit self-registration mode creates a personal account on first entry; an installation remains closed by default unless its operator enables that mode. Use **synthetic test documents only**. A model running on that VPS is not a model running inside a court's network. Cloudflare handles the browser traffic, including documents and results displayed in the workspace.
 
-![Mike assistant home screen](docs/assets/mike-home.png)
+- Personal email-code access, checked again by the application; separate application sessions.
+- Document workspace, projects, source-linked drafting and three initial court workflows.
+- A fixed local model for ordinary assistant work; titles are generated deterministically and automatic model-based memory curation is disabled. User-supplied provider keys and external connectors are disabled in the pilot profile.
+- A guided synthetic case in `hybrid/`: local chronology, review of an exact public-source request, optional frontier analysis, and local synthesis. This is a separate application on the same origin, with separate storage. The ordinary workspace does not send its documents to that external-analysis channel.
+- A concise German, French and Italian guide accompanies the pilot at `/guide/`.
 
-## Features
+The guided case uses a small reviewed source catalog. It is not yet a general OpenCaseLaw search integration. Outputs are drafts for human review; this pilot does not establish legal accuracy, institutional approval or readiness for confidential case files.
 
-- Chat with legal documents and open matters
-- Review documents and apply suggested edits
-- Run reusable assistant and tabular-review workflows
-- Organize projects, folders, and a document library
-- Verify citations and research US case law with CourtListener
-- Work from Microsoft Word with the beta task-pane add-in
-- Run supported language models locally through Ollama
+## Source and licence
 
-## Quick start
+CourtOS retains Mike's **AGPL-3.0-only** licence, notices and attribution. See [LICENSE](LICENSE). This repository is the source offer for the modified network application; operators must make the corresponding source of the version they actually run available to its users. This concerns software source, not users' case files.
 
-The included Docker Compose stack runs Mike, Supabase, RustFS object storage,
-and local email capture without requiring managed infrastructure.
+The project is not an endorsement by a court or authority. The pilot comes first; institutional deployment decisions will follow measured user experience and the institution's own operational requirements.
 
-1. Copy the local environment templates:
+## Development
 
-   ```bash
-   cp .env.example .env
-   cp backend/.env.example backend/.env
-   ```
+Start with [AGENTS.md](AGENTS.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [deployment documentation](docs/deployment.md). Existing Mike development commands remain available. CourtOS's model, connector and managed-access restrictions are opt-in through the documented runtime and frontend build settings. CourtOS branding and navigation remain part of this fork when those restrictions are disabled.
 
-2. In `backend/.env`, set `DOWNLOAD_SIGNING_SECRET` and
-   `USER_API_KEYS_ENCRYPTION_SECRET` to separate values generated with:
-
-   ```bash
-   openssl rand -hex 32
-   ```
-
-3. Add an Anthropic, Gemini, or OpenAI API key to `backend/.env`, unless you
-   plan to use Ollama exclusively.
-
-4. Start the stack:
-
-   ```bash
-   docker compose up --build
-   ```
-
-5. Open [http://localhost:3000](http://localhost:3000) and create an account.
-
-The bundled credentials and infrastructure are intended for local development
-only. See [Local development](docs/local-development.md) for service endpoints,
-authentication behavior, Ollama setup, and first-run guidance.
-
-### Telemetry
-
-Mike sends scrubbed error reports (no document content, user identities, or
-request data) to the project's Sentry by default. Set `SENTRY_DISABLED=true` to
-opt out, or set `SENTRY_DSN` to use your own. See the
-[observability guide](docs/observability.md) for the exact policy, per-runtime
-variables, and the [Sentry data audit](docs/sentry-data-audit.md).
-
-## Repository
-
-| Path | Purpose |
-| --- | --- |
-| `frontend/` | Next.js web application |
-| `backend/` | Express API, document processing, and database access |
-| `word-addin/` | Microsoft Word task-pane add-in (beta) |
-| `backend/schema.sql` | Complete schema for fresh databases |
-| `backend/migrations/` | Dated migrations for existing deployments |
-| `docker-compose.yml` | Local application and infrastructure stack |
-| `docs/` | Development, deployment, testing, and feature guides |
-
-## Documentation
-
-- [Documentation index](docs/README.md)
-- [Local development](docs/local-development.md)
-- [Manual and production deployment](docs/deployment.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [MCP connectors](docs/connectors.md)
-- [Google Drive integration](docs/google-drive.md)
-- [CourtListener integration](docs/courtlistener.md)
-- [Microsoft Word add-in](word-addin/README.md)
-- [Tamper-evident exports](docs/tamper-evident-exports.md)
-- [Safe local testing](docs/safe-local-testing.md)
-- [Preset contract templates and publisher credits](docs/preset-templates.md)
-- [End-to-end testing and CI](docs/e2e-ci.md)
-- [Contributing](CONTRIBUTING.md)
-- [Open-source credits](CREDITS.md)
-- [Security policy](SECURITY.md)
-
-## System workflows
-
-Mike's system assistant and tabular-review workflows are maintained in the
-[`Open-Legal-Products/mike-workflows`](https://github.com/Open-Legal-Products/mike-workflows)
-repository. See [Contributing](CONTRIBUTING.md#system-workflows) for how they are
-packaged and synchronized with this application.
-
-## License
-
-Mike is available under the [GNU Affero General Public License v3.0](LICENSE).
-Bundled [public contract templates](docs/preset-templates.md#maintaining-the-catalog)
-retain their publishers' separate licenses and notices.
-
-## Gmail and Google Calendar
-
-Gmail and Calendar are separate, optional connections in **Settings → Connectors**.
-Google SSO never connects them automatically. Choose any permitted Google account
-for each service, including a different account from your Mike login. Read access
-is the default; write permissions require a separate consent flow, and every
-send/edit/delete proposal requires explicit approval of its exact contents.
-See [setup, technical approach, limits, and manual acceptance tests](docs/google-workspace.md).
+See [CourtOS pilot operations](ops/courtos/README.md) for the additional boundaries and configuration. The upstream development Compose file contains demonstration credentials and must not be exposed as a production configuration.

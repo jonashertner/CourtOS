@@ -86,6 +86,11 @@ export async function login(email: string, password: string) {
     });
 }
 
+/** The server alone derives identity from a verified Cloudflare Access JWT. */
+export async function loginWithCloudflare() {
+    return authRequest<{ user: AuthUser }>("/cloudflare", { method: "POST" });
+}
+
 export async function signup(email: string, password: string, next: string) {
     return authRequest<{
         user: AuthUser;

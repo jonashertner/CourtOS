@@ -9,6 +9,14 @@ const state = vi.hoisted(() => ({
         onboardingComplete: false,
     } as { displayName: string | null; onboardingComplete: boolean },
     replace: vi.fn(),
+    pilot: false,
+    cloudflare: false,
+}));
+
+vi.mock("@/app/lib/courtos", () => ({
+    COURTOS_HOME: "/pilot",
+    get COURTOS_PILOT_MODE() { return state.pilot; },
+    get COURTOS_CLOUDFLARE_AUTH() { return state.cloudflare; },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -36,6 +44,23 @@ describe("OnboardingGate", () => {
             onboardingComplete: false,
         };
         state.replace.mockReset();
+        state.pilot = false;
+        state.cloudflare = false;
+    });
+
+    it("lets a managed pilot user enter without creating another account profile", () => {
+        state.pilot = true;
+        render(<OnboardingGate><div>Pilot workspace</div></OnboardingGate>);
+        expect(screen.getByText("Pilot workspace")).toBeVisible();
+        expect(state.replace).not.toHaveBeenCalled();
+    });
+
+    it("routes password signup back to Access when identity is managed", async () => {
+        state.cloudflare = true;
+        state.pathname = "/signup";
+        render(<OnboardingGate><div>Password signup</div></OnboardingGate>);
+        expect(screen.queryByText("Password signup")).not.toBeInTheDocument();
+        await waitFor(() => expect(state.replace).toHaveBeenCalledWith("/login"));
     });
 
     it("keeps incomplete users out of the main app", async () => {

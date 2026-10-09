@@ -12,6 +12,7 @@
 
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { courtosUploadPolicy } from "./uploads.policy";
 
 import {
   ALLOWED_DOCUMENT_TYPES,
@@ -178,6 +179,20 @@ export function parseUploadSessionRequest(
       isFileTooLarge
         ? { status: 413, code: "upload_file_too_large" }
         : undefined,
+    );
+  }
+
+  const pilot = courtosUploadPolicy();
+  if (pilot && parsed.data.files.length > pilot.maxBatchFiles) {
+    throw new UploadSessionValidationError(
+      `The CourtOS pilot accepts at most ${pilot.maxBatchFiles} files per upload.`,
+      { code: "upload_file_count_limit_exceeded" },
+    );
+  }
+  if (pilot && parsed.data.files.some((file) => file.size_bytes > pilot.maxFileBytes)) {
+    throw new UploadSessionValidationError(
+      `Each pilot upload must be ${pilot.maxFileBytes} bytes or smaller.`,
+      { status: 413, code: "upload_file_too_large" },
     );
   }
 

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { COURTOS_CLOUDFLARE_AUTH } from "@/app/lib/courtos";
+import { CourtOSAccessGate } from "@/app/components/courtos/CourtOSAccessGate";
 import { AuthApiError, login, signup } from "@/app/lib/authApi";
 import { completeUserOnboarding, getUserProfile } from "@/app/lib/mikeApi";
 import { InputUI } from "@/shared/ui/InputUI";
@@ -75,6 +77,10 @@ declare global {
 }
 
 export default function LoginPage() {
+    return COURTOS_CLOUDFLARE_AUTH ? <CourtOSAccessGate /> : <PasswordLoginPage />;
+}
+
+function PasswordLoginPage() {
     const router = useRouter();
     const {
         isAuthenticated,

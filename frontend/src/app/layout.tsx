@@ -5,39 +5,27 @@ import "./globals.css";
 import { Providers } from "@/app/components/providers";
 
 export const metadata: Metadata = {
-    metadataBase: new URL("https://app.mikeoss.com"),
-    title: "Mike - Legal AI Platform",
+    title: "CourtOS · Rechtsarbeit mit Quellen",
     description:
-        "AI-powered legal document analysis and contract review platform.",
+        "Ein offener Arbeitsraum für Akten, Recherche und Entwürfe mit OpenCaseLaw. Pilot für Gerichte und Behörden.",
+    robots: { index: false, follow: false },
     icons: {
         icon: [
             { url: "/icon.svg", type: "image/svg+xml" },
-            { url: "/favicon.ico" },
         ],
-        apple: "/apple-touch-icon.png",
     },
     openGraph: {
         type: "website",
-        url: "https://app.mikeoss.com",
-        siteName: "Mike",
-        title: "Mike - Legal AI Platform",
+        siteName: "CourtOS",
+        title: "CourtOS · Rechtsarbeit mit Quellen",
         description:
-            "AI-powered legal document analysis and contract review platform.",
-        images: [
-            {
-                url: "/link-image.jpg",
-                width: 1200,
-                height: 651,
-                alt: "Mike",
-            },
-        ],
+            "Ein offener Arbeitsraum für Gerichte und Behörden mit OpenCaseLaw.",
     },
     twitter: {
-        card: "summary_large_image",
-        title: "Mike - Legal AI Platform",
+        card: "summary",
+        title: "CourtOS · Rechtsarbeit mit Quellen",
         description:
-            "AI-powered legal document analysis and contract review platform.",
-        images: ["/link-image.jpg"],
+            "Ein offener Arbeitsraum für Gerichte und Behörden mit OpenCaseLaw.",
     },
 };
 
@@ -47,7 +35,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="de-CH">
             <body
                 className="font-sans antialiased"
             >

@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../courtosPilot";
 import type {
   ConnectorApprovalItem,
   GoogleWorkspaceStatus,
@@ -64,6 +65,7 @@ export async function buildGoogleWorkspaceTools(
   userId: string,
   db: Db,
 ): Promise<unknown[]> {
+    if (courtosPilotEnabled()) return [];
   const tools: unknown[] = [];
   for (const provider of Object.keys(GOOGLE_PROVIDERS) as GoogleProvider[]) {
     try {

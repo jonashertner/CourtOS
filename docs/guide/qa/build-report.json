@@ -1,0 +1,60 @@
+{
+  "format": "B5 (176 x 250 mm)",
+  "languages": {
+    "de": {
+      "pages": 7,
+      "lowest_content_y": [
+        88.46,
+        120.16,
+        153.96,
+        165.66,
+        129.16,
+        47.96,
+        89.16
+      ],
+      "sha256": "c7acaccfda665c82694062c2787dbf2d040249f125e7e6a221c2cefa1383ca60",
+      "bytes": 54058,
+      "metadata": null,
+      "xmp_present": false
+    },
+    "fr": {
+      "pages": 7,
+      "lowest_content_y": [
+        92.76,
+        135.16,
+        107.96,
+        165.66,
+        114.16,
+        47.96,
+        76.16
+      ],
+      "sha256": "4cf798b50bf39a48ac9f72a488f61751e6e9529cce5bf8dc874a29ccede64505",
+      "bytes": 54776,
+      "metadata": null,
+      "xmp_present": false
+    },
+    "it": {
+      "pages": 7,
+      "lowest_content_y": [
+        106.76,
+        150.16,
+        140.26,
+        180.66,
+        114.16,
+        47.96,
+        106.16
+      ],
+      "sha256": "d2376e4d0c71f483f9696da357f15661964675267337cad36dbf6306c30482f0",
+      "bytes": 53607,
+      "metadata": null,
+      "xmp_present": false
+    }
+  },
+  "metadata_policy": "No PDF Info dictionary or XMP; HTML title and author metadata blank.",
+  "html_checks": {
+    "languages": 3,
+    "links": "all internal targets and anchors verified",
+    "remote_assets": false,
+    "scripts": false
+  }
+}

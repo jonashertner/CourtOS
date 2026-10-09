@@ -1,3 +1,4 @@
+import { assertCourtosExternalAccess } from "./courtosPilot";
 import { downloadFile, listFiles } from "./storage";
 import { devLog } from "./log";
 import type { Db } from "./supabase";
@@ -61,6 +62,7 @@ async function courtlistenerFetch<T>(
     init?: RequestInit,
     apiToken?: string | null,
 ): Promise<T> {
+    assertCourtosExternalAccess();
     const url = pathOrUrl.startsWith("http")
         ? pathOrUrl
         : `${COURTLISTENER_BASE}${pathOrUrl}`;

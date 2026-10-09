@@ -73,16 +73,16 @@ describe("AppSidebar account dropdown", () => {
     const user = userEvent.setup();
     render(<AppSidebar isOpen onToggle={vi.fn()} />);
 
-    await user.click(screen.getByText("Alice").closest("button")!);
+    await user.click(screen.getByRole("button", { name: "Kontomenü" }));
 
-    expect(screen.getByRole("menuitem", { name: "Settings" })).toBeVisible();
+    expect(screen.getByRole("menuitem", { name: "Einstellungen" })).toBeVisible();
     expect(screen.queryByRole("menuitem", { name: "Memory" })).toBeNull();
   });
 
   it("shows the IDE navigation directly below Assistant", () => {
     render(<AppSidebar isOpen onToggle={vi.fn()} />);
 
-    const assistant = screen.getByRole("button", { name: "Assistant" });
+    const assistant = screen.getByRole("button", { name: "Assistent" });
     const ide = screen.getByRole("button", { name: "IDE" });
 
     expect(assistant.parentElement?.nextElementSibling).toContainElement(ide);
@@ -93,12 +93,12 @@ describe("AppSidebar account dropdown", () => {
     const user = userEvent.setup();
     render(<AppSidebar isOpen onToggle={vi.fn()} />);
 
-    await user.click(screen.getByText("Alice").closest("button")!);
-    await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
+    await user.click(screen.getByRole("button", { name: "Kontomenü" }));
+    await user.click(screen.getByRole("menuitem", { name: "Abmelden" }));
 
-    expect(await screen.findByText("Sign out failed")).toBeInTheDocument();
+    expect(await screen.findByText("Abmelden fehlgeschlagen")).toBeInTheDocument();
     expect(
-      screen.getByText("Unable to sign out. Please try again."),
+      screen.getByText("Die Abmeldung war nicht möglich. Bitte versuchen Sie es erneut."),
     ).toBeInTheDocument();
   });
 
@@ -204,8 +204,8 @@ describe("AppSidebar account dropdown", () => {
   });
 
   it.each([
-    { isOpen: true, toggleName: "Close sidebar" },
-    { isOpen: false, toggleName: "Open sidebar" },
+    { isOpen: true, toggleName: "Navigation schliessen" },
+    { isOpen: false, toggleName: "Navigation öffnen" },
   ])(
     "keeps the header row at a fixed height when isOpen is $isOpen",
     ({ isOpen, toggleName }) => {
@@ -218,12 +218,12 @@ describe("AppSidebar account dropdown", () => {
   );
 
   it.each([true, false])(
-    "keeps the account button at a fixed height when isOpen is %s",
+    "allows the account button to fit an identity at a minimum height when isOpen is %s",
     (isOpen) => {
       render(<AppSidebar isOpen={isOpen} onToggle={vi.fn()} />);
 
-      expect(screen.getByRole("button", { name: "Account menu" })).toHaveClass(
-        "h-9",
+      expect(screen.getByRole("button", { name: "Kontomenü" })).toHaveClass(
+        "min-h-9",
         "shrink-0",
       );
     },
@@ -275,8 +275,8 @@ describe("AppSidebar account dropdown", () => {
 
     rerender(<AppSidebar isOpen onToggle={vi.fn()} />);
 
-    expect(screen.getByText("Assistant")).toHaveClass("sidebar-fade-in-2");
-    expect(screen.getByText("Recent Projects").closest("button")).toHaveClass(
+    expect(screen.getByText("Assistent")).toHaveClass("sidebar-fade-in-2");
+    expect(screen.getByText("Letzte Projekte").closest("button")).toHaveClass(
       "sidebar-fade-in",
     );
   });
@@ -284,6 +284,6 @@ describe("AppSidebar account dropdown", () => {
   it("does not fade contents of a sidebar that is open on first render", () => {
     render(<AppSidebar isOpen onToggle={vi.fn()} />);
 
-    expect(screen.getByText("Assistant")).not.toHaveClass("sidebar-fade-in-2");
+    expect(screen.getByText("Assistent")).not.toHaveClass("sidebar-fade-in-2");
   });
 });

@@ -88,6 +88,29 @@ describe("ChatInput canSend gating", () => {
         mockProfile();
     });
 
+    it("prepares a CourtOS task without sending it and preserves an existing draft", () => {
+        const ref = createRef<ChatInputHandle>();
+        const onSubmit = vi.fn();
+        render(<ChatInput ref={ref} onSubmit={onSubmit} onCancel={vi.fn()} isLoading={false} />);
+        let prepared: boolean | undefined;
+        act(() => { prepared = ref.current?.prepareDraft?.("Eine belegte Chronologie erstellen."); });
+        expect(prepared).toBe(true);
+        expect(screen.getByRole("combobox")).toHaveValue("Eine belegte Chronologie erstellen.");
+        act(() => { prepared = ref.current?.prepareDraft?.("Einen anderen Auftrag einsetzen."); });
+        expect(prepared).toBe(false);
+        expect(screen.getByRole("combobox")).toHaveValue("Eine belegte Chronologie erstellen.");
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it("does not inject a CourtOS task into a read-only composer", () => {
+        const ref = createRef<ChatInputHandle>();
+        render(<ChatInput ref={ref} onSubmit={vi.fn()} onCancel={vi.fn()} isLoading={false} canSend={false} />);
+        let prepared: boolean | undefined;
+        act(() => { prepared = ref.current?.prepareDraft?.("Eine Chronologie erstellen."); });
+        expect(prepared).toBe(false);
+        expect(screen.getByRole("combobox")).toHaveValue("");
+    });
+
     it("opens documents from the dropdown and workflows from its own button", async () => {
         const user = userEvent.setup();
         renderInput(true);

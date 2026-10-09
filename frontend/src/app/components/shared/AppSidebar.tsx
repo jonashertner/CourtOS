@@ -13,13 +13,14 @@ import {
   ChevronsUpDown,
   ChevronDown,
   Loader2,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useUserProfile } from "@/app/contexts/UserProfileContext";
 import { useChatHistoryContext } from "@/app/contexts/ChatHistoryContext";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { MikeIcon } from "@/shared/ui/MikeIconUI";
+import { COURTOS_CLOUDFLARE_AUTH, COURTOS_GUIDE_PATH, COURTOS_HOME, COURTOS_HYBRID_PATH, COURTOS_PILOT_MODE, COURTOS_SOURCE_URL } from "@/app/lib/courtos";
 import { SidebarChatItem } from "@/app/components/shared/SidebarChatItem";
 import {
     Dropdown,
@@ -52,16 +53,17 @@ import {
 } from "@/app/components/ui/liquid-surface";
 
 const NAV_ITEMS = [
-    { href: "/assistant", label: "Assistant", icon: ChatSkeuoIcon },
+    { href: COURTOS_HOME, label: "Einstieg", icon: BookOpen },
+    { href: "/assistant", label: "Assistent", icon: ChatSkeuoIcon },
     { href: "/ide", label: "IDE", icon: IdeSkeuoIcon },
-    { href: "/projects", label: "Projects", icon: FolderSkeuoIcon },
-    { href: "/library", label: "Library", icon: LibrarySkeuoIcon },
+    { href: "/projects", label: "Projekte", icon: FolderSkeuoIcon },
+    { href: "/library", label: "Bibliothek", icon: LibrarySkeuoIcon },
     {
         href: "/tabular-reviews",
-        label: "Tabular Review",
+        label: "Tabellenprüfung",
         icon: TabularReviewSkeuoIcon,
     },
-    { href: "/workflows", label: "Workflows", icon: WorkflowSkeuoIcon },
+    { href: "/workflows", label: "Arbeitsabläufe", icon: WorkflowSkeuoIcon },
 ];
 
 const RECENT_PROJECT_PAGE_SIZE = 10;
@@ -330,18 +332,15 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     {isOpen && (
                         <div className="px-1.5">
                             <Link
-                                href="/assistant"
+                                href={COURTOS_HOME}
                                 className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                             >
-                                <span className="flex shrink-0 px-px">
-                                    <MikeIcon size={18} />
-                                </span>
                                 <span
                                     className={`text-xl font-light font-serif ${
                                         shouldAnimate ? "sidebar-fade-in" : ""
                                     }`}
                                 >
-                                    Mike
+                                    CourtOS
                                 </span>
                             </Link>
                         </div>
@@ -354,20 +353,20 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                         }}
                         onPointerEnter={() => setToggleHoverSuppressed(false)}
                         onPointerLeave={() => setToggleHoverSuppressed(false)}
-                        aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
+                        aria-label={isOpen ? "Navigation schliessen" : "Navigation öffnen"}
                         className={cn(
                             "group flex h-8 w-8 shrink-0 items-center justify-center transition-[border-radius] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/40",
                             isOpen ? "rounded-md" : "rounded-[16px]",
                             !toggleHoverSuppressed && LIQUID_GLASS_HOVER_CLASS,
                         )}
-                        title={isOpen ? "Close sidebar" : "Open sidebar"}
+                        title={isOpen ? "Navigation schliessen" : "Navigation öffnen"}
                     >
                         {isOpen ? (
                             <PanelLeft aria-hidden="true" className="h-4 w-4 shrink-0" />
                         ) : (
                             <span aria-hidden="true" className="relative flex h-[18px] w-[18px] items-center justify-center">
                                 <span className="absolute inset-0 flex items-center justify-center group-hover:invisible group-focus-visible:invisible">
-                                    <MikeIcon size={18} />
+                                    <span className="font-serif text-xl">C</span>
                                 </span>
                                 <PanelLeft className="invisible h-4 w-4 shrink-0 group-hover:visible group-focus-visible:visible" />
                             </span>
@@ -377,7 +376,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
                 {/* Nav items */}
                 <div className="pt-1.5">
-                    {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+                    {NAV_ITEMS.filter((item) => !COURTOS_PILOT_MODE || item.href !== "/ide").map(({ href, label, icon: Icon }) => {
                         const isActive =
                             href === "/assistant"
                                 ? pathname === href
@@ -388,10 +387,13 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                         return (
                             <div key={href} className="px-1.5 py-0.5">
                                 <button
+                                    type="button"
+                                    aria-label={!isOpen ? label : undefined}
+                                    aria-current={isActive ? "page" : undefined}
                                     onClick={() => router.push(href)}
                                     title={!isOpen ? label : ""}
                                     className={cn(
-                                        "w-full h-8 flex items-center gap-2 px-2 py-2 rounded-md transition-colors text-left",
+                                        "w-full h-8 flex items-center gap-2 px-2 py-2 rounded-md transition-colors text-left focus-visible:outline-2 focus-visible:outline-ring",
                                         isActive
                                             ? `${LIQUID_GLASS_SELECTED_CLASS} text-gray-900`
                                             : `text-gray-700 ${LIQUID_GLASS_HOVER_CLASS}`,
@@ -432,7 +434,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                     shouldAnimate ? "sidebar-fade-in" : ""
                                 }`}
                             >
-                                <span>Recent Projects</span>
+                                <span>Letzte Projekte</span>
                                 <ChevronDown
                                     className={`h-3.5 w-3.5 transition-transform ${
                                         projectsCollapsed ? "-rotate-90" : ""
@@ -476,7 +478,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                                     : ""
                                             }`}
                                         >
-                                            No projects yet
+                                            Noch keine Projekte
                                         </div>
                                     ) : (
                                         <div
@@ -535,7 +537,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                     shouldAnimate ? "sidebar-fade-in" : ""
                                 }`}
                             >
-                                <span>Assistant History</span>
+                                <span>Gespräche</span>
                                 <ChevronDown
                                     className={`h-3.5 w-3.5 transition-transform ${
                                         historyCollapsed ? "-rotate-90" : ""
@@ -574,7 +576,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                                 : ""
                                         }`}
                                     >
-                                        No chats yet
+                                        Noch keine Gespräche
                                     </div>
                                 ) : (
                                     <>
@@ -629,6 +631,13 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     </div>
                 )}
 
+                {isOpen && (
+                    <div className="shrink-0 space-y-2 px-3.5 pb-3 pt-3 text-xs">
+                        <a href={COURTOS_HYBRID_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Geführter Hybridversuch</a>
+                        <a href={COURTOS_GUIDE_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Handbuch</a>
+                        <a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="block text-muted-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Quellcode · AGPL-3.0</a>
+                    </div>
+                )}
                 {/* User Profile */}
                 <div className="mt-auto p-1">
                     {user && (
@@ -639,9 +648,9 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                           <DropdownTrigger asChild>
                             <button
                                 type="button"
-                                aria-label="Account menu"
+                                aria-label="Kontomenü"
                                 className={cn(
-                                    "flex h-9 w-full shrink-0 items-center px-1.5 outline-none [transition:border-radius_300ms_cubic-bezier(0.4,0,0.2,1),background-color_150ms,color_150ms] focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2",
+                                    "flex min-h-9 w-full shrink-0 items-center px-1.5 py-2 outline-none [transition:border-radius_300ms_cubic-bezier(0.4,0,0.2,1),background-color_150ms,color_150ms] focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2",
                                     isOpen ? "rounded-xl" : "rounded-[18px]",
                                     !isOpen ? "hidden md:flex" : "",
                                     pathname.startsWith("/settings") ||
@@ -665,6 +674,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                     >
                                         <span className="min-w-0 break-words text-sm font-medium text-gray-900 leading-tight">
                                             {getDisplayName()}
+                                            <span className="mt-1 block text-xs font-normal text-muted-foreground [overflow-wrap:anywhere]">{user.email}</span>
                                         </span>
                                         <ChevronsUpDown className="h-4 w-4 flex-shrink-0 text-gray-400" />
                                     </div>
@@ -687,26 +697,29 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                   className="h-8 gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:text-gray-700 focus:text-gray-700 data-[selected=true]:text-gray-900 data-[selected=true]:hover:text-gray-900 data-[selected=true]:focus:text-gray-900"
                               >
                                   <HistorySkeuoIcon className={cn("h-4 w-4", pathname === "/history" ? "text-gray-900" : "text-black")} />
-                                  History
+                                  Verlauf
                               </DropdownItem>
                               <DropdownItem
                                   onSelect={() => router.push("/settings")}
                                   className="h-8 gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:text-gray-700 focus:text-gray-700 data-[selected=true]:text-gray-900 data-[selected=true]:hover:text-gray-900 data-[selected=true]:focus:text-gray-900"
                               >
                                   <SettingsSkeuoIcon className="h-4 w-4 text-black" />
-                                  Settings
+                                  Einstellungen
                               </DropdownItem>
                               <DropdownItem
                                   onSelect={() => router.push("/organizations")}
                                   className="h-8 gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:text-gray-700 focus:text-gray-700 data-[selected=true]:text-gray-900 data-[selected=true]:hover:text-gray-900 data-[selected=true]:focus:text-gray-900"
                               >
                                   <OrganizationSkeuoIcon className="h-4 w-4 text-black" />
-                                  Organizations
+                                  Organisationen
                               </DropdownItem>
                               <DropdownItem
                                   onSelect={() => {
                                       void signOut()
-                                          .then(() => router.push("/"))
+                                          .then(() => {
+                                              if (COURTOS_CLOUDFLARE_AUTH) window.location.assign(new URL("/cdn-cgi/access/logout", window.location.origin).href);
+                                              else router.push("/");
+                                          })
                                           .catch(() =>
                                               setSignOutWarningOpen(true),
                                           );
@@ -714,7 +727,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                   className="h-8 gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:text-gray-700 focus:text-gray-700 data-[selected=true]:text-gray-900 data-[selected=true]:hover:text-gray-900 data-[selected=true]:focus:text-gray-900"
                               >
                                   <SignOutSkeuoIcon className="h-4 w-4 text-black" />
-                                  Sign out
+                                  Abmelden
                               </DropdownItem>
                           </DropdownContent>
                         </Dropdown>
@@ -723,8 +736,8 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             </div>
             <WarningPopup
                 open={signOutWarningOpen}
-                title="Sign out failed"
-                message="Unable to sign out. Please try again."
+                title="Abmelden fehlgeschlagen"
+                message="Die Abmeldung war nicht möglich. Bitte versuchen Sie es erneut."
                 onClose={() => setSignOutWarningOpen(false)}
             />
         </>

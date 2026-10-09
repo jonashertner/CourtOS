@@ -1,3 +1,4 @@
+import { courtosPilotEnabled } from "../courtosPilot";
 import { randomUUID } from "node:crypto";
 import { envInt } from "../runtimeConfig";
 import type { Db } from "../dbq/types";
@@ -44,7 +45,7 @@ export async function beginMemoryConversationTurn(args: {
   conversationId: string;
   actorUserId: string;
 }): Promise<MemoryConversationTurn | null> {
-  if (process.env.DB_JOBS_ENABLED === "false") return null;
+  if (courtosPilotEnabled() || process.env.DB_JOBS_ENABLED === "false") return null;
   const activityId = randomUUID();
   try {
     const { error } = await args.db.rpc("begin_memory_conversation_turn", {
@@ -106,7 +107,7 @@ export async function scheduleMemoryConsolidation(args: {
 }): Promise<ScheduledMemoryConsolidation | null> {
   // DB_JOBS_ENABLED=false is an operational escape hatch. Do not mark files
   // scheduled when no worker can ever consume the outbox row.
-  if (process.env.DB_JOBS_ENABLED === "false") return null;
+  if (courtosPilotEnabled() || process.env.DB_JOBS_ENABLED === "false") return null;
   if (!args.turn) return null;
   try {
     const { data, error } = await args.db.rpc("schedule_memory_consolidation", {

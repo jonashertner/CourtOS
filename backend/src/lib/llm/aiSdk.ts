@@ -1,3 +1,6 @@
+import { courtosQuotaFetchInit } from "../courtosQuota";
+import { UserFacingError } from "../userFacingError";
+import { courtosPilotEnabled, courtosPilotFetchInit, COURTOS_PILOT_CONTEXT_NOTICE } from "../courtosPilot";
 import { normalizeReasoningLevelForModel } from "./models";
 import type { LanguageModel, ToolSet } from "ai" with {
   "resolution-mode": "import",
@@ -38,6 +41,7 @@ export function maxOutputTokensFor(
   adapterDefault?: number,
 ): number | undefined {
   const value = Number(process.env.LLM_MAX_OUTPUT_TOKENS);
+  if (courtosPilotEnabled()) return Number.isSafeInteger(value) && value > 0 ? Math.min(value, 768) : 768;
   if (Number.isSafeInteger(value) && value > 0) return value;
   return provider === "opencode-go" ? 16_384 : adapterDefault;
 }
@@ -87,7 +91,13 @@ export async function aiSdkFetch(
   init?: RequestInit,
   baseFetch?: typeof fetch,
 ): Promise<Response> {
-  const response = await (baseFetch ?? fetch)(input, init);
+  const response = await (baseFetch ?? fetch)(input, courtosQuotaFetchInit(courtosPilotFetchInit(input, init)));
+  if (courtosPilotEnabled() && response.status === 400) {
+    const failure = await response.clone().text();
+    if (/context.{0,30}(?:exceed|size|length|window)|(?:exceed|too (?:long|large)).{0,50}context/i.test(failure)) {
+      throw new UserFacingError(COURTOS_PILOT_CONTEXT_NOTICE);
+    }
+  }
   if (
     !response.body ||
     !response.headers.get("content-type")?.includes("text/event-stream")
@@ -492,7 +502,7 @@ export async function streamAiSdk(
   let fullText = "";
   let iteration = 0;
   const openReasoningBlocks = new Set<string>();
-  const maxIterations = params.maxIterations ?? DEFAULT_MAX_ITERATIONS;
+  const maxIterations = courtosPilotEnabled() ? Math.min(params.maxIterations ?? 3, 3) : params.maxIterations ?? DEFAULT_MAX_ITERATIONS;
   let lastFinishReason: string | undefined;
 
   try {
@@ -629,12 +639,18 @@ export async function streamAiSdk(
     // a bare "Completed in N steps" with no answer and no error, which is
     // indistinguishable from the model having nothing to say. Name it instead.
     const notice = stopNotice(iteration, maxIterations, lastFinishReason);
-    if (notice) {
+    // In pilot chat, warnings are emitted as persistent native error events by
+    // the engine. Appending them as model text can hide them inside a partially
+    // generated CITATIONS block, falsely making a truncated answer look done.
+    if (notice && !courtosPilotEnabled()) {
       fullText += notice;
       params.callbacks?.onContentDelta?.(notice);
     }
     await rawStreamRecorder?.flush("completed");
-    return { fullText };
+    return courtosPilotEnabled()
+      ? { fullText, finishReason: lastFinishReason,
+          ...(notice ? { stopReason: lastFinishReason === "length" ? "output_limit" as const : "step_limit" as const } : {}) }
+      : { fullText };
   } catch (error) {
     internalAbort.abort();
     // Only model-provider failures are eligible for API-key/quota guidance.

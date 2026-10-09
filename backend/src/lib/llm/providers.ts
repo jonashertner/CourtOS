@@ -1,3 +1,4 @@
+import { assertCourtosPilotModel, courtosPilotEnabled } from "../courtosPilot";
 import {
   aiSdkFetch,
   completeAiSdkText,
@@ -493,6 +494,7 @@ async function createConfiguredAdapter(
   const client = createOpenAICompatible({
     name: configured.id,
     baseURL: configured.baseUrl,
+    ...(courtosPilotEnabled() ? { transformRequestBody: (body: Record<string, unknown>) => ({ ...body, max_tokens: Math.min(typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : 768, 768), chat_template_kwargs: { enable_thinking: false } }) } : {}),
     // Omit Authorization entirely for endpoints declared without auth.
     ...(apiKey ? { apiKey } : {}),
     ...(configured.maxTokensField === "max_completion_tokens"
@@ -550,6 +552,7 @@ async function createProviderAdapter(
   model: string,
   apiKeys?: UserApiKeys,
 ): Promise<AiSdkAdapterConfig> {
+  assertCourtosPilotModel(model);
   const provider = providerForModel(model);
   if (apiKeys?.disabledProviders?.includes(provider)) {
     throw new UserFacingError("This model provider is turned off. Turn it on in Settings → Bring Your Own Keys or select another model.");

@@ -1,3 +1,4 @@
+import { courtosPilotEnabled, assertCourtosExternalAccess } from "../courtosPilot";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { ConnectorApprovalItem } from "@mike/contracts";
@@ -53,6 +54,7 @@ async function withMcpClient<T>(
     callback: (client: Client) => Promise<T>,
     db: Db = createServerSupabase(),
 ): Promise<T> {
+    assertCourtosExternalAccess();
     await validateRemoteMcpUrl(connector.server_url);
     const authConfig = decryptAuthConfig(connector);
     const authProvider =
@@ -440,6 +442,7 @@ export async function buildUserMcpTools(
     userId: string,
     db: Db = createServerSupabase(),
 ): Promise<OpenAIToolSchema[]> {
+    if (courtosPilotEnabled()) return [];
     const { data, error } = await db
         .from("user_mcp_connector_tools")
         .select(

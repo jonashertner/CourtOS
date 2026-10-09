@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MikeIcon } from "@/shared/ui/MikeIconUI";
+import { COURTOS_HOME } from "@/app/lib/courtos";
 
 interface SiteLogoProps {
     size?: "sm" | "md" | "lg" | "xl";
@@ -12,14 +12,9 @@ interface SiteLogoProps {
 export function SiteLogo({
     size = "md",
     className = "",
-    iconClassName = "",
     animate = false,
     asLink = false,
 }: SiteLogoProps) {
-    const landingHref =
-        process.env.NODE_ENV === "production"
-            ? "https://mikeoss.com"
-            : "http://localhost:3000";
     const sizeClasses = {
         sm: "text-xl",
         md: "text-2xl",
@@ -27,33 +22,21 @@ export function SiteLogo({
         xl: "text-6xl",
     };
 
-    const iconSizes = {
-        sm: 20,
-        md: 22,
-        lg: 30,
-        xl: 48,
-    };
-
     const logo = (
-        <h1
+        <span
             className={`flex items-center gap-1.5 ${sizeClasses[size]} font-light font-serif ${
                 animate ? "sidebar-fade-in" : ""
             } ${className}`}
         >
-            <span
-                className={`inline-flex shrink-0 items-center leading-none ${iconClassName}`}
-            >
-                <MikeIcon size={iconSizes[size]} />
-            </span>
-            <span>Mike</span>
-        </h1>
+            CourtOS
+        </span>
     );
 
     if (asLink) {
         return (
             <Link
-                href={landingHref}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
+                href={COURTOS_HOME}
+                className="cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-2 focus-visible:outline-ring"
             >
                 {logo}
             </Link>

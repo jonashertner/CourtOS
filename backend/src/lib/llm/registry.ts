@@ -1,3 +1,4 @@
+import { courtosPilotModel } from "../courtosPilot";
 import type {
   CommitteeModel,
   ConfiguredModel,
@@ -21,6 +22,8 @@ const EMPTY_CONFIG: ModelRegistryConfig = { models: [], committees: [] };
 let cached: ModelRegistryConfig | undefined;
 
 export function loadModelRegistry(): ModelRegistryConfig {
+  const pilot = courtosPilotModel();
+  if (pilot) return { models: [pilot], committees: [] };
   if (cached) return cached;
 
   const raw = process.env.MIKE_MODEL_CONFIG_JSON?.trim();

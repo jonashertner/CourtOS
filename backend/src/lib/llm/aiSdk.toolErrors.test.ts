@@ -3,7 +3,7 @@
  * errors end the turn, with which identity, and what happens to the SDK's
  * step loop afterwards. No network, no keys.
  */
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { stopNotice, streamAiSdk } from "./aiSdk";
 import { UserFacingError } from "../userFacingError";
@@ -566,4 +566,26 @@ describe("provider stall (chunk timeouts)", () => {
     expect(error).not.toBeInstanceOf(UserFacingError);
     expect(readsAsCancel(error)).toBe(true);
   }, 30_000);
+});
+
+
+describe("CourtOS explicit completion metadata", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("returns a real length finish separately from partially generated citations", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    const partial = 'A fact [1].<CITATIONS>[{"ref":1';
+    const model = await makeModel([step(...text(partial), finish("length"))]);
+    const deltas: string[] = [];
+    const result = await streamAiSdk({ ...base, callbacks: { onContentDelta: (text) => { deltas.push(text); } } }, config(model));
+    expect(result).toMatchObject({ fullText: partial, finishReason: "length", stopReason: "output_limit" });
+    expect(deltas.join("")).toBe(partial);
+  });
+  it("distinguishes a normal stop from the pilot tool-step limit", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    const normal = await streamAiSdk(base, config(await makeModel([textStep("done")])));
+    expect(normal).toMatchObject({ finishReason: "stop" });
+    expect(normal.stopReason).toBeUndefined();
+    const capped = await streamAiSdk({ ...base, maxIterations: 1, runTools: okRunTools }, config(await makeModel([callStep("c1", "read_document", { doc_id: "doc-0" })])));
+    expect(capped).toMatchObject({ finishReason: "tool-calls", stopReason: "step_limit" });
+  });
 });
