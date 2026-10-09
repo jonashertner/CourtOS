@@ -6,15 +6,17 @@ CourtOS is a fork of [MikeOSS](https://github.com/open-legal-products/mike), dev
 
 ## Current pilot
 
-The pilot runs on the operator's Hetzner VPS in Germany, reached through Cloudflare Access email-code authentication. Explicit self-registration mode creates a personal account on first entry; an installation remains closed by default unless its operator enables that mode. Use **synthetic test documents only**. A model running on that VPS is not a model running inside a court's network. Cloudflare handles the browser traffic, including documents and results displayed in the workspace.
+The pilot runs on the operator's Hetzner VPS in Germany, reached through Cloudflare Access email-code authentication. Explicit self-registration mode creates a personal account on first entry; an installation remains closed by default unless its operator enables that mode. Use **synthetic case files and public or lawfully usable, non-confidential literature excerpts only**. Real case files, personal data and confidential material are excluded. A model running on that VPS is not a model running inside a court's network. Cloudflare handles the browser traffic, including documents and results displayed in the workspace.
 
 - Personal email-code access, checked again by the application; separate application sessions.
 - Document workspace, projects, source-linked drafting and three initial court workflows.
 - A fixed local model for ordinary assistant work; titles are generated deterministically and automatic model-based memory curation is disabled. User-supplied provider keys and external connectors are disabled in the pilot profile.
 - A guided synthetic case in `hybrid/`: local chronology, review of an exact public-source request, optional frontier analysis, and local synthesis. This is a separate application on the same origin, with separate storage. The ordinary workspace does not send its documents to that external-analysis channel.
+- An opt-in knowledge view at `/knowledge`: explicitly select personal library files, search extracted text locally, and open a passage against its fixed document version and page. It reports unreadable and partially indexed files. A question with those source references can be prepared in the assistant for review before sending; files are not copied.
+- A separate public-decision search in that view queries a read-only OpenCaseLaw corpus through `public-research/`. The user types its public search terms separately; private library text is not sent to this service or the hybrid gateway. This is bounded lexical retrieval, not the full OpenCaseLaw MCP/tool suite, live web research or an AI opinion.
 - A concise German, French and Italian guide accompanies the pilot at `/guide/`.
 
-The guided case uses a small reviewed source catalog. It is not yet a general OpenCaseLaw search integration. Outputs are drafts for human review; this pilot does not establish legal accuracy, institutional approval or readiness for confidential case files.
+The guided hybrid case continues to use a small reviewed source catalog; the independent public-decision search does not expand its approved external payloads. Neither text search nor a missing result establishes exhaustive research or substantive legal support. Outputs are drafts for human review; this pilot does not establish legal accuracy, institutional approval or readiness for confidential case files.
 
 ## Source and licence
 

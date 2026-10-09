@@ -411,7 +411,11 @@ export function AssistantMessage({
                     showConnector={showConnector}
                     isStreaming
                 >
-                    <span>Thinking...</span>
+                    <span>{event.knowledgePhase === "evidence_returned"
+                        ? "Quellen geprüft. Antwort wird formuliert …"
+                        : event.knowledgePhase === "search_returned"
+                            ? "Suche abgeschlossen. Antwort wird formuliert …"
+                            : "Thinking..."}</span>
                 </EventBlock>
             );
         }

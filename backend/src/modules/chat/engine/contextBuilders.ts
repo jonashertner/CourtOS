@@ -1,4 +1,5 @@
 import { responseLanguageName } from "../../../lib/responseLanguages";
+import { courtosKnowledgeEnabled } from "../../../lib/courtosKnowledge";
 import { deadlineMessage, type StreamStopReason } from "../../../lib/streamRuns";
 import crypto from "crypto";
 import type { Db } from "../../../lib/supabase";
@@ -648,8 +649,9 @@ export function buildMessages(
       const label = spotlightFilename(rawLabel, nonce);
       systemContent += `- ${doc.doc_id}: ${label}\n`;
     }
-    systemContent +=
-      "\nYou do NOT retain document content between conversation turns. You MUST call read_document (or fetch_documents) once at the start of every response that involves a document's content, even if you have read it in a previous turn. Within the same response, do not call read_document or fetch_documents again for a document/version that has already been read; use the prior tool result, find_in_document for targeted checks, or proceed to the next required tool. Failure to read once per turn will result in hallucinated or stale content.\n---\n";
+    systemContent += courtosKnowledgeEnabled()
+      ? "\nRetrieve fresh evidence this turn before making document claims: use search_knowledge for selected personal Library literature, or read_document for a short document. A returned version-bound passage is sufficient evidence for the claim it supports; do not read the whole book afterwards. Use its doc_id, page and exact quote for citations. Missing passages do not prove absence. Do not repeat a completed retrieval in the same response.\n---\n"
+      : "\nYou do NOT retain document content between conversation turns. You MUST call read_document (or fetch_documents) once at the start of every response that involves a document's content, even if you have read it in a previous turn. Within the same response, do not call read_document or fetch_documents again for a document/version that has already been read; use the prior tool result, find_in_document for targeted checks, or proceed to the next required tool. Failure to read once per turn will result in hallucinated or stale content.\n---\n";
   }
   formatted.push({ role: "system", content: systemContent });
 

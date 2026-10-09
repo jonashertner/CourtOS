@@ -12,6 +12,12 @@ import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import { AssistantWorkflowModal } from "./AssistantWorkflowModal";
 import { AddDocumentsModal } from "../modals/AddDocumentsModal";
 
+const knowledgeMode = vi.hoisted(() => ({ enabled: false }));
+vi.mock("@/app/lib/courtos", async (original) => ({
+    ...(await original<typeof import("@/app/lib/courtos")>()),
+    get COURTOS_KNOWLEDGE_ENABLED() { return knowledgeMode.enabled; },
+}));
+
 vi.mock("@/app/lib/mikeApi", () => ({
     listWorkflows: vi.fn(async () => []),
     uploadStandaloneDocument: vi.fn(),
@@ -83,9 +89,29 @@ function renderInput(canSend: boolean | null, onSubmit = vi.fn()) {
 describe("ChatInput canSend gating", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        knowledgeMode.enabled = false;
         window.localStorage.clear();
         vi.stubGlobal("ResizeObserver", ResizeObserverMock);
         mockProfile();
+    });
+
+    it("prepares an explicit knowledge question and source without submitting or copying", () => {
+        knowledgeMode.enabled = true;
+        const ref = createRef<ChatInputHandle>();
+        const onSubmit = vi.fn();
+        render(<ChatInput ref={ref} onSubmit={onSubmit} onCancel={vi.fn()} isLoading={false} />);
+        let prepared: boolean | undefined;
+        act(() => { prepared = ref.current?.prepareKnowledgeDraft?.("Meine Frage", [{ id: "library-doc", filename: "Literatur.pdf", current_version_id: "version-2", active_version_number: 2 } as Document]); });
+        expect(prepared).toBe(true);
+        expect(screen.getByRole("combobox")).toHaveValue("Meine Frage");
+        expect(screen.getByText("Literatur.pdf")).toBeInTheDocument();
+        expect(onSubmit).not.toHaveBeenCalled();
+        expect(uploadProjectDocuments).not.toHaveBeenCalled();
+        expect(uploadStandaloneDocuments).not.toHaveBeenCalled();
+        act(() => { prepared = ref.current?.prepareKnowledgeDraft?.("Andere Frage", [{ id: "other", filename: "Andere.pdf" } as Document]); });
+        expect(prepared).toBe(false);
+        expect(screen.getByRole("combobox")).toHaveValue("Meine Frage");
+        expect(screen.queryByText("Andere.pdf")).not.toBeInTheDocument();
     });
 
     it("prepares a CourtOS task without sending it and preserves an existing draft", () => {

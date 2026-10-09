@@ -4,7 +4,7 @@ These are parameterised examples of the native CourtOS pilot arrangement. They
 are corresponding build/run source, **not an unattended production installer**.
 Use a fresh, dedicated Linux x86_64 host or review the isolation of a separate
 installation. Do not run these examples over an existing CourtOS deployment.
-Only synthetic cases belong in this pilot. No live host, account allowlist,
+Only synthetic case files and public or lawfully usable, non-confidential literature excerpts belong in this pilot. Real case files, personal data and confidential material are excluded. No live host, account allowlist,
 Access audience, provider credential, database credential or private volume
 identifier is distributed here.
 
@@ -58,6 +58,14 @@ Check out the exact CourtOS revision that you intend to run. Do not build with
 production `.env` files in the checkout. In these commands, substitute your own
 release and runtime paths; they must match `operator.json`:
 
+For the reviewed Timeless typography, first follow the separately licensed
+font step in [`frontend/scripts/FONTS.md`](../../../frontend/scripts/FONTS.md),
+then run `python3 frontend/scripts/fetch-timeless-fonts.py --accept-license`
+from the release checkout after accepting the publisher's terms. The fonts
+must be present before building and deployed with the application. A checkout
+without this step uses the bundled OFL fallbacks. The guide has its own
+font preparation step in the guide README linked below.
+
 ```sh
 python3 ops/courtos/native/fetch-runtime.py /opt/courtos-runtime \
   --model-file /srv/courtos-models/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf
@@ -76,7 +84,7 @@ agent, MCP proxy or prompt cache. Its stdout/stderr are disabled.
 The build enables CourtOS's pilot UI and managed Access login. For a deliberately
 self-registering installation, prefix the build command with
 `NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION=true`; otherwise it defaults to
-false. This must match the backend setting described below. Frontend settings
+false. For the optional knowledge view, also prefix it with `NEXT_PUBLIC_COURTOS_KNOWLEDGE_ENABLED=true` and set `knowledge_enabled: true` in the operator configuration; both default to false. These build flags must match the backend settings described below. Frontend settings
 are compiled in: changing only a runtime EnvironmentFile does not change them.
 The reviewed guide files can be served directly; see
 [`docs/guide/README.md`](../../../docs/guide/README.md) to rebuild them.
@@ -148,6 +156,47 @@ true in the operator configuration and put a dedicated provider key only into
 the installed `private/gateway-provider.env`. Do not source another
 application's environment or credential file. The key is never included in
 backend, frontend or model settings. Keep all rendered files root-owned.
+
+## Optional knowledge search: separate installation
+
+`knowledge_enabled` is false by default. When true, the renderer sets backend
+`COURTOS_KNOWLEDGE_ENABLED=true` and records the matching frontend build flag.
+Build with `NEXT_PUBLIC_COURTOS_KNOWLEDGE_ENABLED=true`; the runtime file alone
+cannot change a compiled browser application. The native application performs
+private, user-scoped passage extraction and search in its own database. PDF
+text or a completed PDF rendition is required; it does not add OCR silently.
+
+For an existing database, follow the migration ledger through
+`20261009_04_courtos_native_quota.sql`,
+`20261009_05_courtos_upload_budget.sql`,
+`20261009_06_courtos_upload_ledger_grants.sql`,
+`20261009_07_courtos_knowledge.sql`, then
+`20261009_08_courtos_native_ledger_grants.sql`, and reload PostgREST's schema cache.
+Use backups and the repository migration procedure, not the fresh bootstrap.
+The fresh `backend/schema.sql` includes those definitions. Migration 06 is
+required even when knowledge search remains disabled. Migration 08 likewise
+hardens the existing assistant quota ledger independently of knowledge search;
+both ledger migrations retain reads and reserve/release RPCs while removing
+direct service-role writes.
+
+The public source class needs a **separate** installation of
+[`public-research/`](../../../public-research/README.md), its Python virtual
+environment and dedicated service identity. Its example unit and configuration
+are in [`public-research/ops/`](../../../public-research/ops/). Adjust paths,
+provide a read-only physical public OpenCaseLaw SQLite corpus, verify its source
+and update procedure, and keep it inaccessible to writes by the service. The
+corpus is not included or downloaded by this renderer. Keep the service bound to
+`127.0.0.1:18184`; it is reached only through the authenticated native proxy, not
+through a new tunnel route. The native build/install scripts do not start or
+provision it. No private file, hybrid store or provider credential is needed.
+
+Before enabling the view, check both private two-user isolation and a public
+query/detail read, including incomplete extraction and a missing source. Record
+the public corpus generation and source software revision alongside the running
+release. Search does not invoke a model; a subsequent assistant question does
+consume the ordinary model allowance. The public query is entered separately,
+never filled from the private question or passages. Neither search path writes
+private content into the guided hybrid catalog or gateway.
 
 ## 3. Start the reviewed components in order
 

@@ -64,6 +64,21 @@ class RendererTests(unittest.TestCase):
             self.assertIn('NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION=true', (out / 'private/frontend.env').read_text())
             self.assertIn('OCL_ACCESS_SELF_REGISTRATION=true', (out / 'private/hybrid.env').read_text())
 
+    def test_knowledge_requires_explicit_matching_settings(self):
+        config = operator()
+        config.pop('knowledge_enabled')
+        self.assertFalse(validate(config)['knowledge_enabled'])
+        for enabled in (False, True):
+            with self.subTest(enabled=enabled), tempfile.TemporaryDirectory() as root:
+                config['knowledge_enabled'] = enabled
+                out = pathlib.Path(root) / 'rendered'
+                with contextlib.redirect_stdout(io.StringIO()):
+                    render(config, out)
+                value = str(enabled).lower()
+                self.assertIn('COURTOS_KNOWLEDGE_ENABLED=' + value, (out / 'private/backend.env').read_text())
+                self.assertIn('NEXT_PUBLIC_COURTOS_KNOWLEDGE_ENABLED=' + value, (out / 'private/frontend.env').read_text())
+                self.assertNotIn('PUBLIC_RESEARCH_DB=', (out / 'private/backend.env').read_text())
+
     def test_unsafe_or_placeholder_configuration_fails(self):
         cases = [
             ('origin', 'http://courtos.example.org'),
@@ -73,6 +88,7 @@ class RendererTests(unittest.TestCase):
             ('config_dir', '/etc/../private'),
             ('config_dir', '/var/lib/courtos-pilot/private'),
             ('self_registration', 'true'),
+            ('knowledge_enabled', 'true'),
             ('allowed_emails', ['replace-with-person@example.org']),
             ('denied_emails', ['bad\nEMAIL=value']),
         ]

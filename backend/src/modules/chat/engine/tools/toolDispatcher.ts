@@ -1,3 +1,5 @@
+import { courtosKnowledgeEnabled } from "../../../../lib/courtosKnowledge";
+import { searchKnowledge } from "../../../knowledge/knowledge.service";
 import {
   isGoogleWorkspaceTool,
   executeGoogleWorkspaceToolCall,
@@ -550,6 +552,30 @@ export async function runToolCalls(
     if (tc.function.name === "ask_inputs") {
       const event = normalizeAskInputsEvent(args);
       if (event.items.length > 0) askInputsEvents.push(event);
+      continue;
+    }
+
+    if (tc.function.name === "search_knowledge") {
+      const selected = [...new Set(Object.values(docIndex ?? {}).map(d => d.document_id).filter((id): id is string => typeof id === "string"))];
+      let content: string;
+      if (!courtosKnowledgeEnabled() || typeof args.query !== "string" || Object.keys(args).some(k => k !== "query") || !selected.length) {
+        content = JSON.stringify({ error: "Select personal Library files in this chat before searching. Only a query is accepted." });
+      } else if (selected.length > 20) {
+        content = JSON.stringify({ error: "Select at most 20 personal Library files for this search. The selected corpus was not searched." });
+      } else {
+        const result = await searchKnowledge(db, userId, { query: args.query, document_ids: selected, limit: 3 }, true);
+        if (!result.ok) content = JSON.stringify({ error: result.kind === "error" ? "The selected knowledge search is unavailable." : result.detail });
+        else {
+          const passages = result.data.results.flatMap(hit => {
+            const entry = Object.entries(docIndex ?? {}).find(([,d]) => d.document_id === hit.document_id && d.version_id === hit.version_id);
+            if (!entry) return [];
+            docsFound.push({ filename: hit.filename, document_id: hit.document_id, version_id: hit.version_id, version_number: hit.version_number, query: args.query as string, total_matches: 1 });
+            return [{ doc_id: entry[0], filename: hit.filename, version_id: hit.version_id, page: hit.page, quote: hit.quote }];
+          });
+          content = JSON.stringify({ passages, notices: result.data.notices, citation_instruction: 'Cite only these passages with existing doc_id, page and an exact short quote in the complete CITATIONS block. No need to read the whole document for a claim supported by this passage. A missing passage is not an absence proof.' });
+        }
+      }
+      toolResults.push({ role: "tool", tool_call_id: tc.id, content: nonce ? spotlight(content, nonce) : content });
       continue;
     }
 

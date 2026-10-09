@@ -137,8 +137,8 @@ export default function MikeLayout({
                                     className={cn(
                                         "z-30 flex items-center gap-3 overflow-visible px-4 md:hidden",
                                         isChatPage
-                                            ? "pointer-events-none fixed inset-x-0 top-0 bg-transparent pb-2 pt-3"
-                                            : "relative shrink-0 pb-2 pt-3",
+                                            ? "pointer-events-none fixed inset-x-0 top-0 bg-transparent py-0.5"
+                                            : "relative shrink-0 py-0.5",
                                     )}
                                 >
                                     <HeaderButtonsUI
@@ -152,8 +152,9 @@ export default function MikeLayout({
                                         <HeaderButtonUI
                                             iconOnly
                                             onClick={handleSidebarToggle}
-                                            title="Open sidebar"
-                                            aria-label="Open sidebar"
+                                            title="Navigation öffnen"
+                                            aria-label="Navigation öffnen"
+                                            className="min-h-11 min-w-11"
                                         >
                                             <PanelLeft className="h-4 w-4" />
                                         </HeaderButtonUI>

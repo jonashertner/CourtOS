@@ -5,7 +5,8 @@ import Image from "next/image";
 import { MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useUserProfile } from "@/app/contexts/UserProfileContext";
-import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { COURTOS_KNOWLEDGE_ENABLED, COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { KnowledgeDraftEntry } from "@/app/components/courtos/KnowledgeDraftEntry";
 import { CourtOSTaskStarters } from "@/app/components/courtos/CourtOSTaskStarters";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import type { Document, Message, QuickAction } from "../shared/types";
@@ -79,8 +80,8 @@ export function InitialView({
     }
 
     return (
-        <div className={COURTOS_PILOT_MODE ? "flex h-full w-full flex-col gap-2 overflow-y-auto px-5 pt-10 md:px-6 md:pt-16" : "grid h-full w-full grid-rows-[minmax(0,1fr)_auto_minmax(0,1fr)] px-6"}>
-            <div className="flex min-h-10 shrink-0 items-end justify-center pb-6">
+        <div className={COURTOS_PILOT_MODE ? "courtos-assistant flex h-full w-full flex-col gap-2 overflow-y-auto px-5 md:px-6" : "grid h-full w-full grid-rows-[minmax(0,1fr)_auto_minmax(0,1fr)] px-6"}>
+            {COURTOS_PILOT_MODE ? <header className="courtos-assistant-header shrink-0 xl:px-8"><p className="courtos-kicker">CourtOS · Assistent</p><h1 className="courtos-display">Ihr nächster Auftrag.</h1><p className="courtos-lede mt-4">Unterlagen erschliessen, Aussagen vergleichen, einen Entwurf vorbereiten. Sie bestimmen die Frage und prüfen die Belege.</p></header> : <div className="flex min-h-10 shrink-0 items-end justify-center pb-6">
                 <div className="relative h-10 w-full max-w-4xl px-0 xl:px-8">
                     <div
                         className="absolute h-[30px] w-[30px]"
@@ -113,9 +114,10 @@ export function InitialView({
                         {COURTOS_PILOT_MODE ? "Ihr nächster Auftrag" : `Hallo, ${username}`}
                     </h1>
                 </div>
-            </div>
+            </div>}
 
             <div className="mx-auto w-full max-w-4xl justify-self-center px-0 xl:px-8">
+                {COURTOS_KNOWLEDGE_ENABLED && user?.id && <KnowledgeDraftEntry owner={user.id} inputRef={chatInputRef} />}
                 <ChatInput
                     ref={chatInputRef}
                     onSubmit={onSubmit}
@@ -128,7 +130,7 @@ export function InitialView({
             <div className="mx-auto min-h-0 w-full max-w-4xl justify-self-center px-0 pt-1 xl:px-8">
                 <div className="text-center">
                     <p className="text-xs py-2 mb-4 text-gray-500">
-                        {COURTOS_PILOT_MODE ? "Nur synthetische Daten. Antworten und Quellen selbst prüfen." : "KI kann Fehler machen. Antworten und Quellen selbst prüfen."}
+                        {COURTOS_PILOT_MODE ? (COURTOS_KNOWLEDGE_ENABLED ? "Synthetische Akten und rechtmässig nutzbare, nicht vertrauliche Literatur. Antworten und Quellen selbst prüfen." : "Nur synthetische Daten. Antworten und Quellen selbst prüfen.") : "KI kann Fehler machen. Antworten und Quellen selbst prüfen."}
                     </p>
                 </div>
 

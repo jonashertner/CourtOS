@@ -8,6 +8,9 @@ export const COURTOS_SELF_REGISTRATION =
     COURTOS_PILOT_MODE && COURTOS_CLOUDFLARE_AUTH &&
     process.env.NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION === "true";
 
+export const COURTOS_KNOWLEDGE_ENABLED = COURTOS_PILOT_MODE &&
+    process.env.NEXT_PUBLIC_COURTOS_KNOWLEDGE_ENABLED === "true";
+
 export const COURTOS_HOME = "/pilot";
 export const COURTOS_HYBRID_PATH = "/hybrid/";
 export const COURTOS_GUIDE_PATH = "/guide/";

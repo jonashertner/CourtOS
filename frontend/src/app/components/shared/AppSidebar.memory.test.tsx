@@ -213,7 +213,7 @@ describe("AppSidebar account dropdown", () => {
 
       expect(
         screen.getByRole("button", { name: toggleName }).parentElement,
-      ).toHaveClass("h-11", "shrink-0");
+      ).toHaveClass("h-16", "shrink-0");
     },
   );
 

@@ -46,3 +46,10 @@ venv/
 hybrid/var/
 hybrid/*.sqlite*
 hybrid/*.db
+
+# Timeless guide embedding assets: licensed work only, never a font mirror
+docs/guide/.font-cache/
+docs/guide/output/fonts/Timeless*
+
+# Timeless web embedding is licensed per work; fetch from the publisher.
+frontend/public/fonts/timeless/

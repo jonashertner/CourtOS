@@ -41,6 +41,14 @@ export function withoutDocumentMutatingTools<T>(tools: T[]): T[] {
   return tools.filter((tool) => !isDocumentMutatingTool(toolName(tool)));
 }
 
+/** Knowledge-pilot copy only: leave upstream tool schemas unchanged. */
+export function withKnowledgeReadDescriptions<T extends { function: { name: string; description?: string } }>(tools: T[]): T[] {
+  return tools.map(tool => tool.function.name === "read_document" ? {
+    ...tool,
+    function: { ...tool.function, description: "Read the full text of a short available document, at most once per version in this response. For selected personal Library literature, prefer search_knowledge: its version-bound passage can support a citation without reading the whole book. Never load a whole book merely to confirm a returned passage." },
+  } : tool);
+}
+
 export const PROJECT_EXTRA_TOOLS = [
   {
     type: "function",
@@ -519,3 +527,13 @@ export const TOOLS = [
     },
   },
 ];
+
+/** Local selected-library retrieval; the model cannot choose a user or corpus. */
+export const KNOWLEDGE_TOOLS = [{
+  type: "function",
+  function: {
+    name: "search_knowledge",
+    description: "Search passages in the personal Library files already selected for this chat. Prefer this for literature or long PDFs instead of reading whole books. Returns up to three verbatim page-bound passages and known doc_id handles for normal document citations. No hit proves nothing outside this selected, possibly partial index. This never searches public websites or sends literature externally.",
+    parameters: { type: "object", properties: { query: { type: "string", maxLength: 300 } }, required: ["query"], additionalProperties: false },
+  },
+}];

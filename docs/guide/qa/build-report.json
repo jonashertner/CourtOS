@@ -1,60 +1,82 @@
 {
-  "format": "B5 (176 x 250 mm)",
+  "format": "180 x 270 mm",
   "languages": {
     "de": {
-      "pages": 7,
+      "pages": 14,
       "lowest_content_y": [
-        88.46,
-        120.16,
-        153.96,
-        165.66,
-        129.16,
-        47.96,
-        89.16
+        85,
+        143.85,
+        84.35,
+        58.85,
+        84.35,
+        179.15,
+        208.85,
+        225.15,
+        236.85,
+        201.35,
+        155.35,
+        118.65,
+        173.35,
+        142.35
       ],
-      "sha256": "c7acaccfda665c82694062c2787dbf2d040249f125e7e6a221c2cefa1383ca60",
-      "bytes": 54058,
+      "sha256": "19b1d9446a759d28d431fc7565a95c79b2031fdf8cc05dd5dfb185e77ed24311",
+      "bytes": 69332,
       "metadata": null,
       "xmp_present": false
     },
     "fr": {
-      "pages": 7,
+      "pages": 14,
       "lowest_content_y": [
-        92.76,
-        135.16,
-        107.96,
-        165.66,
-        114.16,
-        47.96,
-        76.16
+        85,
+        156.85,
+        156.35,
+        102.35,
+        113.35,
+        182.45,
+        222.85,
+        234.15,
+        236.85,
+        201.35,
+        169.85,
+        118.65,
+        158.85,
+        142.35
       ],
-      "sha256": "4cf798b50bf39a48ac9f72a488f61751e6e9529cce5bf8dc874a29ccede64505",
-      "bytes": 54776,
+      "sha256": "71d29586bf4d7b80b991c4f644562c364dbd0c025d17653eb93c3b4de89e7144",
+      "bytes": 70022,
       "metadata": null,
       "xmp_present": false
     },
     "it": {
-      "pages": 7,
+      "pages": 14,
       "lowest_content_y": [
-        106.76,
-        150.16,
-        140.26,
-        180.66,
-        114.16,
-        47.96,
-        106.16
+        85,
+        172.35,
+        156.35,
+        132.85,
+        127.85,
+        196.95,
+        237.35,
+        234.15,
+        251.35,
+        201.35,
+        169.85,
+        133.15,
+        173.35,
+        156.35
       ],
-      "sha256": "d2376e4d0c71f483f9696da357f15661964675267337cad36dbf6306c30482f0",
-      "bytes": 53607,
+      "sha256": "41b92d507d61fb2446aab914f76466403e117e0d48a23d92a838ced15d0c3792",
+      "bytes": 68279,
       "metadata": null,
       "xmp_present": false
     }
   },
   "metadata_policy": "No PDF Info dictionary or XMP; HTML title and author metadata blank.",
+  "typography": "Timeless Serif / Timeless Sans / Paper Mono; fonts embedded under their respective licences",
   "html_checks": {
     "languages": 3,
     "links": "all internal targets and anchors verified",
     "remote_assets": false,
-    "scripts": false
+    "scripts": "local reader.js; no network requests or persistent storage"
   }
 }

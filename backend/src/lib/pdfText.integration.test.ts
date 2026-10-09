@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractPdfText } from "./pdfText";
+import { extractPdfText, readPdfPages } from "./pdfText";
 
 function buildFilledAcroFormPdf(): ArrayBuffer {
   const content = "BT /F1 12 Tf 72 720 Td (Case No.:) Tj ET";
@@ -48,5 +48,14 @@ describe("extractPdfText AcroForm integration", () => {
     expect(text).not.toContain("[Page 1 form fields]");
     expect(text).not.toContain("AccountPassword");
     expect(text).not.toContain("secret123");
+  });
+});
+
+describe("bounded knowledge PDF extraction", () => {
+  it("preserves real page identity and reports a text cap on actual PDF bytes", async () => {
+    const pages = await readPdfPages(buildFilledAcroFormPdf(), 200, 12);
+    expect(pages).toHaveLength(1);
+    expect(pages?.[0]).toMatchObject({ page: 1, totalPages: 1, truncated: true, empty: false });
+    expect(pages?.[0].text.length).toBe(12);
   });
 });

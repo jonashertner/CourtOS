@@ -1,0 +1,39 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { getPublicDecision, publicSourceUrl, searchKnowledge, searchPublicKnowledge } from "./knowledgeApi";
+
+afterEach(() => vi.unstubAllGlobals());
+describe("explicit knowledge requests", () => {
+    it("sends only selected IDs and the local query, with the cookie session", async () => {
+        const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ results: [] })));
+        vi.stubGlobal("fetch", fetch);
+        await searchKnowledge("Stellungnahme", ["own-document"]);
+        expect(fetch).toHaveBeenCalledWith("/api/knowledge/search", expect.objectContaining({
+            method: "POST", credentials: "include", cache: "no-store",
+            body: JSON.stringify({ query: "Stellungnahme", document_ids: ["own-document"], limit: 12 }),
+        }));
+    });
+    it("keeps the public request limited to its own entered terms and language", async () => {
+        const fetch = vi.fn().mockImplementation(async () => new Response("{}")); vi.stubGlobal("fetch", fetch);
+        await searchPublicKnowledge("rechtliches Gehör", "de");
+        expect(fetch).toHaveBeenCalledWith("/api/knowledge/public/search", expect.objectContaining({
+            body: JSON.stringify({ query: "rechtliches Gehör", limit: 5, language: "de" }),
+        }));
+        await searchPublicKnowledge("audition", "");
+        expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ query: "audition", limit: 5 });
+    });
+    it("encodes a public decision ID rather than interpolating a path", async () => {
+        const fetch = vi.fn().mockImplementation(async () => new Response("{}")); vi.stubGlobal("fetch", fetch);
+        await getPublicDecision("CH/../../case?foo", 4000);
+        expect(fetch.mock.calls[0][0]).toBe("/api/knowledge/public/decisions/CH%2F..%2F..%2Fcase%3Ffoo?start=4000&length=4000");
+    });
+    it.each([401, 403, 404, 400, 422, 429, 503])("does not expose a raw error response (%s)", async (status) => {
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("private raw backend details", { status })));
+        await expect(searchKnowledge("term", ["doc"])).rejects.toThrow(/Sitzung|Quelle|prüfen|ausgelastet|verfügbar/);
+        await expect(searchKnowledge("term", ["doc"])).rejects.not.toThrow("private raw backend details");
+    });
+    it("permits normal source URLs and rejects script and credential URLs", () => {
+        expect(publicSourceUrl("https://example.org/decision")).toBe("https://example.org/decision");
+        expect(publicSourceUrl("http://example.org/decision")).toBe("http://example.org/decision");
+        for (const value of [null, "", "javascript:alert(1)", "data:text/html,x", "https://secret@example.org/", "/api/private"]) expect(publicSourceUrl(value)).toBeNull();
+    });
+});

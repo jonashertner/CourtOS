@@ -1,12 +1,60 @@
-# Design system
+# CourtOS design system
 
-Mike uses Tailwind v4 with shadcn-derived `new-york` primitives for selected
-controls, alongside its own liquid-glass component system. Lucide supplies the
-icon set. This page documents what already exists so contributors can reuse it
-instead of re-deriving it. It is a description of the current system, not a
-proposal for a new one.
+## CourtOS web identity — user direction, 9 October 2026
 
-Everything below lives in `frontend/src/app/globals.css` unless stated otherwise.
+CourtOS uses a quiet editorial workbench: warm paper, dark ink, fine rules and
+clear source references. This explicit user direction replaces the inherited
+Mike liquid-glass aesthetic **in the web application**. It does not change the
+Word add-in or the behaviour/contracts of shared UI primitives. The inherited
+component inventory below remains useful; where its visual recommendations
+conflict with this section, the CourtOS web direction controls.
+
+The web theme is `frontend/src/app/courtos-design.css`, scoped to the
+`courtos-web` body. It adapts shared primitive tokens at the host boundary;
+`DesignTokensUI.css` remains the cross-target token contract. Solid surfaces
+replace glass transparency, blur and decorative bevels. Dark mode has the same
+hierarchy with warm light text and subdued green-black surfaces. Preserve
+semantic error/disabled states; never use a quieter palette to obscure status.
+
+- **Type:** Timeless Serif for editorial headings and source quotations;
+  Timeless Sans for controls and working text; Paper Mono for folios and compact
+  source/status metadata. Real font names and licences are documented in
+  `frontend/scripts/FONTS.md`. Timeless binaries are separately fetched, hash
+  checked and gitignored. No runtime font CDN. OFL fallbacks remain available.
+- **Hierarchy:** one generous title, a readable introduction, then task or source
+  sections divided by rules. Long-form text stays within a comfortable measure.
+  Avoid marketing gradients, nested card grids and display type in controls.
+- **Colour:** paper `#f7f5ef`, reading surface `#fdfcf8`, ink `#252a26`, secondary
+  ink `#64685e`, rules `#d6d6c9`; focus uses `#576c55`. Use the semantic tokens,
+  not new isolated palette values. These pairs provide at least 4.5:1 for normal
+  primary/secondary text; rules are structural, not the only state indicator.
+- **Interaction:** real buttons, clear underlined text links, visible outlines
+  for keyboard focus, 44px primary actions and mobile controls. Source-type
+  navigation shows an underline and retains `aria-pressed`. Disabled controls
+  remain disabled. Prefer immediate changes; respect reduced motion.
+- **Layout:** generous spacing on the pilot introduction; a stable compact
+  sidebar; explicit selected-document inventory alongside local search;
+  restrained ruled result entries with fixed version/page and a readable quote.
+  On narrow screens the source inventory precedes the search, with no clipped
+  source text or horizontal page scrolling.
+- **Trust:** visual refinement must not imply source correctness. Keep quotas,
+  partial indexing, empty/error states, processing location and synthetic-case
+  limits visible. Preserve all independent public/private input fields and
+  explicit-send actions. Never replace a true state with a decorative success.
+
+`courtos-button`, `courtos-field`, `courtos-link`, `courtos-kicker`,
+`courtos-display` and the workbench layout classes live in the web theme. They
+are presentation-only classes; authentication, document selection, session
+isolation, draft preservation and citation navigation remain in their existing
+components. New web screens should use this system; legacy feature screens
+inherit its fonts and surface tokens while keeping their specialised controls.
+
+## Inherited component inventory
+
+The repository uses Tailwind v4 and shadcn-derived primitives alongside its
+shared primitive APIs (whose historical names still include “LiquidGlass”).
+Lucide supplies the icon set. The notes below describe those APIs for reuse;
+CourtOS's web theme above supplies their current visual treatment.
 
 ## Where components live
 

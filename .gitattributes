@@ -6,3 +6,10 @@
 #   git checkout origin/main -- package-lock.json && npm install
 package-lock.json merge=binary
 bun.lock merge=binary
+
+# Generated publications are binary artifacts.
+*.pdf binary
+
+# Preserve the upstream OFL text byte-for-byte, including its trailing space.
+docs/guide/output/fonts/PaperMono-OFL.txt whitespace=-blank-at-eol
+frontend/src/app/fonts/paper-mono/OFL.txt whitespace=-blank-at-eol

@@ -16,5 +16,6 @@
   "external_enabled": false,
   "self_registration": false,
   "denied_emails": [],
-  "hybrid_self_registration": false
+  "hybrid_self_registration": false,
+  "knowledge_enabled": false
 }

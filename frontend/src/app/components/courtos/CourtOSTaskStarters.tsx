@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LIQUID_GLASS_HOVER_CLASS, LIQUID_GLASS_SUBTLE_CLASS } from "@/shared/ui/LiquidGlassUI";
+import { ArrowUpRight } from "lucide-react";
 
 const tasks = [
     { title: "Chronologie erstellen", prompt: "Erstelle aus den beigefügten synthetischen Unterlagen eine Chronologie. Nenne zu jedem Eintrag Datum, Vorgang und genaue Fundstelle. Unterscheide belegte Tatsachen, Parteibehauptungen und ungeklärte Punkte. Weise auf fehlende Belege hin und erfinde keine Daten." },
@@ -14,13 +14,13 @@ export function CourtOSTaskStarters({ prepareDraft }: { prepareDraft: (prompt: s
     return (
         <section aria-label="Auftragsvorschläge für die Gerichtsarbeit" className="mt-4 pb-8">
             <p className="mb-3 text-center text-xs leading-relaxed text-muted-foreground">Testunterlagen hinzufügen, Auftrag vorbereiten, vor dem Senden anpassen.</p>
-            <div className="flex flex-wrap justify-center gap-2">
-                {tasks.map((task) => (
+            <div className="courtos-task-starters">
+                {tasks.map((task, index) => (
                     <button key={task.title} type="button" onClick={() => {
                         const prepared = prepareDraft(task.prompt);
                         setMessage(prepared ? "Der Auftrag steht im Eingabefeld. Fügen Sie Ihre Testunterlagen hinzu und prüfen Sie den Text vor dem Senden." : "Ihr vorhandener Entwurf bleibt erhalten. Leeren Sie das Eingabefeld zuerst, wenn Sie einen anderen Auftragsvorschlag übernehmen möchten.");
-                    }} className={`min-h-9 rounded-full px-3 py-2 text-xs font-medium ${LIQUID_GLASS_SUBTLE_CLASS} ${LIQUID_GLASS_HOVER_CLASS} focus-visible:outline-2 focus-visible:outline-ring`}>
-                        {task.title}
+                    }} className="courtos-task-starter">
+                        <span className="courtos-kicker" aria-hidden="true">0{index + 1}</span><span>{task.title}</span><ArrowUpRight aria-hidden="true" />
                     </button>
                 ))}
             </div>

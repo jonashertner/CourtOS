@@ -544,6 +544,16 @@ export async function consumeAssistantTurnStream(
           continue;
         }
 
+        if (data.type === "tool_call_complete") {
+          if (data.name === "search_knowledge") {
+            // Reuse the transient thinking placeholder; no new persisted event.
+            // Only server-confirmed returned passages get the evidence label.
+            pushEvent({ type: "thinking", isStreaming: true,
+              knowledgePhase: data.has_evidence === true ? "evidence_returned" : "search_returned" });
+          }
+          continue;
+        }
+
         if (data.type === "tool_call_start") {
           // Transient placeholder so the client immediately
           // shows activity after Claude ends a turn with

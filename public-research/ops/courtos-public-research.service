@@ -1,0 +1,34 @@
+[Unit]
+Description=CourtOS local public decision retrieval
+After=network.target
+
+[Service]
+Type=simple
+User=courtos-research
+Group=courtos-research
+WorkingDirectory=/opt/courtos-public-research/current
+EnvironmentFile=/etc/courtos-public-research/config.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/courtos-public-research/venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 18184 --workers 1 --limit-concurrency 16 --backlog 32 --timeout-keep-alive 5 --no-access-log --log-level warning
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectProc=invisible
+PrivateDevices=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+InaccessiblePaths=-/opt/caselaw -/etc/ocl-sandbox -/var/lib/ocl-sandbox -/opt/ocl-sandbox -/etc/courtos -/var/lib/courtos
+MemoryMax=512M
+CPUQuota=100%
+TasksMax=24
+Nice=10
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

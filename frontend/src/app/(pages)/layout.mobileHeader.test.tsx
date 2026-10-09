@@ -83,7 +83,7 @@ describe("mobile page header", () => {
             </MikeLayout>,
         );
 
-        const toggle = screen.getByRole("button", { name: "Open sidebar" });
+        const toggle = screen.getByRole("button", { name: "Navigation öffnen" });
         expect(toggle).toHaveClass("h-7", "w-7", "rounded-full");
         expect(toggle.parentElement).toHaveClass(
             "liquid-glass-subtle",
@@ -146,7 +146,7 @@ describe("desktop sidebar persistence", () => {
         expect(sidebarState.isOpen).toBe(true);
 
         await userEvent.click(
-            screen.getByRole("button", { name: "Open sidebar" }),
+            screen.getByRole("button", { name: "Navigation öffnen" }),
         );
 
         expect(sidebarState.isOpen).toBe(false);

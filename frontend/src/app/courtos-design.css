@@ -1,0 +1,210 @@
+/* CourtOS web identity, 9 October 2026.
+   This host-level theme deliberately replaces the inherited glass aesthetic.
+   Shared primitive APIs and the Word add-in remain independent of this file. */
+.courtos-web {
+    --font-inter: "Timeless Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-eb-garamond: "Timeless Serif", "EB Garamond", Georgia, serif;
+    --font-courtos-mono: "Paper Mono", ui-monospace, monospace;
+    --background: #f7f5ef;
+    --foreground: #252a26;
+    --app-background: var(--background);
+    --app-surface: #fdfcf8;
+    --app-surface-hover: #eeece4;
+    --app-surface-active: #e7e7dd;
+    --app-floating: #fffefb;
+    --card: var(--app-surface);
+    --card-foreground: var(--foreground);
+    --popover: var(--app-floating);
+    --popover-foreground: var(--foreground);
+    --primary: var(--foreground);
+    --primary-foreground: #fffefb;
+    --secondary: #edeae1;
+    --secondary-foreground: var(--foreground);
+    --muted: #efede5;
+    --muted-foreground: #64685e;
+    --accent: #e7e7dd;
+    --accent-foreground: var(--foreground);
+    --border: #d6d6c9;
+    --input: #aaafa2;
+    --ring: #576c55;
+    --destructive: #a13e35;
+    --sidebar: #efeee5;
+    --sidebar-foreground: var(--foreground);
+    --sidebar-accent: var(--app-surface-active);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+    --table-grid-border: var(--border);
+    --document-canvas-background: var(--secondary);
+    --document-tab-active-background: var(--app-surface);
+    --document-tab-inactive-background: var(--background);
+    --document-tab-active-text: var(--foreground);
+    --document-tab-inactive-text: var(--muted-foreground);
+    --dropdown-input-background: var(--app-floating);
+    --liquid-glass-modal-row-hover-background: var(--app-surface-hover);
+    --liquid-glass-modal-row-selected-background: var(--app-surface-active);
+    --focus-ring-color: var(--ring);
+    --radius: 0.375rem;
+    --liquid-glass-background-flat: var(--app-surface);
+    --liquid-glass-background-subtle: var(--app-surface);
+    --liquid-glass-background-float: var(--app-surface);
+    --liquid-glass-background-modal: var(--app-floating);
+    --liquid-glass-border-flat: var(--border);
+    --liquid-glass-border-subtle: var(--border);
+    --liquid-glass-border-float: var(--border);
+    --liquid-glass-border-modal: var(--border);
+    --liquid-glass-shadow-flat: none;
+    --liquid-glass-shadow-subtle: none;
+    --liquid-glass-shadow-float: none;
+    --liquid-glass-shadow-modal: 0 12px 48px #252a261c;
+    --liquid-glass-translucent-background: var(--app-surface);
+    --liquid-glass-translucent-background-action: var(--app-surface);
+    --liquid-glass-translucent-background-action-hover: var(--app-surface-hover);
+    --liquid-glass-translucent-border: var(--border);
+    --liquid-glass-shadow-translucent: none;
+    --liquid-glass-shadow-translucent-action: none;
+    --liquid-glass-shadow-translucent-action-hover: none;
+    --liquid-glass-hover-background: var(--app-surface-hover);
+    --liquid-glass-selected-background: var(--app-surface-active);
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-inter);
+    font-weight: 400;
+    font-feature-settings: "ss01";
+}
+.dark .courtos-web {
+    --background: #202622;
+    --foreground: #ece9df;
+    --app-surface: #272e28;
+    --app-surface-hover: #333c32;
+    --app-surface-active: #3c4637;
+    --app-floating: #2b332c;
+    --primary-foreground: #202622;
+    --secondary: #343b32;
+    --muted: #2c332d;
+    --muted-foreground: #b4b9a9;
+    --accent: #3c4637;
+    --border: #485142;
+    --input: #78806c;
+    --ring: #b2caa1;
+    --destructive: #f0a397;
+    --sidebar: #242b24;
+}
+.courtos-web .font-mono { font-family: var(--font-courtos-mono); }
+.courtos-web :is(.text-gray-950,.text-gray-900,.text-gray-800,.text-gray-700) { color: var(--foreground); }
+.courtos-web :is(.text-gray-600,.text-gray-500,.text-gray-400) { color: var(--muted-foreground); }
+.courtos-web :is(.liquid-glass-translucent,.liquid-glass-translucent-action) { backdrop-filter: none; }
+.courtos-web :where(button,a,input,textarea,select,summary,[tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+}
+.courtos-web :where(button,a) { -webkit-tap-highlight-color: transparent; }
+.courtos-web :where(button):disabled { cursor: not-allowed; }
+.courtos-web ::selection { background: var(--app-surface-active); color: var(--foreground); }
+.courtos-web .courtos-page { max-width: 1120px; margin-inline: auto; padding: clamp(28px,5vw,64px) clamp(20px,4vw,56px) 48px; }
+.courtos-web .courtos-kicker {
+    font-family: var(--font-courtos-mono);
+    font-size: 10px;
+    line-height: 1.6;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: .11em;
+    color: var(--muted-foreground);
+}
+.courtos-web .courtos-display {
+    font-family: var(--font-eb-garamond);
+    font-weight: 400;
+    font-size: clamp(40px,4.6vw,66px);
+    line-height: 1.04;
+    letter-spacing: -.028em;
+    text-wrap: balance;
+}
+.courtos-web .courtos-lede { font-size: 16px; line-height: 1.65; max-width: 66ch; color: var(--muted-foreground); }
+.courtos-web .courtos-section-title { font-family: var(--font-eb-garamond); font-weight: 400; font-size: 30px; line-height: 1.16; letter-spacing: -.015em; }
+.courtos-web .courtos-link { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.courtos-web .courtos-link:hover { text-decoration-thickness: 2px; }
+.courtos-web .courtos-button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 44px; border: 1px solid var(--foreground); border-radius: 4px;
+    background: var(--foreground); color: var(--background); padding: 10px 18px;
+    font-size: 14px; line-height: 1.4; font-weight: 500; text-decoration: none;
+    transition: background-color 120ms, color 120ms;
+}
+.courtos-web .courtos-button:hover:not(:disabled) { background: var(--ring); border-color: var(--ring); color: var(--background); }
+.courtos-web .courtos-button--secondary { background: transparent; border-color: var(--border); color: var(--foreground); }
+.courtos-web .courtos-button--secondary:hover:not(:disabled) { background: var(--app-surface-hover); border-color: var(--input); color: var(--foreground); }
+.courtos-web .courtos-button:disabled { opacity: .45; }
+.courtos-web .courtos-field {
+    display: block; width: 100%; min-height: 44px; margin-top: 8px; padding: 11px 12px;
+    border: 1px solid var(--input); border-radius: 4px; background: var(--app-floating);
+    color: var(--foreground); font-size: 14px; line-height: 1.5;
+}
+.courtos-web .courtos-field::placeholder { color: var(--muted-foreground); }
+.courtos-web .courtos-field:focus { border-color: var(--ring); }
+.courtos-web .courtos-feature { margin-top: 36px; border-block: 1px solid var(--foreground); padding-block: 30px; display: grid; gap: 18px; }
+.courtos-web .courtos-stages { display: grid; gap: 28px; margin-top: 34px; }
+.courtos-web .courtos-stage { border-top: 1px solid var(--border); padding-top: 18px; }
+.courtos-web .courtos-stage h2 { margin-top: 12px; font-size: 25px; line-height: 1.15; font-weight: 400; }
+.courtos-web .courtos-work-section { margin-top: 42px; border-top: 1px solid var(--border); padding-top: 26px; }
+.courtos-web .courtos-usage { border-left: 2px solid var(--border); padding-left: 16px; font-size: 12px; line-height: 1.6; }
+.courtos-web .courtos-source-tabs { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 32px; border-bottom: 1px solid var(--border); }
+.courtos-web .courtos-source-tab { min-height: 48px; padding: 10px 0 14px; border-bottom: 2px solid transparent; color: var(--muted-foreground); font-size: 14px; font-weight: 500; text-align: left; }
+.courtos-web .courtos-source-tab[aria-pressed="true"] { border-color: var(--foreground); color: var(--foreground); }
+.courtos-web .courtos-source-tab:hover { color: var(--foreground); }
+.courtos-web .courtos-source-list { background: var(--app-surface); border: 1px solid var(--border); padding: 20px; border-radius: 4px; }
+.courtos-web .courtos-source-list h3, .courtos-web .courtos-search-form h3 { font-family: var(--font-courtos-mono); font-size: 11px; letter-spacing: .025em; font-weight: 400; text-transform: uppercase; }
+.courtos-web .courtos-source-hit { padding: 24px 0; border-top: 1px solid var(--border); }
+.courtos-web .courtos-source-hit blockquote { font-size: 20px; line-height: 1.55; }
+.courtos-web .courtos-source-meta { font-family: var(--font-courtos-mono); font-size: 11px; line-height: 1.6; font-weight: 400; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.courtos-web .courtos-source-dialog { border-radius: 6px; background: var(--app-floating); box-shadow: 0 20px 80px #17201730; }
+.courtos-web .courtos-source-dialog::backdrop { background: #20262266; backdrop-filter: blur(2px); }
+.courtos-web .courtos-source-dialog pre { max-width: 74ch; margin-inline: auto; font-size: 19px; line-height: 1.6; }
+.courtos-web .courtos-assistant { padding-top: clamp(40px,8vh,88px); }
+.courtos-web .courtos-assistant-header { width: 100%; max-width: 896px; margin-inline: auto; margin-bottom: 28px; }
+.courtos-web .courtos-assistant-header h1 { margin-top: 16px; font-size: clamp(38px,4vw,54px); }
+.courtos-web .courtos-task-starters { display: grid; margin-top: 16px; border-block: 1px solid var(--border); }
+.courtos-web .courtos-task-starter { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 16px 6px; text-align: left; font-size: 14px; }
+.courtos-web .courtos-task-starter + .courtos-task-starter { border-top: 1px solid var(--border); }
+.courtos-web .courtos-task-starter:hover { background: var(--app-surface-hover); }
+.courtos-web .courtos-task-starter svg { margin-left: auto; width: 16px; height: 16px; flex-shrink: 0; }
+.courtos-web .courtos-sidebar { background: var(--sidebar); border-color: var(--border); box-shadow: none; }
+.courtos-web .courtos-sidebar-wordmark { font-family: var(--font-eb-garamond); font-size: 26px; font-weight: 400; letter-spacing: -.03em; }
+.courtos-web .courtos-sidebar-nav-link { min-height: 40px; border-radius: 4px; }
+.courtos-web .courtos-sidebar-nav-link[aria-current="page"] { box-shadow: inset 2px 0 0 var(--foreground); }
+.courtos-web .courtos-sidebar-nav-link svg { stroke-width: 1.5; }
+.courtos-web .courtos-sidebar-footer { border-top: 1px solid var(--border); padding-top: 12px; }
+@media (min-width: 768px) {
+    .courtos-web .courtos-feature { grid-template-columns: 160px minmax(0,1fr); gap: 32px; }
+    .courtos-web .courtos-stages { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; }
+    .courtos-web .courtos-task-starters { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .courtos-web .courtos-task-starter { padding-inline: 14px; }
+    .courtos-web .courtos-task-starter + .courtos-task-starter { border-top: 0; border-left: 1px solid var(--border); }
+}
+@media (max-width: 639px) {
+    .courtos-web .courtos-page { padding-top: 30px; }
+    .courtos-web .courtos-lede { font-size: 15px; }
+    .courtos-web .courtos-link { min-height: 44px; }
+    .courtos-web .courtos-source-list { padding: 16px; }
+    .courtos-web .courtos-source-hit blockquote { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .courtos-web *, .courtos-web *::before, .courtos-web *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+.courtos-web .courtos-sidebar-nav-link svg { color: inherit; }
+.courtos-web .courtos-access-panel { border-radius: 6px; border-color: var(--border); padding: 30px; box-shadow: none; }
+.courtos-web .courtos-composer { border-radius: 8px; border-color: var(--input); background: var(--app-floating); box-shadow: none; }
+.courtos-web .courtos-composer:focus-within { border-color: var(--ring); }
+.courtos-web .courtos-send { background: var(--foreground); color: var(--background); box-shadow: none; min-width: 36px; min-height: 36px; border-radius: 4px; }
+.courtos-web .courtos-send:disabled { opacity: .4; }
+.courtos-web .courtos-send:hover:not(:disabled) { background: var(--ring); }
+@media (max-width: 639px) {
+    .courtos-web .courtos-access-panel { padding: 22px; }
+    .courtos-web .courtos-send { min-width: 44px; min-height: 44px; }
+}
+
+/* Existing shared control APIs retain their behaviour; web buttons lose the bevel. */
+.courtos-web :is(button,a)[class*="shadow-"] { box-shadow: none; }
+@media (max-width: 767px) {
+    .courtos-web .courtos-sidebar-nav-link { min-height: 44px; }
+}

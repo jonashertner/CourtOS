@@ -25,6 +25,14 @@ const reasoning = (text: string): AssistantEvent => ({
 });
 
 describe("AssistantMessage timeline", () => {
+    it("distinguishes retrieved evidence from an empty search during formulation", () => {
+        const { rerender } = render(<AssistantMessage events={[{ type: "thinking", isStreaming: true, knowledgePhase: "evidence_returned" }]} />);
+        expect(screen.getByText("Quellen geprüft. Antwort wird formuliert …")).toBeVisible();
+        expect(screen.queryByText(/Running search_knowledge/)).toBeNull();
+        rerender(<AssistantMessage events={[{ type: "thinking", isStreaming: true, knowledgePhase: "search_returned" }]} />);
+        expect(screen.getByText("Suche abgeschlossen. Antwort wird formuliert …")).toBeVisible();
+        expect(screen.queryByText(/Quellen geprüft/)).toBeNull();
+    });
     beforeEach(() => {
         vi.stubGlobal("ResizeObserver", class {
             observe() {}

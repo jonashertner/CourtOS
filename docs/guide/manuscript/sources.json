@@ -1,0 +1,117 @@
+{
+  "sources": [
+    {
+      "key": "FP01",
+      "title": "Online Courts and the Future of Justice",
+      "author": "Richard Susskind",
+      "issuer": "Oxford University Press",
+      "date": "2019-11-14",
+      "url": "https://academic.oup.com/oxford-law-pro/book/41081",
+      "doi": "https://doi.org/10.1093/oso/9780198838364.001.0001",
+      "locator": "Publisher abstract, especially paragraphs 1 and 3; table of contents, Part II: Is Court a Service or a Place?",
+      "checked_date": "2026-10-09",
+      "verification": "Publisher abstract and contents read directly; full book not claimed to have been read.",
+      "supports": "Susskind frames court reform around access to justice and a service/place question; his account includes online adjudication by human judges.",
+      "quotation_words": 0
+    },
+    {
+      "key": "FP02",
+      "title": "Corrected oral evidence: Constitutional implications of Covid-19",
+      "author": "Richard Susskind (testimony)",
+      "issuer": "UK House of Lords, Select Committee on the Constitution",
+      "date": "2020-06-03",
+      "url": "https://committees.parliament.uk/oralevidence/462/html/",
+      "locator": "Q30, Susskind’s final answer; contextual qualifications in Q23–24 and Q29.",
+      "checked_date": "2026-10-09",
+      "verification": "Corrected official transcript read directly.",
+      "supports": "Susskind distinguishes improving existing processes from using technology to organise work differently; this is a reform argument, not evidence of present AI reliability.",
+      "quotation_words": 0
+    },
+    {
+      "key": "FP03",
+      "title": "Technology and the Future of the Courts",
+      "author": "James Allsop",
+      "issuer": "Federal Court of Australia; lecture at the TC Beirne School of Law, University of Queensland",
+      "date": "2019-03-26",
+      "url": "https://www.fedcourt.gov.au/__data/assets/pdf_file/0017/55520/Allsop-CJ-20190326.pdf",
+      "locator": "Printed pp. 2–4 (judicial power, human institutions, criticism of the binary service/place framing); pp. 11–12 (limits of efficiency and metrics).",
+      "checked_date": "2026-10-09",
+      "verification": "Original court-hosted PDF read directly.",
+      "supports": "A court’s public judicial function and humanity cannot be reduced to a service/place binary or to performance statistics.",
+      "quotation_words": 0
+    },
+    {
+      "key": "FP04",
+      "title": "Bundesverfassung / Constitution fédérale / Costituzione federale (SR 101)",
+      "issuer": "Swiss Confederation, Fedlex",
+      "date": "1999-04-18",
+      "version_date": "2024-03-03",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1999/404/de",
+      "language_urls": {
+        "de": "https://www.fedlex.admin.ch/eli/cc/1999/404/de",
+        "fr": "https://www.fedlex.admin.ch/eli/cc/1999/404/fr",
+        "it": "https://www.fedlex.admin.ch/eli/cc/1999/404/it"
+      },
+      "original_urls": {
+        "de": "https://www.fedlex.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1999/404/20240303/de/xml/fedlex-data-admin-ch-eli-cc-1999-404-20240303-de-xml.xml",
+        "fr": "https://www.fedlex.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1999/404/20240303/fr/xml/fedlex-data-admin-ch-eli-cc-1999-404-20240303-fr-xml.xml",
+        "it": "https://www.fedlex.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1999/404/20240303/it/xml/fedlex-data-admin-ch-eli-cc-1999-404-20240303-it-xml.xml"
+      },
+      "original_sha256": {
+        "de": "4dda9c5f9121594214bce34bb8a3549c289d778fb4f6d0d769176d7950dfe328",
+        "fr": "2734686881d9e6d416cbe7d7cc0eef69bde0497b9d20ede3f81db37ebda53416",
+        "it": "9814a0769eabf7e0a99a672135a3df034dfe26e2cc4a96c44b7d5ad28e34b166"
+      },
+      "locator": "Art. 29 Abs. 1–2; Art. 29a; Art. 30 Abs. 1 and 3; Art. 191c. Official XML eIds art_29, art_29_a, art_30, art_191_c.",
+      "checked_date": "2026-10-09",
+      "verification": "Official Fedlex metadata freshly confirms that consolidation 2024-03-03 applies on 2026-10-09 (dateApplicability 2024-03-03; dateEndApplicability 2028-12-31; next listed consolidation begins 2029-01-01). Art. 29, 29a, 30 and 191c freshly read in the directly fetched official DE/FR/IT XML of that applicable consolidation.",
+      "supports": "Fair procedure and reasonable time; right to be heard; judicial access subject to exceptional statutory exclusions; lawful competent independent impartial court; public hearing and judgment subject to statutory exceptions; judicial independence and commitment to law.",
+      "rights_note": "Official legislative text; public-domain legal authority.",
+      "quotation_words": 0,
+      "current_version_check": {
+        "checked_date": "2026-10-09",
+        "endpoint": "https://fedlex.data.admin.ch/sparqlendpoint",
+        "accept": "application/sparql-results+json",
+        "query": "SELECT DISTINCT ?version ?start ?end WHERE { ?version <http://data.legilux.public.lu/resource/ontology/jolux#isMemberOf> <https://fedlex.data.admin.ch/eli/cc/1999/404>; <http://data.legilux.public.lu/resource/ontology/jolux#dateApplicability> ?start . OPTIONAL { ?version <http://data.legilux.public.lu/resource/ontology/jolux#dateEndApplicability> ?end } FILTER(?start >= \"2024-01-01\"^^<http://www.w3.org/2001/XMLSchema#date>) } ORDER BY ?start",
+        "query_url": "https://fedlex.data.admin.ch/sparqlendpoint?query=SELECT+DISTINCT+%3Fversion+%3Fstart+%3Fend+WHERE+%7B+%3Fversion+%3Chttp%3A%2F%2Fdata.legilux.public.lu%2Fresource%2Fontology%2Fjolux%23isMemberOf%3E+%3Chttps%3A%2F%2Ffedlex.data.admin.ch%2Feli%2Fcc%2F1999%2F404%3E%3B+%3Chttp%3A%2F%2Fdata.legilux.public.lu%2Fresource%2Fontology%2Fjolux%23dateApplicability%3E+%3Fstart+.+OPTIONAL+%7B+%3Fversion+%3Chttp%3A%2F%2Fdata.legilux.public.lu%2Fresource%2Fontology%2Fjolux%23dateEndApplicability%3E+%3Fend+%7D+FILTER%28%3Fstart+%3E%3D+%222024-01-01%22%5E%5E%3Chttp%3A%2F%2Fwww.w3.org%2F2001%2FXMLSchema%23date%3E%29+%7D+ORDER+BY+%3Fstart",
+        "results": [
+          {
+            "version": "https://fedlex.data.admin.ch/eli/cc/1999/404/20240101",
+            "start": "2024-01-01",
+            "end": "2024-03-02"
+          },
+          {
+            "version": "https://fedlex.data.admin.ch/eli/cc/1999/404/20240303",
+            "start": "2024-03-03",
+            "end": "2028-12-31"
+          },
+          {
+            "version": "https://fedlex.data.admin.ch/eli/cc/1999/404/20290101",
+            "start": "2029-01-01"
+          }
+        ],
+        "response_sha256": "ea15124d68e4d00ec1a70593ae54a1da4b4e098ae2ec9179123076c1f12d6eda",
+        "scope": "Current consolidation and only the four identified provisions; no claim about unrelated legal requirements."
+      }
+    },
+    {
+      "key": "FP05",
+      "title": "BGE 129 I 232, judgment 1P.1/2003",
+      "issuer": "Swiss Federal Supreme Court",
+      "date": "2003-07-09",
+      "url": "https://www.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?lang=de&type=show_document&highlight_docid=atf://129-I-232:de",
+      "locator": "E. 3.2, printed pp. 236–237.",
+      "checked_date": "2026-10-09",
+      "verification": "Official judgment retrieved directly by HTTPS; E. 3.2 checked against original HTML.",
+      "supports": "Right to be heard entails serious consideration of submissions and reasons enabling the person concerned and reviewing court to understand and challenge a decision. Judgment arose in a naturalisation-initiative dispute; only its stated general procedural principle is used.",
+      "rights_note": "Official judicial decision.",
+      "quotation_words": 0
+    }
+  ],
+  "writing_reference": {
+    "title": "Building the legal function in the age of AI",
+    "url": "https://ruleandreason.com/book-1/",
+    "role": "User-designated writing and design reference only; not evidence about courts or CourtOS features.",
+    "checked_date": "2026-10-09"
+  }
+}

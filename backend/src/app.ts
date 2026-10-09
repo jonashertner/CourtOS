@@ -1,3 +1,4 @@
+import { knowledgeRouter } from "./modules/knowledge/knowledge.routes";
 import "dotenv/config";
 import { requireCourtOSAccess } from "./middleware/courtosAccess";
 import { courtosPilotMiddleware } from "./middleware/courtosPilot";
@@ -331,6 +332,7 @@ app.use("/orgs", orgsRouter);
 app.use("/projects/:projectId/chat", projectChatRouter);
 app.use("/single-documents", documentsRouter);
 app.use("/library", libraryRouter);
+app.use("/knowledge", knowledgeRouter);
 app.use("/tabular-review", tabularRouter);
 app.use("/workflows", workflowsRouter);
 app.use("/quick-actions", quickActionsRouter);

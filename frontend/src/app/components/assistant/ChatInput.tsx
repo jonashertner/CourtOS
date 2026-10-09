@@ -68,7 +68,7 @@ import {
 } from "@/app/lib/documentUploadValidation";
 import { userFacingApiError } from "@/app/lib/userFacingError";
 import { useConfiguredModels } from "@/app/hooks/useConfiguredModels";
-import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { COURTOS_KNOWLEDGE_ENABLED, COURTOS_PILOT_MODE } from "@/app/lib/courtos";
 import {
     routerSelections,
     type NoModelsReason,
@@ -77,6 +77,8 @@ import {
 export interface ChatInputHandle {
     /** Prepare a visible draft only; refuses to replace an existing draft. */
     prepareDraft?: (prompt: string) => boolean;
+    /** Prepare a visible private question with explicit source references; never submit. */
+    prepareKnowledgeDraft?: (prompt: string, documents: Document[]) => boolean;
     addDoc: (doc: Document) => void;
     addFiles: (files: File[]) => void;
     startWorkflow: (
@@ -152,7 +154,7 @@ function placeholderFor({
     if (COURTOS_PILOT_MODE) {
         if (canSend === null) return "Wird geladen…";
         if (!canSend) return "Nur Lesezugriff – zum Senden ist ein Bearbeitungsrecht nötig";
-        if (!chatLoading) return "Ihr Auftrag zum synthetischen Testfall…";
+        if (!chatLoading) return COURTOS_KNOWLEDGE_ENABLED ? "Ihre Frage zu Testakten oder zulässigen Literaturquellen…" : "Ihr Auftrag zum synthetischen Testfall…";
         return isLoading ? "Die Antwort wird noch erstellt…" : "Gespräch wird geladen…";
     }
     if (canSend === null) return "Loading…";
@@ -473,6 +475,18 @@ function ChatInputForChatImpl(
     );
 
     useImperativeHandle(ref, () => ({
+        prepareKnowledgeDraft: (prompt: string, documents: Document[]) => {
+            if (!COURTOS_KNOWLEDGE_ENABLED || !composerOpen || value.trim() || attachedDocs.length || selectedWorkflow || documents.length < 1 || documents.length > 20) return false;
+            setValue(prompt);
+            setAttachedDocs(documents);
+            requestAnimationFrame(() => {
+                if (!textareaRef.current) return;
+                textareaRef.current.style.height = "auto";
+                textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+                textareaRef.current.focus();
+            });
+            return true;
+        },
         prepareDraft: (prompt: string) => {
             if (!composerOpen || value.trim()) return false;
             setValue(prompt);
@@ -705,7 +719,7 @@ function ChatInputForChatImpl(
                 )}
                 <div
                     className={cn(
-                        "rounded-[21px]",
+                        "courtos-composer rounded-[21px]",
                         LIQUID_GLASS_TRANSLUCENT_CLASS,
                     )}
                 >
@@ -921,7 +935,7 @@ function ChatInputForChatImpl(
                                     isLoading ? "Stop response" : "Send message"
                                 }
                                 className={cn(
-                                    "relative flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-full border-0 bg-gradient-to-b from-neutral-700 to-black text-white transition-all duration-150 active:enabled:scale-95 disabled:from-neutral-600 disabled:to-black",
+                                    "courtos-send relative flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-full border-0 bg-gradient-to-b from-neutral-700 to-black text-white transition-all duration-150 active:enabled:scale-95 disabled:from-neutral-600 disabled:to-black",
                                     "shadow-[0_3px_9px_rgba(15,23,42,0.10),inset_1px_1px_0_rgba(255,255,255,0.22),inset_-1px_-1px_0_rgba(255,255,255,0.10),inset_-4px_-4px_9px_rgba(15,23,42,0.2)]",
                                 )}
                                 onClick={handleActionClick}

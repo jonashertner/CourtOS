@@ -226,6 +226,27 @@ describe("runLLMStream document-mutation gating", () => {
 
 
 describe("CourtOS pilot tool execution boundary", () => {
+  it.each([true, false])("announces knowledge retrieval completion before the next model hop (evidence=%s)", async (hasEvidence) => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    vi.stubEnv("COURTOS_KNOWLEDGE_ENABLED", "true");
+    const params = { ...baseParams(), model: "courtos-local" };
+    const completionFrame = `data: ${JSON.stringify({ type: "tool_call_complete", name: "search_knowledge", has_evidence: hasEvidence })}\n\n`;
+    runToolCalls.mockImplementationOnce(async () => {
+      expect(params.write).not.toHaveBeenCalledWith(completionFrame);
+      return {
+        toolResults: [{ role: "tool", tool_call_id: "kb", content: hasEvidence ? '{"passages":[{"quote":"source"}]}' : '{"error":"unavailable"}' }],
+        docsFound: hasEvidence ? [{ filename: "source.pdf", document_id: "d", version_id: "v", version_number: 1, query: "q", total_matches: 1 }] : [],
+        docsRead: [], docsCreated: [], docsReplicated: [], workflowsApplied: [], docsEdited: [],
+        askInputsEvents: [], courtlistenerEvents: [], caseCitationEvents: [], mcpEvents: [],
+      } as never;
+    });
+    streamChatWithTools.mockImplementationOnce(async (request) => {
+      await request.runTools?.([{ id: "kb", name: "search_knowledge", input: { query: "q" } }]);
+      expect(params.write).toHaveBeenCalledWith(completionFrame);
+      return { fullText: "" };
+    });
+    await runLLMStream(params);
+  });
   it("rejects hallucinated external, writing and client tools before dispatch", async () => {
     vi.stubEnv("COURTOS_PILOT_MODE", "true");
     let toolResults: { tool_use_id: string; content: string }[] | undefined;

@@ -1,7 +1,7 @@
 {
   "de": {
     "language": "Deutsch",
-    "label": "Leitfaden zum Pilotbetrieb",
+    "label": "Arbeitsbuch",
     "date": "9. Oktober 2026",
     "contents": "In diesem Heft",
     "pdf_label": "PDF herunterladen",
@@ -9,11 +9,187 @@
     "next": "Weiter",
     "previous": "Zurück",
     "page_label": "Seite",
-    "pilot": "Fiktive Beispielakte",
-    "title": "Mit CourtOS am Dossier arbeiten",
+    "pilot": "Arbeitsausgabe 01 · VPS-Pilot",
+    "title": "Das Gericht im Zeitalter der KI",
     "pages": [
       {
         "id": "start",
+        "kind": "cover",
+        "blocks": [],
+        "title": "Das Gericht\nim Zeitalter\nder KI",
+        "lead": "Ein Arbeitsbuch für Richterinnen, Richter und Gerichtsschreibende. Mit einem praktischen Einstieg in CourtOS.",
+        "statement": "Besser verstehen, sorgfältig abwägen und nachvollziehbar entscheiden. Von diesem Auftrag aus wird die Technik gestaltet.",
+        "edition": "Arbeitsausgabe 01 · Mit VPS-Pilot",
+        "part": "Zweck · Urteilskraft · Arbeitsalltag"
+      },
+      {
+        "id": "purpose",
+        "title": "Vom Zweck\nher denken",
+        "lead": "Was soll für die Menschen besser werden, deren Sache vor Gericht liegt?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Mit einer Schwierigkeit beginnen",
+            "body": "Gerichte schützen Rechte, klären Konflikte verbindlich und kontrollieren staatliches Handeln. Menschen müssen ihre Sache vorbringen und die Gründe eines Entscheids verstehen können. Wo erschwert der heutige Ablauf diese Aufgabe: beim Verstehen eines Begehrens, beim Auffinden eines Belegs oder beim Prüfen eines Einwands? Davon soll der technische Auftrag ausgehen."
+          },
+          {
+            "type": "text",
+            "heading": "Zwei hilfreiche Perspektiven",
+            "body": "Richard Susskind richtet den Blick vom Gerichtsgebäude auf den Zugang zum Recht. Er unterscheidet die Beschleunigung bestehender Abläufe von einer anderen Organisation der Arbeit. Das fordert uns auf, den Zweck eines Arbeitsschritts zu prüfen, bevor wir ihn automatisieren. [1, 2]",
+            "source_keys": [
+              "FP01",
+              "FP02"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Den öffentlichen Auftrag mitdenken",
+            "body": "James Allsop hält dagegen: Gerichte verkörpern richterliche Gewalt und schützen die Rechtsstaatlichkeit. Ihre menschliche Aufgabe geht über die Gegenüberstellung von Ort und Dienstleistung hinaus. Messbare Leistung erfasst sie nur teilweise. [3]",
+            "source_keys": [
+              "FP03"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Unser Ausgangspunkt für CourtOS",
+            "body": "Eine richterliche Arbeitsumgebung soll Aufmerksamkeit für entscheidende Fragen schaffen. Welche Information fehlt? Welcher Einwand wurde übergangen? Wer kann eine fehlerhafte Annahme erkennen und korrigieren? Schnelligkeit ist wertvoll, wenn die Antwort darauf besser wird."
+          },
+          {
+            "type": "text",
+            "heading": "Ein Ergebnis für Ihr Team",
+            "body": "Formulieren Sie einen Satz: Wir wollen bei dieser wiederkehrenden Aufgabe dieses Hindernis beseitigen, damit diese Person ihre Aufgabe oder ihr Recht besser wahrnehmen kann. Wählen Sie einen überschaubaren Testfall."
+          }
+        ],
+        "source_keys": [
+          "FP01",
+          "FP02",
+          "FP03"
+        ],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Die gerichtliche Arbeit gestalten"
+      },
+      {
+        "id": "role",
+        "title": "Die richterliche\nRolle bewahren",
+        "lead": "Welche Verantwortung muss auch bei guter technischer Unterstützung erkennbar bleiben?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Ein verfassungsrechtlicher Rahmen",
+            "body": "Die Bundesverfassung gibt unterschiedliche, zusammenwirkende Garantien vor. Art. 29 schützt das faire Verfahren vor Gerichts- und Verwaltungsinstanzen, das rechtliche Gehör und eine angemessene Verfahrensdauer. Art. 29a gewährleistet grundsätzlich Zugang zu einer richterlichen Behörde; gesetzliche Ausschlüsse bleiben in Ausnahmefällen möglich. [4]",
+            "source_keys": [
+              "FP04"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Unabhängig prüfen und entscheiden",
+            "body": "Art. 30 verlangt für gerichtliche Verfahren ein gesetzlich geschaffenes, zuständiges, unabhängiges und unparteiisches Gericht. Verhandlung und Urteilsverkündung sind grundsätzlich öffentlich. Art. 191c verpflichtet die richterlichen Behörden in ihrer Rechtsprechung allein auf das Recht. Diese Garantien beantworten noch nicht jede Frage eines bestimmten KI-Einsatzes. [4]",
+            "source_keys": [
+              "FP04"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Gründe müssen eine Prüfung ermöglichen",
+            "body": "Zur Gewährung des rechtlichen Gehörs gehört die ernsthafte Auseinandersetzung mit erheblichen Vorbringen. Die Begründung muss die tragenden Überlegungen erkennen lassen und eine sachgerechte Anfechtung ermöglichen. Ein überzeugend formulierter Text allein erfüllt diese Aufgabe nicht. [5]",
+            "source_keys": [
+              "FP05"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Daraus folgt unser Gestaltungsvorschlag",
+            "body": "Die Aufgabenverteilung im Gericht bleibt sichtbar: Wer erschliesst die Akten, wer prüft die Gegenargumente, wer entscheidet? Gerichtsschreibende und Richterinnen oder Richter müssen Quellen einsehen, Entwürfe ändern und Vorschläge verwerfen können. Ein Bestätigungsklick belegt noch keine eigene Prüfung."
+          },
+          {
+            "type": "text",
+            "heading": "Eine konkrete Vereinbarung",
+            "body": "Halten Sie für den Test fest, wer fachlich prüft und welche Feststellungen offen bleiben müssen. CourtOS erhält dadurch keine Entscheidbefugnis. Eine spätere institutionelle Nutzung braucht eine gesonderte rechtliche und organisatorische Beurteilung."
+          }
+        ],
+        "source_keys": [
+          "FP04",
+          "FP05"
+        ],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Die gerichtliche Arbeit gestalten"
+      },
+      {
+        "id": "work",
+        "title": "Den Gedankengang\nprüfbar halten",
+        "lead": "Kann eine andere Person verstehen, wie aus einer Quelle eine Schlussfolgerung wurde?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Ein Zielbild für die Zusammenarbeit",
+            "body": "Eine gute Arbeitsumgebung verbindet Aktenstelle, Behauptung, Prüfung und Begründung. Die folgenden Schritte sind unser Vorschlag für die gerichtliche Zusammenarbeit. Sie beschreiben einen institutionellen Arbeitsablauf, den der heutige Pilot nur teilweise umsetzt."
+          },
+          {
+            "type": "items",
+            "heading": "Vom Eingang bis zur Kontrolle",
+            "items": [
+              "Erschliessen: Gerichtsschreibende ordnen Unterlagen nach der gerichtlichen Aufgabenverteilung. Datum, Herkunft und Fassung bleiben sichtbar; eine Zusammenfassung ist als Ableitung erkennbar.",
+              "Streitpunkte bilden: Stellen Sie je entscheidender Frage Behauptung, Beleg, Bestreitung und fehlende Abklärung nebeneinander. Ein Widerspruch darf bestehen bleiben.",
+              "Gegenlesen: Fragen Sie gezielt nach der stärksten anderen Erklärung. Prüfen Sie Original und Zusammenhang, auch wenn das Zitat wörtlich stimmt.",
+              "Begründen: Die verantwortlichen Personen wählen und prüfen die tragenden Gründe. KI kann einen Entwurf anbieten; Beweiswürdigung und Entscheidung werden dadurch nicht erledigt.",
+              "Änderungen nachführen: Kommt eine neue Fassung hinzu, muss erkennbar sein, welche Feststellung erneut geprüft werden soll. Bewahren Sie den früheren Arbeitsstand nachvollziehbar auf."
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Was eine Übergabe brauchbar macht",
+            "body": "Übergeben Sie einen Prüfvermerk mit Quellenfassung, offenen Punkten und Prüfschritt. So kann eine Kollegin widersprechen, ohne die ganze Arbeit rekonstruieren zu müssen. Nachfragen und Lernen gehören zum Ablauf."
+          },
+          {
+            "type": "text",
+            "heading": "Den Umfang ehrlich halten",
+            "body": "Der Pilot bietet Aktenhilfen und begrenzte Recherche. Eine vollständige Gerichtsakte, automatische Folgenprüfung jeder Dokumentänderung oder amtliche Entscheideröffnung sind damit nicht bereitgestellt."
+          }
+        ],
+        "source_keys": [],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Die gerichtliche Arbeit gestalten"
+      },
+      {
+        "id": "quality",
+        "title": "Den Nutzen\nam Fall prüfen",
+        "lead": "Woran erkennen Sie, dass die Arbeit besser geworden ist?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Eine kleine gemeinsame Prüfung",
+            "body": "Vereinbaren Sie Ergebnis und Stolperstellen. Vergleichen Sie denselben Testfall mit und ohne Unterstützung. Erfassen Sie Lesen, Warten, Prüfen und Korrigieren. Die Matrix ist ein Testvorschlag, keine bereits erzielte Wirkung."
+          },
+          {
+            "type": "items",
+            "heading": "Aufgabe · Unterstützung · menschliche Prüfung · Beobachtung",
+            "items": [
+              "Akten erschliessen: Chronologie vorschlagen lassen; Belege und Datumsarten prüfen. Zählen Sie übersehene sowie erfundene Ereignisse.",
+              "Widersprüche klären: abweichende Angaben sammeln lassen; echte Unvereinbarkeit von verschiedenen Ereignissen unterscheiden. Bleibt der bekannte Testwiderspruch sichtbar?",
+              "Literatur prüfen: Fundstellen suchen; Fassung, Zusammenhang und Gegenauffassung im Original lesen. Wie viele tragende Aussagen haben einen zutreffenden Beleg?",
+              "Rechtsfrage eingrenzen: öffentliche Quellen hinzuziehen; Zuständigkeit und Verfahrenskontext prüfen. Wird eine unpassende Regel rechtzeitig erkannt?",
+              "Entwurf übergeben: einen kurzen Vermerk erstellen lassen; tragende Gründe selbst verantworten. Kann eine Kollegin eine Schlussfolgerung nachvollziehen und korrigieren?",
+              "Grenzen erkennen: einen fehlenden Beleg oder unlesbaren Scan einbauen. Macht das Ergebnis die Lücke kenntlich, oder verdeckt es sie mit Gewissheit?"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Zahlen brauchen Urteil",
+            "body": "Besprechen Sie auch den schwersten Fehler und die Sicht der betroffenen Person. Weniger Wörter oder Minuten allein zeigen keine bessere Rechtsprechung. Ein Ergebnis, das systematisch zum blossen Bestätigen verleitet, verlangt eine Änderung des Ablaufs."
+          },
+          {
+            "type": "text",
+            "heading": "Ein belastbarer nächster Schritt",
+            "body": "Notieren Sie Nutzen, Fehler und Prüfaufwand. Entscheiden Sie gemeinsam, was weiter erprobt, verändert oder vorerst nicht verwendet wird."
+          }
+        ],
+        "source_keys": [],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Die gerichtliche Arbeit gestalten"
+      },
+      {
+        "id": "first-steps",
         "title": "Am Dossier\narbeiten",
         "lead": "Ein kurzer Probelauf für Gerichtsschreiberinnen, Gerichtsschreiber, Richterinnen und Richter.",
         "blocks": [
@@ -38,14 +214,15 @@
           {
             "type": "note",
             "heading": "Ein überschaubarer Test",
-            "body": "Der geführte Ablauf verwendet nur die vorbereitete erfundene Akte. Im ergänzenden offenen Arbeitsbereich dürfen ausschliesslich synthetische Testdokumente erprobt werden. Die folgenden Prüfkriterien beziehen sich auf den geführten Fall. Beispielakte und voreingestellte Antwortsprache sind derzeit Deutsch."
+            "body": "Der geführte Fall verwendet nur die erfundene Akte. Für die eigene Wissensbasis können Sie zusätzlich öffentliche Literaturauszüge verwenden, die Sie hier speichern und bearbeiten dürfen. Echte Fallakten und vertrauliche Unterlagen bleiben ausgeschlossen. Beispielakte und voreingestellte Antwortsprache sind Deutsch."
           },
           {
             "type": "text",
             "heading": "Ihr Weg durch das Heft",
-            "body": "Aktenerschliessung auf Seite 2, Rechtsfrage auf Seite 3, Prüfvermerk auf Seite 4. Seite 5 enthält drei Testaufgaben. Datenweg und Grenzen folgen auf Seite 6; spätere institutionelle Entscheidungen auf Seite 7."
+            "body": "Beginnen Sie mit den Fragen nach Zweck, Rolle und Arbeitsweise des Gerichts. Der praktische Teil führt von der Beispielakte über eine öffentliche Rechtsfrage zum Prüfvermerk. Danach folgen Ihre Wissensbasis, die Datenwege und der spätere institutionelle Betrieb. Sie können über das Inhaltsverzeichnis direkt einsteigen."
           }
-        ]
+        ],
+        "part": "CourtOS in der Praxis"
       },
       {
         "id": "local",
@@ -81,7 +258,8 @@
             "heading": "Wartezeit einplanen",
             "body": "Die Berechnung auf dem Server kann mehrere Minuten dauern. Lassen Sie einen laufenden Auftrag zunächst arbeiten, statt denselben Schritt mehrfach zu starten."
           }
-        ]
+        ],
+        "part": "CourtOS in der Praxis"
       },
       {
         "id": "public",
@@ -116,7 +294,8 @@
             "heading": "Was die Freigabe bewirkt",
             "body": "Erst Ihre ausdrückliche Freigabe löst den Anthropic-Aufruf aus. Die Freigabe gilt für dieses Paket und ist einmal verwendbar. Nach einem Fehler erfolgt keine automatische Wiederholung. Ein neuer Versuch benötigt ein neues Paket und eine neue Freigabe."
           }
-        ]
+        ],
+        "part": "CourtOS in der Praxis"
       },
       {
         "id": "check",
@@ -148,7 +327,8 @@
             "heading": "Offene Fragen sind ein Ergebnis",
             "body": "Welcher Zustellbeleg fehlt? Gibt es eine unterzeichnete Endfassung? Wurden nachgereichte Unterlagen tatsächlich geprüft? Ein hilfreicher Entwurf macht solche Lücken sichtbar, statt sie mit Vermutungen zu schliessen."
           }
-        ]
+        ],
+        "part": "CourtOS in der Praxis"
       },
       {
         "id": "test",
@@ -180,7 +360,41 @@
             "heading": "Wann der Test noch nicht überzeugt",
             "body": "Verlorene Belege, überspielte Widersprüche, unklare Übermittlungen oder ein scheinbar fertiger Text trotz Lücken sind konkrete Gründe für eine Verbesserung."
           }
-        ]
+        ],
+        "part": "CourtOS in der Praxis"
+      },
+      {
+        "id": "knowledge",
+        "title": "Die eigene\nWissensbasis",
+        "lead": "Literaturstellen finden und Rechtsprechung hinzuziehen.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Eigene Literatur vorbereiten",
+            "body": "Laden Sie geeignete PDF-Auszüge in Ihre persönliche Bibliothek. Benennen Sie sie mit Autor, Kurztitel, Auflage oder Jahr und Seiten. Ordner helfen bei der Gliederung. Pro Datei sind höchstens 5 MiB, für Ihr Konto insgesamt 20 MiB Uploadbudget vorgesehen. Löschen setzt diese Grenze nicht zurück."
+          },
+          {
+            "type": "text",
+            "heading": "In ausgewählten Unterlagen suchen",
+            "body": "Öffnen Sie «Wissensbasis», wählen Sie Ihre Dokumente und suchen Sie mit einigen passenden Begriffen. Die Treffer zeigen Textstellen, PDF-Seite und Dokumentfassung. Öffnen Sie den Beleg im Original. Eine PDF-Seite kann von der gedruckten Seitenzahl abweichen."
+          },
+          {
+            "type": "text",
+            "heading": "OpenCaseLaw hinzuziehen",
+            "body": "Das separate Suchfeld durchsucht veröffentlichte Entscheide aus OpenCaseLaw. Geben Sie dort eigene öffentliche Suchbegriffe ein. Ihre Literatur und Ihre lokale Suchanfrage werden nicht automatisch übernommen. Die Suche läuft auf dem VPS und benötigt kein externes KI-Modell."
+          },
+          {
+            "type": "text",
+            "heading": "Mit dem Assistenten weiterarbeiten",
+            "body": "Wählen Sie für Ihren Auftrag die benötigten Bibliotheksdokumente als Anhänge. Der lokale Assistent kann darin gezielt Textstellen suchen. Lassen Sie unterschiedliche Auffassungen mit ihren Belegen nebeneinanderstehen, statt eine scheinbar eindeutige Antwort zu verlangen."
+          },
+          {
+            "type": "text",
+            "heading": "Suchgrenzen mitprüfen",
+            "body": "Eine Begriffssuche findet nicht jede sinngleiche Aussage. Gescannte PDFs ohne auswählbaren Text benötigen zuerst Texterkennung. Beachten Sie Hinweise auf nur teilweise erfasste Dokumente. Ein fehlender Treffer beweist nicht, dass eine Aussage im Werk fehlt."
+          }
+        ],
+        "part": "CourtOS in der Praxis"
       },
       {
         "id": "access",
@@ -215,7 +429,8 @@
             "heading": "Zugang, Kontingent und Aufbewahrung",
             "body": "Verwenden Sie Ihr eigenes Konto. Im geführten Fall gelten derzeit pro Person und UTC-Kalendertag höchstens drei lokale Aufträge und eine externe Analyse. Angenommene Aufträge zählen auch bei Fehlern; gemeinsame Tagesgrenzen können früher greifen. Lesen und Vorschau sind frei. Antworten bleiben bis zur ausdrücklich veranlassten Bereinigung gespeichert; Abmelden löscht sie nicht. Downloads bleiben auf Ihrem Gerät."
           }
-        ]
+        ],
+        "part": "CourtOS in der Praxis"
       },
       {
         "id": "later",
@@ -262,13 +477,92 @@
               ]
             ]
           }
+        ],
+        "part": "CourtOS in der Praxis"
+      },
+      {
+        "id": "sources",
+        "title": "Quellen und\nArbeitsweise",
+        "lead": "Die ersten vier Kapitel entwickeln einen Gestaltungsvorschlag. Die folgenden Quellen stützen die ausdrücklich zugeordneten Positionen und Rechtsaussagen.",
+        "part": "Nachweise",
+        "blocks": [
+          {
+            "type": "links",
+            "items": [
+              [
+                "1. Richard Susskind · Online Courts and the Future of Justice",
+                "https://academic.oup.com/oxford-law-pro/book/41081"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Susskind: Verlagszusammenfassung und Inhaltsverzeichnis, besonders Teil II. Das vollständige Buch wurde für diese Ausgabe nicht ausgewertet."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "2. Richard Susskind (testimony) · Corrected oral evidence: Constitutional implications of Covid-19",
+                "https://committees.parliament.uk/oralevidence/462/html/"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Susskind: amtliches Wortprotokoll, 3. Juni 2020, Frage 30."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "3. James Allsop · Technology and the Future of the Courts",
+                "https://www.fedcourt.gov.au/__data/assets/pdf_file/0017/55520/Allsop-CJ-20190326.pdf"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Allsop: Vortrag vom 26. März 2019, S. 2–4 und 11–12."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "4. Bundesverfassung · SR 101",
+                "https://www.fedlex.admin.ch/eli/cc/1999/404/de"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Bundesverfassung: Art. 29, 29a, 30 und 191c. Geltende Fassung vom 3. März 2024; geprüft am 9. Oktober 2026."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "5. Bundesgericht · BGE 129 I 232",
+                "https://www.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?lang=de&type=show_document&highlight_docid=atf://129-I-232:de"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Bundesgericht: BGE 129 I 232, E. 3.2, S. 236–237. Allgemeiner Begründungsgrundsatz aus einem Einbürgerungsfall."
+          },
+          {
+            "type": "note",
+            "heading": "Was diese Ausgabe beansprucht",
+            "body": "Die Arbeitsabläufe und Qualitätsfragen sind eigene Vorschläge. Sie geben weder einen empirisch nachgewiesenen Produktivitätsgewinn noch eine vollständige rechtliche Freigabe wieder. Die Praxisabschnitte beschreiben den begrenzten CourtOS-Pilot. Beobachtungen sind von allgemeinen Zusagen getrennt."
+          }
         ]
       }
     ]
   },
   "fr": {
     "language": "Français",
-    "label": "Guide du projet pilote",
+    "label": "Guide pratique",
     "date": "9 octobre 2026",
     "contents": "Dans ce guide",
     "pdf_label": "Télécharger le PDF",
@@ -276,11 +570,187 @@
     "next": "Suivant",
     "previous": "Précédent",
     "page_label": "Page",
-    "pilot": "Dossier d’exemple fictif",
-    "title": "Travailler sur un dossier avec CourtOS",
+    "pilot": "Édition de travail 01 · Pilote VPS",
+    "title": "Le tribunal à l’ère de l’IA",
     "pages": [
       {
         "id": "start",
+        "kind": "cover",
+        "blocks": [],
+        "title": "Le tribunal\nà l’ère de l’IA",
+        "lead": "Un guide pour les juges et les greffières et greffiers. Avec une introduction pratique à CourtOS.",
+        "statement": "Mieux comprendre, apprécier avec soin et rendre des décisions dont le raisonnement peut être suivi. C’est à partir de cette mission que la technique doit être conçue.",
+        "edition": "Édition de travail 01 · Pilote sur VPS",
+        "part": "Finalité · Jugement · Travail quotidien"
+      },
+      {
+        "id": "purpose",
+        "title": "Partir de\nla finalité",
+        "lead": "Qu’est-ce qui doit s’améliorer pour les personnes dont le tribunal examine la cause?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Commencer par une difficulté",
+            "body": "Les tribunaux protègent les droits, tranchent les litiges et contrôlent l’action de l’État. Les personnes doivent pouvoir présenter leur cause et comprendre les motifs de la décision. Où le travail se bloque-t-il: comprendre la demande, retrouver une preuve, examiner une objection? L’outil doit y répondre."
+          },
+          {
+            "type": "text",
+            "heading": "Deux perspectives utiles",
+            "body": "Richard Susskind déplace le regard du bâtiment judiciaire vers l’accès au droit. Il distingue l’accélération des pratiques existantes d’une autre organisation du travail. Cette distinction invite à vérifier la finalité d’une étape avant de l’automatiser. [1, 2]",
+            "source_keys": [
+              "FP01",
+              "FP02"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Garder la mission publique en vue",
+            "body": "James Allsop rappelle que les tribunaux exercent le pouvoir judiciaire et protègent l’État de droit. Leur dimension humaine dépasse l’alternative entre lieu et service. Les résultats mesurables n’en rendent compte que partiellement. [3]",
+            "source_keys": [
+              "FP03"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Notre point de départ pour CourtOS",
+            "body": "Un environnement de travail judiciaire doit dégager de l’attention pour les questions décisives. Quelle information manque? Quelle objection a été négligée? Qui peut reconnaître une hypothèse erronée et la corriger? La rapidité compte lorsqu’elle améliore ces réponses."
+          },
+          {
+            "type": "text",
+            "heading": "Un résultat pour votre équipe",
+            "body": "Formulez une phrase: pour cette tâche récurrente, nous voulons lever cet obstacle afin que cette personne puisse mieux accomplir son travail ou exercer son droit. Choisissez un cas d’essai limité."
+          }
+        ],
+        "source_keys": [
+          "FP01",
+          "FP02",
+          "FP03"
+        ],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Concevoir le travail judiciaire"
+      },
+      {
+        "id": "role",
+        "title": "Préserver\nla fonction de juger",
+        "lead": "Quelle responsabilité doit rester visible, même avec un bon soutien technique?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Un cadre constitutionnel",
+            "body": "La Constitution fédérale prévoit des garanties complémentaires. L’art. 29 protège l’équité des procédures judiciaires et administratives, le droit d’être entendu et un délai raisonnable. L’art. 29a garantit l’accès au juge, sous réserve d’exclusions légales exceptionnelles. [4]",
+            "source_keys": [
+              "FP04"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Examiner et juger en toute indépendance",
+            "body": "L’art. 30 exige un tribunal établi par la loi, compétent, indépendant et impartial. L’audience et le prononcé du jugement sont en principe publics. Selon l’art. 191c, les autorités judiciaires ne sont soumises qu’à la loi dans leur activité juridictionnelle. Ces garanties ne règlent pas, à elles seules, chaque usage particulier de l’IA. [4]",
+            "source_keys": [
+              "FP04"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Permettre le contrôle des motifs",
+            "body": "Le droit d’être entendu implique un examen sérieux des arguments pertinents. La motivation doit faire apparaître les raisons déterminantes et permettre de contester utilement la décision. Une rédaction convaincante ne suffit pas. [5]",
+            "source_keys": [
+              "FP05"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Notre proposition d’organisation",
+            "body": "Précisez qui examine les pièces, vérifie les objections et décide. Greffières, greffiers et juges doivent pouvoir consulter les sources, modifier les projets et rejeter les propositions. Un clic de confirmation n’atteste pas un examen personnel."
+          },
+          {
+            "type": "text",
+            "heading": "Un accord concret",
+            "body": "Désignez la personne chargée du contrôle et les constatations à laisser ouvertes. CourtOS n’acquiert aucun pouvoir de décision. Un usage institutionnel ultérieur exige une appréciation juridique et organisationnelle distincte."
+          }
+        ],
+        "source_keys": [
+          "FP04",
+          "FP05"
+        ],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Concevoir le travail judiciaire"
+      },
+      {
+        "id": "work",
+        "title": "Rendre le raisonnement\nvérifiable",
+        "lead": "Une autre personne peut-elle comprendre le passage de la source à la conclusion?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Une organisation à construire",
+            "body": "Un environnement relie pièce, affirmation, examen et motivation. Cette proposition d’organisation judiciaire dépasse le pilote actuel, qui ne la met en œuvre que partiellement."
+          },
+          {
+            "type": "items",
+            "heading": "De la réception au contrôle",
+            "items": [
+              "Examiner: selon la répartition judiciaire des tâches, le greffe organise les pièces. Date, provenance et version restent visibles; un résumé se distingue de son original.",
+              "Dégager les questions litigieuses: rapprocher affirmation, preuve, contestation et vérification manquante. Une contradiction peut rester ouverte.",
+              "Contre-vérifier: rechercher l’explication contraire la plus solide. Lire l’original et son contexte, même si la citation est exacte.",
+              "Motiver: les personnes responsables choisissent et contrôlent les raisons déterminantes. L’IA peut proposer un projet; elle n’accomplit pas ainsi l’appréciation des preuves ou la décision.",
+              "Suivre les changements: une nouvelle version doit permettre de repérer les constatations à réexaminer. Conserver un état antérieur compréhensible."
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Une transmission utile",
+            "body": "Transmettez une courte note avec version des sources, questions ouvertes et prochaine vérification. Une collègue pourra discuter une conclusion sans tout reconstruire. Prévoyez du temps pour les questions et l’apprentissage."
+          },
+          {
+            "type": "text",
+            "heading": "Décrire honnêtement la portée",
+            "body": "Le pilote propose des aides documentaires et une recherche limitée. Il ne fournit ni dossier judiciaire complet, ni suivi automatique des conséquences de chaque modification, ni notification officielle des décisions."
+          }
+        ],
+        "source_keys": [],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Concevoir le travail judiciaire"
+      },
+      {
+        "id": "quality",
+        "title": "Évaluer l’utilité\nsur un cas",
+        "lead": "Comment reconnaître une amélioration du travail?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Une évaluation commune et limitée",
+            "body": "Fixez un résultat attendu et des difficultés connues. Comparez le même cas fictif avec et sans assistance. Comptez lecture, attente, vérification et correction. Cette grille propose un test; elle ne démontre aucun bénéfice."
+          },
+          {
+            "type": "items",
+            "heading": "Tâche · assistance · examen humain · observation",
+            "items": [
+              "Examiner les pièces: demander une chronologie; contrôler preuves et types de dates. Compter les événements omis ou inventés.",
+              "Éclaircir les contradictions: rassembler les indications divergentes; distinguer incompatibilité et événements différents. La contradiction connue reste-t-elle visible?",
+              "Examiner la doctrine: rechercher des passages; lire version, contexte et position contraire. Combien d’affirmations déterminantes ont un appui exact?",
+              "Délimiter la question juridique: consulter les sources publiques; vérifier compétence et contexte procédural. Une règle inadaptée est-elle détectée?",
+              "Transmettre un projet: demander une courte note; assumer ses raisons déterminantes. Une collègue peut-elle comprendre et corriger la conclusion?",
+              "Reconnaître les limites: ajouter une preuve manquante ou un scan illisible. Le résultat révèle-t-il ou masque-t-il la lacune?"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Les chiffres appellent une appréciation",
+            "body": "Discutez de l’erreur la plus grave et du vécu des personnes concernées. Moins de mots ou de minutes ne prouve pas une meilleure justice. Confirmer sans examiner impose de revoir le processus."
+          },
+          {
+            "type": "text",
+            "heading": "Choisir la suite",
+            "body": "Consignez utilité, erreurs et effort de contrôle. Décidez quoi poursuivre, modifier ou écarter provisoirement."
+          }
+        ],
+        "source_keys": [],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Concevoir le travail judiciaire"
+      },
+      {
+        "id": "first-steps",
         "title": "Du dossier\nà la note de travail",
         "lead": "Un court parcours d’essai pour les greffières, les greffiers et les juges.",
         "blocks": [
@@ -305,14 +775,15 @@
           {
             "type": "note",
             "heading": "Un essai circonscrit",
-            "body": "Le parcours guidé utilise uniquement le dossier fictif fourni. L’espace de travail ouvert, proposé en complément, ne peut être exploré qu’avec des documents de test fictifs. Les critères qui suivent concernent le cas guidé. Les pièces d’exemple sont en allemand; les modèles sont également configurés pour répondre en allemand."
+            "body": "Le cas guidé utilise uniquement le dossier fictif. Pour votre base documentaire, vous pouvez aussi utiliser des extraits de publications publiques que vous avez le droit de stocker et de traiter ici. Les dossiers réels et les pièces confidentielles restent exclus. Les exemples et la langue de réponse par défaut sont en allemand."
           },
           {
             "type": "text",
             "heading": "Votre chemin dans ce guide",
-            "body": "Les pièces en page 2, la question juridique en page 3, la note en page 4. Trois exercices figurent en page 5. Le trajet des données et les limites suivent en page 6; les décisions institutionnelles ultérieures en page 7."
+            "body": "Commencez par les questions de finalité, de rôle et de méthode de travail du tribunal. La partie pratique mène du dossier fictif à une question juridique générale, puis à une note vérifiable. Viennent ensuite votre base de connaissances, les flux de données et l’exploitation institutionnelle ultérieure. Le sommaire permet un accès direct."
           }
-        ]
+        ],
+        "part": "CourtOS en pratique"
       },
       {
         "id": "local",
@@ -348,7 +819,8 @@
             "heading": "Prévoir un temps d’attente",
             "body": "Le calcul sur le serveur peut prendre plusieurs minutes. Laissez la tâche en cours se terminer au lieu de relancer plusieurs fois la même étape."
           }
-        ]
+        ],
+        "part": "CourtOS en pratique"
       },
       {
         "id": "public",
@@ -383,7 +855,8 @@
             "heading": "L’effet de votre autorisation",
             "body": "Seule votre autorisation explicite déclenche l’appel à Anthropic. Elle concerne ce paquet et ne peut servir qu’une fois. Une erreur ne provoque pas de répétition automatique. Un nouvel essai exige un nouveau paquet et une nouvelle autorisation."
           }
-        ]
+        ],
+        "part": "CourtOS en pratique"
       },
       {
         "id": "check",
@@ -415,7 +888,8 @@
             "heading": "Les questions ouvertes sont un résultat",
             "body": "Quelle preuve de notification manque? Existe-t-il une version finale signée? Les pièces déposées ensuite ont-elles réellement été examinées? Une note utile montre ces lacunes au lieu de les combler par des suppositions."
           }
-        ]
+        ],
+        "part": "CourtOS en pratique"
       },
       {
         "id": "test",
@@ -447,7 +921,41 @@
             "heading": "Quand l’essai n’est pas encore convaincant",
             "body": "Une référence perdue, une contradiction masquée, une transmission obscure ou un texte apparemment achevé malgré des lacunes justifient une amélioration concrète."
           }
-        ]
+        ],
+        "part": "CourtOS en pratique"
+      },
+      {
+        "id": "knowledge",
+        "title": "Votre base\ndocumentaire",
+        "lead": "Retrouver des passages et consulter la jurisprudence.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Préparer votre documentation",
+            "body": "Ajoutez des extraits PDF appropriés à votre bibliothèque personnelle. Nommez-les avec l’auteur, le titre abrégé, l’édition ou l’année et les pages. Classez-les dans des dossiers. La limite est de 5 Mio par fichier et de 20 Mio de téléversements cumulés pour votre compte. Supprimer un fichier ne rétablit pas ce quota."
+          },
+          {
+            "type": "text",
+            "heading": "Rechercher dans les documents choisis",
+            "body": "Ouvrez «Wissensbasis», sélectionnez vos documents et saisissez quelques termes pertinents. Les résultats indiquent le passage, la page PDF et la version du document. Ouvrez la référence dans l’original. La page PDF peut différer du numéro imprimé."
+          },
+          {
+            "type": "text",
+            "heading": "Consulter OpenCaseLaw",
+            "body": "Un champ distinct recherche dans les décisions publiées d’OpenCaseLaw. Saisissez-y vos propres termes de recherche publics. Ni votre documentation ni votre requête locale ne sont repris automatiquement. Cette recherche fonctionne sur le VPS, sans modèle d’IA externe."
+          },
+          {
+            "type": "text",
+            "heading": "Poursuivre avec l’assistant",
+            "body": "Sélectionnez les documents nécessaires de la bibliothèque comme pièces jointes à votre demande. L’assistant local peut y rechercher des passages ciblés. Demandez-lui de présenter côte à côte les positions divergentes avec leurs références, sans forcer une réponse apparemment unique."
+          },
+          {
+            "type": "text",
+            "heading": "Vérifier aussi les limites de la recherche",
+            "body": "Une recherche par termes ne retrouve pas toutes les formulations équivalentes. Un PDF numérisé sans texte sélectionnable nécessite d’abord une reconnaissance de texte. Tenez compte des indications de couverture partielle. L’absence de résultat ne prouve pas qu’une affirmation manque dans l’ouvrage."
+          }
+        ],
+        "part": "CourtOS en pratique"
       },
       {
         "id": "access",
@@ -482,7 +990,8 @@
             "heading": "Accès, quotas et conservation",
             "body": "Utilisez votre propre compte. Pour le cas guidé, la limite actuelle est de trois tâches locales et d’une analyse externe par personne et par jour civil UTC. Une tâche acceptée compte même si elle échoue; des plafonds communs peuvent limiter l’accès plus tôt. La lecture et l’aperçu sont libres. Les réponses restent enregistrées jusqu’à un nettoyage expressément décidé; la déconnexion ne les efface pas. Les téléchargements restent sur votre appareil."
           }
-        ]
+        ],
+        "part": "CourtOS en pratique"
       },
       {
         "id": "later",
@@ -529,13 +1038,92 @@
               ]
             ]
           }
+        ],
+        "part": "CourtOS en pratique"
+      },
+      {
+        "id": "sources",
+        "title": "Sources et\nméthode",
+        "lead": "Les quatre premiers chapitres proposent une conception du travail judiciaire. Les sources suivantes étayent les positions et les propositions juridiques qui leur sont expressément attribuées.",
+        "part": "Références",
+        "blocks": [
+          {
+            "type": "links",
+            "items": [
+              [
+                "1. Richard Susskind · Online Courts and the Future of Justice",
+                "https://academic.oup.com/oxford-law-pro/book/41081"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Susskind: résumé et sommaire de l’éditeur, notamment la partie II. Le livre intégral n’a pas été analysé pour cette édition."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "2. Richard Susskind (testimony) · Corrected oral evidence: Constitutional implications of Covid-19",
+                "https://committees.parliament.uk/oralevidence/462/html/"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Susskind: compte rendu officiel du 3 juin 2020, question 30."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "3. James Allsop · Technology and the Future of the Courts",
+                "https://www.fedcourt.gov.au/__data/assets/pdf_file/0017/55520/Allsop-CJ-20190326.pdf"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Allsop: conférence du 26 mars 2019, p. 2–4 et 11–12."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "4. Constitution fédérale · RS 101",
+                "https://www.fedlex.admin.ch/eli/cc/1999/404/fr"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Constitution fédérale: art. 29, 29a, 30 et 191c. Version en vigueur du 3 mars 2024; vérifiée le 9 octobre 2026."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "5. Tribunal fédéral · ATF 129 I 232",
+                "https://www.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?lang=de&type=show_document&highlight_docid=atf://129-I-232:de"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Tribunal fédéral: ATF 129 I 232, consid. 3.2, p. 236–237. Principe général de motivation énoncé dans une affaire de naturalisation."
+          },
+          {
+            "type": "note",
+            "heading": "La portée de cette édition",
+            "body": "Les méthodes de travail et les critères d’évaluation sont nos propositions. Ils ne constituent ni un gain de productivité démontré ni une validation juridique complète. La partie pratique décrit le pilote CourtOS et ses limites. Les observations sont distinguées des engagements généraux."
+          }
         ]
       }
     ]
   },
   "it": {
     "language": "Italiano",
-    "label": "Guida al progetto pilota",
+    "label": "Guida pratica",
     "date": "9 ottobre 2026",
     "contents": "In questa guida",
     "pdf_label": "Scaricare il PDF",
@@ -543,11 +1131,187 @@
     "next": "Avanti",
     "previous": "Indietro",
     "page_label": "Pagina",
-    "pilot": "Fascicolo di esempio fittizio",
-    "title": "Lavorare su un fascicolo con CourtOS",
+    "pilot": "Edizione di lavoro 01 · Pilota VPS",
+    "title": "Il tribunale nell’era dell’IA",
     "pages": [
       {
         "id": "start",
+        "kind": "cover",
+        "blocks": [],
+        "title": "Il tribunale\nnell’era dell’IA",
+        "lead": "Una guida per giudici e cancelliere e cancellieri. Con un’introduzione pratica a CourtOS.",
+        "statement": "Comprendere meglio, valutare con cura e decidere con motivazioni verificabili. È da questo compito che deve partire la progettazione della tecnologia.",
+        "edition": "Edizione di lavoro 01 · Pilota su VPS",
+        "part": "Finalità · Giudizio · Lavoro quotidiano"
+      },
+      {
+        "id": "purpose",
+        "title": "Partire\ndallo scopo",
+        "lead": "Che cosa deve migliorare per le persone la cui causa è davanti al tribunale?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Cominciare da una difficoltà",
+            "body": "I tribunali tutelano i diritti, risolvono controversie con decisioni vincolanti e controllano l’azione dello Stato. Le persone devono poter esporre la causa e comprendere i motivi della decisione. Dove si blocca il lavoro: nel capire la domanda, trovare una prova o esaminare un’obiezione? Su questo valutiamo l’aiuto tecnico."
+          },
+          {
+            "type": "text",
+            "heading": "Due prospettive utili",
+            "body": "Richard Susskind sposta l’attenzione dall’edificio giudiziario all’accesso al diritto. Distingue l’accelerazione delle prassi esistenti da una diversa organizzazione del lavoro. Questa distinzione invita a verificare lo scopo di un passaggio prima di automatizzarlo. [1, 2]",
+            "source_keys": [
+              "FP01",
+              "FP02"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Considerare la funzione pubblica",
+            "body": "James Allsop ricorda che i tribunali esercitano il potere giudiziario e tutelano lo Stato di diritto. La loro dimensione umana supera l’alternativa tra luogo e servizio. I risultati misurabili ne colgono soltanto una parte. [3]",
+            "source_keys": [
+              "FP03"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Il nostro punto di partenza per CourtOS",
+            "body": "Un ambiente di lavoro giudiziario deve liberare attenzione per le questioni decisive. Quale informazione manca? Quale obiezione è stata trascurata? Chi può riconoscere un’ipotesi errata e correggerla? La rapidità conta quando migliora queste risposte."
+          },
+          {
+            "type": "text",
+            "heading": "Un risultato per il gruppo",
+            "body": "Formulate una frase: per questo compito ricorrente vogliamo rimuovere questo ostacolo, affinché questa persona possa svolgere meglio il proprio lavoro o esercitare il proprio diritto. Scegliete un caso di prova circoscritto."
+          }
+        ],
+        "source_keys": [
+          "FP01",
+          "FP02",
+          "FP03"
+        ],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Progettare il lavoro giudiziario"
+      },
+      {
+        "id": "role",
+        "title": "Preservare\nla funzione giudiziaria",
+        "lead": "Quale responsabilità deve restare visibile anche con un valido sostegno tecnico?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Un quadro costituzionale",
+            "body": "La Costituzione federale prevede garanzie distinte e complementari. L’art. 29 tutela parità ed equità del procedimento giudiziario e amministrativo, diritto di essere sentiti e termine ragionevole. L’art. 29a garantisce di principio la via giudiziaria, salvo esclusioni legali eccezionali. [4]",
+            "source_keys": [
+              "FP04"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Esaminare e decidere in modo indipendente",
+            "body": "L’art. 30 richiede un tribunale fondato sulla legge, competente, indipendente e imparziale. Udienza e pronuncia della sentenza sono di principio pubbliche. L’art. 191c vincola le autorità giudiziarie al solo diritto nella loro attività giurisdizionale. Queste garanzie non risolvono, da sole, ogni questione relativa a un determinato uso dell’IA. [4]",
+            "source_keys": [
+              "FP04"
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Rendere controllabili i motivi",
+            "body": "Il diritto di essere sentiti richiede un esame serio degli argomenti rilevanti. La motivazione deve rendere riconoscibili le ragioni decisive e consentire di impugnare adeguatamente la decisione. Una formulazione convincente non basta. [5]",
+            "source_keys": [
+              "FP05"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "La nostra proposta organizzativa",
+            "body": "Rendete visibile la ripartizione dei compiti: chi esamina gli atti, chi verifica le obiezioni, chi decide? Cancellieri e giudici devono poter consultare le fonti, modificare le bozze e respingere le proposte. Un clic di conferma non dimostra un esame personale."
+          },
+          {
+            "type": "text",
+            "heading": "Un accordo concreto",
+            "body": "Indicate chi svolge il controllo e quali accertamenti restano aperti. CourtOS non acquisisce alcun potere decisionale. Un futuro impiego istituzionale richiede una valutazione giuridica e organizzativa distinta."
+          }
+        ],
+        "source_keys": [
+          "FP04",
+          "FP05"
+        ],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Progettare il lavoro giudiziario"
+      },
+      {
+        "id": "work",
+        "title": "Rendere verificabile\nil ragionamento",
+        "lead": "Un’altra persona può comprendere il passaggio dalla fonte alla conclusione?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Un’organizzazione da costruire",
+            "body": "Un buon ambiente collega documento, affermazione, esame e motivazione. Questa proposta di organizzazione giudiziaria va oltre il pilota, che la realizza soltanto in parte."
+          },
+          {
+            "type": "items",
+            "heading": "Dalla ricezione al controllo",
+            "items": [
+              "Esaminare: la cancelleria ordina gli atti secondo la ripartizione giudiziaria dei compiti. Data, provenienza e versione restano visibili; il riassunto si distingue dall’originale.",
+              "Definire i punti controversi: affiancare affermazione, prova, contestazione e accertamento mancante. Una contraddizione può restare aperta.",
+              "Verificare in senso contrario: cercare la spiegazione alternativa più solida. Leggere originale e contesto anche quando la citazione è esatta.",
+              "Motivare: le persone responsabili scelgono e verificano le ragioni decisive. L’IA può proporre una bozza; ciò non compie la valutazione delle prove o la decisione.",
+              "Seguire i cambiamenti: una nuova versione deve permettere di individuare gli accertamenti da riesaminare. Conservare uno stato precedente comprensibile."
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Un passaggio di lavoro utile",
+            "body": "Consegnate una nota con fonti, versioni, questioni aperte e prossima verifica. Una collega potrà discutere una conclusione senza ricostruire tutto il lavoro. Prevedete tempo per domande e apprendimento."
+          },
+          {
+            "type": "text",
+            "heading": "Descrivere con chiarezza la portata",
+            "body": "Il progetto pilota offre aiuti all’esame degli atti e una ricerca limitata. Non fornisce un fascicolo giudiziario completo, un controllo automatico di tutte le conseguenze delle modifiche o la notificazione ufficiale delle decisioni."
+          }
+        ],
+        "source_keys": [],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Progettare il lavoro giudiziario"
+      },
+      {
+        "id": "quality",
+        "title": "Valutare l’utilità\nsu un caso",
+        "lead": "Come riconoscere un miglioramento del lavoro?",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Una valutazione comune e circoscritta",
+            "body": "Definite un risultato atteso e difficoltà note. Confrontate lo stesso caso fittizio con e senza assistenza. Contate lettura, attesa, verifica e correzione. La griglia propone una prova, non benefici accertati."
+          },
+          {
+            "type": "items",
+            "heading": "Compito · aiuto · esame umano · osservazione",
+            "items": [
+              "Esaminare gli atti: chiedere una cronologia; controllare prove e tipi di date. Contare gli eventi omessi o inventati.",
+              "Chiarire le contraddizioni: raccogliere indicazioni divergenti; distinguere incompatibilità ed eventi diversi. Il contrasto noto resta visibile?",
+              "Esaminare la dottrina: cercare passaggi; leggere versione, contesto e posizione contraria. Quante affermazioni decisive hanno un riscontro esatto?",
+              "Delimitare la questione giuridica: consultare fonti pubbliche; verificare competenza e contesto procedurale. Una regola inadeguata viene individuata?",
+              "Trasmettere una bozza: chiedere una nota breve; assumere la responsabilità delle ragioni decisive. Una collega può comprendere e correggere la conclusione?",
+              "Riconoscere i limiti: inserire una prova mancante o una scansione illeggibile. Il risultato segnala o nasconde la lacuna?"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "I numeri richiedono una valutazione",
+            "body": "Discutete anche l’errore più grave e il punto di vista della persona interessata. Meno parole o minuti non dimostrano una giustizia migliore. Una tendenza a confermare senza esaminare richiede di rivedere il procedimento di lavoro."
+          },
+          {
+            "type": "text",
+            "heading": "Scegliere il seguito",
+            "body": "Annotate utilità, errori e impegno di controllo. Decidete che cosa continuare, modificare o escludere."
+          }
+        ],
+        "source_keys": [],
+        "argument_status": "Original authorial proposal; attributed positions and legal propositions are identified by source keys.",
+        "part": "Progettare il lavoro giudiziario"
+      },
+      {
+        "id": "first-steps",
         "title": "Dagli atti\nalla nota di lavoro",
         "lead": "Un breve percorso di prova per le cancelliere, i cancellieri e i giudici.",
         "blocks": [
@@ -572,14 +1336,15 @@
           {
             "type": "note",
             "heading": "Una prova circoscritta",
-            "body": "Il percorso guidato utilizza soltanto il fascicolo fittizio fornito. Lo spazio di lavoro aperto, disponibile in aggiunta, può essere esplorato solo con documenti di prova sintetici. I criteri seguenti riguardano il caso guidato. I documenti di esempio sono in tedesco e anche i modelli sono configurati per rispondere in tedesco."
+            "body": "Il caso guidato utilizza soltanto il fascicolo fittizio. Per la vostra base documentale potete usare anche estratti di pubblicazioni pubbliche che siete autorizzati a memorizzare e trattare qui. I fascicoli reali e i documenti riservati restano esclusi. Gli esempi e la lingua di risposta predefinita sono in tedesco."
           },
           {
             "type": "text",
             "heading": "Il percorso nella guida",
-            "body": "Gli atti a pagina 2, la domanda giuridica a pagina 3, la nota a pagina 4. Tre esercizi si trovano a pagina 5. Percorso dei dati e limiti seguono a pagina 6; le future decisioni istituzionali a pagina 7."
+            "body": "Si parte dalla finalità, dal ruolo e dal modo di lavorare del tribunale. La parte pratica conduce dal fascicolo fittizio a una questione giuridica generale e a una nota verificabile. Seguono la base di conoscenze, i flussi dei dati e il futuro impiego istituzionale. L’indice consente di accedere direttamente al punto desiderato."
           }
-        ]
+        ],
+        "part": "CourtOS nella pratica"
       },
       {
         "id": "local",
@@ -615,7 +1380,8 @@
             "heading": "Prevedere un’attesa",
             "body": "Il calcolo sul server può richiedere diversi minuti. Lasciate terminare il lavoro in corso, invece di avviare più volte lo stesso passaggio."
           }
-        ]
+        ],
+        "part": "CourtOS nella pratica"
       },
       {
         "id": "public",
@@ -650,7 +1416,8 @@
             "heading": "Che cosa comporta l’autorizzazione",
             "body": "Solo la vostra autorizzazione esplicita avvia la chiamata ad Anthropic. Vale per quel pacchetto ed è utilizzabile una sola volta. Un errore non provoca un nuovo invio automatico. Per riprovare servono un nuovo pacchetto e una nuova autorizzazione."
           }
-        ]
+        ],
+        "part": "CourtOS nella pratica"
       },
       {
         "id": "check",
@@ -682,7 +1449,8 @@
             "heading": "Le questioni aperte sono un risultato",
             "body": "Quale prova di notificazione manca? Esiste una versione finale firmata? I documenti presentati successivamente sono stati davvero esaminati? Una nota utile rende visibili queste lacune, senza colmarle con supposizioni."
           }
-        ]
+        ],
+        "part": "CourtOS nella pratica"
       },
       {
         "id": "test",
@@ -714,7 +1482,41 @@
             "heading": "Quando la prova non convince ancora",
             "body": "Un riferimento perso, una contraddizione mascherata, un invio poco chiaro o un testo apparentemente concluso nonostante le lacune sono motivi concreti per migliorare il sistema."
           }
-        ]
+        ],
+        "part": "CourtOS nella pratica"
+      },
+      {
+        "id": "knowledge",
+        "title": "La vostra base\ndocumentale",
+        "lead": "Trovare passaggi e consultare la giurisprudenza.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Preparare la propria documentazione",
+            "body": "Caricate estratti PDF appropriati nella biblioteca personale. Indicate nel nome autore, titolo breve, edizione o anno e pagine. Organizzateli in cartelle. Il limite è di 5 MiB per file e di 20 MiB di caricamenti complessivi per account. Eliminare un file non ripristina questa quota."
+          },
+          {
+            "type": "text",
+            "heading": "Cercare nei documenti selezionati",
+            "body": "Aprite «Wissensbasis», selezionate i documenti e cercate con alcuni termini pertinenti. I risultati indicano passaggio, pagina PDF e versione del documento. Aprite il riferimento nell’originale. La pagina PDF può non coincidere con il numero stampato."
+          },
+          {
+            "type": "text",
+            "heading": "Consultare OpenCaseLaw",
+            "body": "Un campo separato cerca nelle decisioni pubblicate di OpenCaseLaw. Inseritevi i vostri termini di ricerca pubblici. La documentazione e i termini della ricerca locale non vengono ripresi automaticamente. La ricerca funziona sul VPS, senza un modello di IA esterno."
+          },
+          {
+            "type": "text",
+            "heading": "Proseguire con l’assistente",
+            "body": "Selezionate come allegati alla domanda i documenti necessari della biblioteca. L’assistente locale può cercarvi passaggi mirati. Chiedete di affiancare le posizioni divergenti con i rispettivi riferimenti, senza forzare una risposta solo apparentemente univoca."
+          },
+          {
+            "type": "text",
+            "heading": "Verificare anche i limiti della ricerca",
+            "body": "Una ricerca per termini non trova tutte le formulazioni equivalenti. Un PDF scansionato senza testo selezionabile richiede prima il riconoscimento del testo. Considerate le indicazioni di copertura parziale. L’assenza di risultati non prova che un’affermazione manchi nell’opera."
+          }
+        ],
+        "part": "CourtOS nella pratica"
       },
       {
         "id": "access",
@@ -749,7 +1551,8 @@
             "heading": "Accesso, quote e conservazione",
             "body": "Usate il vostro account. Nel caso guidato il limite attuale è di tre attività locali e un’analisi esterna per persona e giorno civile UTC. Le attività accettate contano anche se falliscono; i limiti comuni possono ridurre prima la disponibilità. Lettura e anteprima sono libere. Le risposte restano memorizzate fino a una pulizia espressamente disposta; disconnettersi non le cancella. I file scaricati restano sul vostro dispositivo."
           }
-        ]
+        ],
+        "part": "CourtOS nella pratica"
       },
       {
         "id": "later",
@@ -795,6 +1598,85 @@
                 "https://github.com/open-legal-products/mike"
               ]
             ]
+          }
+        ],
+        "part": "CourtOS nella pratica"
+      },
+      {
+        "id": "sources",
+        "title": "Fonti e\nmetodo",
+        "lead": "I primi quattro capitoli propongono un modo di progettare il lavoro giudiziario. Le fonti seguenti sostengono le posizioni e le affermazioni giuridiche espressamente attribuite loro.",
+        "part": "Riferimenti",
+        "blocks": [
+          {
+            "type": "links",
+            "items": [
+              [
+                "1. Richard Susskind · Online Courts and the Future of Justice",
+                "https://academic.oup.com/oxford-law-pro/book/41081"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Susskind: sintesi e indice dell’editore, in particolare la parte II. Per questa edizione non è stato analizzato il libro integrale."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "2. Richard Susskind (testimony) · Corrected oral evidence: Constitutional implications of Covid-19",
+                "https://committees.parliament.uk/oralevidence/462/html/"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Susskind: verbale ufficiale del 3 giugno 2020, domanda 30."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "3. James Allsop · Technology and the Future of the Courts",
+                "https://www.fedcourt.gov.au/__data/assets/pdf_file/0017/55520/Allsop-CJ-20190326.pdf"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Allsop: conferenza del 26 marzo 2019, pag. 2–4 e 11–12."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "4. Costituzione federale · RS 101",
+                "https://www.fedlex.admin.ch/eli/cc/1999/404/it"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Costituzione federale: art. 29, 29a, 30 e 191c. Versione vigente del 3 marzo 2024; verificata il 9 ottobre 2026."
+          },
+          {
+            "type": "links",
+            "items": [
+              [
+                "5. Tribunale federale · DTF 129 I 232",
+                "https://www.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?lang=de&type=show_document&highlight_docid=atf://129-I-232:de"
+              ]
+            ]
+          },
+          {
+            "type": "text",
+            "body": "Tribunale federale: DTF 129 I 232, consid. 3.2, pag. 236–237. Principio generale di motivazione espresso in una causa di naturalizzazione."
+          },
+          {
+            "type": "note",
+            "heading": "La portata di questa edizione",
+            "body": "I metodi di lavoro e i criteri di valutazione sono nostre proposte. Non attestano un aumento di produttività dimostrato né una validazione giuridica completa. La parte pratica descrive il pilota CourtOS e i suoi limiti. Le osservazioni sono distinte dalle garanzie generali."
           }
         ]
       }

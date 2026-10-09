@@ -1,0 +1,50 @@
+{
+  "publisher": "Paper Design",
+  "url": "https://paper.design/mono",
+  "repository": "https://github.com/paper-design/paper-mono",
+  "commit": "e6eaeceaef02e77e3db997711e07a16378de2bd7",
+  "license": "OFL-1.1",
+  "checked_date": "2026-10-09",
+  "files": [
+    {
+      "file": "AUTHORS.txt",
+      "sha256": "4345acc281ca3c2e93d70b7034641c97e9d1242bdd683943e2c981e7f421ae5f",
+      "bytes": 686
+    },
+    {
+      "file": "LICENSE.txt",
+      "sha256": "6c09ddf064a0b0f7cfffd555c674bfa08bb1e1a75a3e4b7b1a63c8f7cbb5a1f2",
+      "bytes": 4517
+    },
+    {
+      "file": "OFL.txt",
+      "sha256": "ae8bcaf5a046be7e096b5710a8532cdaa5a299462e182752b805dcfa44370e4c",
+      "bytes": 4402
+    },
+    {
+      "file": "PaperMono-Medium.ttf",
+      "sha256": "1609d049b4ec07e358cbd1494afb39886a8415a9a36300222b4d804042803e22",
+      "bytes": 107280
+    },
+    {
+      "file": "PaperMono-Medium.woff2",
+      "sha256": "53805a6239b32feb55aae2ec5abff182c027ad267314ed2992f6a8aedc3c442c",
+      "bytes": 38324
+    },
+    {
+      "file": "PaperMono-Regular.ttf",
+      "sha256": "130e1a09b64b4f150d34c93a6b7bd52d6c5c3513761d1fbc7be42d68398b8c10",
+      "bytes": 106088
+    },
+    {
+      "file": "PaperMono-Regular.woff2",
+      "sha256": "bb51ddbeb0bf288821b6cc4e16f94fcc475a1e069eedd6832a320afaf70bfecf",
+      "bytes": 37868
+    },
+    {
+      "file": "PaperMono-Variable.woff2",
+      "sha256": "34bf2cb064a77b2b966063b17887e50d71f9fb61481af67444eaf91561cf6327",
+      "bytes": 53344
+    }
+  ]
+}

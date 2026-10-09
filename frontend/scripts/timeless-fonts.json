@@ -1,0 +1,24 @@
+{
+  "license_url": "https://www.timeless.co/type/license",
+  "license_version": "1.2, 2026-09-18",
+  "files": [
+    {
+      "file": "TimelessSerif-Variable.woff2",
+      "url": "https://www.timeless.co/_next/static/immutable/media/TimelessSerifVF-s.p.3i2h129pjbgjz.woff2",
+      "sha256": "8d63fb19982087ffddf2650f4aede6759f74933c996834b307dcb968fa9ab429",
+      "bytes": 116804
+    },
+    {
+      "file": "TimelessSans-Variable.woff2",
+      "url": "https://www.timeless.co/_next/static/immutable/media/TimelessSansVF-s.p.02a91p5yxldkb.woff2",
+      "sha256": "353b3fbb75b8e9b927db12d520ff8d446d89c36897b47a90d70dbe36e9eeb23a",
+      "bytes": 211828
+    },
+    {
+      "file": "TimelessSerif-Italic-Variable.woff2",
+      "url": "https://www.timeless.co/_next/static/immutable/media/TimelessSerifItalicVF-s.p.08488-aj-cu7k.woff2",
+      "sha256": "82fff1584c338894341d5c49af246c1032b1253f3e5f2b3808a6b4e130efe4c6",
+      "bytes": 54140
+    }
+  ]
+}

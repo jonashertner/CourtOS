@@ -479,6 +479,20 @@ describe("content and reasoning deltas", () => {
 });
 
 describe("tool placeholders and cancellation", () => {
+  it("replaces a finished knowledge search while the model formulates its answer", async () => {
+    expect(await eventsOf([
+      { type: "tool_call_start", name: "search_knowledge" },
+      { type: "tool_call_complete", name: "search_knowledge", has_evidence: true },
+    ])).toEqual([{ type: "thinking", isStreaming: true, knowledgePhase: "evidence_returned" }]);
+    expect(await eventsOf([
+      { type: "tool_call_start", name: "search_knowledge" },
+      { type: "tool_call_complete", name: "search_knowledge", has_evidence: false },
+    ])).toEqual([{ type: "thinking", isStreaming: true, knowledgePhase: "search_returned" }]);
+    expect(await eventsOf([
+      { type: "tool_call_complete", name: "search_knowledge", has_evidence: true },
+      { type: "content_delta", text: "Antwort" },
+    ])).toEqual([{ type: "content", text: "Antwort", isStreaming: true }]);
+  });
   it.each([
     ["the tool's name", { name: "search" }, "search"],
     ["an empty name when the server omits one", {}, ""],

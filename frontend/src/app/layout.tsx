@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-// Self-hosted Inter and EB Garamond; sets --font-inter and --font-eb-garamond.
+// OFL fallbacks and locally embedded CourtOS typefaces; no font CDN.
 import "./fonts/fonts.css";
 import "./globals.css";
+import "./fonts/courtos-fonts.css";
+import "./courtos-design.css";
 import { Providers } from "@/app/components/providers";
 
 export const metadata: Metadata = {
@@ -37,7 +39,7 @@ export default function RootLayout({
     return (
         <html lang="de-CH">
             <body
-                className="font-sans antialiased"
+                className="courtos-web font-sans antialiased"
             >
                 <Providers>{children}</Providers>
             </body>

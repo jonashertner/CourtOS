@@ -1,7 +1,85 @@
-# Travailler sur un dossier avec CourtOS
-Guide du projet pilote | 9 octobre 2026
+# Le tribunal à l’ère de l’IA
+Guide pratique | 9 octobre 2026
 
-## 1. Du dossier à la note de travail
+## 1. Le tribunal à l’ère de l’IA
+Un guide pour les juges et les greffières et greffiers. Avec une introduction pratique à CourtOS.
+
+## 2. Partir de la finalité
+Qu’est-ce qui doit s’améliorer pour les personnes dont le tribunal examine la cause?
+
+### Commencer par une difficulté
+Les tribunaux protègent les droits, tranchent les litiges et contrôlent l’action de l’État. Les personnes doivent pouvoir présenter leur cause et comprendre les motifs de la décision. Où le travail se bloque-t-il: comprendre la demande, retrouver une preuve, examiner une objection? L’outil doit y répondre.
+
+### Deux perspectives utiles
+Richard Susskind déplace le regard du bâtiment judiciaire vers l’accès au droit. Il distingue l’accélération des pratiques existantes d’une autre organisation du travail. Cette distinction invite à vérifier la finalité d’une étape avant de l’automatiser. [1, 2]
+
+### Garder la mission publique en vue
+James Allsop rappelle que les tribunaux exercent le pouvoir judiciaire et protègent l’État de droit. Leur dimension humaine dépasse l’alternative entre lieu et service. Les résultats mesurables n’en rendent compte que partiellement. [3]
+
+### Notre point de départ pour CourtOS
+Un environnement de travail judiciaire doit dégager de l’attention pour les questions décisives. Quelle information manque? Quelle objection a été négligée? Qui peut reconnaître une hypothèse erronée et la corriger? La rapidité compte lorsqu’elle améliore ces réponses.
+
+### Un résultat pour votre équipe
+Formulez une phrase: pour cette tâche récurrente, nous voulons lever cet obstacle afin que cette personne puisse mieux accomplir son travail ou exercer son droit. Choisissez un cas d’essai limité.
+
+## 3. Préserver la fonction de juger
+Quelle responsabilité doit rester visible, même avec un bon soutien technique?
+
+### Un cadre constitutionnel
+La Constitution fédérale prévoit des garanties complémentaires. L’art. 29 protège l’équité des procédures judiciaires et administratives, le droit d’être entendu et un délai raisonnable. L’art. 29a garantit l’accès au juge, sous réserve d’exclusions légales exceptionnelles. [4]
+
+### Examiner et juger en toute indépendance
+L’art. 30 exige un tribunal établi par la loi, compétent, indépendant et impartial. L’audience et le prononcé du jugement sont en principe publics. Selon l’art. 191c, les autorités judiciaires ne sont soumises qu’à la loi dans leur activité juridictionnelle. Ces garanties ne règlent pas, à elles seules, chaque usage particulier de l’IA. [4]
+
+### Permettre le contrôle des motifs
+Le droit d’être entendu implique un examen sérieux des arguments pertinents. La motivation doit faire apparaître les raisons déterminantes et permettre de contester utilement la décision. Une rédaction convaincante ne suffit pas. [5]
+
+### Notre proposition d’organisation
+Précisez qui examine les pièces, vérifie les objections et décide. Greffières, greffiers et juges doivent pouvoir consulter les sources, modifier les projets et rejeter les propositions. Un clic de confirmation n’atteste pas un examen personnel.
+
+### Un accord concret
+Désignez la personne chargée du contrôle et les constatations à laisser ouvertes. CourtOS n’acquiert aucun pouvoir de décision. Un usage institutionnel ultérieur exige une appréciation juridique et organisationnelle distincte.
+
+## 4. Rendre le raisonnement vérifiable
+Une autre personne peut-elle comprendre le passage de la source à la conclusion?
+
+### Une organisation à construire
+Un environnement relie pièce, affirmation, examen et motivation. Cette proposition d’organisation judiciaire dépasse le pilote actuel, qui ne la met en œuvre que partiellement.
+
+### De la réception au contrôle
+- Examiner: selon la répartition judiciaire des tâches, le greffe organise les pièces. Date, provenance et version restent visibles; un résumé se distingue de son original.
+- Dégager les questions litigieuses: rapprocher affirmation, preuve, contestation et vérification manquante. Une contradiction peut rester ouverte.
+- Contre-vérifier: rechercher l’explication contraire la plus solide. Lire l’original et son contexte, même si la citation est exacte.
+- Motiver: les personnes responsables choisissent et contrôlent les raisons déterminantes. L’IA peut proposer un projet; elle n’accomplit pas ainsi l’appréciation des preuves ou la décision.
+- Suivre les changements: une nouvelle version doit permettre de repérer les constatations à réexaminer. Conserver un état antérieur compréhensible.
+
+### Une transmission utile
+Transmettez une courte note avec version des sources, questions ouvertes et prochaine vérification. Une collègue pourra discuter une conclusion sans tout reconstruire. Prévoyez du temps pour les questions et l’apprentissage.
+
+### Décrire honnêtement la portée
+Le pilote propose des aides documentaires et une recherche limitée. Il ne fournit ni dossier judiciaire complet, ni suivi automatique des conséquences de chaque modification, ni notification officielle des décisions.
+
+## 5. Évaluer l’utilité sur un cas
+Comment reconnaître une amélioration du travail?
+
+### Une évaluation commune et limitée
+Fixez un résultat attendu et des difficultés connues. Comparez le même cas fictif avec et sans assistance. Comptez lecture, attente, vérification et correction. Cette grille propose un test; elle ne démontre aucun bénéfice.
+
+### Tâche · assistance · examen humain · observation
+- Examiner les pièces: demander une chronologie; contrôler preuves et types de dates. Compter les événements omis ou inventés.
+- Éclaircir les contradictions: rassembler les indications divergentes; distinguer incompatibilité et événements différents. La contradiction connue reste-t-elle visible?
+- Examiner la doctrine: rechercher des passages; lire version, contexte et position contraire. Combien d’affirmations déterminantes ont un appui exact?
+- Délimiter la question juridique: consulter les sources publiques; vérifier compétence et contexte procédural. Une règle inadaptée est-elle détectée?
+- Transmettre un projet: demander une courte note; assumer ses raisons déterminantes. Une collègue peut-elle comprendre et corriger la conclusion?
+- Reconnaître les limites: ajouter une preuve manquante ou un scan illisible. Le résultat révèle-t-il ou masque-t-il la lacune?
+
+### Les chiffres appellent une appréciation
+Discutez de l’erreur la plus grave et du vécu des personnes concernées. Moins de mots ou de minutes ne prouve pas une meilleure justice. Confirmer sans examiner impose de revoir le processus.
+
+### Choisir la suite
+Consignez utilité, erreurs et effort de contrôle. Décidez quoi poursuivre, modifier ou écarter provisoirement.
+
+## 6. Du dossier à la note de travail
 Un court parcours d’essai pour les greffières, les greffiers et les juges.
 
 À partir de quatre documents, établir un état du dossier que l’on peut vérifier: quels faits sont étayés? Où les pièces se contredisent-elles? Quelle question importante pour la décision reste ouverte? CourtOS doit vous aider dans ce travail.
@@ -14,12 +92,12 @@ Un court parcours d’essai pour les greffières, les greffiers et les juges.
 Ouvrez https://sandbox.swisslaw.io/pilot et saisissez votre adresse e-mail personnelle. Cloudflare Access vous envoie un code à usage unique. Après validation, votre compte est créé automatiquement, sans invitation. Lancez le cas guidé. Prévoyez environ 15 minutes.
 
 ### Un essai circonscrit
-Le parcours guidé utilise uniquement le dossier fictif fourni. L’espace de travail ouvert, proposé en complément, ne peut être exploré qu’avec des documents de test fictifs. Les critères qui suivent concernent le cas guidé. Les pièces d’exemple sont en allemand; les modèles sont également configurés pour répondre en allemand.
+Le cas guidé utilise uniquement le dossier fictif. Pour votre base documentaire, vous pouvez aussi utiliser des extraits de publications publiques que vous avez le droit de stocker et de traiter ici. Les dossiers réels et les pièces confidentielles restent exclus. Les exemples et la langue de réponse par défaut sont en allemand.
 
 ### Votre chemin dans ce guide
-Les pièces en page 2, la question juridique en page 3, la note en page 4. Trois exercices figurent en page 5. Le trajet des données et les limites suivent en page 6; les décisions institutionnelles ultérieures en page 7.
+Commencez par les questions de finalité, de rôle et de méthode de travail du tribunal. La partie pratique mène du dossier fictif à une question juridique générale, puis à une note vérifiable. Viennent ensuite votre base de connaissances, les flux de données et l’exploitation institutionnelle ultérieure. Le sommaire permet un accès direct.
 
-## 2. Explorer les pièces
+## 7. Explorer les pièces
 Demandez une chronologie, puis confrontez-la aux documents.
 
 ### Un dossier de petite taille
@@ -39,7 +117,7 @@ La date d’une lettre, son envoi et sa notification peuvent différer sans cont
 ### Prévoir un temps d’attente
 Le calcul sur le serveur peut prendre plusieurs minutes. Laissez la tâche en cours se terminer au lieu de relancer plusieurs fois la même étape.
 
-## 3. Autoriser une question juridique
+## 8. Autoriser une question juridique
 Lisez d’abord le paquet, puis décidez de sa transmission.
 
 ### La partie publique
@@ -58,7 +136,7 @@ Le dispositif sélectionne des textes publics fixes. Il ne promet pas de retirer
 ### L’effet de votre autorisation
 Seule votre autorisation explicite déclenche l’appel à Anthropic. Elle concerne ce paquet et ne peut servir qu’une fois. Une erreur ne provoque pas de répétition automatique. Un nouvel essai exige un nouveau paquet et une nouvelle autorisation.
 
-## 4. Obtenir une note que l’on peut vérifier
+## 9. Obtenir une note que l’on peut vérifier
 L’appréciation professionnelle reste une tâche humaine.
 
 ### Un document de travail utile
@@ -76,7 +154,7 @@ Pour une affirmation importante, ouvrez la source indiquée. Vérifiez le texte 
 ### Les questions ouvertes sont un résultat
 Quelle preuve de notification manque? Existe-t-il une version finale signée? Les pièces déposées ensuite ont-elles réellement été examinées? Une note utile montre ces lacunes au lieu de les combler par des suppositions.
 
-## 5. Trois exercices pour votre essai
+## 10. Trois exercices pour votre essai
 Évaluez si le parcours facilite votre travail sur le dossier.
 
 ### 1  Étayer une contradiction
@@ -94,7 +172,25 @@ Indiquez l’étape, votre attente, l’écart observé et la référence du par
 ### Quand l’essai n’est pas encore convaincant
 Une référence perdue, une contradiction masquée, une transmission obscure ou un texte apparemment achevé malgré des lacunes justifient une amélioration concrète.
 
-## 6. Ce qui se passe en arrière-plan
+## 11. Votre base documentaire
+Retrouver des passages et consulter la jurisprudence.
+
+### Préparer votre documentation
+Ajoutez des extraits PDF appropriés à votre bibliothèque personnelle. Nommez-les avec l’auteur, le titre abrégé, l’édition ou l’année et les pages. Classez-les dans des dossiers. La limite est de 5 Mio par fichier et de 20 Mio de téléversements cumulés pour votre compte. Supprimer un fichier ne rétablit pas ce quota.
+
+### Rechercher dans les documents choisis
+Ouvrez «Wissensbasis», sélectionnez vos documents et saisissez quelques termes pertinents. Les résultats indiquent le passage, la page PDF et la version du document. Ouvrez la référence dans l’original. La page PDF peut différer du numéro imprimé.
+
+### Consulter OpenCaseLaw
+Un champ distinct recherche dans les décisions publiées d’OpenCaseLaw. Saisissez-y vos propres termes de recherche publics. Ni votre documentation ni votre requête locale ne sont repris automatiquement. Cette recherche fonctionne sur le VPS, sans modèle d’IA externe.
+
+### Poursuivre avec l’assistant
+Sélectionnez les documents nécessaires de la bibliothèque comme pièces jointes à votre demande. L’assistant local peut y rechercher des passages ciblés. Demandez-lui de présenter côte à côte les positions divergentes avec leurs références, sans forcer une réponse apparemment unique.
+
+### Vérifier aussi les limites de la recherche
+Une recherche par termes ne retrouve pas toutes les formulations équivalentes. Un PDF numérisé sans texte sélectionnable nécessite d’abord une reconnaissance de texte. Tenez compte des indications de couverture partielle. L’absence de résultat ne prouve pas qu’une affirmation manque dans l’ouvrage.
+
+## 12. Ce qui se passe en arrière-plan
 Ces limites concernent le test actuel sur le VPS.
 
 - Votre navigateur
@@ -113,7 +209,7 @@ Le modèle local Gemma utilise une version économe en mémoire fournie par Unsl
 ### Accès, quotas et conservation
 Utilisez votre propre compte. Pour le cas guidé, la limite actuelle est de trois tâches locales et d’une analyse externe par personne et par jour civil UTC. Une tâche acceptée compte même si elle échoue; des plafonds communs peuvent limiter l’accès plus tôt. La lecture et l’aperçu sont libres. Les réponses restent enregistrées jusqu’à un nettoyage expressément décidé; la déconnexion ne les efface pas. Les téléchargements restent sur votre appareil.
 
-## 7. La prochaine étape dans l’institution
+## 13. La prochaine étape dans l’institution
 Après le test sur le VPS: un projet distinct pour un usage institutionnel.
 
 ### Choisir le mode d’exploitation
@@ -135,4 +231,30 @@ CourtOS est un fork de Mike (MikeOSS), projet d’Open Legal Products et de ses 
 ### Pour aller plus loin
 - [CourtOS: code source et licence](https://github.com/jonashertner/CourtOS)
 - [Mike: projet d’origine](https://github.com/open-legal-products/mike)
+
+## 14. Sources et méthode
+Les quatre premiers chapitres proposent une conception du travail judiciaire. Les sources suivantes étayent les positions et les propositions juridiques qui leur sont expressément attribuées.
+
+- [1. Richard Susskind · Online Courts and the Future of Justice](https://academic.oup.com/oxford-law-pro/book/41081)
+
+Susskind: résumé et sommaire de l’éditeur, notamment la partie II. Le livre intégral n’a pas été analysé pour cette édition.
+
+- [2. Richard Susskind (testimony) · Corrected oral evidence: Constitutional implications of Covid-19](https://committees.parliament.uk/oralevidence/462/html/)
+
+Susskind: compte rendu officiel du 3 juin 2020, question 30.
+
+- [3. James Allsop · Technology and the Future of the Courts](https://www.fedcourt.gov.au/__data/assets/pdf_file/0017/55520/Allsop-CJ-20190326.pdf)
+
+Allsop: conférence du 26 mars 2019, p. 2–4 et 11–12.
+
+- [4. Constitution fédérale · RS 101](https://www.fedlex.admin.ch/eli/cc/1999/404/fr)
+
+Constitution fédérale: art. 29, 29a, 30 et 191c. Version en vigueur du 3 mars 2024; vérifiée le 9 octobre 2026.
+
+- [5. Tribunal fédéral · ATF 129 I 232](https://www.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?lang=de&type=show_document&highlight_docid=atf://129-I-232:de)
+
+Tribunal fédéral: ATF 129 I 232, consid. 3.2, p. 236–237. Principe général de motivation énoncé dans une affaire de naturalisation.
+
+### La portée de cette édition
+Les méthodes de travail et les critères d’évaluation sont nos propositions. Ils ne constituent ni un gain de productivité démontré ni une validation juridique complète. La partie pratique décrit le pilote CourtOS et ses limites. Les observations sont distinguées des engagements généraux.
 

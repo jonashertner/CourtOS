@@ -220,7 +220,7 @@ export type AssistantEvent =
     })
   | AskInputsEvent
   | AskInputsResponseEvent
-  | { type: "thinking"; isStreaming?: boolean }
+  | { type: "thinking"; isStreaming?: boolean; knowledgePhase?: "evidence_returned" | "search_returned" }
   | (Omit<
       WireActivity<"doc_read">,
       "document_id" | "version_id" | "version_number" | "isStreaming"

@@ -12,6 +12,8 @@ export NEXT_PUBLIC_SENTRY_DISABLED=true NEXT_PUBLIC_SENTRY_INSTALL=false
 export NEXT_PUBLIC_COURTOS_PILOT_MODE=true NEXT_PUBLIC_COURTOS_AUTH_MODE=cloudflare
 export NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION=${NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION:-false}
 case "$NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION" in true|false) ;; *) printf '%s\n' 'Self-registration build flag must be true or false.' >&2; exit 1 ;; esac
+export NEXT_PUBLIC_COURTOS_KNOWLEDGE_ENABLED=${NEXT_PUBLIC_COURTOS_KNOWLEDGE_ENABLED:-false}
+case "$NEXT_PUBLIC_COURTOS_KNOWLEDGE_ENABLED" in true|false) ;; *) printf '%s\n' 'Knowledge build flag must be true or false.' >&2; exit 1 ;; esac
 npm ci --prefix "$release/backend"
 npm run build --prefix "$release/backend"
 npm ci --prefix "$release/frontend"

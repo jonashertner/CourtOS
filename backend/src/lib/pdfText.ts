@@ -228,7 +228,10 @@ type PdfLoadingTask = {
   destroy?: () => Promise<void>;
 };
 
-type PdfPageText = {
+export type PdfPageText = {
+  page: number;
+  totalPages: number;
+  truncated: boolean;
   /** The page's section of extractPdfText output, "[Page N]" marker included. */
   text: string;
   /** No text layer and no form field values: nothing the model could read. */
@@ -241,7 +244,7 @@ type PdfPageText = {
  * the joined text afterwards: a PDF line that happens to read "[Page 2]" is
  * content, not a page boundary.
  */
-async function readPdfPages(buf: ArrayBuffer): Promise<PdfPageText[] | null> {
+export async function readPdfPages(buf: ArrayBuffer, maxPages = Infinity, maxChars = Infinity): Promise<PdfPageText[] | null> {
   let loadingTask: PdfLoadingTask | undefined;
   try {
     const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs" as string);
@@ -255,7 +258,8 @@ async function readPdfPages(buf: ArrayBuffer): Promise<PdfPageText[] | null> {
     });
     const pdf = await loadingTask.promise;
     const pages: PdfPageText[] = [];
-    for (let i = 1; i <= pdf.numPages; i++) {
+    let remaining = maxChars;
+    for (let i = 1; i <= Math.min(pdf.numPages, maxPages) && remaining > 0; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       let fields: ExtractedFormField[] = [];
@@ -278,7 +282,13 @@ async function readPdfPages(buf: ArrayBuffer): Promise<PdfPageText[] | null> {
           .map((field) => field.text)
           .join("\n")}`;
       }
+      const truncated = pageText.length > remaining || (i === maxPages && i < pdf.numPages);
+      let end = Math.min(pageText.length, remaining);
+      if (end < pageText.length && /[\uD800-\uDBFF]/.test(pageText[end - 1]) && /[\uDC00-\uDFFF]/.test(pageText[end])) end--;
+      pageText = pageText.slice(0, end);
+      remaining -= pageText.length;
       pages.push({
+        page: i, totalPages: pdf.numPages, truncated: truncated || (remaining <= 0 && i < pdf.numPages),
         text: pageText,
         empty: !layout.trim() && unpositionedFields.length === 0,
       });

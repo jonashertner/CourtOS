@@ -1,3 +1,5 @@
+import { courtosKnowledgeEnabled } from "../../../lib/courtosKnowledge";
+import { KNOWLEDGE_TOOLS } from "./tools/toolSchemas";
 import { courtosPilotEnabled, courtosPilotToolAllowed } from "../../../lib/courtosPilot";
 import { buildGoogleWorkspaceTools } from "../../../lib/integrations/googleWorkspace";
 import {
@@ -29,6 +31,7 @@ import {
   WORKFLOW_TOOLS,
   isDocumentMutatingTool,
   withoutDocumentMutatingTools,
+  withKnowledgeReadDescriptions,
 } from "./tools/toolSchemas";
 import {
   parseCitationsWithDiagnostics,
@@ -299,10 +302,11 @@ export async function runLLMStream(params: {
   const researchTools = includeResearchTools && !courtosPilotEnabled() ? COURTLISTENER_TOOLS : [];
   const mcpTools = await buildUserMcpTools(userId, db);
   const googleDriveTools = await buildGoogleDriveTools(userId, db);
+  const taskTools = courtosKnowledgeEnabled() ? withKnowledgeReadDescriptions(TOOLS) : TOOLS;
   const conversationTools = includeAskInputs
-    ? TOOLS
-    : TOOLS.filter((tool) => tool.function.name !== "ask_inputs");
-  const baseTools = [...conversationTools, ...researchTools, ...WORKFLOW_TOOLS];
+    ? taskTools
+    : taskTools.filter((tool) => tool.function.name !== "ask_inputs");
+  const baseTools = [...conversationTools, ...researchTools, ...WORKFLOW_TOOLS, ...(courtosKnowledgeEnabled() ? KNOWLEDGE_TOOLS : [])];
   const advertisedTools = [
     ...baseTools,
     ...mcpTools,
@@ -729,6 +733,12 @@ export async function runLLMStream(params: {
             content?: unknown;
           };
           resultByCallId.set(row.tool_call_id, String(row.content ?? ""));
+        }
+        if (courtosKnowledgeEnabled() && serverCalls.some((call) => call.name === "search_knowledge" && resultByCallId.has(call.id))) {
+          // Retrieval has returned. The next local model hop can take minutes;
+          // do not leave the interface claiming that the search is still running.
+          // A failed/empty search must not be labelled as checked evidence.
+          write(`data: ${JSON.stringify({ type: "tool_call_complete", name: "search_knowledge", has_evidence: docsFound.length > 0 })}\n\n`);
         }
         // Answer every tool_use the model sent — client and server alike —
         // in the model's original call order.

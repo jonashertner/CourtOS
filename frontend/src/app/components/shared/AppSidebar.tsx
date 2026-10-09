@@ -14,13 +14,23 @@ import {
   ChevronDown,
   Loader2,
   BookOpen,
+  MessageSquare as ChatSkeuoIcon,
+  Code as IdeSkeuoIcon,
+  FolderClosed as FolderSkeuoIcon,
+  Library as LibrarySkeuoIcon,
+  Table2 as TabularReviewSkeuoIcon,
+  ListChecks as WorkflowSkeuoIcon,
+  Building2 as OrganizationSkeuoIcon,
+  Settings2 as SettingsSkeuoIcon,
+  LogOut as SignOutSkeuoIcon,
+  History as HistorySkeuoIcon,
 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useUserProfile } from "@/app/contexts/UserProfileContext";
 import { useChatHistoryContext } from "@/app/contexts/ChatHistoryContext";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { COURTOS_CLOUDFLARE_AUTH, COURTOS_GUIDE_PATH, COURTOS_HOME, COURTOS_HYBRID_PATH, COURTOS_PILOT_MODE, COURTOS_SOURCE_URL } from "@/app/lib/courtos";
+import { COURTOS_CLOUDFLARE_AUTH, COURTOS_GUIDE_PATH, COURTOS_HOME, COURTOS_HYBRID_PATH, COURTOS_KNOWLEDGE_ENABLED, COURTOS_PILOT_MODE, COURTOS_SOURCE_URL } from "@/app/lib/courtos";
 import { SidebarChatItem } from "@/app/components/shared/SidebarChatItem";
 import {
     Dropdown,
@@ -29,18 +39,6 @@ import {
     DropdownTrigger,
 } from "@/shared/ui/dropdown";
 import { SidebarProjectItem } from "@/app/components/shared/SidebarProjectItem";
-import {
-    ChatSkeuoIcon,
-    IdeSkeuoIcon,
-    FolderSkeuoIcon,
-    LibrarySkeuoIcon,
-    TabularReviewSkeuoIcon,
-    WorkflowSkeuoIcon,
-    OrganizationSkeuoIcon,
-    SettingsSkeuoIcon,
-    SignOutSkeuoIcon,
-} from "@/app/components/shared/AppSidebarSkeuoIcons";
-import { HistorySkeuoIcon } from "@/app/components/shared/HistorySkeuoIcon";
 import { listProjectSummaries } from "@/app/lib/mikeApi";
 import type { Project } from "@/app/components/shared/types";
 import { cn } from "@/app/lib/utils";
@@ -58,6 +56,7 @@ const NAV_ITEMS = [
     { href: "/ide", label: "IDE", icon: IdeSkeuoIcon },
     { href: "/projects", label: "Projekte", icon: FolderSkeuoIcon },
     { href: "/library", label: "Bibliothek", icon: LibrarySkeuoIcon },
+    ...(COURTOS_KNOWLEDGE_ENABLED ? [{ href: "/knowledge", label: "Wissensbasis", icon: BookOpen }] : []),
     {
         href: "/tabular-reviews",
         label: "Tabellenprüfung",
@@ -314,10 +313,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     isOpen
                         ? "w-64 h-[calc(100dvh-1rem)] md:h-[calc(100dvh-1.5rem)]"
                         : "max-md:hidden w-[46px] md:h-[calc(100dvh-1.5rem)] h-auto pointer-events-none md:pointer-events-auto",
-                    // Collapsed, the ends are full semicircles. The radii are
-                    // lengths, not rounded-full, so the change animates with
-                    // the width.
-                    isOpen ? "rounded-2xl" : "rounded-[23px]",
+                    "courtos-sidebar rounded-md",
                     "my-2 ml-2 mr-0 md:my-3 md:ml-3 md:mr-0 overflow-visible",
                     LIQUID_GLASS_FLOAT_CLASS,
                     "absolute z-[99] flex shrink-0 flex-col transition-all duration-300 md:relative",
@@ -325,7 +321,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             >
                 {/* Toggle + Logo */}
                 <div
-                    className={`h-11 shrink-0 items-center justify-between px-1.5 ${
+                    className={`h-16 shrink-0 items-center justify-between px-1.5 ${
                         !isOpen ? "hidden md:flex" : "flex"
                     }`}
                 >
@@ -336,7 +332,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                 className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                             >
                                 <span
-                                    className={`text-xl font-light font-serif ${
+                                    className={`courtos-sidebar-wordmark ${
                                         shouldAnimate ? "sidebar-fade-in" : ""
                                     }`}
                                 >
@@ -374,6 +370,9 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     </button>
                 </div>
 
+                {/* This bounded scroll area owns navigation and history. Fixed-height
+                    project lists must never paint over the fixed footer. */}
+                <div className="courtos-sidebar-body min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 {/* Nav items */}
                 <div className="pt-1.5">
                     {NAV_ITEMS.filter((item) => !COURTOS_PILOT_MODE || item.href !== "/ide").map(({ href, label, icon: Icon }) => {
@@ -393,7 +392,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                     onClick={() => router.push(href)}
                                     title={!isOpen ? label : ""}
                                     className={cn(
-                                        "w-full h-8 flex items-center gap-2 px-2 py-2 rounded-md transition-colors text-left focus-visible:outline-2 focus-visible:outline-ring",
+                                        "courtos-sidebar-nav-link w-full flex items-center gap-3 px-2 py-2 transition-colors text-left focus-visible:outline-2 focus-visible:outline-ring",
                                         isActive
                                             ? `${LIQUID_GLASS_SELECTED_CLASS} text-gray-900`
                                             : `text-gray-700 ${LIQUID_GLASS_HOVER_CLASS}`,
@@ -425,7 +424,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                 </div>
 
                 {isOpen && (
-                    <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4">
+                    <div className="mt-4 flex flex-col gap-4 pb-4">
                         {/* Recent Projects */}
                         <div>
                             <button
@@ -526,10 +525,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
                         {/* Assistant History */}
                         <div
-                            className={cn(
-                                "flex min-h-0 flex-col",
-                                !historyCollapsed && "flex-1",
-                            )}
+                            className="flex min-h-0 flex-col"
                         >
                             <button
                                 onClick={() => setHistoryCollapsed((v) => !v)}
@@ -546,7 +542,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                             </button>
                             <div
                                 className={cn(
-                                    "min-h-0 flex-1 overflow-y-auto",
+                                    "max-h-64 overflow-y-auto",
                                     historyCollapsed && "hidden",
                                 )}
                                 onScroll={handleChatHistoryScroll}
@@ -631,15 +627,18 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     </div>
                 )}
 
+                </div>
+
+                <footer className="courtos-sidebar-fixed-footer shrink-0">
                 {isOpen && (
-                    <div className="shrink-0 space-y-2 px-3.5 pb-3 pt-3 text-xs">
-                        <a href={COURTOS_HYBRID_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Geführter Hybridversuch</a>
+                    <div className="courtos-sidebar-footer shrink-0 space-y-2 px-3.5 pb-3 pt-3 text-xs">
+                        <a href={COURTOS_HYBRID_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Fall Linden bearbeiten</a>
                         <a href={COURTOS_GUIDE_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Handbuch</a>
                         <a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="block text-muted-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Quellcode · AGPL-3.0</a>
                     </div>
                 )}
                 {/* User Profile */}
-                <div className="mt-auto p-1">
+                <div className="p-1">
                     {user && (
                         <Dropdown
                             open={isDropdownOpen}
@@ -733,6 +732,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                         </Dropdown>
                     )}
                 </div>
+                </footer>
             </div>
             <WarningPopup
                 open={signOutWarningOpen}

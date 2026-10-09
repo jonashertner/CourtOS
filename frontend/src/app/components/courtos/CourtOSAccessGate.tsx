@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { AuthApiError, loginWithCloudflare } from "@/app/lib/authApi";
-import { COURTOS_HOME, COURTOS_PILOT_MODE, COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
+import { COURTOS_HOME, COURTOS_KNOWLEDGE_ENABLED, COURTOS_PILOT_MODE, COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
 import { SiteLogo } from "@/app/components/site-logo";
 import { PilotUsageNotice } from "./PilotUsageNotice";
 import { CourtOSCredits } from "./CourtOSCredits";
@@ -58,10 +58,10 @@ export function CourtOSAccessGate() {
         <main className="flex min-h-dvh items-center justify-center bg-app-background px-6 py-12">
             <div className="w-full max-w-lg">
                 <SiteLogo size="lg" className="mb-10" />
-                <div className={cn(authGlassCardUIClassName, "space-y-6")}>
+                <div className={cn(authGlassCardUIClassName, "courtos-access-panel space-y-6")}>
                     <div>
-                        <p className="mb-3 text-xs font-medium tracking-wide text-muted-foreground">ARBEITSRAUM FÜR DIE RECHTSPRAXIS</p>
-                        <h1 className="font-serif text-3xl text-foreground">Willkommen bei CourtOS.</h1>
+                        <p className="courtos-kicker mb-4">ARBEITSRAUM FÜR DIE RECHTSPRAXIS</p>
+                        <h1 className="courtos-section-title text-foreground">Willkommen bei CourtOS.</h1>
                         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                             {COURTOS_SELF_REGISTRATION
                                 ? "Ihr E-Mail-Code bestätigt Ihre Adresse. Beim ersten Öffnen wird Ihr persönliches CourtOS-Konto erstellt. Eine Einladung oder ein zusätzliches Passwort ist nicht nötig."
@@ -70,11 +70,11 @@ export function CourtOSAccessGate() {
                     </div>
                     {COURTOS_PILOT_MODE && (
                         <p className="text-sm leading-relaxed text-foreground">
-                            Testbetrieb mit synthetischen Fällen. Bitte keine echten Akten, Personendaten oder vertraulichen Texte eingeben. Die Verarbeitung findet auf einem gemieteten Server in Deutschland statt.
+                            Testbetrieb mit synthetischen Fällen.{COURTOS_KNOWLEDGE_ENABLED && " Öffentliche oder rechtmässig nutzbare, nicht vertrauliche Literaturauszüge sind ebenfalls möglich."} Bitte keine echten Akten, Personendaten oder vertraulichen Texte eingeben. Die Verarbeitung findet auf einem gemieteten Server in Deutschland statt.
                         </p>
                     )}
                     <PilotUsageNotice />
-                    <PillButtonUI type="button" tone="black" size="normal" className="min-h-11 w-full" disabled={opening || authLoading || isAuthenticated} onClick={() => void openWorkspace()}>
+                    <PillButtonUI type="button" tone="black" size="normal" className="courtos-button min-h-11 w-full" disabled={opening || authLoading || isAuthenticated} onClick={() => void openWorkspace()}>
                         {opening || authLoading || isAuthenticated ? <><Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> Zugang wird geprüft…</> : <>CourtOS öffnen <ArrowRight className="h-4 w-4" aria-hidden="true" /></>}
                     </PillButtonUI>
                     {error && (

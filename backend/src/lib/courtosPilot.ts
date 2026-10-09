@@ -63,6 +63,7 @@ export const COURTOS_PILOT_TOOL_NAMES: ReadonlySet<string> = new Set([
 ]);
 
 export function courtosPilotToolAllowed(name: string): boolean {
+  if (name === "search_knowledge") return courtosPilotEnabled() && process.env.COURTOS_KNOWLEDGE_ENABLED === "true";
   return !courtosPilotEnabled() || COURTOS_PILOT_TOOL_NAMES.has(name);
 }
 
