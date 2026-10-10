@@ -99,10 +99,10 @@ Aprite un passaggio pertinente, verificate la fonte originale e copiate testo e 
 Sono adatti decisioni pubbliche, letteratura non riservata lecitamente utilizzabile e documenti sintetici. Fascicoli giudiziari reali e documenti riservati restano esclusi da questo server virtuale (VPS) in Germania.
 
 ## 7. Trovare e inquadrare le decisioni
-Cercare nella giurisprudenza pubblica senza chiamare un modello.
+Trovare la giurisprudenza pubblica con il servizio di ricerca OpenCaseLaw, assistito dall’IA.
 
 ### Iniziare con pochi termini
-Inserite termini giuridici significativi nel campo pubblico. Fino a otto termini devono comparire insieme nel testo. Il filtro linguistico può restringere la selezione. Se necessario, riformulate con meno termini o con parole diverse.
+Inserite fino a otto termini giuridici precisi. CourtOS li trasmette al servizio pubblico OpenCaseLaw soltanto dopo «Suchen». Un filtro linguistico restringe la selezione. Non inserite informazioni riservate.
 
 ### Aprire il risultato
 L’elenco presenta fino a cinque risultati testuali. Aprite la decisione e leggete il passaggio pertinente. Data, numero di causa e tribunale aiutano a inquadrarla; la fonte originale rimane determinante.
@@ -116,7 +116,7 @@ L’elenco presenta fino a cinque risultati testuali. Aprite la decisione e legg
 La posizione visualizzata indica caratteri nel testo registrato. Non è un numero di paragrafo ufficiale né di considerando. Individuate nella fonte originale il riferimento da citare.
 
 ### La portata della ricerca
-La ricerca testuale avviene sul server CourtOS, senza un modello di IA esterno. Cinque risultati costituiscono una selezione, non una garanzia di completezza.
+OpenCaseLaw può analizzare la richiesta e ordinare i risultati con l’IA. La ricerca avviene fuori da CourtOS. Cinque risultati costituiscono una selezione, non una garanzia di completezza.
 
 ## 8. Riprendere un riferimento
 Trasferire insieme il passaggio e la sua provenienza nel proprio lavoro.
@@ -182,7 +182,7 @@ Se utilizzate l’assistente o l’esame esterno, valutatene separatamente l’a
 Termini cercati, fonte attesa, scostamento osservato e impegno approssimativo bastano spesso. Non utilizzate fascicoli reali o passaggi riservati per illustrare un difetto.
 
 ## 11. Ricorrere all’IA quando serve
-Ricerca e copia dei riferimenti funzionano anche senza IA.
+La ricerca nelle proprie fonti e la copia dei riferimenti funzionano senza IA. Per approfondire, scegliete il modello.
 
 ### Proseguire in locale
 «Mit dieser Auswahl fragen» prepara nell’assistente la domanda e i documenti scelti. Solo il vostro invio avvia Gemma 4. «Locale» indica il VPS CourtOS presso Hetzner in Germania, non il vostro dispositivo né la rete del tribunale.
@@ -201,14 +201,14 @@ L’anteprima mostra l’intera richiesta, il fornitore e il modello. Solo la vo
 La risposta esterna può tornare nell’assistente locale come bozza modificabile, senza invio automatico. Testo in corso e allegati restano invariati. Un testo troppo lungo non viene troncato silenziosamente. Potete anche copiare un passaggio utile nel vostro strumento abituale.
 
 ## 12. Dati e gestione
-Ricerca nel browser; IA soltanto su vostra richiesta esplicita.
+Biblioteca personale, ricerca pubblica e richieste ai modelli seguono percorsi distinti.
 
 - Il vostro browser
 - Cloudflare
 - VPS in Germania
 
 ### Trattamento locale ed esterno
-Biblioteca, ricerca locale e Gemma 4 funzionano sul server CourtOS presso Hetzner. Cloudflare tratta il traffico web, compresi i testi visualizzati. Solo la richiesta esterna espressamente autorizzata viene trasmessa all’API Anthropic, attualmente a Claude Opus 5.5.
+Biblioteca e Gemma 4 funzionano su Switchboard, presso Hetzner in Germania. Cloudflare tratta il traffico web, compresi i testi visualizzati. I termini pubblici sono trasmessi a OpenCaseLaw, la cui ricerca utilizza un’IA esterna. I vostri file non vengono allegati. L’esame Frontier separato invia soltanto il contenuto da voi autorizzato a Claude Opus 5.5 presso Anthropic.
 
 ### Non ancora un uso istituzionale
 Controllo degli accessi e conti separati non sostituiscono un’autorizzazione istituzionale. Fascicoli giudiziari reali e documenti riservati restano esclusi. Non è prevista un’anonimizzazione automatica.
@@ -223,7 +223,7 @@ Le richieste ammesse contano anche in caso di errore del modello. Le risposte re
 Dopo il test sul VPS: un progetto distinto per l’impiego istituzionale.
 
 ### In seguito: lavorare con i fascicoli
-Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. Questa funzione e le integrazioni Word e Citecheck non sono ancora realizzate.
+Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. La pseudonimizzazione resta da sviluppare. L’interfaccia Word non è ancora stata interamente verificata in Word; Citecheck è attualmente accessibile tramite un link separato.
 
 ### Prima dei fascicoli reali
 - Definire compiti autorizzati e responsabilità professionali e operative.

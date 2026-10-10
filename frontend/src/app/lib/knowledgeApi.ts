@@ -32,12 +32,19 @@ export interface PublicDecision {
     pdf_url: string | null;
     content_hash: string | null;
     scraped_at: string | null;
+    date_is_estimated?: boolean | null;
+    source_note?: string | null;
     snippet: string;
 }
 export interface PublicSearch {
     results: PublicDecision[];
-    query_mode: "literal_terms";
-    database_generation: string;
+    query_mode: "literal_terms" | "opencaselaw_ai";
+    ai_assisted?: boolean;
+    degraded?: boolean;
+    database_generation: string | number | null;
+    ranking?: string;
+    candidate_limit?: number;
+    candidates_examined?: number;
 }
 export interface PublicDecisionDetail extends PublicDecision {
     passage: { start: number; end: number; text: string; total_chars: number; has_more: boolean };

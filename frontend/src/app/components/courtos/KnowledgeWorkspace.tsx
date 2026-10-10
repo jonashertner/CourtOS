@@ -46,7 +46,8 @@ function libraryExcerpt(hit: KnowledgeResult) {
 }
 
 function publicReference(decision: PublicDecision) {
-    return [decisionTitle(decision), [courtLabel(decision.court), decision.docket_number, decision.decision_date].filter(Boolean).join(" · "), publicSourceUrl(decision.source_url) || publicSourceUrl(decision.pdf_url), `OpenCaseLaw-ID: ${decision.decision_id}`].filter(Boolean).join("\n");
+    const date = decision.decision_date ? `${decision.decision_date}${decision.date_is_estimated ? " (Datum geschätzt)" : ""}` : null;
+    return [decisionTitle(decision), [courtLabel(decision.court), decision.docket_number, date].filter(Boolean).join(" · "), publicSourceUrl(decision.source_url) || publicSourceUrl(decision.pdf_url), `OpenCaseLaw-ID: ${decision.decision_id}`, decision.source_note ? `Hinweis von OpenCaseLaw: ${decision.source_note}` : null].filter(Boolean).join("\n");
 }
 
 function SourceDialog({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
@@ -174,14 +175,16 @@ function PublicSource({ decision, onClose, wordHost, inWord }: { decision: Publi
     return <SourceDialog title={decisionTitle(decision)} onClose={onClose}><div className="courtos-source-reading">
         <p className="text-sm text-muted-foreground">{[courtLabel(decision.court), decision.docket_number, decision.decision_date, decision.language?.toUpperCase()].filter(Boolean).join(" · ")}</p><OriginalLinks decision={decision} />
         {loading ? <p role="status" className="mt-6">Entscheidtext wird geladen…</p> : error ? <div role="alert" className="mt-6"><p>{error}</p><button className={`${secondary} mt-3`} onClick={() => setRetry((value) => value + 1)}>Erneut laden</button></div> : detail && <>
-            <div className="mt-5"><CopySource text={`${detail.passage.text}\n\nQuelle: ${publicReference(decision)}\nErfasster Auszug: Zeichen ${detail.passage.start}–${detail.passage.end} von ${detail.passage.total_chars}; keine amtlichen Randnummern. Zitat an der Originalquelle prüfen.`} label="Auszug und Quelle kopieren" wordHost={wordHost} /></div>
+            {detail.date_is_estimated && <p className="mt-4 text-sm text-muted-foreground">Das Entscheidungsdatum ist im Quellenbestand nur geschätzt.</p>}
+            {detail.source_note && <p className="mt-4 text-sm text-muted-foreground">Hinweis von OpenCaseLaw: {detail.source_note}</p>}
+            <div className="mt-5"><CopySource text={`${detail.passage.text}\n\nQuelle: ${publicReference({ ...decision, ...detail })}\nErfasster Auszug: Zeichen ${detail.passage.start}–${detail.passage.end} von ${detail.passage.total_chars}; keine amtlichen Randnummern. Zitat an der Originalquelle prüfen.`} label="Auszug und Quelle kopieren" wordHost={wordHost} /></div>
             <p className="mt-5 text-xs leading-relaxed text-muted-foreground">Erfasster Text · Zeichenposition {detail.passage.start}–{detail.passage.end} von {detail.passage.total_chars}. Diese Positionen beginnen bei 0 und sind keine amtlichen Randnummern. Prüfen Sie Zitate an der Originalquelle.</p>
             <pre className="courtos-decision-text">{detail.passage.text}</pre>
             {!inWord && <div className="courtos-source-ai">
                 <button type="button" className={secondary} disabled={!user?.id} onClick={() => {
                     if (!user?.id) return;
                     if (model === "gemma") {
-                        const text = `Prüfe den folgenden Entscheidauszug anhand seiner eigenen Aussagen. Unterscheide belegte Aussagen und offene Fragen. Erfinde keine Quellen und behaupte nicht, den vollständigen Entscheid gelesen zu haben.\n\n${publicReference(decision)}\nErfasster Auszug: Zeichen ${detail.passage.start}–${detail.passage.end} von ${detail.passage.total_chars}; keine amtlichen Randnummern.\n\n${detail.passage.text}`;
+                        const text = `Prüfe den folgenden Entscheidauszug anhand seiner eigenen Aussagen. Unterscheide belegte Aussagen und offene Fragen. Erfinde keine Quellen und behaupte nicht, den vollständigen Entscheid gelesen zu haben.\n\n${publicReference({ ...decision, ...detail })}\nErfasster Auszug: Zeichen ${detail.passage.start}–${detail.passage.end} von ${detail.passage.total_chars}; keine amtlichen Randnummern.\n\n${detail.passage.text}`;
                         if (prepareResearchDraft(user.id, text)) router.push("/assistant");
                         else setHandoffError("Der Auszug konnte nicht übergeben werden. Bitte kopieren Sie ihn in den lokalen Assistenten.");
                     } else {
@@ -226,9 +229,10 @@ function PublicKnowledge({ wordHost, wordHostError, inWord }: { wordHost?: WordR
                     <button className={button} disabled={searching || !query.trim()}><Search size={17} aria-hidden="true" />{searching ? "Suche läuft…" : "Suchen"}</button>
                 </div>
                 <div className="courtos-search-options">
-                    <p id="public-search-help">Textsuche ohne KI · Bis zu acht Begriffe</p>
+                    <p id="public-search-help">OpenCaseLaw · KI-gestützte Suche · Bis zu acht Begriffe</p>
                     <label htmlFor="public-language"><span className="sr-only">Sprache</span><select id="public-language" value={language} onChange={(event) => setLanguage(event.target.value)} className={field}><option value="">Alle Sprachen</option><option value="de">Deutsch</option><option value="fr">Französisch</option><option value="it">Italienisch</option></select></label>
                 </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">Ihre Suchbegriffe werden an den öffentlichen OpenCaseLaw-Dienst übermittelt. Dieser nutzt KI für die Suche. Keine Namen oder Angaben aus vertraulichen Verfahren eingeben.</p>
                 {inWord && <div className="courtos-word-selection"><button type="button" className={link} disabled={!wordHost || readingSelection} onClick={async () => {
                     if (!wordHost) return;
                     setReadingSelection(true); setSelectionError("");
@@ -246,9 +250,10 @@ function PublicKnowledge({ wordHost, wordHostError, inWord }: { wordHost?: WordR
         {result && <section className="courtos-public-results" aria-label="Öffentliche Suchergebnisse">
             <header className="courtos-results-heading">
                 <h3>{result.results.length} Entscheide zu «{submitted}»</h3>
-                <details className="courtos-result-scope"><summary>Zum Suchumfang</summary><p>Die fünf bestbewerteten Texttreffer, keine vollständige Recherche. Datum und Aktenzeichen stammen aus dem Datenbestand; die Originalquelle bleibt massgeblich.</p></details>
+                <details className="courtos-result-scope"><summary>Zum Suchumfang</summary><p>Bis zu fünf Texttreffer{result.candidate_limit ? ` aus einer begrenzten Auswahl von höchstens ${result.candidate_limit} passenden Datensätzen` : ""}, keine vollständige Recherche. Datum und Aktenzeichen stammen aus dem Datenbestand; die Originalquelle bleibt massgeblich.</p></details>
             </header>
             {!result.results.length && <p className="courtos-empty-results">Keine passenden Entscheide im erfassten Bestand. Versuchen Sie weniger oder andere Begriffe.</p>}
+            {result.degraded && <p className="courtos-search-state">OpenCaseLaw hat eine eingeschränkte Rangfolge geliefert. Bitte die Suche später wiederholen oder präzisere Begriffe verwenden.</p>}
             <ol className="courtos-public-result-list">{result.results.map((decision) => <li key={decision.decision_id} className="courtos-public-result">
                 <p className="courtos-result-meta"><span>{[courtLabel(decision.court), decision.canton].filter(Boolean).join(" · ")}</span>{" "}<span>{[decision.decision_date, decision.language?.toUpperCase()].filter(Boolean).join(" · ")}</span></p>
                 <div className="courtos-result-content">
@@ -257,7 +262,7 @@ function PublicKnowledge({ wordHost, wordHostError, inWord }: { wordHost?: WordR
                     <div className="courtos-result-actions"><button className={link} onClick={() => setSource(decision)}>Entscheidtext öffnen <BookOpen size={15} aria-hidden="true" /></button><OriginalLinks decision={decision} /></div>
                 </div>
             </li>)}</ol>
-            <p className="courtos-results-generation">Datenstand-Kennung: {result.database_generation}</p>
+            <p className="courtos-results-generation">OpenCaseLaw · {result.query_mode === "opencaselaw_ai" ? "KI-gestützte Suche" : "öffentliche Suche"} · Datenstand-Kennung: {result.database_generation ?? "nicht angegeben"}</p>
         </section>}
         {source && <PublicSource decision={source} onClose={() => setSource(null)} wordHost={wordHost} inWord={inWord} />}
     </section>;

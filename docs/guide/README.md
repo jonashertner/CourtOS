@@ -9,7 +9,7 @@ The edition begins with four source-grounded chapters on purpose, judicial
 responsibility, reviewable work and evaluation. The practical entry is now
 `/research`: search published OpenCaseLaw decisions, inspect the original and
 copy a passage together with provenance into the reader's usual tools. No
-project, chat or model call is required for this work. `/knowledge` remains a
+project or chat is required for this work. Public search calls the existing OpenCaseLaw service, which can use external AI for query analysis and ranking; that transmission is disclosed before submission. `/knowledge` remains a
 compatible route; personal source import and management use `/library`.
 Public and personal search keep separate inputs and source scopes.
 
@@ -21,7 +21,7 @@ and PDF page, with no private document URL. A manual text field is offered when
 clipboard access fails. These references remain subject to checking against
 the original; copying does not certify their correctness or confer source rights.
 
-AI remains available as an optional extension: explicit personal-source
+Beyond public search, separate AI work remains optional: explicit personal-source
 selection for local Gemma 4 work on the CourtOS server, or a separately reviewed
 Claude Opus 5.5 request to Anthropic followed by an editable return to the local
 composer without automatic sending. Public passages can enter that same
@@ -36,8 +36,7 @@ without altering them and keep readable working notes alongside them. Notes woul
 distinguish findings, allegations and disputed points, link source versions and
 flag dependencies for review when sources change. The current library uploads
 copies to the VPS; in-place filesystem access and a local Word/browser connector
-are not implemented. No automatic anonymisation, Word integration or
-Citecheck integration is claimed. The guide no longer prescribes the former Linden case.
+are not implemented. No automatic anonymisation or complete native Word acceptance is claimed. Citecheck remains separately linked. The guide no longer prescribes the former Linden case.
 
 The guide describes email-code self-registration and the current separate
 per-person UTC-day limits: three native local assistant starts and one external

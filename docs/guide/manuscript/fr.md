@@ -99,10 +99,10 @@ Ouvrez un passage pertinent, vérifiez la source originale, puis copiez le texte
 Décisions publiques, littérature non confidentielle dont l’usage est licite et documents synthétiques conviennent. Les vrais dossiers judiciaires et documents confidentiels restent exclus de ce serveur virtuel (VPS) en Allemagne.
 
 ## 7. Trouver et situer les décisions
-Rechercher dans la jurisprudence publique sans appel à un modèle.
+Trouver la jurisprudence publique avec le service de recherche OpenCaseLaw, assisté par IA.
 
 ### Commencer par quelques termes
-Saisissez des termes juridiques significatifs dans le champ public. Jusqu’à huit termes doivent apparaître ensemble dans le texte. Le filtre de langue peut préciser la sélection. Reformulez au besoin avec moins de termes ou d’autres mots.
+Saisissez jusqu’à huit termes juridiques précis. CourtOS les transmet au service public OpenCaseLaw uniquement après «Suchen». Un filtre linguistique restreint la sélection. N’utilisez aucune information confidentielle.
 
 ### Ouvrir le résultat
 La liste présente jusqu’à cinq résultats textuels. Ouvrez la décision et lisez le passage pertinent. Date, numéro de dossier et tribunal aident à la situer; la source originale reste déterminante.
@@ -116,7 +116,7 @@ La liste présente jusqu’à cinq résultats textuels. Ouvrez la décision et l
 La position affichée indique des caractères dans le texte enregistré. Ce n’est ni un numéro de paragraphe officiel ni un numéro de considérant. Retrouvez la référence à citer dans la source originale.
 
 ### La portée de la recherche
-Il s’agit d’une recherche textuelle sur le serveur CourtOS, sans modèle d’IA externe. Cinq résultats constituent une sélection, pas une garantie d’exhaustivité.
+OpenCaseLaw peut analyser la requête et classer les résultats avec l’IA. Cette recherche a lieu hors de CourtOS. Cinq résultats constituent une sélection, pas une garantie d’exhaustivité.
 
 ## 8. Reprendre une référence
 Transférer ensemble le passage et son origine dans votre travail.
@@ -182,7 +182,7 @@ Si vous utilisez l’assistant ou l’examen externe, évaluez leur apport disti
 Termes recherchés, source attendue, écart constaté et effort approximatif suffisent souvent. N’utilisez pas de vrais dossiers ou de passages confidentiels pour illustrer un défaut.
 
 ## 11. Recourir à l’IA si nécessaire
-La recherche et la copie des références fonctionnent aussi sans IA.
+La recherche dans vos propres sources et la copie des références fonctionnent sans IA. Pour aller plus loin, choisissez le modèle.
 
 ### Poursuivre localement
 «Mit dieser Auswahl fragen» prépare votre question et les documents choisis dans l’assistant. Seul votre envoi lance Gemma 4. «Local» désigne le VPS CourtOS chez Hetzner en Allemagne, pas votre appareil ni le réseau du tribunal.
@@ -201,14 +201,14 @@ L’aperçu montre toute la requête, le fournisseur et le modèle. Seule votre 
 La réponse externe peut revenir dans l’assistant local comme projet modifiable, sans envoi automatique. Votre texte en cours et les pièces jointes restent inchangés. Un texte trop long n’est pas tronqué silencieusement. Vous pouvez aussi copier un passage utile dans votre outil habituel.
 
 ## 12. Données et exploitation
-Recherche dans le navigateur; IA uniquement sur votre demande explicite.
+Bibliothèque personnelle, recherche publique et requêtes aux modèles suivent des circuits distincts.
 
 - Votre navigateur
 - Cloudflare
 - VPS en Allemagne
 
 ### Traitements local et externe
-Bibliothèque, recherche locale et Gemma 4 fonctionnent sur le serveur CourtOS chez Hetzner. Cloudflare traite le trafic web, y compris les textes affichés. Seule la requête externe expressément autorisée est transmise à l’API Anthropic, actuellement à Claude Opus 5.5.
+La bibliothèque et Gemma 4 fonctionnent sur Switchboard, chez Hetzner en Allemagne. Cloudflare traite le trafic web, y compris les textes affichés. Les termes publics sont transmis à OpenCaseLaw, dont la recherche utilise une IA externe. Vos fichiers ne les accompagnent pas. L’examen Frontier distinct envoie seulement le contenu autorisé par vous à Claude Opus 5.5 chez Anthropic.
 
 ### Pas encore un usage institutionnel
 Contrôle d’accès et comptes séparés ne remplacent pas une autorisation institutionnelle. Les vrais dossiers judiciaires et documents confidentiels restent exclus. Il n’existe pas d’anonymisation automatique.
@@ -223,7 +223,7 @@ Les demandes admises comptent même si le modèle échoue. Les réponses restent
 Après le test sur le VPS: un projet distinct pour un usage institutionnel.
 
 ### Plus tard: travailler avec les dossiers
-Demande, réponse et pièces exigent un environnement autorisé pour les originaux. Avant un examen externe, une pseudonymisation cohérente reste à développer: mêmes personnes et organisations, mêmes pseudonymes dans tous les documents; la table de correspondance reste locale. Cela ne garantit pas l’anonymat. L’identification encore possible devrait être examinée avant l’envoi. Cette fonction et les intégrations Word et Citecheck ne sont pas encore réalisées.
+Demande, réponse et pièces exigent un environnement autorisé pour les originaux. Avant un examen externe, une pseudonymisation cohérente reste à développer: mêmes personnes et organisations, mêmes pseudonymes dans tous les documents; la table de correspondance reste locale. Cela ne garantit pas l’anonymat. L’identification encore possible devrait être examinée avant l’envoi. La pseudonymisation reste à développer. L’interface Word n’a pas encore été entièrement vérifiée dans Word; Citecheck est pour l’instant accessible par un lien distinct.
 
 ### Avant les dossiers réels
 - Définir les tâches autorisées et les responsabilités métier et d’exploitation.

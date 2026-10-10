@@ -107,14 +107,14 @@ describe("fixed local public-source proxy",()=>{
   });
   it("encodes actual corpus identifiers with spaces and colons as one path segment",async()=>{
     const fetch=vi.fn().mockImplementation(async()=>new Response("{}"));vi.stubGlobal("fetch",fetch);
-    for(const id of ["ow_gerichte_VVGE 1976_77 Nr. 54","source:case_1"]){
+    for(const id of ["ow_gerichte_VVGE 1976_77 Nr. 54","source:case_1","ow_gerichte_OGVE-2016-17-79.htm#"]){
       expect(await publicKnowledgeRequest("decision",{id})).toMatchObject({ok:true});
       expect(fetch).toHaveBeenLastCalledWith(`http://127.0.0.1:18184/decisions/${encodeURIComponent(id)}?start=0&length=4000`,expect.anything());
     }
     for(const id of ["../private","case/other","case\\other","case\nother","a".repeat(241)]){
       expect(await publicKnowledgeRequest("decision",{id})).toMatchObject({ok:false,kind:"validation"});
     }
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
   it("forwards only explicit public query to fixed loopback with no credentials or redirects",async()=>{
     const fetch=vi.fn().mockResolvedValue(new Response(JSON.stringify({results:[]})));vi.stubGlobal("fetch",fetch);

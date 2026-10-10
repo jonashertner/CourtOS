@@ -27,6 +27,32 @@ beforeEach(() => {
 });
 
 describe("personal knowledge workspace", () => {
+    it("discloses public AI processing before any explicit search and labels degraded results", async () => {
+        api.public.mockResolvedValue({ results: [], query_mode: "opencaselaw_ai", ai_assisted: true, degraded: true, database_generation: null });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        expect(screen.getByText(/OpenCaseLaw · KI-gestützte Suche · Bis zu acht Begriffe/)).toBeInTheDocument();
+        expect(screen.getByText(/Ihre Suchbegriffe werden an den öffentlichen OpenCaseLaw-Dienst übermittelt/)).toBeInTheDocument();
+        expect(screen.queryByText(/Textsuche ohne KI/)).not.toBeInTheDocument();
+        expect(api.public).not.toHaveBeenCalled();
+        await user.type(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" }), "Gehör");
+        expect(api.public).not.toHaveBeenCalled();
+        await user.click(screen.getByRole("button", { name: "Suchen" }));
+        expect(await screen.findByText(/eingeschränkte Rangfolge/)).toBeInTheDocument();
+        expect(screen.getByText(/Datenstand-Kennung:/)).toHaveTextContent("KI-gestützte Suche");
+        expect(api.public).toHaveBeenCalledTimes(1);
+        expect(api.local).not.toHaveBeenCalled();expect(api.handoff).not.toHaveBeenCalled();
+    });
+    it("discloses bounded public candidates without claiming corpus-best results or inventing a generation", async () => {
+        api.public.mockResolvedValue({ results: [], query_mode: "literal_terms", database_generation: null,
+            candidate_limit: 256, candidates_examined: 256, ranking: "bm25_within_rowid_window" });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.type(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" }), "Gehör");
+        await user.click(screen.getByRole("button", { name: "Suchen" }));
+        await user.click(await screen.findByText("Zum Suchumfang"));
+        expect(screen.getByText(/aus einer begrenzten Auswahl/)).toHaveTextContent("höchstens 256 passenden Datensätzen");
+        expect(screen.queryByText(/bestbewerteten/)).not.toBeInTheDocument();
+        expect(screen.getByText(/Datenstand-Kennung:/)).toHaveTextContent("nicht angegeben");
+    });
     it("starts with public research without loading a library or calling a model", () => {
         render(<KnowledgeWorkspace />);
         expect(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" })).toHaveValue("");
@@ -34,6 +60,24 @@ describe("personal knowledge workspace", () => {
         expect(api.local).not.toHaveBeenCalled();
         expect(api.public).not.toHaveBeenCalled();
         expect(api.handoff).not.toHaveBeenCalled();
+    });
+    it("carries updated source metadata and warnings into copied citations", async () => {
+        const decision = { decision_id: "CH_CASE", title: "Entscheid", snippet: "Auszug", court: "bge", decision_date: "2025-01-02" };
+        api.public.mockResolvedValue({ results: [decision], query_mode: "opencaselaw_ai", database_generation: null });
+        api.detail.mockResolvedValue({ ...decision, decision_date: "2025-01-01", date_is_estimated: true, source_note: "Wiederhergestellter Text <b>prüfen</b>", passage: { start: 0, end: 4, total_chars: 4, has_more: false, text: "Text" } });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.click(screen.getByRole("button", { name: "Suchen" }));
+        await user.click(await screen.findByRole("button", { name: /Entscheidtext öffnen/ }));
+        const dialog = screen.getByRole("dialog");
+        expect(await within(dialog).findByText(/Entscheidungsdatum ist im Quellenbestand nur geschätzt/)).toBeInTheDocument();
+        expect(within(dialog).getByText(/Wiederhergestellter Text <b>prüfen<\/b>/)).toBeInTheDocument();
+        const clipboard = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValueOnce();
+        await user.click(within(dialog).getByRole("button", { name: "Auszug und Quelle kopieren" }));
+        expect(clipboard.mock.calls[0][0]).toContain("2025-01-01 (Datum geschätzt)");
+        expect(clipboard.mock.calls[0][0]).toContain("Hinweis von OpenCaseLaw: Wiederhergestellter Text <b>prüfen</b>");
+        expect(clipboard.mock.calls[0][0]).not.toContain("2025-01-02");
+        expect(dialog.querySelector("b")).toBeNull();
     });
     it("offers the exact passage for manual copy if clipboard access is denied", async () => {
         const user = userEvent.setup();

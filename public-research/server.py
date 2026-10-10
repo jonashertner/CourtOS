@@ -1,4 +1,4 @@
-"""Bounded local retrieval of public OpenCaseLaw decisions. No model/network client."""
+"""Bounded public decision retrieval through explicitly configured sources."""
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -15,6 +15,9 @@ from urllib.parse import urlsplit
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
+from starlette.concurrency import run_in_threadpool
+from remote import RemotePublicResearch, RemoteUnavailable
+from existing import ExistingOpenCaseLaw
 
 
 @dataclass(frozen=True)
@@ -22,18 +25,22 @@ class Settings:
     db: Path
     query_timeout_ms: int = 1500
     max_concurrent: int = 2
+    mode: str = "local"
 
     def __post_init__(self):
         if not self.db.is_absolute():
             raise ValueError("PUBLIC_RESEARCH_DB must be an absolute file path")
         if not 1 <= self.query_timeout_ms <= 2000 or not 1 <= self.max_concurrent <= 4:
             raise ValueError("Public research resource limits are outside safe bounds")
+        if self.mode not in {"local", "opencaselaw", "existing_opencaselaw"}:
+            raise ValueError("Unknown public research mode")
 
     @classmethod
     def environment(cls):
         return cls(Path(os.environ.get("PUBLIC_RESEARCH_DB", "/srv/courtos-public-data/decisions.db")),
                    int(os.environ.get("PUBLIC_RESEARCH_TIMEOUT_MS", "1500")),
-                   int(os.environ.get("PUBLIC_RESEARCH_CONCURRENCY", "2")))
+                   int(os.environ.get("PUBLIC_RESEARCH_CONCURRENCY", "2")),
+                   os.environ.get("PUBLIC_RESEARCH_MODE", "local"))
 
 
 class SearchInput(BaseModel):
@@ -185,9 +192,16 @@ class PublicResearch:
 
 
 def create_app(settings: Settings | None = None):
-    service = PublicResearch(settings or Settings.environment())
+    settings = settings or Settings.environment()
+    service = (ExistingOpenCaseLaw(settings.max_concurrent, literal_terms, public_url) if settings.mode == "existing_opencaselaw"
+               else RemotePublicResearch(settings.max_concurrent, literal_terms, public_url) if settings.mode == "opencaselaw" else PublicResearch(settings))
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.service = service
+
+    async def invoke(method, *args):
+        if settings.mode in {"opencaselaw", "existing_opencaselaw"}:
+            return await method(*args)
+        return await run_in_threadpool(method, *args)
 
     @app.middleware("http")
     async def headers(request: Request, call_next):
@@ -219,23 +233,31 @@ def create_app(settings: Settings | None = None):
     async def database_error(_request, _error):
         return JSONResponse(status_code=503, content={"code": "public_research_unavailable", "detail": "Die öffentliche Suchdatenbank ist vorübergehend nicht verfügbar."})
 
+    @app.exception_handler(RemoteUnavailable)
+    async def remote_error(_request, error):
+        messages = {"public_research_busy": "Die öffentliche Suche ist ausgelastet. Bitte kurz warten.",
+                    "public_research_timeout": "Die Suche hat zu lange gedauert. Bitte erneut versuchen.",
+                    "public_research_unavailable": "Die öffentliche Recherche ist vorübergehend nicht verfügbar."}
+        return JSONResponse(status_code=429 if error.code == "public_research_busy" else 503,
+                            content={"code": error.code, "detail": messages[error.code]})
+
     @app.get("/health")
-    def health():
-        return service.health()
+    async def health():
+        return await invoke(service.health)
 
     @app.post("/search")
-    def search(body: SearchInput):
+    async def search(body: SearchInput):
         try:
-            return service.search(body)
+            return await invoke(service.search, body)
         except ValueError:
             raise HTTPException(422, "Bitte ein bis acht kurze Suchbegriffe verwenden.") from None
 
     @app.get("/decisions/{decision_id}")
-    def decision(decision_id: str, start: int = Query(default=0, ge=0, le=10000000),
+    async def decision(decision_id: str, start: int = Query(default=0, ge=0, le=10000000),
                  length: int = Query(default=4000, ge=1, le=6000)):
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.: -]{0,239}", decision_id):
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:# -]{0,239}", decision_id):
             raise HTTPException(422, "Ungültige Entscheidkennung.")
-        result = service.decision(decision_id, start, length)
+        result = await invoke(service.decision, decision_id, start, length)
         if result is None:
             raise HTTPException(404, "Entscheid nicht gefunden.")
         return result

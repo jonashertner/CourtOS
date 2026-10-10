@@ -110,7 +110,7 @@ class PublicResearchTests(unittest.TestCase):
         r=self.client.get('/decisions/unsafe_url')
         self.assertEqual(r.headers['x-content-type-options'],'nosniff');self.assertEqual(r.headers['cache-control'],'no-store')
     def test_public_identifiers_preserve_spaces_and_encoded_colons(self):
-        ids=['ow_gerichte_VVGE 1976_77 Nr. 54','test_court:decision.2026-01']
+        ids=['ow_gerichte_VVGE 1976_77 Nr. 54','test_court:decision.2026-01','ow_gerichte_OGVE-2016-17-79.htm#']
         with sqlite3.connect(self.db) as conn:
             for identifier in ids:
                 conn.execute('INSERT INTO decisions SELECT ?,court,canton,docket_number,decision_date,language,title,regeste,full_text,source_url,pdf_url,content_hash,scraped_at FROM decisions WHERE decision_id=?',

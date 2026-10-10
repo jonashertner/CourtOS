@@ -99,10 +99,10 @@ Die öffentliche Suche erschliesst veröffentlichte Entscheide aus OpenCaseLaw. 
 Öffentliche Entscheide, rechtmässig nutzbare nicht vertrauliche Literatur und synthetische Unterlagen sind geeignet. Echte Fallakten und vertrauliche Dokumente gehören nicht auf diesen virtuellen Server (VPS) in Deutschland.
 
 ## 7. Entscheide finden und einordnen
-Öffentliche Rechtsprechung durchsuchen, ohne Modellaufruf.
+Öffentliche Rechtsprechung über den KI-gestützten Suchdienst OpenCaseLaw finden.
 
 ### Mit wenigen Begriffen beginnen
-Geben Sie im öffentlichen Suchfeld aussagekräftige Rechtsbegriffe ein. Bis zu acht Begriffe müssen gemeinsam im Text vorkommen. Ein Sprachfilter kann die Auswahl eingrenzen. Formulieren Sie bei Bedarf mit weniger oder anderen Begriffen neu.
+Geben Sie bis zu acht aussagekräftige Rechtsbegriffe ein. CourtOS übermittelt diese erst nach «Suchen» an den öffentlichen OpenCaseLaw-Dienst. Ein Sprachfilter grenzt die Auswahl ein. Verwenden Sie keine vertraulichen Angaben.
 
 ### Den Treffer öffnen
 Die Ergebnisliste zeigt bis zu fünf Texttreffer. Öffnen Sie den Entscheidtext und lesen Sie den passenden Ausschnitt. Datum, Aktenzeichen und Gericht helfen bei der Einordnung; massgeblich bleibt die Originalquelle.
@@ -116,7 +116,7 @@ Die Ergebnisliste zeigt bis zu fünf Texttreffer. Öffnen Sie den Entscheidtext 
 Die Positionsangabe im angezeigten Text bezeichnet Zeichen im erfassten Entscheid. Sie ist keine amtliche Randnummer oder Erwägungsnummer. Ermitteln Sie die zitierfähige Fundstelle in der Originalquelle.
 
 ### Was die Suche leistet
-Die Recherche läuft als lokale Textsuche auf dem CourtOS-Server. Sie benötigt kein externes KI-Modell. Fünf Treffer sind eine Auswahl, keine Zusicherung einer vollständigen Recherche.
+OpenCaseLaw kann die Anfrage mit KI auswerten und Treffer gewichten. Die Suche läuft ausserhalb von CourtOS. Fünf Treffer sind eine Auswahl, keine Zusicherung einer vollständigen Recherche.
 
 ## 8. Eine Fundstelle mitnehmen
 Text und Herkunft gemeinsam in Ihre weitere Arbeit übernehmen.
@@ -182,7 +182,7 @@ Wenn Sie den Assistenten oder die Frontier-Prüfung einsetzen, betrachten Sie de
 Suchbegriffe, erwartete Quelle, beobachtete Abweichung und ungefährer Aufwand genügen meist. Verwenden Sie keine echten Akten oder vertraulichen Ausschnitte als Fehlerbeispiel.
 
 ## 11. KI bei Bedarf hinzunehmen
-Die Recherche und das Kopieren von Belegen funktionieren auch ohne KI.
+Eigene Quellen durchsuchen und Belege kopieren geht ohne KI. Für weitergehende Arbeit wählen Sie das Modell.
 
 ### Lokal weiterdenken
 «Mit dieser Auswahl fragen» bereitet Ihre Frage und die gewählten Bibliotheksdokumente im Assistenten vor. Erst Ihr Senden startet Gemma 4. «Lokal» bezeichnet den CourtOS-VPS bei Hetzner in Deutschland, nicht Ihr Gerät oder das Gerichtsnetz.
@@ -201,14 +201,14 @@ Die Vorschau zeigt den vollständigen Anfrageinhalt, Anbieter und Modell. Erst I
 Die externe Antwort kann als bearbeitbarer Entwurf in den lokalen Assistenten zurückkehren; sie wird nicht automatisch gesendet. Bestehende Eingaben und Anhänge bleiben erhalten. Überlange Übergabetexte werden nicht still gekürzt. Alternativ kopieren Sie einen passenden Ausschnitt in Ihr gewohntes Werkzeug.
 
 ## 12. Datenwege und Betrieb
-Recherche im Browser; KI nur auf Ihren ausdrücklichen Auftrag.
+Eigene Bibliothek, öffentliche Suche und Modellanfragen haben getrennte Datenwege.
 
 - Ihr Browser
 - Cloudflare
 - VPS in Deutschland
 
 ### Lokale und externe Verarbeitung
-Bibliothek, lokale Suche und Gemma 4 laufen auf dem CourtOS-Server bei Hetzner. Cloudflare verarbeitet den Webverkehr einschliesslich angezeigter Texte. Nur die ausdrücklich freigegebene Frontier-Anfrage wird an die externe Anthropic-API übermittelt; derzeit an Claude Opus 5.5.
+Bibliothek und Gemma 4 laufen auf Switchboard bei Hetzner in Deutschland. Cloudflare verarbeitet den Webverkehr einschliesslich angezeigter Texte. Öffentliche Suchbegriffe gehen an OpenCaseLaw, dessen Suchdienst externe KI nutzt. Eigene Dateien werden dabei nicht mitgesendet. Die gesonderte Frontier-Prüfung sendet nur den von Ihnen freigegebenen Inhalt an Claude Opus 5.5 bei Anthropic.
 
 ### Noch kein Behördenbetrieb
 Zugangskontrolle und getrennte Konten ersetzen keine institutionelle Freigabe. Echte Fallakten und vertrauliche Unterlagen bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung.
@@ -223,7 +223,7 @@ Angenommene Anfragen zählen auch bei Modellfehlern. Antworten bleiben bis zur v
 Erst nach dem VPS-Test: ein eigener Auftrag für den institutionellen Betrieb.
 
 ### Später: mit Fallakten arbeiten
-Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Diese Funktion sowie Word- und Citecheck-Anbindungen sind noch nicht umgesetzt.
+Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Die Pseudonymisierung ist noch nicht umgesetzt. Die Word-Oberfläche ist noch nicht vollständig in Word geprüft; Citecheck ist bisher separat verlinkt.
 
 ### Vor echten Akten klären
 - Erlaubte Aufgaben und fachliche sowie betriebliche Verantwortung bestimmen.
