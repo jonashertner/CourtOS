@@ -23,6 +23,8 @@ Search results and model answers are working materials. A missing result does no
 
 The current library stores uploaded copies on the CourtOS server. It does not read ordinary folders in place or maintain a case wiki beside local originals. A local companion, a shared browser/Word research panel and per-case memory beside untouched originals are proposed next steps, not capabilities of this release.
 
+The concrete design, existing Citecheck/Word interfaces and acceptance boundaries are set out in [Local case work in Word and the browser](docs/architecture/local-case-memory.md).
+
 The intended institutional path also includes claims, responses and exhibits. Confidential real case files require a suitable institution-controlled deployment or a verified, consistent anonymisation process across the complete set of documents before external processing. This pilot implements neither that approval nor automatic cross-document anonymisation; naming that future use does not change the present data limits.
 
 ## Source and licence
