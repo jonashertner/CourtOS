@@ -18,6 +18,8 @@ describe("compact research settings", () => {
         fireEvent.click(screen.getByRole("radio", { name: /Claude Opus/ }));
         expect(getResearchModelPreference("settings-owner")).toBe("claude-opus-5-5");
         expect(fetch).not.toHaveBeenCalled(); expect(signOut).not.toHaveBeenCalled();
+        expect(screen.getByText("Eigene Quellen: Suche ohne KI")).toBeVisible();
+        expect(screen.queryByText("Suche: ohne KI")).toBeNull();
         expect(screen.getByText("Externe Aufträge: Vorschau vor dem Senden")).toBeVisible();
         fireEvent.click(screen.getByRole("button", { name: "Abmelden" }));
         expect(signOut).toHaveBeenCalledOnce();

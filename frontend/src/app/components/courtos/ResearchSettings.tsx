@@ -56,7 +56,7 @@ export function ResearchSettings({
             </fieldset>
             <p className="courtos-settings-note">{modelsAvailable ? "Für öffentliche Auszüge. Eigene Dokumente werden mit Gemma verarbeitet." : "KI-Aufträge sind in dieser Word-Testfassung noch nicht verfügbar."}</p>
             {modelsAvailable && storageNotice && <p role="status" className="courtos-settings-notice">Die Auswahl konnte nicht gespeichert werden. Gemma bleibt ausgewählt.</p>}
-            <div className="courtos-settings-facts"><p>Suche: ohne KI</p>{modelsAvailable && <p>Externe Aufträge: Vorschau vor dem Senden</p>}</div>
+            <div className="courtos-settings-facts"><p>Eigene Quellen: Suche ohne KI</p>{modelsAvailable && <p>Externe Aufträge: Vorschau vor dem Senden</p>}</div>
             <section className="courtos-settings-account" aria-label="Konto">
                 {email && <p className="courtos-settings-email">{email}</p>}
                 <button type="button" className="courtos-settings-signout" onClick={() => void onSignOut()} disabled={signingOut}>{signingOut ? "Wird abgemeldet…" : "Abmelden"}</button>
