@@ -1,5 +1,6 @@
-import { normaliseSourceGroundingIssue } from "./sourceGroundingMessages";
 "use client";
+
+import { normaliseSourceGroundingIssue } from "./sourceGroundingMessages";
 
 import { streamChatTurn } from "@/app/lib/mikeApi";
 import { readSseFrames } from "@/app/lib/sse";
