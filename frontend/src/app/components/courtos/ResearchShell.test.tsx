@@ -1,32 +1,52 @@
+// @vitest-environment-options {"url":"https://court.example.org/word/research?selection=private&token=private#private"}
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchShell } from "./ResearchShell";
-const state = vi.hoisted(() => ({ pathname: "/research", email: "very.long.but.realistically.named.reader@court.example.org", signOut: vi.fn(), replace: vi.fn() }));
-vi.mock("next/navigation", () => ({ usePathname: () => state.pathname, useRouter: () => ({ replace: state.replace }) }));
-vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { email: state.email }, signOut: state.signOut }) }));
-vi.mock("@/app/lib/courtos", () => ({ COURTOS_CLOUDFLARE_AUTH: false, COURTOS_CITECHECK_URL: "https://jonashertner.github.io/citecheck/taskpane.html?lang=de", COURTOS_GUIDE_PATH: "/guide/", COURTOS_SOURCE_URL: "https://github.com/jonashertner/CourtOS" }));
-beforeEach(() => { state.pathname = "/research"; state.signOut.mockReset().mockResolvedValue(undefined); state.replace.mockReset(); });
+const state = vi.hoisted(() => ({ pathname: "/research", query: "", email: "very.long.but.realistically.named.reader@court.example.org", signOut: vi.fn(), replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ usePathname: () => state.pathname, useSearchParams: () => new URLSearchParams(state.query), useRouter: () => ({ replace: state.replace }) }));
+vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "shell-owner", email: state.email }, signOut: state.signOut }) }));
+vi.mock("@/app/lib/courtos", async (original) => ({ ...(await original<typeof import("@/app/lib/courtos")>()), COURTOS_CLOUDFLARE_AUTH: false }));
+beforeEach(() => {
+    state.pathname = "/research"; state.query = ""; state.signOut.mockReset().mockResolvedValue(undefined); state.replace.mockReset(); localStorage.clear();
+    Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
+    Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
+});
+afterEach(() => { vi.unstubAllGlobals(); });
 describe("compact research window", () => {
     it("shows research and personal library, complete identity and source offer without workspace navigation", () => {
         render(<ResearchShell><p>Source results</p></ResearchShell>);
         expect(screen.getByRole("link", { name: "Recherche" })).toHaveAttribute("aria-current", "page");
-        expect(screen.getByRole("link", { name: "Meine Bibliothek" })).toHaveAttribute("href", "/library");
+        expect(screen.getByRole("link", { name: "Bibliothek" })).toHaveAttribute("href", "/library");
         expect(screen.getByRole("link", { name: /Quellcode/ })).toHaveAttribute("href", "https://github.com/jonashertner/CourtOS");
         const citecheck = screen.getByRole("link", { name: "Zitate prüfen" });
         expect(citecheck).toHaveAttribute("href", "https://jonashertner.github.io/citecheck/taskpane.html?lang=de");
         expect(citecheck).toHaveAttribute("target", "_blank");
         expect(citecheck).toHaveAttribute("rel", "noopener noreferrer");
+        expect(screen.getByText(state.email)).not.toBeVisible();
+        fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
         expect(screen.getByText(state.email)).toBeVisible();
         expect(screen.getByRole("main")).toHaveTextContent("Source results");
         expect(screen.queryByRole("link", { name: /Projekte|Arbeitsabläufe|Assistent/ })).toBeNull();
+        expect(screen.queryByRole("link", { name: "Im Browser öffnen" })).toBeNull();
     });
     it("keeps library navigation active inside a folder", () => {
         state.pathname = "/library/folders/one";
         render(<ResearchShell>Folder</ResearchShell>);
-        expect(screen.getByRole("link", { name: "Meine Bibliothek" })).toHaveAttribute("aria-current", "page");
+        expect(screen.getByRole("link", { name: "Bibliothek" })).toHaveAttribute("aria-current", "page");
+    });
+    it.each([["/word/research", ""], ["/library/folders/one", "host=word"]])("retains the Word return path and disables unavailable model actions in %s", (pathname, query) => {
+        state.pathname = pathname; state.query = query;
+        render(<ResearchShell>Word research</ResearchShell>);
+        expect(screen.getByRole("link", { name: "Recherche" })).toHaveAttribute("href", "/word/research");
+        expect(screen.getByRole("link", { name: "Bibliothek" })).toHaveAttribute("href", "/library?host=word");
+        fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
+        expect(screen.getByRole("radio", { name: /Gemma/ })).toBeDisabled();
+        expect(screen.getByRole("radio", { name: /Claude Opus/ })).toBeDisabled();
+        expect(screen.getByText(/KI-Aufträge sind in dieser Word-Testfassung noch nicht verfügbar/)).toBeVisible();
     });
     it("ends the application session before returning to password login", async () => {
         render(<ResearchShell>Results</ResearchShell>);
+        fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
         fireEvent.click(screen.getByRole("button", { name: "Abmelden" }));
         await waitFor(() => expect(state.replace).toHaveBeenCalledWith("/login"));
         expect(state.signOut).toHaveBeenCalledOnce();
@@ -34,10 +54,42 @@ describe("compact research window", () => {
     it("keeps an unsuccessful sign-out visible and recoverable", async () => {
         state.signOut.mockRejectedValue(new Error("private server detail"));
         render(<ResearchShell>Results</ResearchShell>);
+        fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
         fireEvent.click(screen.getByRole("button", { name: "Abmelden" }));
         expect(await screen.findByRole("alert")).toHaveTextContent("Die Abmeldung ist gerade nicht möglich");
         expect(screen.queryByText("private server detail")).toBeNull();
         expect(state.replace).not.toHaveBeenCalled();
         expect(screen.getByRole("button", { name: "Abmelden" })).toBeEnabled();
+    });
+    it("opens only the fixed research URL through supported Office UI without reading a document", () => {
+        state.pathname = "/word/research";
+        const openBrowserWindow = vi.fn(); const readDocument = vi.fn(); const wordRun = vi.fn();
+        const isSetSupported = vi.fn().mockReturnValue(true);
+        vi.stubGlobal("Office", { context: { requirements: { isSetSupported }, ui: { openBrowserWindow }, document: { getSelectedDataAsync: readDocument } } });
+        vi.stubGlobal("Word", { run: wordRun });
+        render(<ResearchShell>Word research</ResearchShell>);
+        expect(openBrowserWindow).not.toHaveBeenCalled();
+        const link = screen.getByRole("link", { name: "Im Browser öffnen" });
+        const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+        fireEvent(link, click);
+        expect(isSetSupported).toHaveBeenCalledWith("OpenBrowserWindowApi", "1.1");
+        expect(openBrowserWindow).toHaveBeenCalledExactlyOnceWith("https://court.example.org/research");
+        expect(click.defaultPrevented).toBe(true);
+        expect(readDocument).not.toHaveBeenCalled(); expect(wordRun).not.toHaveBeenCalled();
+        expect(state.replace).not.toHaveBeenCalled();
+    });
+    it.each(["missing", "unsupported", "throws"])("keeps a fixed HTTPS new-tab fallback when Office is %s", (mode) => {
+        state.pathname = "/library"; state.query = "host=word&selection=private";
+        const openBrowserWindow = vi.fn().mockImplementation(() => { if (mode === "throws") throw new Error("host unavailable"); });
+        vi.stubGlobal("Office", mode === "missing" ? undefined : { context: { requirements: { isSetSupported: () => mode !== "unsupported" }, ui: { openBrowserWindow } } });
+        render(<ResearchShell>Word library</ResearchShell>);
+        const link = screen.getByRole("link", { name: "Im Browser öffnen" });
+        const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+        fireEvent(link, click);
+        expect(link).toHaveAttribute("href", "https://court.example.org/research");
+        expect(link).toHaveAttribute("target", "_blank");
+        expect(link).toHaveAttribute("rel", "noopener noreferrer");
+        expect(click.defaultPrevented).toBe(false);
+        if (mode !== "throws") expect(openBrowserWindow).not.toHaveBeenCalled();
     });
 });

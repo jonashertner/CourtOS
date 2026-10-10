@@ -6,8 +6,9 @@ import { addPresetTemplate } from "./presetTemplates";
 
 const push = vi.fn();
 const setDocumentsForKind = vi.fn();
+let host = "";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }), useSearchParams: () => new URLSearchParams(host ? `host=${host}` : "") }));
 vi.mock("@/app/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "user-1" } }),
 }));
@@ -54,6 +55,7 @@ async function openRowMenu(name: string) {
 describe("preset templates page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    host = "";
     vi.stubGlobal(
       "matchMedia",
       vi.fn().mockReturnValue({
@@ -62,6 +64,13 @@ describe("preset templates page", () => {
         removeEventListener: vi.fn(),
       }),
     );
+  });
+
+  it("preserves the explicit Word host when returning to the original templates folder", async () => {
+    host = "word";
+    render(<PresetTemplatesPage folderId="my-folder" />);
+    await userEvent.click(screen.getByText("Back", { selector: "button" }));
+    expect(push).toHaveBeenCalledWith("/library/templates/folders/my-folder?host=word");
   });
 
   it("lists each publisher library as a folder and previews its files read-only", async () => {

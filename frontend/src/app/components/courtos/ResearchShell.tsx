@@ -1,18 +1,48 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { ExternalLink, Settings2 } from "lucide-react";
+import { ResearchSettings } from "./ResearchSettings";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { COURTOS_CLOUDFLARE_AUTH, COURTOS_CITECHECK_URL, COURTOS_GUIDE_PATH, COURTOS_SOURCE_URL } from "@/app/lib/courtos";
+import { COURTOS_CLOUDFLARE_AUTH, COURTOS_CITECHECK_URL, COURTOS_SOURCE_URL, isWordResearchContext } from "@/app/lib/courtos";
+
+/** Fixed destination only: no document access, auth exchange or pane-state transfer. */
+function openResearchInBrowser(event: MouseEvent<HTMLAnchorElement>) {
+    const destination = new URL("/research", window.location.origin);
+    if (destination.protocol !== "https:") { event.preventDefault(); return; }
+    event.currentTarget.href = destination.href;
+    const office = (window as unknown as { Office?: { context?: {
+        requirements?: { isSetSupported(name: string, version: string): boolean };
+        ui?: { openBrowserWindow(url: string): void };
+    } } }).Office;
+    try {
+        // Microsoft OpenBrowserWindowApi 1.1 opens the external browser, not an Office dialog.
+        // https://learn.microsoft.com/office/dev/add-ins/reference/requirement-sets/open-browser-window-api-requirement-sets
+        if (office?.context?.requirements?.isSetSupported("OpenBrowserWindowApi", "1.1") &&
+            typeof office.context.ui?.openBrowserWindow === "function") {
+            office.context.ui.openBrowserWindow(destination.href);
+            event.preventDefault();
+        }
+    } catch { /* Keep the normal new-tab link when the host cannot open a browser. */ }
+}
 
 /** A research window beside the user's usual tools, with no workspace catalogue. */
 export function ResearchShell({ children }: { children: ReactNode }) {
+    return <Suspense fallback={<p className="p-6" role="status">Recherche wird geladen…</p>}><ResearchShellContent>{children}</ResearchShellContent></Suspense>;
+}
+
+function ResearchShellContent({ children }: { children: ReactNode }) {
     const { user, signOut } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
     const [leaving, setLeaving] = useState(false);
     const [error, setError] = useState("");
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const searchParams = useSearchParams();
+    const inWord = isWordResearchContext(pathname, searchParams.get("host"));
+    const researchPath = inWord ? "/word/research" : "/research";
     const inLibrary = pathname === "/library" || pathname.startsWith("/library/");
 
     async function leave() {
@@ -28,31 +58,28 @@ export function ResearchShell({ children }: { children: ReactNode }) {
         }
     }
 
-    return <div className="flex h-dvh min-h-0 flex-col bg-app-background">
+    return <div className="courtos-research-shell">
         <a href="#research-main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:bg-background focus:p-3">Zum Inhalt</a>
-        <header className="shrink-0 border-b border-border px-5 py-3 sm:px-8">
-            <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-x-8 gap-y-2">
-                <Link href="/research" aria-label="CourtOS Recherche" className="font-serif text-[1.75rem] leading-tight tracking-tight text-foreground">CourtOS <span className="text-muted-foreground">Recherche</span></Link>
-                <nav aria-label="Recherchebereiche" className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
-                    <Link href="/research" aria-current={!inLibrary ? "page" : undefined} className={`flex min-h-11 items-center underline-offset-8 ${!inLibrary ? "underline" : "hover:underline"}`}>Recherche</Link>
-                    <Link href="/library" aria-current={inLibrary ? "page" : undefined} className={`flex min-h-11 items-center underline-offset-8 ${inLibrary ? "underline" : "hover:underline"}`}>Meine Bibliothek</Link>
-                    <a href={COURTOS_CITECHECK_URL} target="_blank" rel="noopener noreferrer" title="Citecheck als separates Werkzeug öffnen; es werden keine Dokumente übergeben." className="flex min-h-11 items-center text-muted-foreground underline-offset-8 hover:underline">Zitate prüfen <span aria-hidden="true" className="ml-1">↗</span></a>
-                    <a href={COURTOS_GUIDE_PATH} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center text-muted-foreground underline-offset-8 hover:underline">Leitfaden</a>
+        <header className="courtos-research-header">
+            <div className="courtos-research-bar">
+                <Link href={researchPath} aria-label="CourtOS Recherche" className="courtos-wordmark">CourtOS</Link>
+                <nav aria-label="Recherchebereiche" className="courtos-research-nav">
+                    <Link href={researchPath} aria-current={!inLibrary ? "page" : undefined}>Recherche</Link>
+                    <Link href={inWord ? "/library?host=word" : "/library"} aria-current={inLibrary ? "page" : undefined}>Bibliothek</Link>
+                    <a href={COURTOS_CITECHECK_URL} target="_blank" rel="noopener noreferrer" aria-label="Zitate prüfen" title="Citecheck öffnen">Zitate <span aria-hidden="true">↗</span></a>
                 </nav>
+                {inWord && <a href="/research" target="_blank" rel="noopener noreferrer" className="courtos-word-browser-link" onClick={openResearchInBrowser}>Im Browser öffnen <ExternalLink size={14} aria-hidden="true" /></a>}
+                <button type="button" className="courtos-settings-trigger" onClick={() => setSettingsOpen(true)} aria-label="Einstellungen" title="Einstellungen"><Settings2 size={19} aria-hidden="true" /></button>
             </div>
-            <div className="mx-auto mt-1 flex max-w-[1440px] flex-wrap items-center justify-between gap-x-6 gap-y-1 text-xs leading-relaxed text-muted-foreground">
-                <p>Testbetrieb · Server in Deutschland · Keine vertraulichen Unterlagen</p>
-                <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-4">
-                    {user?.email && <p className="min-w-0 [overflow-wrap:anywhere]">{user.email}</p>}
-                    <button type="button" disabled={leaving} onClick={() => void leave()} className="min-h-11 shrink-0 text-foreground underline underline-offset-4 disabled:opacity-60">{leaving ? "Wird abgemeldet…" : "Abmelden"}</button>
-                </div>
-            </div>
-            {error && <p role="alert" className="mx-auto mt-2 max-w-[1440px] text-sm text-destructive">{error}</p>}
+            <p className="courtos-research-context">Testbetrieb · Keine vertraulichen Unterlagen</p>
         </header>
-        <main id="research-main" tabIndex={-1} className="flex min-h-0 flex-1 flex-col overflow-hidden outline-none">{children}</main>
-        <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border px-5 py-2 text-xs leading-relaxed text-muted-foreground sm:px-8">
-            <p>OpenCaseLaw und Ihre Bibliothek · Fundstellen für Ihre eigenen Arbeitsmittel</p>
-            <a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="min-h-6 py-1 underline underline-offset-4">Quellcode · AGPL-3.0 · auf MikeOSS aufgebaut</a>
-        </footer>
+        <ResearchSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} userId={user?.id} email={user?.email} onSignOut={leave} signingOut={leaving} signOutError={error} externalAvailable={!inWord} modelsAvailable={!inWord} />
+        <div className={`courtos-research-body${inLibrary ? " courtos-research-body--library" : ""}`}>
+            <main id="research-main" tabIndex={-1} className="courtos-research-main">{children}</main>
+            <footer className="courtos-research-footer">
+                <p>OpenCaseLaw · Recherche mit Quellen</p>
+                <a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer">Quellcode · AGPL-3.0 · auf MikeOSS aufgebaut</a>
+            </footer>
+        </div>
     </div>;
 }

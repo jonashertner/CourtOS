@@ -12,10 +12,11 @@ import {
     useRef,
     useState,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, ChevronLeft, Plus } from "lucide-react";
 import { DocTable } from "@/app/components/documents/DocTable";
 import { NO_ROLE_MODEL } from "@/app/lib/permissions";
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
 import type {
   DocTableFolderBreadcrumb,
   DocTableFolder,
@@ -84,9 +85,14 @@ type LibraryWorkspaceContextValue = {
 };
 
 const LIBRARY_TABS: { id: LibraryKind; label: string }[] = [
-    { id: "files", label: "Documents" },
-    { id: "templates", label: "Templates" },
+    { id: "files", label: COURTOS_PILOT_MODE ? "Dokumente" : "Documents" },
+    { id: "templates", label: COURTOS_PILOT_MODE ? "Vorlagen" : "Templates" },
 ];
+
+// Keep the upstream layout unchanged outside the CourtOS web pilot.
+function LibraryChrome({ className, children }: { className: string; children: ReactNode }) {
+    return COURTOS_PILOT_MODE ? <div className={className}>{children}</div> : <>{children}</>;
+}
 
 const EMPTY_COLLECTION: LibraryViewCollection = {
     documents: [],
@@ -506,6 +512,7 @@ export function LibraryCollectionPage({
     folderId?: string | null;
 }) {
     const router = useRouter();
+    const hostQuery = useSearchParams().get("host") === "word" ? "?host=word" : "";
     const {
         collections,
         loadingByKind,
@@ -524,7 +531,9 @@ export function LibraryCollectionPage({
     const search = searchByKind[kind];
     const collectionRootPath = kind === "files" ? "/library" : "/library/templates";
   const debouncedSearch = useDebouncedValue(search, 250);
-    const title = kind === "files" ? "Documents" : "Templates";
+    const title = kind === "files"
+        ? (COURTOS_PILOT_MODE ? "Dokumente" : "Documents")
+        : (COURTOS_PILOT_MODE ? "Vorlagen" : "Templates");
     const [selectionActions, setSelectionActions] = useState<DocTableSelectionActions | null>(null);
   const [documentTypeOptions, setDocumentTypeOptions] = useState<string[]>([]);
   const [tableQuery, setTableQuery] = useState<DocTableQuery>({
@@ -601,7 +610,7 @@ export function LibraryCollectionPage({
                 console.error("[library] failed to load folder route", error);
                 loadedFolderRouteRef.current = null;
                 if (!cancelled) {
-                    router.replace(collectionRootPath, { scroll: false });
+                    router.replace(`${collectionRootPath}${hostQuery}`, { scroll: false });
                 }
             });
 
@@ -613,6 +622,7 @@ export function LibraryCollectionPage({
         collectionRootPath,
         folderId,
         kind,
+        hostQuery,
         router,
         setFoldersForKind,
     ]);
@@ -622,9 +632,9 @@ export function LibraryCollectionPage({
             const nextPath = nextFolderId
                 ? `${collectionRootPath}/folders/${encodeURIComponent(nextFolderId)}`
                 : collectionRootPath;
-            router.push(nextPath, { scroll: false });
+            router.push(`${nextPath}${hostQuery}`, { scroll: false });
         },
-        [collectionRootPath, router],
+        [collectionRootPath, hostQuery, router],
     );
 
     const openPresets = useCallback(() => {
@@ -633,11 +643,11 @@ export function LibraryCollectionPage({
                 folderId
                     ? `${collectionRootPath}/folders/${encodeURIComponent(folderId)}`
                     : collectionRootPath
-            }/presets`,
+            }/presets${hostQuery}`,
         );
-    }, [collectionRootPath, folderId, router]);
+    }, [collectionRootPath, folderId, hostQuery, router]);
     const presetsEmptyStateAction = useMemo(
-        () => ({ label: "Presets", onClick: openPresets }),
+        () => ({ label: COURTOS_PILOT_MODE ? "Vorlagenkatalog" : "Presets", onClick: openPresets }),
         [openPresets],
     );
 
@@ -914,16 +924,18 @@ export function LibraryCollectionPage({
     );
 
     return (
-        <div className="flex h-full min-h-0 flex-col">
+        <div className={COURTOS_PILOT_MODE ? "courtos-library-workspace flex h-full min-h-0 flex-col" : "flex h-full min-h-0 flex-col"}>
+            <LibraryChrome className="courtos-library-header shrink-0">
             <PageHeader
+                shrink={COURTOS_PILOT_MODE}
                 breadcrumbs={[
                     {
-                        label: "Library",
-                        onClick: () => router.push("/library"),
+                        label: COURTOS_PILOT_MODE ? "Meine Bibliothek" : "Library",
+                        onClick: () => router.push(`/library${hostQuery}`),
                     },
                     {
                         label: title,
-                        onClick: () => router.push(collectionRootPath),
+                        onClick: () => router.push(`${collectionRootPath}${hostQuery}`),
                     },
                     ...folderBreadcrumbs,
                 ]}
@@ -934,16 +946,16 @@ export function LibraryCollectionPage({
                                 type: "search",
                                 value: search,
                 onChange: (value) => setSearchForKind(kind, value),
-                                placeholder: `Search ${title.toLowerCase()}...`,
+                                placeholder: COURTOS_PILOT_MODE ? "Dateinamen suchen…" : `Search ${title.toLowerCase()}...`,
                             },
                             kind === "templates" && {
                                 type: "custom",
                                 render: (
                                     <HeaderActionsMenu
-                                        title="More actions"
+                                        title={COURTOS_PILOT_MODE ? "Weitere Aktionen" : "More actions"}
                                         items={[
                                             {
-                                                label: "Add preset templates",
+                                                label: COURTOS_PILOT_MODE ? "Vorlagen aus dem Katalog aufnehmen" : "Add preset templates",
                                                 icon: BookOpen,
                                                 onSelect: openPresets,
                                             },
@@ -969,21 +981,23 @@ export function LibraryCollectionPage({
                     },
                 ]}
             />
+            </LibraryChrome>
 
-            <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+            <div className={COURTOS_PILOT_MODE ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex h-full min-h-0 flex-1 flex-col overflow-hidden"}>
+                <LibraryChrome className="courtos-library-toolbar shrink-0">
                 <TableToolbar
                     items={folderBackAction ? [] : LIBRARY_TABS}
                     active={kind}
                     onChange={(next) =>
                         router.push(
-                            next === "files" ? "/library" : "/library/templates",
+                            `${next === "files" ? "/library" : "/library/templates"}${hostQuery}`,
                         )
                     }
                     leading={
                         folderBackAction ? (
                             <TabPillButtonUI onClick={folderBackAction} className="pl-2">
                                 <ChevronLeft className="h-3.5 w-3.5" />
-                                Back
+                                {COURTOS_PILOT_MODE ? "Zurück" : "Back"}
                             </TabPillButtonUI>
                         ) : undefined
                     }
@@ -993,15 +1007,17 @@ export function LibraryCollectionPage({
                                 <SelectionActionsMenu renderItems={selectionActions.renderMenuItems} />
                             )}
                             <TabPillButtonUI
+                                aria-label={COURTOS_PILOT_MODE ? "Ordner erstellen" : undefined}
                                 onClick={createFolderAction ?? undefined}
                                 disabled={!createFolderAction || loading}
                             >
                                 <Plus className="h-3.5 w-3.5" />
-                                <span className="hidden sm:inline">Folder</span>
+                                <span className="hidden sm:inline">{COURTOS_PILOT_MODE ? "Ordner" : "Folder"}</span>
                             </TabPillButtonUI>
                         </>
                     }
                 />
+                </LibraryChrome>
                 <DocTable
                     onSelectionActionsChange={setSelectionActions}
                     scopeKey={kind}

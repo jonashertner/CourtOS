@@ -1,53 +1,68 @@
 # CourtOS design system
 
-## CourtOS web identity — user direction, 9 October 2026
+## Shared research identity — user direction, 10 October 2026
 
-CourtOS uses a quiet editorial workbench: warm paper, dark ink, fine rules and
-clear source references. This explicit user direction replaces the inherited
-Mike liquid-glass aesthetic **in the web application**. It does not change the
-Word add-in or the behaviour/contracts of shared UI primitives. The inherited
-component inventory below remains useful; where its visual recommendations
-conflict with this section, the CourtOS web direction controls.
+CourtOS is a Word research add-in with the same workspace available in a browser.
+The primary task is finding and using sources beside the user's existing work.
+Jonas requested white Swiss minimalism, excellent typography and settings that
+are understood immediately, with little explanatory text. This supersedes the
+warm-paper web palette of 9 October. The separately published guide retains its
+book design.
 
-The web theme is `frontend/src/app/courtos-design.css`, scoped to the
-`courtos-web` body. It adapts shared primitive tokens at the host boundary;
-`DesignTokensUI.css` remains the cross-target token contract. Solid surfaces
-replace glass transparency, blur and decorative bevels. Dark mode has the same
-hierarchy with warm light text and subdued green-black surfaces. Preserve
-semantic error/disabled states; never use a quieter palette to obscure status.
+The research UI is shared by `/research` and `/word/research`, with an explicit
+Office adapter for the latter. The existing MikeOSS chat add-in is a separate
+implementation. Its automatic whole-document context is not used by this route.
+The CourtOS theme is `frontend/src/app/courtos-design.css`, scoped to the
+`courtos-web` body; shared primitive APIs stay unchanged.
 
-- **Type:** Timeless Serif for editorial headings and source quotations;
-  Timeless Sans for controls and working text; Paper Mono for folios and compact
-  source/status metadata. Real font names and licences are documented in
-  `frontend/scripts/FONTS.md`. Timeless binaries are separately fetched, hash
-  checked and gitignored. No runtime font CDN. OFL fallbacks remain available.
-- **Hierarchy:** one generous title, a readable introduction, then task or source
-  sections divided by rules. Long-form text stays within a comfortable measure.
-  Avoid marketing gradients, nested card grids and display type in controls.
-- **Colour:** paper `#f7f5ef`, reading surface `#fdfcf8`, ink `#252a26`, secondary
-  ink `#64685e`, rules `#d6d6c9`; focus uses `#576c55`. Use the semantic tokens,
-  not new isolated palette values. These pairs provide at least 4.5:1 for normal
-  primary/secondary text; rules are structural, not the only state indicator.
-- **Interaction:** real buttons, clear underlined text links, visible outlines
-  for keyboard focus, 44px primary actions and mobile controls. Source-type
-  navigation shows an underline and retains `aria-pressed`. Disabled controls
-  remain disabled. Prefer immediate changes; respect reduced motion.
-- **Layout:** generous spacing on the pilot introduction; a stable compact
-  sidebar; explicit selected-document inventory alongside local search;
-  restrained ruled result entries with fixed version/page and a readable quote.
-  On narrow screens the source inventory precedes the search, with no clipped
-  source text or horizontal page scrolling.
-- **Trust:** visual refinement must not imply source correctness. Keep quotas,
-  partial indexing, empty/error states, processing location and synthetic-case
-  limits visible. Preserve all independent public/private input fields and
-  explicit-send actions. Never replace a true state with a decorative success.
+The user supplied [Fluid Functionalism's typography reference](https://www.fluidfunctionalism.com/docs/typography).
+We apply its restraint: five recurring sizes, three weights, two text colours,
+no decorative uppercase labels, no tracked headings and consistent reading text.
+CourtOS adapts the scale for legal source reading and a narrow Word taskpane:
 
-`courtos-button`, `courtos-field`, `courtos-link`, `courtos-kicker`,
-`courtos-display` and the workbench layout classes live in the web theme. They
-are presentation-only classes; authentication, document selection, session
-isolation, draft preservation and citation navigation remain in their existing
-components. New web screens should use this system; legacy feature screens
-inherit its fonts and surface tokens while keeping their specialised controls.
+| Role | Size / line height | Weight |
+| --- | --- | --- |
+| Page title | 28 / 34px | 700 |
+| Section / result title | 18 / 26px | 550 |
+| Subheading / long source text | 16 / 24px | 550 / 400 |
+| Body and controls | 14 / 22px | 400 / 550 |
+| Supporting text | 12 / 18px | 400 |
+
+Timeless Sans is used throughout the research workspace; Paper Mono is reserved
+for technical provenance identifiers. Locally embedded licensed variable fonts
+require no runtime font CDN; see `frontend/scripts/FONTS.md`. Text uses tabular
+numerals, balanced headings and readable line lengths. Legacy guide and assistant
+surfaces may retain Timeless Serif.
+
+- **Navigation:** Recherche, Bibliothek, Zitate; one settings button. Source
+  choice is OpenCaseLaw or Eigene Quellen. No sample matters or dashboard tiles.
+- **Settings:** two model choices with explicit processing location, followed by
+  account and sign-out. Help is collapsed. Preferences belong to the signed-in
+  owner and fail back to Gemma when unavailable or invalid. Search uses no LLM.
+- **Source actions:** open original, copy passage with provenance, or explicitly
+  prepare an AI request. The selected model and processing location are visible
+  beside that action. Private documents use server-local Gemma only in this pilot.
+- **Word:** read selected terms only after a click; never read the whole document
+  at startup. Insert source text only after a separate click. Host state travels
+  in the library URL, not in an account-wide preference. This candidate disables
+  AI handoffs until Word authentication and a suitable request surface are proven.
+  **Im Browser öffnen** provides more room without transferring document text or
+  pretending to synchronise the current task; the browser has its own session.
+- **Colour:** white `#ffffff`, ink `#191919`, secondary ink `#5e5e5e`, rules
+  `#dedede`. Solid surfaces, black primary actions and restrained neutral states.
+  Errors retain a semantic colour; keyboard focus remains clearly outlined.
+- **Layout:** a consistent 1280px maximum outer grid with identical inner gutters
+  for header, body and library. Research has one scrolling content region; library
+  management retains its bounded table. Narrow taskpanes stack source metadata,
+  use 44px controls and wrap source titles and account identity without clipping.
+- **Trust:** concise pilot restriction stays visible. Search scope and detailed
+  provenance are disclosed on demand. Source text, extraction limitations, copy
+  fallbacks, authentication and explicit-send contracts remain intact.
+
+The first candidate requires real Word sideload, selection, insertion and sign-in
+checks before being described as ready to distribute to courts. Browser QA is a
+separate acceptance step; neither appearance nor unit tests prove native Office
+compatibility or institutional suitability.
 
 ## Inherited component inventory
 

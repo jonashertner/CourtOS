@@ -1,34 +1,34 @@
-/* CourtOS web identity, 9 October 2026.
+/* CourtOS web identity, Swiss minimalist revision, 10 October 2026.
    This host-level theme deliberately replaces the inherited glass aesthetic.
-   Shared primitive APIs and the Word add-in remain independent of this file. */
+   Shared primitive APIs remain independent; the Word research route shares this theme. */
 .courtos-web {
     --font-inter: "Timeless Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-eb-garamond: "Timeless Serif", "EB Garamond", Georgia, serif;
     --font-courtos-mono: "Paper Mono", ui-monospace, monospace;
-    --background: #f7f5ef;
-    --foreground: #252a26;
+    --background: #ffffff;
+    --foreground: #191919;
     --app-background: var(--background);
-    --app-surface: #fdfcf8;
-    --app-surface-hover: #eeece4;
-    --app-surface-active: #e7e7dd;
-    --app-floating: #fffefb;
+    --app-surface: #ffffff;
+    --app-surface-hover: #f5f5f5;
+    --app-surface-active: #ededed;
+    --app-floating: #ffffff;
     --card: var(--app-surface);
     --card-foreground: var(--foreground);
     --popover: var(--app-floating);
     --popover-foreground: var(--foreground);
     --primary: var(--foreground);
-    --primary-foreground: #fffefb;
-    --secondary: #edeae1;
+    --primary-foreground: #ffffff;
+    --secondary: #f3f3f3;
     --secondary-foreground: var(--foreground);
-    --muted: #efede5;
-    --muted-foreground: #64685e;
-    --accent: #e7e7dd;
+    --muted: #f6f6f6;
+    --muted-foreground: #5e5e5e;
+    --accent: #ededed;
     --accent-foreground: var(--foreground);
-    --border: #d6d6c9;
-    --input: #aaafa2;
-    --ring: #576c55;
+    --border: #dedede;
+    --input: #a3a3a3;
+    --ring: #353535;
     --destructive: #a13e35;
-    --sidebar: #efeee5;
+    --sidebar: #fafafa;
     --sidebar-foreground: var(--foreground);
     --sidebar-accent: var(--app-surface-active);
     --sidebar-accent-foreground: var(--foreground);
@@ -44,7 +44,7 @@
     --liquid-glass-modal-row-hover-background: var(--app-surface-hover);
     --liquid-glass-modal-row-selected-background: var(--app-surface-active);
     --focus-ring-color: var(--ring);
-    --radius: 0.375rem;
+    --radius: 0.125rem;
     --liquid-glass-background-flat: var(--app-surface);
     --liquid-glass-background-subtle: var(--app-surface);
     --liquid-glass-background-float: var(--app-surface);
@@ -56,7 +56,7 @@
     --liquid-glass-shadow-flat: none;
     --liquid-glass-shadow-subtle: none;
     --liquid-glass-shadow-float: none;
-    --liquid-glass-shadow-modal: 0 12px 48px #252a261c;
+    --liquid-glass-shadow-modal: 0 12px 48px #1919191c;
     --liquid-glass-translucent-background: var(--app-surface);
     --liquid-glass-translucent-background-action: var(--app-surface);
     --liquid-glass-translucent-background-action-hover: var(--app-surface-hover);
@@ -73,22 +73,22 @@
     font-feature-settings: "ss01";
 }
 .dark .courtos-web {
-    --background: #202622;
-    --foreground: #ece9df;
-    --app-surface: #272e28;
-    --app-surface-hover: #333c32;
-    --app-surface-active: #3c4637;
-    --app-floating: #2b332c;
-    --primary-foreground: #202622;
-    --secondary: #343b32;
-    --muted: #2c332d;
-    --muted-foreground: #b4b9a9;
-    --accent: #3c4637;
-    --border: #485142;
-    --input: #78806c;
-    --ring: #b2caa1;
+    --background: #191919;
+    --foreground: #f5f5f5;
+    --app-surface: #202020;
+    --app-surface-hover: #2b2b2b;
+    --app-surface-active: #333333;
+    --app-floating: #242424;
+    --primary-foreground: #191919;
+    --secondary: #292929;
+    --muted: #262626;
+    --muted-foreground: #bcbcbc;
+    --accent: #333333;
+    --border: #454545;
+    --input: #858585;
+    --ring: #dedede;
     --destructive: #f0a397;
-    --sidebar: #242b24;
+    --sidebar: #1c1c1c;
 }
 .courtos-web .font-mono { font-family: var(--font-courtos-mono); }
 .courtos-web :is(.text-gray-950,.text-gray-900,.text-gray-800,.text-gray-700) { color: var(--foreground); }
@@ -104,11 +104,11 @@
 .courtos-web .courtos-page { max-width: 1120px; margin-inline: auto; padding: clamp(28px,5vw,64px) clamp(20px,4vw,56px) 48px; }
 .courtos-web .courtos-kicker {
     font-family: var(--font-courtos-mono);
-    font-size: 10px;
+    font-size: 11px;
     line-height: 1.6;
     font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: .11em;
+    letter-spacing: .065em;
     color: var(--muted-foreground);
 }
 .courtos-web .courtos-display {
@@ -125,7 +125,7 @@
 .courtos-web .courtos-link:hover { text-decoration-thickness: 2px; }
 .courtos-web .courtos-button {
     display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-    min-height: 44px; border: 1px solid var(--foreground); border-radius: 4px;
+    min-height: 44px; border: 1px solid var(--foreground); border-radius: 2px;
     background: var(--foreground); color: var(--background); padding: 10px 18px;
     font-size: 14px; line-height: 1.4; font-weight: 500; text-decoration: none;
     transition: background-color 120ms, color 120ms;
@@ -135,9 +135,9 @@
 .courtos-web .courtos-button--secondary:hover:not(:disabled) { background: var(--app-surface-hover); border-color: var(--input); color: var(--foreground); }
 .courtos-web .courtos-button:disabled { opacity: .45; }
 .courtos-web .courtos-field {
-    display: block; width: 100%; min-height: 44px; margin-top: 8px; padding: 11px 12px;
-    border: 1px solid var(--input); border-radius: 4px; background: var(--app-floating);
-    color: var(--foreground); font-size: 14px; line-height: 1.5;
+    display: block; width: 100%; min-height: 48px; margin-top: 8px; padding: 11px 14px;
+    border: 1px solid var(--input); border-radius: 2px; background: var(--app-floating);
+    color: var(--foreground); font-size: 16px; line-height: 1.5;
 }
 .courtos-web .courtos-field::placeholder { color: var(--muted-foreground); }
 .courtos-web .courtos-field:focus { border-color: var(--ring); }
@@ -151,14 +151,12 @@
 .courtos-web .courtos-source-tab { min-height: 48px; padding: 10px 0 14px; border-bottom: 2px solid transparent; color: var(--muted-foreground); font-size: 14px; font-weight: 500; text-align: left; }
 .courtos-web .courtos-source-tab[aria-pressed="true"] { border-color: var(--foreground); color: var(--foreground); }
 .courtos-web .courtos-source-tab:hover { color: var(--foreground); }
-.courtos-web .courtos-source-list { background: var(--app-surface); border: 1px solid var(--border); padding: 20px; border-radius: 4px; }
+.courtos-web .courtos-source-list { background: var(--app-surface); border: 1px solid var(--border); padding: 20px; border-radius: 2px; }
 .courtos-web .courtos-source-list h3, .courtos-web .courtos-search-form h3 { font-family: var(--font-courtos-mono); font-size: 11px; letter-spacing: .025em; font-weight: 400; text-transform: uppercase; }
 .courtos-web .courtos-source-hit { padding: 24px 0; border-top: 1px solid var(--border); }
 .courtos-web .courtos-source-hit blockquote { font-size: 20px; line-height: 1.55; }
-.courtos-web .courtos-source-meta { font-family: var(--font-courtos-mono); font-size: 11px; line-height: 1.6; font-weight: 400; color: var(--muted-foreground); overflow-wrap: anywhere; }
-.courtos-web .courtos-source-dialog { border-radius: 6px; background: var(--app-floating); box-shadow: 0 20px 80px #17201730; }
-.courtos-web .courtos-source-dialog::backdrop { background: #20262266; backdrop-filter: blur(2px); }
-.courtos-web .courtos-source-dialog pre { max-width: 74ch; margin-inline: auto; font-size: 19px; line-height: 1.6; }
+.courtos-web .courtos-source-meta { font-family: var(--font-courtos-mono); font-size: 12px; line-height: 1.6; font-weight: 400; color: var(--muted-foreground); overflow-wrap: anywhere; }
+
 .courtos-web .courtos-assistant { padding-top: clamp(40px,8vh,88px); }
 .courtos-web .courtos-assistant-header { width: 100%; max-width: 896px; margin-inline: auto; margin-bottom: 28px; }
 .courtos-web .courtos-assistant-header h1 { margin-top: 16px; font-size: clamp(38px,4vw,54px); }
@@ -169,7 +167,7 @@
 .courtos-web .courtos-task-starter svg { margin-left: auto; width: 16px; height: 16px; flex-shrink: 0; }
 .courtos-web .courtos-sidebar { background: var(--sidebar); border-color: var(--border); box-shadow: none; }
 .courtos-web .courtos-sidebar-wordmark { font-family: var(--font-eb-garamond); font-size: 26px; font-weight: 400; letter-spacing: -.03em; }
-.courtos-web .courtos-sidebar-nav-link { min-height: 40px; border-radius: 4px; }
+.courtos-web .courtos-sidebar-nav-link { min-height: 40px; border-radius: 2px; }
 .courtos-web .courtos-sidebar-nav-link[aria-current="page"] { box-shadow: inset 2px 0 0 var(--foreground); }
 .courtos-web .courtos-sidebar-nav-link svg { stroke-width: 1.5; }
 .courtos-web .courtos-sidebar-footer { border-top: 1px solid var(--border); padding-top: 12px; }
@@ -192,10 +190,12 @@
 }
 
 .courtos-web .courtos-sidebar-nav-link svg { color: inherit; }
-.courtos-web .courtos-access-panel { border-radius: 6px; border-color: var(--border); padding: 30px; box-shadow: none; }
+.courtos-web .courtos-access-panel { border-radius: 2px; border-color: var(--border); padding: 24px; box-shadow: none; }
+.courtos-web .courtos-access-panel .courtos-section-title { font-family: var(--font-inter); font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: normal; }
+.courtos-web .courtos-access-panel summary { cursor: pointer; min-height: 44px; padding-block: 11px; font-size: 14px; line-height: 22px; }
 .courtos-web .courtos-composer { border-radius: 8px; border-color: var(--input); background: var(--app-floating); box-shadow: none; }
 .courtos-web .courtos-composer:focus-within { border-color: var(--ring); }
-.courtos-web .courtos-send { background: var(--foreground); color: var(--background); box-shadow: none; min-width: 36px; min-height: 36px; border-radius: 4px; }
+.courtos-web .courtos-send { background: var(--foreground); color: var(--background); box-shadow: none; min-width: 36px; min-height: 36px; border-radius: 2px; }
 .courtos-web .courtos-send:disabled { opacity: .4; }
 .courtos-web .courtos-send:hover:not(:disabled) { background: var(--ring); }
 @media (max-width: 639px) {
@@ -207,4 +207,140 @@
 .courtos-web :is(button,a)[class*="shadow-"] { box-shadow: none; }
 @media (max-width: 767px) {
     .courtos-web .courtos-sidebar-nav-link { min-height: 44px; }
+}
+
+
+/* Shared research surface: Word taskpane first, wider browser second.
+   Five sizes, three weights, two text colours. Timeless Sans throughout;
+   Paper Mono is reserved for technical provenance identifiers. */
+.courtos-web .courtos-research-shell {
+    --research-gutter: clamp(20px, 4vw, 64px);
+    height: 100dvh; min-height: 0; display: flex; flex-direction: column;
+    background: var(--background); font-size: 14px; line-height: 22px;
+    font-variant-numeric: tabular-nums;
+}
+.courtos-web .courtos-research-shell :is(h1,h2,h3,h4) { font-family: var(--font-inter); letter-spacing: normal; text-wrap: balance; }
+.courtos-web .courtos-research-shell p { text-wrap: pretty; }
+.courtos-web .courtos-research-header { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--background); }
+.courtos-web :is(.courtos-research-bar,.courtos-research-context,.courtos-research-page) { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: var(--research-gutter); box-sizing: border-box; }
+.courtos-web .courtos-research-bar { min-height: 64px; display: flex; align-items: center; gap: 24px; }
+.courtos-web .courtos-wordmark { color: var(--foreground); font-size: 18px; line-height: 26px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.courtos-web .courtos-research-nav { display: flex; align-items: center; gap: 28px; margin-left: auto; }
+.courtos-web .courtos-research-nav a { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; color: var(--muted-foreground); border-bottom: 1px solid transparent; text-decoration: none; }
+.courtos-web .courtos-research-nav a[aria-current="page"] { color: var(--foreground); border-color: var(--foreground); font-weight: 550; }
+.courtos-web .courtos-research-nav a:hover { color: var(--foreground); }
+.courtos-web .courtos-word-browser-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; line-height: 22px; color: var(--foreground); text-decoration: underline; text-underline-offset: 4px; }
+.courtos-web .courtos-settings-trigger { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 2px; }
+.courtos-web .courtos-settings-trigger:hover { background: var(--app-surface-hover); }
+.courtos-web .courtos-research-context { padding-bottom: 10px; color: var(--muted-foreground); font-size: 12px; line-height: 18px; }
+.courtos-web .courtos-research-body { display: flex; flex: 1; min-height: 0; flex-direction: column; overflow-y: auto; scroll-padding-block: 24px; }
+.courtos-web .courtos-research-main { flex: 1 0 auto; min-width: 0; outline: none; }
+.courtos-web .courtos-research-body--library { overflow: hidden; }
+.courtos-web .courtos-research-body--library .courtos-research-main { display: flex; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; }
+.courtos-web .courtos-research-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 24px; padding: 12px var(--research-gutter); border-top: 1px solid var(--border); font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-research-footer a { text-decoration: underline; text-underline-offset: 4px; }
+.courtos-web .courtos-research-page { padding-block: 28px 40px; }
+.courtos-web .courtos-research-intro h1 { font-size: 28px; line-height: 34px; font-weight: 700; }
+.courtos-web .courtos-research-page .courtos-source-tabs { margin-top: 20px; gap: 24px; }
+.courtos-web .courtos-research-page .courtos-source-tab { min-height: 44px; padding-block: 10px; font-size: 14px; line-height: 22px; font-weight: 550; }
+.courtos-web .courtos-research-section-title { font-size: 18px; line-height: 26px; font-weight: 550; }
+.courtos-web .courtos-research-search-grid { padding-block: 24px; }
+.courtos-web .courtos-research-source-note { position: absolute; }
+.courtos-web .courtos-public-search > label { display: block; font-weight: 550; }
+.courtos-web .courtos-search-line { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
+.courtos-web .courtos-search-line .courtos-field { margin: 0; min-width: 0; flex: 1; min-height: 48px; }
+.courtos-web .courtos-search-line .courtos-button { flex-shrink: 0; min-height: 48px; }
+.courtos-web .courtos-search-options { margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px 24px; color: var(--muted-foreground); font-size: 12px; line-height: 18px; }
+.courtos-web .courtos-search-options label { flex-shrink: 0; }
+.courtos-web .courtos-search-options .courtos-field { min-height: 44px; width: auto; margin: 0; padding: 8px 28px 8px 10px; font-size: 14px; line-height: 22px; border-color: var(--input); }
+.courtos-web .courtos-search-state { margin-top: 16px; }
+.courtos-web .courtos-search-state--error { color: var(--destructive); border-left: 2px solid var(--destructive); padding-left: 12px; }
+.courtos-web .courtos-word-selection { margin-top: 8px; }
+.courtos-web .courtos-word-selection p { font-size: 12px; line-height: 18px; }
+.courtos-web .courtos-public-results { border-top: 1px solid var(--foreground); }
+.courtos-web .courtos-results-heading { padding-block: 20px; }
+.courtos-web .courtos-results-heading h3 { font-size: 18px; line-height: 26px; font-weight: 550; overflow-wrap: anywhere; }
+.courtos-web .courtos-result-scope { margin-top: 4px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-result-scope summary { width: fit-content; min-height: 32px; padding-block: 7px; cursor: pointer; }
+.courtos-web .courtos-result-scope p { max-width: 85ch; margin-top: 4px; }
+.courtos-web .courtos-public-result { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 12px 32px; padding-block: 24px; border-top: 1px solid var(--border); }
+.courtos-web .courtos-result-meta { display: flex; flex-direction: column; gap: 4px; padding-top: 4px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.courtos-web .courtos-result-content { min-width: 0; }
+.courtos-web .courtos-result-content h4 { font-size: 18px; line-height: 26px; font-weight: 550; overflow-wrap: anywhere; }
+.courtos-web .courtos-result-excerpt { max-width: 78ch; margin-top: 8px; font-size: 16px; line-height: 24px; white-space: normal; overflow-wrap: anywhere; }
+.courtos-web .courtos-result-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0 24px; margin-top: 8px; }
+.courtos-web .courtos-results-generation { margin-top: 24px; font-family: var(--font-courtos-mono); font-size: 12px; line-height: 18px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.courtos-web .courtos-empty-results { padding-block: 24px; }
+.courtos-web .courtos-private-workspace { padding-top: 24px; }
+.courtos-web .courtos-library-grid { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(0, 1.6fr); gap: 32px; align-items: start; margin-top: 24px; }
+.courtos-web .courtos-research-page .courtos-source-list { background: var(--background); border: 0; border-top: 1px solid var(--foreground); border-radius: 0; padding: 20px 0; }
+.courtos-web .courtos-research-page .courtos-search-form { border-top: 1px solid var(--foreground); padding-top: 20px; }
+.courtos-web .courtos-research-page :is(.courtos-source-list,.courtos-search-form) h3 { font-family: var(--font-inter); font-size: 16px; line-height: 24px; font-weight: 550; text-transform: none; letter-spacing: normal; }
+.courtos-web .courtos-research-page .courtos-source-hit blockquote { font-family: var(--font-inter); font-size: 16px; line-height: 24px; }
+.courtos-web .courtos-research-page .courtos-source-meta { font-family: var(--font-inter); font-size: 12px; line-height: 18px; }
+.courtos-web .courtos-source-dialog { margin: auto; height: 92dvh; max-height: 980px; width: calc(100vw - 48px); max-width: 1040px; padding: 0; border: 1px solid var(--border); border-radius: 2px; overflow: hidden; background: var(--app-floating); color: var(--foreground); box-shadow: 0 16px 64px #0000001f; }
+.courtos-web :is(.courtos-source-dialog,.courtos-settings-dialog)::backdrop { background: #00000055; }
+.courtos-web .courtos-source-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 32px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.courtos-web .courtos-source-dialog-header h2 { min-width: 0; padding-top: 8px; font-size: 18px; line-height: 26px; font-weight: 550; overflow-wrap: anywhere; }
+.courtos-web .courtos-source-dialog-header button { flex-shrink: 0; padding-inline: 12px; }
+.courtos-web .courtos-source-reading { min-height: 0; flex: 1; overflow-y: auto; padding: 24px 40px 32px; }
+.courtos-web .courtos-decision-text { max-width: 76ch; margin: 24px auto; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-inter); font-size: 16px; line-height: 24px; font-weight: 400; }
+.courtos-web .courtos-source-ai { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.courtos-web .courtos-source-ai p { margin-top: 8px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-settings-dialog { margin: auto; width: calc(100vw - 32px); max-width: 440px; max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--border); border-radius: 2px; background: var(--background); color: var(--foreground); overflow-y: auto; box-shadow: 0 16px 64px #0000001f; }
+.courtos-web .courtos-settings-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; border-bottom: 1px solid var(--border); }
+.courtos-web .courtos-settings-header h2 { font-size: 18px; line-height: 26px; font-weight: 550; }
+.courtos-web .courtos-settings-close { width: 44px; height: 44px; display: grid; place-items: center; }
+.courtos-web .courtos-settings-body { padding: 24px; }
+.courtos-web .courtos-settings-models { display: grid; gap: 8px; }
+.courtos-web .courtos-settings-models legend { margin-bottom: 12px; font-size: 16px; line-height: 24px; font-weight: 550; }
+.courtos-web .courtos-settings-model { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px; border: 1px solid var(--border); cursor: pointer; }
+.courtos-web .courtos-settings-model:has(input:checked) { border-color: var(--foreground); }
+.courtos-web .courtos-settings-model input { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--foreground); }
+.courtos-web .courtos-settings-model span { min-width: 0; }
+.courtos-web .courtos-settings-model strong { display: block; font-size: 14px; line-height: 22px; font-weight: 550; }
+.courtos-web .courtos-settings-model small { display: block; color: var(--muted-foreground); font-size: 12px; line-height: 18px; }
+.courtos-web .courtos-settings-model:has(input:disabled) { cursor: not-allowed; }
+.courtos-web :is(.courtos-settings-note,.courtos-settings-notice,.courtos-settings-facts) { margin-top: 12px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-settings-account { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+.courtos-web .courtos-settings-email { overflow-wrap: anywhere; }
+.courtos-web .courtos-settings-signout { min-height: 44px; text-decoration: underline; text-underline-offset: 4px; }
+.courtos-web .courtos-settings-error { font-size: 12px; line-height: 18px; color: var(--destructive); }
+.courtos-web .courtos-settings-help { margin-top: 16px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-settings-help summary { min-height: 44px; padding-block: 13px; cursor: pointer; }
+.courtos-web .courtos-settings-help div { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.courtos-web .courtos-settings-help a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; }
+/* File management retains its table scroll owner. */
+.courtos-web .courtos-library-workspace { width: 100%; max-width: 1280px; margin-inline: auto; }
+.courtos-web .courtos-library-header > div { min-height: 88px; margin-inline: var(--research-gutter); padding-block: 24px 16px; gap: 12px; }
+.courtos-web .courtos-library-header :is(button,input) { font-size: 14px; line-height: 22px; }
+.courtos-web .courtos-library-toolbar > div { margin-inline: var(--research-gutter); padding-inline: 0; padding-bottom: 12px; }
+.courtos-web .courtos-library-toolbar button { border-radius: 2px; }
+@media (max-width: 767px) {
+    .courtos-web .courtos-library-header > div { flex-wrap: wrap; min-height: 0; padding-block: 20px 12px; }
+    .courtos-web .courtos-library-header > div > .hidden { display: flex; width: 100%; margin-left: 0; flex-wrap: wrap; gap: 12px; }
+    .courtos-web .courtos-library-header :is(button,input), .courtos-web .courtos-library-toolbar button { min-height: 44px; }
+}
+@media (max-width: 640px) {
+    .courtos-web .courtos-research-bar { display: grid; grid-template-columns: 1fr 44px; gap: 0; padding-top: 4px; }
+    .courtos-web .courtos-wordmark { grid-row: 1; }
+    .courtos-web .courtos-settings-trigger { grid-column: 2; grid-row: 1; }
+    .courtos-web .courtos-research-bar:has(.courtos-word-browser-link) { grid-template-columns: minmax(0,1fr) auto 44px; column-gap: 8px; }
+    .courtos-web .courtos-word-browser-link { grid-column: 2; grid-row: 1; max-width: 12ch; }
+    .courtos-web .courtos-research-bar:has(.courtos-word-browser-link) .courtos-settings-trigger { grid-column: 3; }
+    .courtos-web .courtos-research-nav { grid-column: 1 / -1; grid-row: 2; margin: 0; justify-content: space-between; gap: 12px; }
+    .courtos-web .courtos-research-context { padding-block: 8px 10px; }
+    .courtos-web .courtos-research-page { padding-block: 24px 32px; }
+    .courtos-web .courtos-search-line .courtos-button { padding-inline: 12px; }
+    .courtos-web .courtos-search-line .courtos-button svg { display: none; }
+    .courtos-web .courtos-search-options { flex-wrap: wrap; }
+    .courtos-web .courtos-search-options .courtos-field { font-size: 16px; line-height: 24px; }
+    .courtos-web .courtos-public-result { grid-template-columns: 1fr; gap: 8px; }
+    .courtos-web .courtos-result-meta { flex-direction: row; flex-wrap: wrap; gap: 2px 16px; }
+    .courtos-web .courtos-library-grid { grid-template-columns: 1fr; gap: 24px; }
+    .courtos-web .courtos-source-dialog { width: calc(100vw - 16px); height: calc(100dvh - 16px); max-height: none; }
+    .courtos-web .courtos-source-dialog-header { padding: 12px 16px; gap: 12px; }
+    .courtos-web .courtos-source-reading { padding: 20px; }
+    .courtos-web .courtos-research-footer a { min-height: 44px; display: inline-flex; align-items: center; }
+    .courtos-web .courtos-result-scope summary { min-height: 44px; padding-block: 13px; }
 }

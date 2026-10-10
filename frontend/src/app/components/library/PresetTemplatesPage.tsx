@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { DocTable } from "@/app/components/documents/DocTable";
 import type {
@@ -58,6 +58,7 @@ export function PresetTemplatesPage({
   folderId?: string | null;
 }) {
   const router = useRouter();
+  const hostQuery = useSearchParams().get("host") === "word" ? "?host=word" : "";
   const { collections, setDocumentsForKind } = useLibraryWorkspace();
   const templatesLoaded = collections.templates !== null;
   const [search, setSearch] = useState("");
@@ -164,10 +165,10 @@ export function PresetTemplatesPage({
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         breadcrumbs={[
-          { label: "Library", onClick: () => router.push("/library") },
+          { label: "Library", onClick: () => router.push(`/library${hostQuery}`) },
           {
             label: "Templates",
-            onClick: () => router.push("/library/templates"),
+            onClick: () => router.push(`/library/templates${hostQuery}`),
           },
           { label: "Presets" },
           ...folderBreadcrumbs,
@@ -186,7 +187,7 @@ export function PresetTemplatesPage({
         <TableToolbar
           leading={
             <TabPillButtonUI
-              onClick={folderBackAction ?? (() => router.push(templatesPath))}
+              onClick={folderBackAction ?? (() => router.push(`${templatesPath}${hostQuery}`))}
               className="pl-2"
             >
               <ChevronLeft className="h-3.5 w-3.5" />

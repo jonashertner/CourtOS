@@ -8,6 +8,11 @@ const AUTH_REDIRECT_PATHS = new Set([
     "/onboarding/practice",
 ]);
 
+/** CourtOS entry accepts only these exact research routes, without query or fragment. */
+export function safeCourtOSResearchNext(candidate: string | null | undefined, fallback: string): string {
+    return candidate === "/word/research" || candidate === "/research" ? candidate : fallback;
+}
+
 export function safeAuthNext(
     candidate: string | null | undefined,
     fallback = "/assistant",

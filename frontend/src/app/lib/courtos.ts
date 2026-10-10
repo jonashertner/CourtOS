@@ -15,8 +15,14 @@ export const COURTOS_HOME = COURTOS_KNOWLEDGE_ENABLED ? "/research" : "/pilot";
 
 /** Keep specialised workspaces reachable without putting them in research navigation. */
 export function isResearchShellPath(pathname: string): boolean {
-    return COURTOS_KNOWLEDGE_ENABLED && (pathname === "/research" || pathname === "/knowledge" ||
+    return COURTOS_KNOWLEDGE_ENABLED && (pathname === "/research" || pathname === "/word/research" || pathname === "/knowledge" ||
         pathname === "/library" || pathname.startsWith("/library/"));
+}
+
+/** A URL-scoped presentation hint only; never stored and never used for authorization. */
+export function isWordResearchContext(pathname: string, host: string | null = null): boolean {
+    return pathname === "/word/research" || (host === "word" &&
+        (pathname === "/library" || pathname.startsWith("/library/")));
 }
 export const COURTOS_HYBRID_PATH = "/hybrid/";
 export const COURTOS_GUIDE_PATH = "/guide/";

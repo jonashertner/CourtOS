@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { AuthApiError, loginWithCloudflare } from "@/app/lib/authApi";
-import { COURTOS_HOME, COURTOS_KNOWLEDGE_ENABLED, COURTOS_PILOT_MODE, COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
+import { safeCourtOSResearchNext } from "@/app/lib/authRedirects";
+import { COURTOS_HOME, COURTOS_PILOT_MODE, COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
 import { SiteLogo } from "@/app/components/site-logo";
 import { PilotUsageNotice } from "./PilotUsageNotice";
 import { CourtOSCredits } from "./CourtOSCredits";
@@ -29,13 +30,14 @@ function accessError(error: unknown): string {
 
 export function CourtOSAccessGate() {
     const router = useRouter();
+    const returnPath = safeCourtOSResearchNext(useSearchParams().get("next"), COURTOS_HOME);
     const { isAuthenticated, authLoading, refreshSession } = useAuth();
     const [opening, setOpening] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) router.replace(COURTOS_HOME);
-    }, [authLoading, isAuthenticated, router]);
+        if (!authLoading && isAuthenticated) router.replace(returnPath);
+    }, [authLoading, isAuthenticated, returnPath, router]);
 
     const openWorkspace = async () => {
         if (opening) return;
@@ -47,7 +49,7 @@ export function CourtOSAccessGate() {
             await loginWithCloudflare();
             const session = await refreshSession();
             if (!session) throw new Error("Session was not established");
-            router.replace(COURTOS_HOME);
+            router.replace(returnPath);
         } catch (caught) {
             setError(accessError(caught));
             setOpening(false);
@@ -60,20 +62,23 @@ export function CourtOSAccessGate() {
                 <SiteLogo size="lg" className="mb-10" />
                 <div className={cn(authGlassCardUIClassName, "courtos-access-panel space-y-6")}>
                     <div>
-                        <p className="courtos-kicker mb-4">RECHTSPRECHUNG UND EIGENE QUELLEN</p>
-                        <h1 className="courtos-section-title text-foreground">Willkommen bei CourtOS.</h1>
+                        <h1 className="courtos-section-title text-foreground">Recherche öffnen</h1>
                         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                            {COURTOS_SELF_REGISTRATION
-                                ? "Ihr E-Mail-Code bestätigt Ihre Adresse. Beim ersten Öffnen wird Ihr persönliches CourtOS-Konto erstellt. Eine Einladung oder ein zusätzliches Passwort ist nicht nötig."
-                                : "Ihr E-Mail-Code bestätigt den Zugang. Öffnen Sie jetzt Ihren persönlichen Recherchebereich; ein zusätzliches Passwort ist nicht nötig."}
+                            Ihr persönlicher Zugang ist mit Ihrem E-Mail-Code bestätigt.
+                            {COURTOS_SELF_REGISTRATION && " Beim ersten Öffnen erstellen wir Ihr Konto."}
                         </p>
                     </div>
                     {COURTOS_PILOT_MODE && (
                         <p className="text-sm leading-relaxed text-foreground">
-                            Testbetrieb für {COURTOS_KNOWLEDGE_ENABLED ? "öffentliche Quellen, rechtmässig nutzbare nicht vertrauliche Literatur und synthetische Unterlagen" : "synthetische Unterlagen"}. Keine echten Verfahrensakten, Personendaten oder vertraulichen Texte. Die Verarbeitung findet auf einem gemieteten Server in Deutschland statt.
+                            Testbetrieb · Server in Deutschland. Keine vertraulichen Unterlagen.
                         </p>
                     )}
-                    <PilotUsageNotice />
+                    {COURTOS_SELF_REGISTRATION && (
+                        <details className="text-sm text-muted-foreground">
+                            <summary className="cursor-pointer py-2 focus-visible:outline-2 focus-visible:outline-ring">Nutzungsgrenzen</summary>
+                            <div className="pt-2"><PilotUsageNotice /></div>
+                        </details>
+                    )}
                     <PillButtonUI type="button" tone="black" size="normal" className="courtos-button min-h-11 w-full" disabled={opening || authLoading || isAuthenticated} onClick={() => void openWorkspace()}>
                         {opening || authLoading || isAuthenticated ? <><Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> Zugang wird geprüft…</> : <>CourtOS öffnen <ArrowRight className="h-4 w-4" aria-hidden="true" /></>}
                     </PillButtonUI>

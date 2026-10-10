@@ -2,10 +2,20 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
     authErrorDescription,
     safeAuthNext,
+    safeCourtOSResearchNext,
 } from "./authRedirects";
 
 afterEach(() => {
     vi.unstubAllGlobals();
+});
+
+describe("safeCourtOSResearchNext", () => {
+    it.each(["/word/research", "/research"])("accepts the exact research return path %s", (path) => {
+        expect(safeCourtOSResearchNext(path, "/pilot")).toBe(path);
+    });
+    it.each([null, undefined, "", "//evil.example", "https://evil.example", "/word\\research", "/word/research\n", "/word/research?x=1", "/word/research#x", "/word/research/../login", "%2Fword%2Fresearch"])("fails closed for %s", (path) => {
+        expect(safeCourtOSResearchNext(path, "/research")).toBe("/research");
+    });
 });
 
 describe("safeAuthNext", () => {
