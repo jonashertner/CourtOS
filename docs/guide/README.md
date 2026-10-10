@@ -5,12 +5,47 @@
 Deploy its contents together, preserving relative paths, under `/guide/`.
 The web guide works without JavaScript and uses local font assets. Its optional book view, chapter navigation and responsive page controls use local reader.js, with no network calls or persistent storage.
 
-The edition begins with four source-grounded chapters on purpose, judicial responsibility, reviewable work and evaluation, then includes a personal knowledge-base chapter and describes email-code self-registration and the guided
-workflow's current per-person UTC-day limits: three local jobs and one external
+The edition begins with four source-grounded chapters on purpose, judicial
+responsibility, reviewable work and evaluation. The practical entry is now
+`/research`: search published OpenCaseLaw decisions, inspect the original and
+copy a passage together with provenance into the reader's usual tools. No
+project, chat or model call is required for this work. `/knowledge` remains a
+compatible route; personal source import and management use `/library`.
+Public and personal search keep separate inputs and source scopes.
+
+The copy action returns plain text. For public decisions it includes the shown
+passage, decision metadata, safe public source/PDF URL when available,
+OpenCaseLaw identifier and character-position context (not official paragraph
+numbers). For personal sources it includes the quote, filename, fixed version
+and PDF page, with no private document URL. A manual text field is offered when
+clipboard access fails. These references remain subject to checking against
+the original; copying does not certify their correctness or confer source rights.
+
+AI remains available as an optional extension: explicit personal-source
+selection for local Gemma 4 work on the CourtOS server, or a separately reviewed
+Claude Opus 5.5 request to Anthropic followed by an editable return to the local
+composer without automatic sending. Public passages can enter that same
+reviewed hand-off. Links identify sources; the external request does not fetch
+their contents. The institutional-planning chapter records a future case-file requirement:
+original pleadings and exhibits in an approved local environment, or a separately
+reviewed cross-document pseudonymisation process before frontier use. This does
+not establish anonymity. Consistent
+aliases, a local mapping and residual-identification review are requirements,
+not current capabilities. A future approved local case folder would read originals
+without altering them and keep readable working notes alongside them. Notes would
+distinguish findings, allegations and disputed points, link source versions and
+flag dependencies for review when sources change. The current library uploads
+copies to the VPS; in-place filesystem access and a local Word/browser connector
+are not implemented. No automatic anonymisation, Word integration or
+Citecheck integration is claimed. The guide no longer prescribes the former Linden case.
+
+The guide describes email-code self-registration and the current separate
+per-person UTC-day limits: three native local assistant starts and one external
 analysis. These statements require the matching deployment configuration;
-review them if access policy or quotas change. The timing example is one complete
-native assistant run with verified synthetic-PDF citations (about six and a half
-minutes), not a benchmark or guaranteed wait.
+review them if access policy, models or quotas change. An earlier measured local
+PDF run is mentioned only as evidence that CPU work can take several minutes,
+not as a performance benchmark or guaranteed wait. The current practical edition
+is dated 10 October 2026.
 
 ## Rebuild
 

@@ -2,7 +2,7 @@
   "de": {
     "language": "Deutsch",
     "label": "Arbeitsbuch",
-    "date": "9. Oktober 2026",
+    "date": "10. Oktober 2026",
     "contents": "In diesem Heft",
     "pdf_label": "PDF herunterladen",
     "back": "Übersicht",
@@ -17,7 +17,7 @@
         "kind": "cover",
         "blocks": [],
         "title": "Das Gericht\nim Zeitalter\nder KI",
-        "lead": "Ein Arbeitsbuch für Richterinnen, Richter und Gerichtsschreibende. Mit einem praktischen Einstieg in CourtOS.",
+        "lead": "Ein Arbeitsbuch für Richterinnen, Richter und Gerichtsschreibende. Mit einem praktischen Einstieg in die Recherche mit CourtOS.",
         "statement": "Besser verstehen, sorgfältig abwägen und nachvollziehbar entscheiden. Von diesem Auftrag aus wird die Technik gestaltet.",
         "edition": "Arbeitsausgabe 01 · Mit VPS-Pilot",
         "part": "Zweck · Urteilskraft · Arbeitsalltag"
@@ -159,7 +159,7 @@
           {
             "type": "text",
             "heading": "Eine kleine gemeinsame Prüfung",
-            "body": "Vereinbaren Sie Ergebnis und Stolperstellen. Vergleichen Sie denselben Testfall mit und ohne Unterstützung. Erfassen Sie Lesen, Warten, Prüfen und Korrigieren. Die Matrix ist ein Testvorschlag, keine bereits erzielte Wirkung."
+            "body": "Vereinbaren Sie Ergebnis und bekannte Schwierigkeiten anhand eines eigenen zulässigen Quellenbestands. Vergleichen Sie denselben Ausschnitt mit und ohne Unterstützung. Erfassen Sie Lesen, Warten, Prüfen und Korrigieren. Die Matrix ist ein Testvorschlag, keine bereits erzielte Wirkung."
           },
           {
             "type": "items",
@@ -190,216 +190,233 @@
       },
       {
         "id": "first-steps",
-        "title": "Am Dossier\narbeiten",
-        "lead": "Ein kurzer Probelauf für Gerichtsschreiberinnen, Gerichtsschreiber, Richterinnen und Richter.",
+        "title": "Recherchieren. Prüfen.\nWeiterarbeiten.",
+        "lead": "Der erste Nutzen: eine passende Fundstelle für Ihre Arbeit.",
         "blocks": [
           {
             "type": "text",
-            "heading": "",
-            "body": "Aus vier Dokumenten soll ein nachvollziehbarer Arbeitsstand entstehen: Was ist belegt? Wo widersprechen sich die Akten? Welche entscheidrelevante Frage bleibt offen? CourtOS soll Sie bei dieser Arbeit unterstützen."
+            "heading": "Direkt zur Recherche",
+            "body": "Öffnen Sie https://sandbox.swisslaw.io/research. Nach der Anmeldung mit persönlicher E-Mail-Adresse und Cloudflare-Einmalcode gelangen Sie zur Recherche. Eine Einladung ist nicht nötig. Sie brauchen weder ein Projekt anzulegen noch einen Chat zu beginnen."
           },
           {
             "type": "flow",
             "items": [
-              "Akten erschliessen",
-              "Rechtsfrage klären",
-              "Prüfvermerk erstellen"
+              "Suchen",
+              "Quelle prüfen",
+              "Fundstelle mitnehmen"
             ]
           },
           {
             "type": "text",
-            "heading": "Der erste Durchlauf",
-            "body": "Öffnen Sie https://sandbox.swisslaw.io/pilot und geben Sie Ihre persönliche E-Mail-Adresse ein. Cloudflare Access sendet Ihnen einen Einmalcode. Nach dessen Bestätigung wird Ihr Konto automatisch angelegt; eine Einladung ist nicht nötig. Starten Sie den geführten Fall. Planen Sie etwa 15 Minuten ein."
-          },
-          {
-            "type": "note",
-            "heading": "Ein überschaubarer Test",
-            "body": "Der geführte Fall verwendet nur die erfundene Akte. Für die eigene Wissensbasis können Sie zusätzlich öffentliche Literaturauszüge verwenden, die Sie hier speichern und bearbeiten dürfen. Echte Fallakten und vertrauliche Unterlagen bleiben ausgeschlossen. Beispielakte und voreingestellte Antwortsprache sind Deutsch."
+            "heading": "Ein klarer Ausgangspunkt",
+            "body": "Die öffentliche Suche erschliesst veröffentlichte Entscheide aus OpenCaseLaw. Daneben können Sie eigene Bibliotheksdokumente durchsuchen. Die beiden Bereiche haben getrennte Eingaben; persönliche Texte werden nicht automatisch in die öffentliche Suche übernommen."
           },
           {
             "type": "text",
-            "heading": "Ihr Weg durch das Heft",
-            "body": "Beginnen Sie mit den Fragen nach Zweck, Rolle und Arbeitsweise des Gerichts. Der praktische Teil führt von der Beispielakte über eine öffentliche Rechtsfrage zum Prüfvermerk. Danach folgen Ihre Wissensbasis, die Datenwege und der spätere institutionelle Betrieb. Sie können über das Inhaltsverzeichnis direkt einsteigen."
+            "heading": "In den gewohnten Werkzeugen bleiben",
+            "body": "Öffnen Sie eine relevante Passage, prüfen Sie die Originalquelle und kopieren Sie Text und Herkunftsangaben in Ihren Vermerk, Ihre Textverarbeitung oder Ihr bestehendes Dossier. CourtOS setzt keinen Wechsel Ihrer Fallführung voraus."
+          },
+          {
+            "type": "note",
+            "heading": "Für diesen Pilot",
+            "body": "Öffentliche Entscheide, rechtmässig nutzbare nicht vertrauliche Literatur und synthetische Unterlagen sind geeignet. Echte Fallakten und vertrauliche Dokumente gehören nicht auf diesen virtuellen Server (VPS) in Deutschland."
           }
         ],
         "part": "CourtOS in der Praxis"
       },
       {
         "id": "local",
-        "title": "Die Akte erschliessen",
-        "lead": "Lassen Sie die Chronologie erstellen. Lesen Sie danach gezielt gegen.",
+        "title": "Entscheide finden\nund einordnen",
+        "lead": "Öffentliche Rechtsprechung durchsuchen, ohne Modellaufruf.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Ein überschaubares Dossier",
-            "body": "Die Baubehörde Linden und die beteiligte Person sind erfunden. Vier kurze Dokumente enthalten unterschiedliche Datumsangaben, einen Registereintrag und einen ununterzeichneten Verfügungsentwurf. Kein bestimmter Kanton ist festgelegt."
+            "heading": "Mit wenigen Begriffen beginnen",
+            "body": "Geben Sie im öffentlichen Suchfeld aussagekräftige Rechtsbegriffe ein. Bis zu acht Begriffe müssen gemeinsam im Text vorkommen. Ein Sprachfilter kann die Auswahl eingrenzen. Formulieren Sie bei Bedarf mit weniger oder anderen Begriffen neu."
           },
           {
             "type": "text",
-            "heading": "Den lokalen Schritt starten",
-            "body": "Öffnen Sie die bereitgestellten Dokumente und starten Sie die Chronologie. Das lokale Modell bearbeitet diese Unterlagen auf dem VPS. Es wird dabei kein externer Ersatzdienst aufgerufen."
+            "heading": "Den Treffer öffnen",
+            "body": "Die Ergebnisliste zeigt bis zu fünf Texttreffer. Öffnen Sie den Entscheidtext und lesen Sie den passenden Ausschnitt. Datum, Aktenzeichen und Gericht helfen bei der Einordnung; massgeblich bleibt die Originalquelle."
           },
           {
             "type": "items",
-            "heading": "Achten Sie auf drei Dinge",
+            "heading": "Den Zusammenhang prüfen",
             "items": [
-              "Lassen sich die Aussagen über Absatzkennungen im Dokument wiederfinden?",
-              "Bleiben widersprüchliche Daten sichtbar, statt zu einem vermeintlich sicheren Datum zu verschmelzen?",
-              "Unterscheidet die Antwort einen noch offenen Entwurf von einer tatsächlich erlassenen Verfügung?"
+              "Betrifft der Entscheid dieselbe Rechtsfrage und denselben Verfahrenskontext?",
+              "Welche tatsächlichen und rechtlichen Voraussetzungen tragen die Aussage?",
+              "Handelt es sich um eine tragende Erwägung, eine Parteiposition oder einen wiedergegebenen früheren Entscheid?"
             ]
           },
           {
             "type": "note",
-            "heading": "Eine flüssige Antwort ist noch kein guter Befund.",
-            "body": "Ein Briefdatum, ein Versanddatum und eine Zustellung können verschieden sein, ohne sich zu widersprechen. Umgekehrt löst eine plausible Erzählung einen echten Aktenwiderspruch nicht."
+            "heading": "Ausschnitt und amtliche Fundstelle",
+            "body": "Die Positionsangabe im angezeigten Text bezeichnet Zeichen im erfassten Entscheid. Sie ist keine amtliche Randnummer oder Erwägungsnummer. Ermitteln Sie die zitierfähige Fundstelle in der Originalquelle."
           },
           {
             "type": "text",
-            "heading": "Wartezeit einplanen",
-            "body": "Die Berechnung auf dem Server kann mehrere Minuten dauern. Lassen Sie einen laufenden Auftrag zunächst arbeiten, statt denselben Schritt mehrfach zu starten."
+            "heading": "Was die Suche leistet",
+            "body": "Die Recherche läuft als lokale Textsuche auf dem CourtOS-Server. Sie benötigt kein externes KI-Modell. Fünf Treffer sind eine Auswahl, keine Zusicherung einer vollständigen Recherche."
           }
         ],
         "part": "CourtOS in der Praxis"
       },
       {
         "id": "public",
-        "title": "Eine Rechtsfrage freigeben",
-        "lead": "Erst das Paket lesen, dann über seine Übermittlung entscheiden.",
+        "title": "Eine Fundstelle\nmitnehmen",
+        "lead": "Text und Herkunft gemeinsam in Ihre weitere Arbeit übernehmen.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Der öffentliche Teil",
-            "body": "Wählen Sie eine der festen allgemeinen Fragen und die vorgesehenen öffentlichen Quellen. Der derzeitige Katalog enthält die Bundesverfassung und zwei Bundesgerichtsurteile. Er ist noch keine Live-Suche in OpenCaseLaw."
-          },
-          {
-            "type": "text",
-            "heading": "Die Vorschau ernst nehmen",
-            "body": "Die Vorschau zeigt die Frage, Quellenauszüge, Modellanweisung und den externen Anbieter. Prüfen Sie, ob nur diese öffentlichen Inhalte enthalten sind. Das festgehaltene Paket ist die Grundlage Ihrer Freigabe; eine lokale Zusammenfassung gehört nicht hinein."
+            "heading": "Die Passage auswählen",
+            "body": "Öffnen Sie den relevanten Textbereich. «Auszug und Quelle kopieren» übernimmt bei öffentlichen Entscheiden den angezeigten Auszug mit seinen Herkunftsangaben. Die Funktion erzeugt keine neue juristische Zusammenfassung."
           },
           {
             "type": "flow",
             "items": [
-              "Öffentliches Paket",
-              "Ihre Freigabe",
-              "Claude Sonnet 4.6"
+              "Passage öffnen",
+              "Mit Herkunft kopieren",
+              "Im eigenen Text nutzen"
             ]
           },
           {
-            "type": "note",
-            "heading": "Keine automatische Anonymisierung, kein freier Fallprompt.",
-            "body": "Es werden feste öffentliche Texte ausgewählt. Der Ablauf verspricht nicht, beliebige Eingaben zuverlässig von Geheimnissen zu befreien. Ist eine Vorschau unverständlich oder unerwartet, geben Sie sie nicht frei."
+            "type": "text",
+            "heading": "Bei öffentlichen Entscheiden",
+            "body": "Zum Auszug gehören die angezeigten Entscheidangaben, die OpenCaseLaw-Kennung und eine vorhandene öffentliche Quellenadresse. Kontrollieren Sie die amtliche Fundstelle und die Metadaten vor einer Übernahme in Ihre Begründung."
           },
           {
             "type": "text",
-            "heading": "Was die Freigabe bewirkt",
-            "body": "Erst Ihre ausdrückliche Freigabe löst den Anthropic-Aufruf aus. Die Freigabe gilt für dieses Paket und ist einmal verwendbar. Nach einem Fehler erfolgt keine automatische Wiederholung. Ein neuer Versuch benötigt ein neues Paket und eine neue Freigabe."
+            "heading": "Bei eigenen Dokumenten",
+            "body": "«Passage und Quelle kopieren» übernimmt bei eigenen Dokumenten Dateiname, feste Dokumentfassung und PDF-Seite. Die gedruckte Seitenzahl kann abweichen. Es wird keine Adresse erzeugt, über die andere Personen Ihr privates Dokument öffnen könnten."
+          },
+          {
+            "type": "note",
+            "heading": "Ein verwendbarer Nachweis",
+            "body": "Ergänzen Sie die für Ihren Text erforderliche Zitierweise und den rechtlichen Zusammenhang. Die Kopierfunktion bewahrt einen Ausgangsbeleg; sie bestätigt weder die Richtigkeit der Quelle noch die Tragweite ihrer Aussage."
+          },
+          {
+            "type": "text",
+            "heading": "Falls Kopieren nicht verfügbar ist",
+            "body": "Falls der Browser den Zugriff auf die Zwischenablage verweigert, erscheint ein Textfeld mit der vollständigen Kopiervorlage. Markieren und kopieren Sie diese von Hand. Ihr bestehender Arbeitsstand ausserhalb von CourtOS bleibt erhalten."
           }
         ],
         "part": "CourtOS in der Praxis"
       },
       {
         "id": "check",
-        "title": "Einen prüfbaren\nVermerk gewinnen",
-        "lead": "Die fachliche Beurteilung bleibt eine menschliche Aufgabe.",
+        "title": "Mit eigenen\nQuellen arbeiten",
+        "lead": "Eine persönliche Bibliothek als Ergänzung zur Rechtsprechung.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Ein brauchbarer Arbeitsentwurf",
-            "body": "Verbinden Sie nach der öffentlichen Analyse die Ergebnisse im lokalen Schritt. Erwarten Sie einen knappen Vermerk mit vier Teilen: belegter Aktenstand, Widersprüche, entscheidrelevante offene Fragen und nächste Prüfschritte. Eine abschliessende Verfügung ist nicht das Ziel."
+            "heading": "Literatur aufnehmen",
+            "body": "Öffnen Sie die Bibliothek und laden Sie geeignete PDF-Auszüge hoch. Autor, Kurztitel, Auflage oder Jahr und Seiten im Dateinamen erleichtern die spätere Zuordnung. Ordner strukturieren den Bestand. Ein Projekt ist dafür nicht erforderlich."
           },
           {
             "type": "text",
-            "heading": "Quelle und Auslegung auseinanderhalten",
-            "body": "Öffnen Sie bei einer wichtigen Aussage die angegebene Quelle. Prüfen Sie den Wortlaut und den Zusammenhang. Ein kurzer Auszug und eine redaktionelle Einordnung sind nicht dasselbe. Eine allgemeine Aussage zum rechtlichen Gehör beantwortet noch keinen konkreten kantonalen Verfahrensfall."
-          },
-          {
-            "type": "items",
-            "heading": "Vor jeder Übernahme",
-            "items": [
-              "Stimmt die Fundstelle und trägt sie die Aussage?",
-              "Passt der Verfahrenskontext, oder fehlt eine Abklärung?",
-              "Sind Tatsachen, Widersprüche und rechtliche Einschätzung unterscheidbar?",
-              "Ist die Antwort vollständig, oder endet sie am Ausgabelimit?"
-            ]
+            "heading": "Die Auswahl bestimmen",
+            "body": "Wechseln Sie in der Recherche zur persönlichen Bibliothek und wählen Sie die Dokumente ausdrücklich aus. Die Suche bleibt auf diese Auswahl begrenzt. Öffnen Sie einen Treffer, um Passage, Dokumentfassung und PDF-Seite im Zusammenhang zu lesen."
           },
           {
             "type": "text",
-            "heading": "Offene Fragen sind ein Ergebnis",
-            "body": "Welcher Zustellbeleg fehlt? Gibt es eine unterzeichnete Endfassung? Wurden nachgereichte Unterlagen tatsächlich geprüft? Ein hilfreicher Entwurf macht solche Lücken sichtbar, statt sie mit Vermutungen zu schliessen."
+            "heading": "Den Beleg weiterverwenden",
+            "body": "Kopieren Sie eine relevante Passage mit ihrer Herkunft in den eigenen Vermerk. Wer den Vermerk später liest, benötigt gegebenenfalls selbst Zugang zum betreffenden Werk. Das Kopieren einer Fundstelle erteilt keine Nutzungsrechte."
+          },
+          {
+            "type": "note",
+            "heading": "Grenzen des Materials",
+            "body": "Scans ohne auswählbaren Text, fehlende PDF-Fassungen und teilweise indexierte Dokumente begrenzen die Treffer. Ein fehlender Treffer belegt nicht das Fehlen einer Aussage im Werk."
+          },
+          {
+            "type": "text",
+            "heading": "Umfang des Testbestands",
+            "body": "Pro Datei gelten 5 MiB; insgesamt stehen pro Konto 20 MiB Uploadbudget zur Verfügung. Fehlgeschlagene Uploads und gelöschte Dateien stellen dieses Budget nicht wieder her. Beginnen Sie mit einem überschaubaren Literaturbestand."
+          },
+          {
+            "type": "text",
+            "heading": "Ausblick: der lokale Aktenordner",
+            "body": "Ein künftiger, freigegebener lokaler Aktenordner soll Originale nur lesen und verständliche Notizen daneben ablegen. Feststellungen, Parteibehauptungen und bestrittene Punkte wären mit Quelle und Dokumentfassung zu unterscheiden. Quellenänderungen müssten abhängige Notizen als prüfbedürftig markieren. Die lokale Anbindung über Word oder Browser fehlt noch. Heute lädt die Bibliothek Kopien auf den VPS; sie arbeitet nicht direkt im Aktenordner."
           }
         ],
         "part": "CourtOS in der Praxis"
       },
       {
         "id": "test",
-        "title": "Drei Aufgaben\nfür Ihren Probelauf",
-        "lead": "Beurteilen Sie, ob der Ablauf Ihre Arbeit am Dossier erleichtert.",
+        "title": "Den Nutzen\nim Alltag prüfen",
+        "lead": "Ein brauchbares Ergebnis in Ihrem bestehenden Arbeitsablauf.",
         "blocks": [
           {
             "type": "text",
-            "heading": "1  Einen Widerspruch nachweisen",
-            "body": "Erstellen Sie die Chronologie und wählen Sie einen Datumskonflikt. Ein gutes Ergebnis nennt beide Angaben mit den passenden Absatzbelegen, unterscheidet Briefdatum und Zustellung und sagt, welcher Beleg zur Klärung fehlt."
+            "heading": "Eine echte Arbeitsfrage wählen",
+            "body": "Verwenden Sie einen zulässigen Quellenbestand und eine Frage, deren Schwierigkeiten Sie kennen. Vereinbaren Sie das benötigte Ergebnis: beispielsweise einen belegten Absatz, eine Gegenposition oder eine kurze Rechtsprechungsübersicht."
           },
           {
             "type": "text",
-            "heading": "2  Die Rechtsfrage eng halten",
-            "body": "Wählen Sie die feste Frage zum rechtlichen Gehör. Prüfen Sie das öffentliche Paket vor der Freigabe und danach eine Aussage in der Originalquelle. Ein gutes Ergebnis benennt seine Verfahrensgrenze und behauptet keine automatische Nichtigkeit."
+            "heading": "Den ganzen Weg beobachten",
+            "body": "Messen Sie nicht nur die Zeit bis zum ersten Treffer. Erfassen Sie Suche, Lesen, Prüfung, Kopieren und Einordnung in den eigenen Text. Vergleichen Sie denselben Ausschnitt mit Ihrem bisherigen Vorgehen."
+          },
+          {
+            "type": "items",
+            "heading": "Drei Fragen an das Ergebnis",
+            "items": [
+              "Ist die entscheidende Passage auffindbar und in ihrem Zusammenhang verständlich?",
+              "Kann eine andere Person die übernommene Aussage anhand der Herkunftsangaben prüfen?",
+              "Entsteht ein brauchbarer Arbeitsstand im gewohnten Werkzeug, ohne zusätzliche Ablagearbeit?"
+            ]
           },
           {
             "type": "text",
-            "heading": "3  Einen Vermerk weiterbearbeiten",
-            "body": "Lassen Sie Aktenstand und öffentliche Analyse lokal zusammenführen. Ein gutes Ergebnis trennt Tatsachen und Einschätzung, erhält Widersprüche und formuliert konkrete offene Prüffragen. Können Sie damit sinnvoll weiterarbeiten, ohne die ganze Akte nochmals ungeführt zu lesen?"
+            "heading": "KI gesondert bewerten",
+            "body": "Wenn Sie den Assistenten oder die Frontier-Prüfung einsetzen, betrachten Sie deren Zusatznutzen getrennt. Eine längere Antwort ist kein besserer Beleg. Notieren Sie auch Korrekturaufwand und übersehene Gegenargumente."
           },
           {
             "type": "note",
-            "heading": "So wird Ihr Feedback nützlich",
-            "body": "Nennen Sie den Arbeitsschritt, Ihre Erwartung, die beobachtete Abweichung und die Absatz- oder Quellenkennung. Ergänzen Sie die ungefähre Wartezeit. Keine echten Akten als Beispiel mitschicken."
-          },
-          {
-            "type": "text",
-            "heading": "Wann der Test noch nicht überzeugt",
-            "body": "Verlorene Belege, überspielte Widersprüche, unklare Übermittlungen oder ein scheinbar fertiger Text trotz Lücken sind konkrete Gründe für eine Verbesserung."
+            "heading": "Rückmeldung",
+            "body": "Suchbegriffe, erwartete Quelle, beobachtete Abweichung und ungefährer Aufwand genügen meist. Verwenden Sie keine echten Akten oder vertraulichen Ausschnitte als Fehlerbeispiel."
           }
         ],
         "part": "CourtOS in der Praxis"
       },
       {
         "id": "knowledge",
-        "title": "Die eigene\nWissensbasis",
-        "lead": "Literaturstellen finden und Rechtsprechung hinzuziehen.",
+        "title": "KI bei Bedarf\nhinzunehmen",
+        "lead": "Die Recherche und das Kopieren von Belegen funktionieren auch ohne KI.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Eigene Literatur vorbereiten",
-            "body": "Laden Sie geeignete PDF-Auszüge in Ihre persönliche Bibliothek. Benennen Sie sie mit Autor, Kurztitel, Auflage oder Jahr und Seiten. Ordner helfen bei der Gliederung. Pro Datei sind höchstens 5 MiB, für Ihr Konto insgesamt 20 MiB Uploadbudget vorgesehen. Löschen setzt diese Grenze nicht zurück."
+            "heading": "Lokal weiterdenken",
+            "body": "«Mit dieser Auswahl fragen» bereitet Ihre Frage und die gewählten Bibliotheksdokumente im Assistenten vor. Erst Ihr Senden startet Gemma 4. «Lokal» bezeichnet den CourtOS-VPS bei Hetzner in Deutschland, nicht Ihr Gerät oder das Gerichtsnetz."
           },
           {
             "type": "text",
-            "heading": "In ausgewählten Unterlagen suchen",
-            "body": "Öffnen Sie «Wissensbasis», wählen Sie Ihre Dokumente und suchen Sie mit einigen passenden Begriffen. Die Treffer zeigen Textstellen, PDF-Seite und Dokumentfassung. Öffnen Sie den Beleg im Original. Eine PDF-Seite kann von der gedruckten Seitenzahl abweichen."
+            "heading": "Eine externe Perspektive",
+            "body": "Eine öffentliche Entscheidpassage oder eine abgeschlossene lokale Antwort lässt sich zur Frontier-Prüfung übergeben. Der Text liegt zunächst als bearbeitbarer Entwurf im Browser. Anhänge und der übrige Chatverlauf werden nicht mitgegeben. Es gibt keine automatische Anonymisierung."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Text und Auftrag",
+              "Vorschau und Freigabe",
+              "Claude Opus 5.5"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Der freigegebene Inhalt zählt",
+            "body": "Die Vorschau zeigt den vollständigen Anfrageinhalt, Anbieter und Modell. Erst Ihre Freigabe löst den Anthropic-Aufruf aus. Nur extern zulässiges, nicht vertrauliches Material verwenden. Links sind Quellenangaben; das Modell ruft ihren Inhalt nicht ab."
           },
           {
             "type": "text",
-            "heading": "OpenCaseLaw hinzuziehen",
-            "body": "Das separate Suchfeld durchsucht veröffentlichte Entscheide aus OpenCaseLaw. Geben Sie dort eigene öffentliche Suchbegriffe ein. Ihre Literatur und Ihre lokale Suchanfrage werden nicht automatisch übernommen. Die Suche läuft auf dem VPS und benötigt kein externes KI-Modell."
-          },
-          {
-            "type": "text",
-            "heading": "Mit dem Assistenten weiterarbeiten",
-            "body": "Wählen Sie für Ihren Auftrag die benötigten Bibliotheksdokumente als Anhänge. Der lokale Assistent kann darin gezielt Textstellen suchen. Lassen Sie unterschiedliche Auffassungen mit ihren Belegen nebeneinanderstehen, statt eine scheinbar eindeutige Antwort zu verlangen."
-          },
-          {
-            "type": "text",
-            "heading": "Suchgrenzen mitprüfen",
-            "body": "Eine Begriffssuche findet nicht jede sinngleiche Aussage. Gescannte PDFs ohne auswählbaren Text benötigen zuerst Texterkennung. Beachten Sie Hinweise auf nur teilweise erfasste Dokumente. Ein fehlender Treffer beweist nicht, dass eine Aussage im Werk fehlt."
+            "heading": "Zum eigenen Arbeitsstand zurück",
+            "body": "Die externe Antwort kann als bearbeitbarer Entwurf in den lokalen Assistenten zurückkehren; sie wird nicht automatisch gesendet. Bestehende Eingaben und Anhänge bleiben erhalten. Überlange Übergabetexte werden nicht still gekürzt. Alternativ kopieren Sie einen passenden Ausschnitt in Ihr gewohntes Werkzeug."
           }
         ],
         "part": "CourtOS in der Praxis"
       },
       {
         "id": "access",
-        "title": "Was im Hintergrund\ngeschieht",
-        "lead": "Diese Grenzen gelten für den heutigen Test auf dem VPS.",
+        "title": "Datenwege\nund Betrieb",
+        "lead": "Recherche im Browser; KI nur auf Ihren ausdrücklichen Auftrag.",
         "blocks": [
           {
             "type": "flow",
@@ -411,23 +428,23 @@
           },
           {
             "type": "text",
-            "heading": "«Lokal» bedeutet hier: auf dem VPS",
-            "body": "Der Test läuft bei Hetzner in Deutschland, noch nicht im Netz Ihres Gerichts. Cloudflare verarbeitet den Webverkehr, einschliesslich der im Browser angezeigten Dokumente und Ergebnisse. Nur das ausdrücklich freigegebene öffentliche Paket geht im geführten Ablauf an Anthropic."
+            "heading": "Lokale und externe Verarbeitung",
+            "body": "Bibliothek, lokale Suche und Gemma 4 laufen auf dem CourtOS-Server bei Hetzner. Cloudflare verarbeitet den Webverkehr einschliesslich angezeigter Texte. Nur die ausdrücklich freigegebene Frontier-Anfrage wird an die externe Anthropic-API übermittelt; derzeit an Claude Opus 5.5."
           },
           {
             "type": "note",
-            "heading": "Keine vertraulichen Akten",
-            "body": "Die Zugangskontrolle macht diesen Datenweg nicht zu einem freigegebenen Behördenbetrieb. Echte vertrauliche Unterlagen bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung, die solche Eingaben erlauben würde."
+            "heading": "Noch kein Behördenbetrieb",
+            "body": "Zugangskontrolle und getrennte Konten ersetzen keine institutionelle Freigabe. Echte Fallakten und vertrauliche Unterlagen bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung."
           },
           {
             "type": "text",
-            "heading": "Mit Wartezeit und Grenzen rechnen",
-            "body": "Das lokale Gemma-Modell nutzt eine speichersparende Fassung von Unsloth auf Serverprozessoren (CPU). Im geprüften Versuch lieferte der freie Assistent nach rund sechseinhalb Minuten eine vollständige Antwort mit überprüfbaren Belegen im synthetischen PDF. Das ist eine einzelne Beobachtung zu einer gezielten Frage, keine allgemeine Laufzeit- oder Qualitätszusage. Unvollständige Ausgaben werden gekennzeichnet."
+            "heading": "Zeit und Kontingent",
+            "body": "Das lokale Modell verwendet eine Unsloth-Fassung und läuft auf Serverprozessoren (CPU). Eine frühere gezielte PDF-Frage benötigte im beobachteten Versuch mehrere Minuten; daraus folgt keine Laufzeitzusage. Der native Assistent erlaubt drei gestartete Aufträge je Person und UTC-Tag, die Frontier-Prüfung eine externe Analyse. Gemeinsame Tagesgrenzen können früher greifen. Lesen und Vorschau lösen keine Modellanfrage aus."
           },
           {
             "type": "text",
-            "heading": "Zugang, Kontingent und Aufbewahrung",
-            "body": "Verwenden Sie Ihr eigenes Konto. Im geführten Fall gelten derzeit pro Person und UTC-Kalendertag höchstens drei lokale Aufträge und eine externe Analyse. Angenommene Aufträge zählen auch bei Fehlern; gemeinsame Tagesgrenzen können früher greifen. Lesen und Vorschau sind frei. Antworten bleiben bis zur ausdrücklich veranlassten Bereinigung gespeichert; Abmelden löscht sie nicht. Downloads bleiben auf Ihrem Gerät."
+            "heading": "Aufbewahrung",
+            "body": "Angenommene Anfragen zählen auch bei Modellfehlern. Antworten bleiben bis zur veranlassten Bereinigung gespeichert; Abmelden löscht sie nicht. Ein Browser-Übergabetext ist davon getrennt und zeitlich begrenzt. Heruntergeladene Dateien bleiben auf Ihrem Gerät."
           }
         ],
         "part": "CourtOS in der Praxis"
@@ -439,8 +456,8 @@
         "blocks": [
           {
             "type": "text",
-            "heading": "Betriebsform wählen",
-            "body": "Möglich sind die vorhandene IT oder ein freigegebener, getrennt betriebener Dienst. Die Wahl hängt von Aufgaben, Daten und Zuständigkeiten ab."
+            "heading": "Später: mit Fallakten arbeiten",
+            "body": "Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Diese Funktion sowie Word- und Citecheck-Anbindungen sind noch nicht umgesetzt."
           },
           {
             "type": "items",
@@ -563,7 +580,7 @@
   "fr": {
     "language": "Français",
     "label": "Guide pratique",
-    "date": "9 octobre 2026",
+    "date": "10 octobre 2026",
     "contents": "Dans ce guide",
     "pdf_label": "Télécharger le PDF",
     "back": "Sommaire",
@@ -578,7 +595,7 @@
         "kind": "cover",
         "blocks": [],
         "title": "Le tribunal\nà l’ère de l’IA",
-        "lead": "Un guide pour les juges et les greffières et greffiers. Avec une introduction pratique à CourtOS.",
+        "lead": "Un guide destiné aux juges, aux greffières et aux greffiers. Avec une introduction pratique à la recherche dans CourtOS.",
         "statement": "Mieux comprendre, apprécier avec soin et rendre des décisions dont le raisonnement peut être suivi. C’est à partir de cette mission que la technique doit être conçue.",
         "edition": "Édition de travail 01 · Pilote sur VPS",
         "part": "Finalité · Jugement · Travail quotidien"
@@ -720,7 +737,7 @@
           {
             "type": "text",
             "heading": "Une évaluation commune et limitée",
-            "body": "Fixez un résultat attendu et des difficultés connues. Comparez le même cas fictif avec et sans assistance. Comptez lecture, attente, vérification et correction. Cette grille propose un test; elle ne démontre aucun bénéfice."
+            "body": "Définissez résultat et difficultés connues à partir de vos propres sources admises. Comparez le même périmètre avec et sans assistance. Incluez lecture, attente, vérification et correction. La matrice propose une évaluation; elle ne décrit pas un effet déjà établi."
           },
           {
             "type": "items",
@@ -751,216 +768,233 @@
       },
       {
         "id": "first-steps",
-        "title": "Du dossier\nà la note de travail",
-        "lead": "Un court parcours d’essai pour les greffières, les greffiers et les juges.",
+        "title": "Rechercher. Vérifier.\nPoursuivre le travail.",
+        "lead": "Le premier bénéfice: une référence pertinente pour votre travail.",
         "blocks": [
           {
             "type": "text",
-            "heading": "",
-            "body": "À partir de quatre documents, établir un état du dossier que l’on peut vérifier: quels faits sont étayés? Où les pièces se contredisent-elles? Quelle question importante pour la décision reste ouverte? CourtOS doit vous aider dans ce travail."
+            "heading": "Accéder directement à la recherche",
+            "body": "Ouvrez https://sandbox.swisslaw.io/research. Identifiez-vous avec votre adresse électronique personnelle et le code à usage unique de Cloudflare. Aucune invitation n’est nécessaire. Vous pouvez rechercher sans créer de projet ni commencer une conversation."
           },
           {
             "type": "flow",
             "items": [
-              "Explorer les pièces",
-              "Cadrer la question juridique",
-              "Rédiger une note de vérification"
+              "Rechercher",
+              "Vérifier la source",
+              "Reprendre la référence"
             ]
           },
           {
             "type": "text",
-            "heading": "Le premier parcours",
-            "body": "Ouvrez https://sandbox.swisslaw.io/pilot et saisissez votre adresse e-mail personnelle. Cloudflare Access vous envoie un code à usage unique. Après validation, votre compte est créé automatiquement, sans invitation. Lancez le cas guidé. Prévoyez environ 15 minutes."
-          },
-          {
-            "type": "note",
-            "heading": "Un essai circonscrit",
-            "body": "Le cas guidé utilise uniquement le dossier fictif. Pour votre base documentaire, vous pouvez aussi utiliser des extraits de publications publiques que vous avez le droit de stocker et de traiter ici. Les dossiers réels et les pièces confidentielles restent exclus. Les exemples et la langue de réponse par défaut sont en allemand."
+            "heading": "Un point de départ clair",
+            "body": "La recherche publique donne accès aux décisions publiées du fonds OpenCaseLaw. Vous pouvez également rechercher dans vos propres documents. Les deux espaces ont des champs distincts; vos textes personnels ne sont pas repris automatiquement dans la recherche publique."
           },
           {
             "type": "text",
-            "heading": "Votre chemin dans ce guide",
-            "body": "Commencez par les questions de finalité, de rôle et de méthode de travail du tribunal. La partie pratique mène du dossier fictif à une question juridique générale, puis à une note vérifiable. Viennent ensuite votre base de connaissances, les flux de données et l’exploitation institutionnelle ultérieure. Le sommaire permet un accès direct."
+            "heading": "Conserver vos outils habituels",
+            "body": "Ouvrez un passage pertinent, vérifiez la source originale, puis copiez le texte et ses références dans votre note, votre traitement de texte ou votre dossier existant. CourtOS ne vous impose pas de changer votre gestion des dossiers."
+          },
+          {
+            "type": "note",
+            "heading": "Pour ce pilote",
+            "body": "Décisions publiques, littérature non confidentielle dont l’usage est licite et documents synthétiques conviennent. Les vrais dossiers judiciaires et documents confidentiels restent exclus de ce serveur virtuel (VPS) en Allemagne."
           }
         ],
         "part": "CourtOS en pratique"
       },
       {
         "id": "local",
-        "title": "Explorer les pièces",
-        "lead": "Demandez une chronologie, puis confrontez-la aux documents.",
+        "title": "Trouver et situer\nles décisions",
+        "lead": "Rechercher dans la jurisprudence publique sans appel à un modèle.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Un dossier de petite taille",
-            "body": "L’autorité de construction de Linden et la personne concernée sont fictives. Quatre documents courts comportent des dates différentes, une inscription au registre et un projet de décision non signé. Aucun canton particulier n’est désigné."
+            "heading": "Commencer par quelques termes",
+            "body": "Saisissez des termes juridiques significatifs dans le champ public. Jusqu’à huit termes doivent apparaître ensemble dans le texte. Le filtre de langue peut préciser la sélection. Reformulez au besoin avec moins de termes ou d’autres mots."
           },
           {
             "type": "text",
-            "heading": "Lancer le traitement local",
-            "body": "Ouvrez les documents fournis et lancez la chronologie. Le modèle local traite ces documents sur le VPS. Aucun service externe ne prend automatiquement le relais."
+            "heading": "Ouvrir le résultat",
+            "body": "La liste présente jusqu’à cinq résultats textuels. Ouvrez la décision et lisez le passage pertinent. Date, numéro de dossier et tribunal aident à la situer; la source originale reste déterminante."
           },
           {
             "type": "items",
-            "heading": "Trois points à observer",
+            "heading": "Vérifier le contexte",
             "items": [
-              "Les références aux paragraphes permettent-elles de retrouver les affirmations dans le dossier?",
-              "Les dates contradictoires restent-elles visibles, sans être fusionnées en une date présentée comme certaine?",
-              "La réponse distingue-t-elle un projet encore ouvert d’une décision effectivement rendue?"
+              "La décision traite-t-elle de la même question juridique et du même contexte procédural?",
+              "Quelles conditions de fait et de droit soutiennent l’affirmation?",
+              "S’agit-il d’un motif déterminant, de la position d’une partie ou de la reprise d’une décision antérieure?"
             ]
           },
           {
             "type": "note",
-            "heading": "Une réponse fluide n’est pas encore un constat fiable.",
-            "body": "La date d’une lettre, son envoi et sa notification peuvent différer sans contradiction. À l’inverse, un récit plausible ne résout pas une véritable divergence dans les pièces."
+            "heading": "Extrait et référence officielle",
+            "body": "La position affichée indique des caractères dans le texte enregistré. Ce n’est ni un numéro de paragraphe officiel ni un numéro de considérant. Retrouvez la référence à citer dans la source originale."
           },
           {
             "type": "text",
-            "heading": "Prévoir un temps d’attente",
-            "body": "Le calcul sur le serveur peut prendre plusieurs minutes. Laissez la tâche en cours se terminer au lieu de relancer plusieurs fois la même étape."
+            "heading": "La portée de la recherche",
+            "body": "Il s’agit d’une recherche textuelle sur le serveur CourtOS, sans modèle d’IA externe. Cinq résultats constituent une sélection, pas une garantie d’exhaustivité."
           }
         ],
         "part": "CourtOS en pratique"
       },
       {
         "id": "public",
-        "title": "Autoriser une question juridique",
-        "lead": "Lisez d’abord le paquet, puis décidez de sa transmission.",
+        "title": "Reprendre\nune référence",
+        "lead": "Transférer ensemble le passage et son origine dans votre travail.",
         "blocks": [
           {
             "type": "text",
-            "heading": "La partie publique",
-            "body": "Choisissez l’une des questions générales prédéfinies et les sources publiques prévues. Le catalogue actuel contient la Constitution fédérale et deux arrêts du Tribunal fédéral. Il ne s’agit pas encore d’une recherche en direct dans OpenCaseLaw."
-          },
-          {
-            "type": "text",
-            "heading": "Examiner réellement l’aperçu",
-            "body": "L’aperçu présente la question, les extraits, les instructions au modèle et le prestataire externe. Vérifiez qu’il ne contient que ces éléments publics. Votre autorisation porte sur ce paquet enregistré; un résumé local du dossier n’y a pas sa place."
+            "heading": "Choisir le passage",
+            "body": "Ouvrez la partie pertinente du texte. Pour une décision publique, «Auszug und Quelle kopieren» copie l’extrait affiché avec ses références. Cette fonction ne produit pas un nouveau résumé juridique."
           },
           {
             "type": "flow",
             "items": [
-              "Paquet public",
-              "Votre autorisation",
-              "Claude Sonnet 4.6"
+              "Ouvrir le passage",
+              "Copier avec la référence",
+              "Utiliser dans votre texte"
             ]
           },
           {
-            "type": "note",
-            "heading": "Ni anonymisation automatique, ni requête libre sur un cas.",
-            "body": "Le dispositif sélectionne des textes publics fixes. Il ne promet pas de retirer les secrets de n’importe quelle saisie. Si un aperçu est incompréhensible ou inattendu, ne l’autorisez pas."
+            "type": "text",
+            "heading": "Pour les décisions publiques",
+            "body": "L’extrait est accompagné des indications affichées sur la décision, de son identifiant OpenCaseLaw et de l’adresse publique de la source lorsqu’elle est disponible. Contrôlez référence officielle et métadonnées avant de les intégrer à votre motivation."
           },
           {
             "type": "text",
-            "heading": "L’effet de votre autorisation",
-            "body": "Seule votre autorisation explicite déclenche l’appel à Anthropic. Elle concerne ce paquet et ne peut servir qu’une fois. Une erreur ne provoque pas de répétition automatique. Un nouvel essai exige un nouveau paquet et une nouvelle autorisation."
+            "heading": "Pour vos documents",
+            "body": "Pour vos documents, «Passage und Quelle kopieren» reprend le nom du fichier, la version fixe et la page PDF. Celle-ci peut différer de la pagination imprimée. Aucune adresse donnant accès à votre document privé n’est créée."
+          },
+          {
+            "type": "note",
+            "heading": "Une référence exploitable",
+            "body": "Complétez la citation selon les exigences de votre texte et son contexte juridique. La copie conserve un point d’appui; elle ne confirme ni l’exactitude de la source ni la portée de son affirmation."
+          },
+          {
+            "type": "text",
+            "heading": "Si la copie est indisponible",
+            "body": "Si le navigateur refuse l’accès au presse-papiers, un champ affiche le texte complet à copier. Sélectionnez-le et copiez-le à la main. Votre travail existant en dehors de CourtOS reste inchangé."
           }
         ],
         "part": "CourtOS en pratique"
       },
       {
         "id": "check",
-        "title": "Obtenir une note\nque l’on peut vérifier",
-        "lead": "L’appréciation professionnelle reste une tâche humaine.",
+        "title": "Travailler avec\nvos propres sources",
+        "lead": "Une bibliothèque personnelle en complément de la jurisprudence.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Un document de travail utile",
-            "body": "Après l’analyse publique, rapprochez les résultats dans l’étape locale. Attendez-vous à une note concise en quatre parties: faits étayés, contradictions, questions importantes encore ouvertes et vérifications à effectuer. L’objectif n’est pas de rédiger une décision définitive."
+            "heading": "Ajouter de la littérature",
+            "body": "Ouvrez la bibliothèque et ajoutez des extraits PDF appropriés. Auteur, titre abrégé, édition ou année et pages dans le nom du fichier facilitent leur identification. Les dossiers structurent le fonds. Aucun projet n’est nécessaire."
           },
           {
             "type": "text",
-            "heading": "Distinguer la source de son interprétation",
-            "body": "Pour une affirmation importante, ouvrez la source indiquée. Vérifiez le texte et son contexte. Un extrait et un commentaire rédactionnel sont deux choses différentes. Une règle générale sur le droit d’être entendu ne tranche pas un cas relevant d’une procédure cantonale précise."
-          },
-          {
-            "type": "items",
-            "heading": "Avant toute reprise",
-            "items": [
-              "La référence est-elle correcte et étaye-t-elle l’affirmation?",
-              "Le contexte procédural convient-il, ou une vérification manque-t-elle?",
-              "Les faits, les contradictions et l’appréciation juridique sont-ils distincts?",
-              "La réponse est-elle complète ou s’arrête-t-elle à la limite de sortie?"
-            ]
+            "heading": "Définir la sélection",
+            "body": "Dans la recherche, passez à votre bibliothèque personnelle et choisissez explicitement les documents. La recherche reste limitée à cette sélection. Ouvrez un résultat pour lire le passage avec sa version et sa page PDF dans leur contexte."
           },
           {
             "type": "text",
-            "heading": "Les questions ouvertes sont un résultat",
-            "body": "Quelle preuve de notification manque? Existe-t-il une version finale signée? Les pièces déposées ensuite ont-elles réellement été examinées? Une note utile montre ces lacunes au lieu de les combler par des suppositions."
+            "heading": "Réutiliser la référence",
+            "body": "Copiez le passage pertinent et ses références dans votre note. La personne qui la lira pourra avoir besoin d’un accès propre à l’ouvrage. Copier une référence ne confère aucun droit d’utilisation."
+          },
+          {
+            "type": "note",
+            "heading": "Les limites du matériau",
+            "body": "Scans sans texte sélectionnable, versions PDF manquantes et indexation partielle limitent les résultats. L’absence de résultat ne prouve pas qu’une affirmation est absente de l’ouvrage."
+          },
+          {
+            "type": "text",
+            "heading": "La taille du fonds de test",
+            "body": "Chaque fichier est limité à 5 MiB; le budget total d’importation est de 20 MiB par compte. Les imports échoués et les fichiers supprimés ne reconstituent pas ce budget. Commencez par un fonds de littérature restreint."
+          },
+          {
+            "type": "text",
+            "heading": "À terme: le dossier local",
+            "body": "Un futur dossier local autorisé permettrait de lire les originaux sans les modifier et de conserver des notes lisibles à leurs côtés. Constats, allégations et points contestés seraient distingués, avec source et version. Les notes dépendant d’une source modifiée seraient signalées pour révision. La connexion locale par Word ou navigateur reste à développer. Aujourd’hui, la bibliothèque reçoit des copies sur le VPS; elle ne travaille pas dans votre dossier local."
           }
         ],
         "part": "CourtOS en pratique"
       },
       {
         "id": "test",
-        "title": "Trois exercices\npour votre essai",
-        "lead": "Évaluez si le parcours facilite votre travail sur le dossier.",
+        "title": "Évaluer l’utilité\nau quotidien",
+        "lead": "Un résultat exploitable dans votre manière habituelle de travailler.",
         "blocks": [
           {
             "type": "text",
-            "heading": "1  Étayer une contradiction",
-            "body": "Établissez la chronologie et choisissez un conflit de dates. Un bon résultat cite les deux indications et les bons paragraphes, distingue date de la lettre et notification, et précise la pièce manquante pour clarifier la situation."
+            "heading": "Choisir une question de travail",
+            "body": "Utilisez des sources admises et une question dont vous connaissez les difficultés. Définissez le résultat attendu: par exemple un paragraphe étayé, une position contraire ou un bref aperçu de jurisprudence."
           },
           {
             "type": "text",
-            "heading": "2  Cadrer la question juridique",
-            "body": "Choisissez la question prédéfinie sur le droit d’être entendu. Examinez le paquet public avant de l’autoriser, puis vérifiez une affirmation dans l’original. Un bon résultat précise sa limite procédurale et n’affirme pas une nullité automatique."
+            "heading": "Observer tout le parcours",
+            "body": "Ne mesurez pas seulement le délai jusqu’au premier résultat. Incluez recherche, lecture, vérification, copie et intégration dans votre texte. Comparez le même périmètre avec votre méthode actuelle."
+          },
+          {
+            "type": "items",
+            "heading": "Trois questions sur le résultat",
+            "items": [
+              "Le passage déterminant est-il repérable et compréhensible dans son contexte?",
+              "Une autre personne peut-elle vérifier l’affirmation reprise à partir de ses références?",
+              "Obtient-on un travail exploitable dans l’outil habituel, sans classement supplémentaire?"
+            ]
           },
           {
             "type": "text",
-            "heading": "3  Poursuivre le travail à partir de la note",
-            "body": "Demandez le rapprochement local des pièces et de l’analyse publique. Un bon résultat distingue faits et appréciation, conserve les contradictions et formule des questions précises. Vous permet-il d’avancer sans devoir relire tout le dossier sans point de repère?"
+            "heading": "Évaluer l’IA séparément",
+            "body": "Si vous utilisez l’assistant ou l’examen externe, évaluez leur apport distinctement. Une réponse plus longue n’est pas une meilleure référence. Relevez aussi l’effort de correction et les objections omises."
           },
           {
             "type": "note",
-            "heading": "Un retour utile",
-            "body": "Indiquez l’étape, votre attente, l’écart observé et la référence du paragraphe ou de la source. Ajoutez le temps d’attente approximatif. Ne joignez pas de dossier réel à titre d’exemple."
-          },
-          {
-            "type": "text",
-            "heading": "Quand l’essai n’est pas encore convaincant",
-            "body": "Une référence perdue, une contradiction masquée, une transmission obscure ou un texte apparemment achevé malgré des lacunes justifient une amélioration concrète."
+            "heading": "Retour d’expérience",
+            "body": "Termes recherchés, source attendue, écart constaté et effort approximatif suffisent souvent. N’utilisez pas de vrais dossiers ou de passages confidentiels pour illustrer un défaut."
           }
         ],
         "part": "CourtOS en pratique"
       },
       {
         "id": "knowledge",
-        "title": "Votre base\ndocumentaire",
-        "lead": "Retrouver des passages et consulter la jurisprudence.",
+        "title": "Recourir à l’IA\nsi nécessaire",
+        "lead": "La recherche et la copie des références fonctionnent aussi sans IA.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Préparer votre documentation",
-            "body": "Ajoutez des extraits PDF appropriés à votre bibliothèque personnelle. Nommez-les avec l’auteur, le titre abrégé, l’édition ou l’année et les pages. Classez-les dans des dossiers. La limite est de 5 Mio par fichier et de 20 Mio de téléversements cumulés pour votre compte. Supprimer un fichier ne rétablit pas ce quota."
+            "heading": "Poursuivre localement",
+            "body": "«Mit dieser Auswahl fragen» prépare votre question et les documents choisis dans l’assistant. Seul votre envoi lance Gemma 4. «Local» désigne le VPS CourtOS chez Hetzner en Allemagne, pas votre appareil ni le réseau du tribunal."
           },
           {
             "type": "text",
-            "heading": "Rechercher dans les documents choisis",
-            "body": "Ouvrez «Wissensbasis», sélectionnez vos documents et saisissez quelques termes pertinents. Les résultats indiquent le passage, la page PDF et la version du document. Ouvrez la référence dans l’original. La page PDF peut différer du numéro imprimé."
+            "heading": "Un regard externe",
+            "body": "Un passage public ou une réponse locale terminée peut être transmis à l’espace «Frontier-Prüfung». Le texte reste d’abord un projet modifiable dans le navigateur. Pièces jointes et reste de la conversation ne l’accompagnent pas. Il n’existe aucune anonymisation automatique."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Texte et demande",
+              "Aperçu et autorisation",
+              "Claude Opus 5.5"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Le contenu autorisé fait foi",
+            "body": "L’aperçu montre toute la requête, le fournisseur et le modèle. Seule votre autorisation déclenche l’appel à Anthropic. Utilisez uniquement du matériel non confidentiel dont le traitement externe est permis. Les liens sont des références; le modèle n’en consulte pas le contenu."
           },
           {
             "type": "text",
-            "heading": "Consulter OpenCaseLaw",
-            "body": "Un champ distinct recherche dans les décisions publiées d’OpenCaseLaw. Saisissez-y vos propres termes de recherche publics. Ni votre documentation ni votre requête locale ne sont repris automatiquement. Cette recherche fonctionne sur le VPS, sans modèle d’IA externe."
-          },
-          {
-            "type": "text",
-            "heading": "Poursuivre avec l’assistant",
-            "body": "Sélectionnez les documents nécessaires de la bibliothèque comme pièces jointes à votre demande. L’assistant local peut y rechercher des passages ciblés. Demandez-lui de présenter côte à côte les positions divergentes avec leurs références, sans forcer une réponse apparemment unique."
-          },
-          {
-            "type": "text",
-            "heading": "Vérifier aussi les limites de la recherche",
-            "body": "Une recherche par termes ne retrouve pas toutes les formulations équivalentes. Un PDF numérisé sans texte sélectionnable nécessite d’abord une reconnaissance de texte. Tenez compte des indications de couverture partielle. L’absence de résultat ne prouve pas qu’une affirmation manque dans l’ouvrage."
+            "heading": "Revenir à votre travail",
+            "body": "La réponse externe peut revenir dans l’assistant local comme projet modifiable, sans envoi automatique. Votre texte en cours et les pièces jointes restent inchangés. Un texte trop long n’est pas tronqué silencieusement. Vous pouvez aussi copier un passage utile dans votre outil habituel."
           }
         ],
         "part": "CourtOS en pratique"
       },
       {
         "id": "access",
-        "title": "Ce qui se passe\nen arrière-plan",
-        "lead": "Ces limites concernent le test actuel sur le VPS.",
+        "title": "Données\net exploitation",
+        "lead": "Recherche dans le navigateur; IA uniquement sur votre demande explicite.",
         "blocks": [
           {
             "type": "flow",
@@ -972,23 +1006,23 @@
           },
           {
             "type": "text",
-            "heading": "«Local» signifie ici: sur le VPS",
-            "body": "Le test fonctionne chez Hetzner en Allemagne, pas encore dans le réseau de votre tribunal. Cloudflare traite le trafic web, y compris les documents et les résultats affichés. Dans le parcours guidé, seul le paquet public expressément autorisé est envoyé à Anthropic."
+            "heading": "Traitements local et externe",
+            "body": "Bibliothèque, recherche locale et Gemma 4 fonctionnent sur le serveur CourtOS chez Hetzner. Cloudflare traite le trafic web, y compris les textes affichés. Seule la requête externe expressément autorisée est transmise à l’API Anthropic, actuellement à Claude Opus 5.5."
           },
           {
             "type": "note",
-            "heading": "Aucun dossier confidentiel",
-            "body": "Le contrôle d’accès ne transforme pas ce trajet des données en système institutionnel autorisé. Les pièces réelles confidentielles restent exclues. Aucune anonymisation automatique ne permet de les saisir."
+            "heading": "Pas encore un usage institutionnel",
+            "body": "Contrôle d’accès et comptes séparés ne remplacent pas une autorisation institutionnelle. Les vrais dossiers judiciaires et documents confidentiels restent exclus. Il n’existe pas d’anonymisation automatique."
           },
           {
             "type": "text",
-            "heading": "Tenir compte de l’attente et des limites",
-            "body": "Le modèle local Gemma utilise une version économe en mémoire fournie par Unsloth, sur les processeurs du serveur (CPU). Lors de l’essai vérifié, l’assistant libre a fourni en environ six minutes et demie une réponse complète avec des références vérifiables dans le PDF fictif. Cette observation porte sur une seule question ciblée; elle ne garantit ni une durée habituelle ni la qualité générale. Les réponses incomplètes sont signalées."
+            "heading": "Durée et contingent",
+            "body": "Le modèle local utilise une version Unsloth et des processeurs de serveur (CPU). Une question PDF ciblée a pris plusieurs minutes lors d’un essai antérieur; cela ne constitue pas une garantie de durée. L’assistant natif permet trois demandes démarrées par personne et jour UTC; l’examen externe, une analyse. Des limites communes peuvent intervenir plus tôt. Lecture et aperçu ne déclenchent pas de requête au modèle."
           },
           {
             "type": "text",
-            "heading": "Accès, quotas et conservation",
-            "body": "Utilisez votre propre compte. Pour le cas guidé, la limite actuelle est de trois tâches locales et d’une analyse externe par personne et par jour civil UTC. Une tâche acceptée compte même si elle échoue; des plafonds communs peuvent limiter l’accès plus tôt. La lecture et l’aperçu sont libres. Les réponses restent enregistrées jusqu’à un nettoyage expressément décidé; la déconnexion ne les efface pas. Les téléchargements restent sur votre appareil."
+            "heading": "Conservation",
+            "body": "Les demandes admises comptent même si le modèle échoue. Les réponses restent enregistrées jusqu’au nettoyage demandé; la déconnexion ne les efface pas. Le texte de transition dans le navigateur est distinct et limité dans le temps. Les téléchargements restent sur votre appareil."
           }
         ],
         "part": "CourtOS en pratique"
@@ -1000,8 +1034,8 @@
         "blocks": [
           {
             "type": "text",
-            "heading": "Choisir le mode d’exploitation",
-            "body": "L’informatique existante ou un service séparé dûment autorisé sont des options. Le choix dépend des tâches, des données et des compétences."
+            "heading": "Plus tard: travailler avec les dossiers",
+            "body": "Demande, réponse et pièces exigent un environnement autorisé pour les originaux. Avant un examen externe, une pseudonymisation cohérente reste à développer: mêmes personnes et organisations, mêmes pseudonymes dans tous les documents; la table de correspondance reste locale. Cela ne garantit pas l’anonymat. L’identification encore possible devrait être examinée avant l’envoi. Cette fonction et les intégrations Word et Citecheck ne sont pas encore réalisées."
           },
           {
             "type": "items",
@@ -1124,7 +1158,7 @@
   "it": {
     "language": "Italiano",
     "label": "Guida pratica",
-    "date": "9 ottobre 2026",
+    "date": "10 ottobre 2026",
     "contents": "In questa guida",
     "pdf_label": "Scaricare il PDF",
     "back": "Indice",
@@ -1139,7 +1173,7 @@
         "kind": "cover",
         "blocks": [],
         "title": "Il tribunale\nnell’era dell’IA",
-        "lead": "Una guida per giudici e cancelliere e cancellieri. Con un’introduzione pratica a CourtOS.",
+        "lead": "Una guida per giudici, cancelliere e cancellieri. Con un’introduzione pratica alla ricerca in CourtOS.",
         "statement": "Comprendere meglio, valutare con cura e decidere con motivazioni verificabili. È da questo compito che deve partire la progettazione della tecnologia.",
         "edition": "Edizione di lavoro 01 · Pilota su VPS",
         "part": "Finalità · Giudizio · Lavoro quotidiano"
@@ -1281,7 +1315,7 @@
           {
             "type": "text",
             "heading": "Una valutazione comune e circoscritta",
-            "body": "Definite un risultato atteso e difficoltà note. Confrontate lo stesso caso fittizio con e senza assistenza. Contate lettura, attesa, verifica e correzione. La griglia propone una prova, non benefici accertati."
+            "body": "Definite risultato e difficoltà note sulla base delle vostre fonti ammesse. Confrontate lo stesso ambito con e senza assistenza. Considerate lettura, attesa, verifica e correzione. La matrice propone una valutazione; non descrive un effetto già accertato."
           },
           {
             "type": "items",
@@ -1312,216 +1346,233 @@
       },
       {
         "id": "first-steps",
-        "title": "Dagli atti\nalla nota di lavoro",
-        "lead": "Un breve percorso di prova per le cancelliere, i cancellieri e i giudici.",
+        "title": "Cercare. Verificare.\nProseguire il lavoro.",
+        "lead": "Il primo vantaggio: un riferimento pertinente per il vostro lavoro.",
         "blocks": [
           {
             "type": "text",
-            "heading": "",
-            "body": "Da quattro documenti ricavare un quadro verificabile del fascicolo: quali fatti sono documentati? Dove gli atti si contraddicono? Quale questione rilevante per la decisione resta aperta? CourtOS vuole aiutarvi in questo lavoro."
+            "heading": "Accedere direttamente alla ricerca",
+            "body": "Aprite https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail personale e il codice monouso di Cloudflare. Non occorre un invito. Potete cercare senza creare un progetto né avviare una conversazione."
           },
           {
             "type": "flow",
             "items": [
-              "Esaminare gli atti",
-              "Circoscrivere la domanda",
-              "Preparare una nota di verifica"
+              "Cercare",
+              "Verificare la fonte",
+              "Riprendere il riferimento"
             ]
           },
           {
             "type": "text",
-            "heading": "Il primo percorso",
-            "body": "Aprite https://sandbox.swisslaw.io/pilot e inserite il vostro indirizzo e-mail personale. Cloudflare Access invia un codice monouso. Dopo la conferma, l’account viene creato automaticamente, senza invito. Avviate il caso guidato. Prevedete circa 15 minuti."
-          },
-          {
-            "type": "note",
-            "heading": "Una prova circoscritta",
-            "body": "Il caso guidato utilizza soltanto il fascicolo fittizio. Per la vostra base documentale potete usare anche estratti di pubblicazioni pubbliche che siete autorizzati a memorizzare e trattare qui. I fascicoli reali e i documenti riservati restano esclusi. Gli esempi e la lingua di risposta predefinita sono in tedesco."
+            "heading": "Un punto di partenza chiaro",
+            "body": "La ricerca pubblica permette di consultare le decisioni pubblicate raccolte in OpenCaseLaw. Potete inoltre cercare nei vostri documenti. Le due aree hanno campi distinti; i testi personali non vengono ripresi automaticamente nella ricerca pubblica."
           },
           {
             "type": "text",
-            "heading": "Il percorso nella guida",
-            "body": "Si parte dalla finalità, dal ruolo e dal modo di lavorare del tribunale. La parte pratica conduce dal fascicolo fittizio a una questione giuridica generale e a una nota verificabile. Seguono la base di conoscenze, i flussi dei dati e il futuro impiego istituzionale. L’indice consente di accedere direttamente al punto desiderato."
+            "heading": "Mantenere gli strumenti abituali",
+            "body": "Aprite un passaggio pertinente, verificate la fonte originale e copiate testo e riferimenti nella vostra nota, nel programma di scrittura o nel fascicolo esistente. CourtOS non richiede di cambiare la gestione dei fascicoli."
+          },
+          {
+            "type": "note",
+            "heading": "Per questo progetto pilota",
+            "body": "Sono adatti decisioni pubbliche, letteratura non riservata lecitamente utilizzabile e documenti sintetici. Fascicoli giudiziari reali e documenti riservati restano esclusi da questo server virtuale (VPS) in Germania."
           }
         ],
         "part": "CourtOS nella pratica"
       },
       {
         "id": "local",
-        "title": "Esaminare gli atti",
-        "lead": "Fate elaborare una cronologia, poi confrontatela con i documenti.",
+        "title": "Trovare e inquadrare\nle decisioni",
+        "lead": "Cercare nella giurisprudenza pubblica senza chiamare un modello.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Un fascicolo contenuto",
-            "body": "L’autorità edilizia di Linden e la persona interessata sono inventate. Quattro brevi documenti contengono date differenti, un’annotazione nel registro e una bozza di decisione non firmata. Non è indicato un Cantone specifico."
+            "heading": "Iniziare con pochi termini",
+            "body": "Inserite termini giuridici significativi nel campo pubblico. Fino a otto termini devono comparire insieme nel testo. Il filtro linguistico può restringere la selezione. Se necessario, riformulate con meno termini o con parole diverse."
           },
           {
             "type": "text",
-            "heading": "Avviare il passaggio locale",
-            "body": "Aprite i documenti forniti e avviate la cronologia. Il modello locale elabora questi documenti sul VPS. Nessun servizio esterno subentra automaticamente."
+            "heading": "Aprire il risultato",
+            "body": "L’elenco presenta fino a cinque risultati testuali. Aprite la decisione e leggete il passaggio pertinente. Data, numero di causa e tribunale aiutano a inquadrarla; la fonte originale rimane determinante."
           },
           {
             "type": "items",
-            "heading": "Osservate tre aspetti",
+            "heading": "Verificare il contesto",
             "items": [
-              "I riferimenti ai paragrafi permettono di ritrovare le affermazioni nel fascicolo?",
-              "Le date contrastanti restano visibili, senza essere fuse in una data presentata come certa?",
-              "La risposta distingue una bozza ancora aperta da una decisione effettivamente emanata?"
+              "La decisione riguarda la stessa questione giuridica e lo stesso contesto procedurale?",
+              "Quali presupposti di fatto e di diritto sostengono l’affermazione?",
+              "Si tratta di un motivo determinante, della posizione di una parte o del richiamo a una decisione precedente?"
             ]
           },
           {
             "type": "note",
-            "heading": "Una risposta scorrevole non è ancora un riscontro affidabile.",
-            "body": "La data di una lettera, la spedizione e la notificazione possono essere diverse senza contraddirsi. Per contro, un racconto plausibile non risolve un vero contrasto tra gli atti."
+            "heading": "Estratto e riferimento ufficiale",
+            "body": "La posizione visualizzata indica caratteri nel testo registrato. Non è un numero di paragrafo ufficiale né di considerando. Individuate nella fonte originale il riferimento da citare."
           },
           {
             "type": "text",
-            "heading": "Prevedere un’attesa",
-            "body": "Il calcolo sul server può richiedere diversi minuti. Lasciate terminare il lavoro in corso, invece di avviare più volte lo stesso passaggio."
+            "heading": "La portata della ricerca",
+            "body": "La ricerca testuale avviene sul server CourtOS, senza un modello di IA esterno. Cinque risultati costituiscono una selezione, non una garanzia di completezza."
           }
         ],
         "part": "CourtOS nella pratica"
       },
       {
         "id": "public",
-        "title": "Autorizzare una domanda giuridica",
-        "lead": "Prima leggete il pacchetto, poi decidete se trasmetterlo.",
+        "title": "Riprendere\nun riferimento",
+        "lead": "Trasferire insieme il passaggio e la sua provenienza nel proprio lavoro.",
         "blocks": [
           {
             "type": "text",
-            "heading": "La parte pubblica",
-            "body": "Scegliete una delle domande generali predefinite e le fonti pubbliche previste. Il catalogo attuale contiene la Costituzione federale e due sentenze del Tribunale federale. Non è ancora una ricerca in tempo reale in OpenCaseLaw."
-          },
-          {
-            "type": "text",
-            "heading": "Esaminare davvero l’anteprima",
-            "body": "L’anteprima mostra la domanda, gli estratti, le istruzioni al modello e il fornitore esterno. Verificate che contenga soltanto questi elementi pubblici. L’autorizzazione riguarda il pacchetto fissato; un riassunto locale del fascicolo non deve farne parte."
+            "heading": "Scegliere il passaggio",
+            "body": "Aprite la parte pertinente del testo. Per una decisione pubblica, «Auszug und Quelle kopieren» copia l’estratto visualizzato con i suoi riferimenti. La funzione non produce una nuova sintesi giuridica."
           },
           {
             "type": "flow",
             "items": [
-              "Pacchetto pubblico",
-              "La vostra autorizzazione",
-              "Claude Sonnet 4.6"
+              "Aprire il passaggio",
+              "Copiare con il riferimento",
+              "Usare nel proprio testo"
             ]
           },
           {
-            "type": "note",
-            "heading": "Né anonimizzazione automatica né richieste libere su un caso.",
-            "body": "Il sistema seleziona testi pubblici prestabiliti. Non promette di eliminare i segreti da qualsiasi testo inserito. Se un’anteprima è poco chiara o inattesa, non autorizzatela."
+            "type": "text",
+            "heading": "Per le decisioni pubbliche",
+            "body": "L’estratto è accompagnato dai dati visualizzati sulla decisione, dall’identificativo OpenCaseLaw e dall’indirizzo pubblico della fonte, se disponibile. Verificate riferimento ufficiale e metadati prima di inserirli nella motivazione."
           },
           {
             "type": "text",
-            "heading": "Che cosa comporta l’autorizzazione",
-            "body": "Solo la vostra autorizzazione esplicita avvia la chiamata ad Anthropic. Vale per quel pacchetto ed è utilizzabile una sola volta. Un errore non provoca un nuovo invio automatico. Per riprovare servono un nuovo pacchetto e una nuova autorizzazione."
+            "heading": "Per i propri documenti",
+            "body": "Per i vostri documenti, «Passage und Quelle kopieren» riprende nome del file, versione fissa e pagina PDF. Quest’ultima può differire dalla pagina stampata. Non viene creato un indirizzo che consenta ad altri di aprire il documento privato."
+          },
+          {
+            "type": "note",
+            "heading": "Un riferimento utilizzabile",
+            "body": "Completate la citazione secondo le esigenze del vostro testo e il contesto giuridico. La copia conserva un riscontro di partenza; non conferma né l’esattezza della fonte né la portata della sua affermazione."
+          },
+          {
+            "type": "text",
+            "heading": "Se la copia non è disponibile",
+            "body": "Se il browser nega l’accesso agli appunti, un campo mostra il testo completo da copiare. Selezionatelo e copiatelo a mano. Il lavoro esistente al di fuori di CourtOS rimane invariato."
           }
         ],
         "part": "CourtOS nella pratica"
       },
       {
         "id": "check",
-        "title": "Ottenere una nota\nverificabile",
-        "lead": "La valutazione professionale resta un compito umano.",
+        "title": "Lavorare con\nle proprie fonti",
+        "lead": "Una biblioteca personale a complemento della giurisprudenza.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Una bozza di lavoro utile",
-            "body": "Dopo l’analisi pubblica, collegate i risultati nel passaggio locale. Cercate una nota concisa in quattro parti: fatti documentati, contraddizioni, questioni rilevanti ancora aperte e verifiche da svolgere. Lo scopo non è redigere una decisione definitiva."
+            "heading": "Aggiungere letteratura",
+            "body": "Aprite la biblioteca e caricate estratti PDF idonei. Autore, titolo breve, edizione o anno e pagine nel nome del file facilitano l’identificazione. Le cartelle organizzano la raccolta. Non occorre un progetto."
           },
           {
             "type": "text",
-            "heading": "Distinguere fonte e interpretazione",
-            "body": "Per un’affermazione importante, aprite la fonte indicata. Controllate il testo e il contesto. Un estratto e un commento redazionale non sono la stessa cosa. Una regola generale sul diritto di essere sentito non risolve un caso soggetto a una specifica procedura cantonale."
-          },
-          {
-            "type": "items",
-            "heading": "Prima di riprendere un risultato",
-            "items": [
-              "Il riferimento è corretto e sostiene l’affermazione?",
-              "Il contesto procedurale è pertinente oppure manca un accertamento?",
-              "Fatti, contraddizioni e valutazione giuridica sono distinguibili?",
-              "La risposta è completa oppure termina al limite di generazione?"
-            ]
+            "heading": "Definire la selezione",
+            "body": "Nella ricerca passate alla biblioteca personale e scegliete esplicitamente i documenti. La ricerca resta limitata a questa selezione. Aprite un risultato per leggere il passaggio nel contesto, con versione e pagina PDF."
           },
           {
             "type": "text",
-            "heading": "Le questioni aperte sono un risultato",
-            "body": "Quale prova di notificazione manca? Esiste una versione finale firmata? I documenti presentati successivamente sono stati davvero esaminati? Una nota utile rende visibili queste lacune, senza colmarle con supposizioni."
+            "heading": "Riutilizzare il riferimento",
+            "body": "Copiate un passaggio pertinente con i suoi riferimenti nella vostra nota. Chi la leggerà potrebbe aver bisogno di un proprio accesso all’opera. Copiare un riferimento non conferisce diritti di utilizzazione."
+          },
+          {
+            "type": "note",
+            "heading": "I limiti del materiale",
+            "body": "Scansioni senza testo selezionabile, versioni PDF mancanti e indicizzazione parziale limitano i risultati. L’assenza di risultati non prova che nell’opera manchi un’affermazione."
+          },
+          {
+            "type": "text",
+            "heading": "La dimensione della raccolta di prova",
+            "body": "Ogni file è limitato a 5 MiB; il budget complessivo di caricamento è di 20 MiB per conto. Caricamenti falliti e file eliminati non ripristinano il budget. Iniziate con una raccolta di letteratura circoscritta."
+          },
+          {
+            "type": "text",
+            "heading": "In prospettiva: il fascicolo locale",
+            "body": "Un futuro fascicolo locale autorizzato permetterebbe di leggere gli originali senza modificarli e di conservare note leggibili accanto ad essi. Accertamenti, allegazioni e punti contestati andrebbero distinti, con fonte e versione. Le note basate su fonti modificate sarebbero segnalate per una nuova verifica. Il collegamento locale tramite Word o browser resta da sviluppare. Oggi la biblioteca riceve copie sul VPS; non lavora nel fascicolo locale."
           }
         ],
         "part": "CourtOS nella pratica"
       },
       {
         "id": "test",
-        "title": "Tre esercizi\nper la vostra prova",
-        "lead": "Valutate se il percorso facilita il vostro lavoro sul fascicolo.",
+        "title": "Valutare l’utilità\nnel lavoro quotidiano",
+        "lead": "Un risultato utilizzabile nel vostro modo abituale di lavorare.",
         "blocks": [
           {
             "type": "text",
-            "heading": "1  Documentare una contraddizione",
-            "body": "Create la cronologia e scegliete un contrasto tra date. Un buon risultato riporta entrambe le indicazioni e i paragrafi corretti, distingue la data della lettera dalla notificazione e precisa quale documento manca per chiarire il punto."
+            "heading": "Scegliere una domanda di lavoro",
+            "body": "Utilizzate fonti ammesse e una domanda di cui conoscete le difficoltà. Definite il risultato atteso: ad esempio un paragrafo documentato, una posizione contraria o una breve rassegna di giurisprudenza."
           },
           {
             "type": "text",
-            "heading": "2  Circoscrivere la domanda giuridica",
-            "body": "Scegliete la domanda predefinita sul diritto di essere sentito. Esaminate il pacchetto pubblico prima di autorizzarlo, poi verificate un’affermazione nell’originale. Un buon risultato indica il limite procedurale e non afferma una nullità automatica."
+            "heading": "Osservare l’intero percorso",
+            "body": "Non misurate soltanto l’attesa fino al primo risultato. Considerate ricerca, lettura, verifica, copia e inserimento nel vostro testo. Confrontate lo stesso ambito con il metodo attuale."
+          },
+          {
+            "type": "items",
+            "heading": "Tre domande sul risultato",
+            "items": [
+              "Il passaggio determinante è reperibile e comprensibile nel suo contesto?",
+              "Un’altra persona può verificare l’affermazione ripresa attraverso i riferimenti?",
+              "Si ottiene un risultato utilizzabile nello strumento abituale, senza ulteriore lavoro di archiviazione?"
+            ]
           },
           {
             "type": "text",
-            "heading": "3  Proseguire il lavoro dalla nota",
-            "body": "Fate collegare localmente gli atti e l’analisi pubblica. Un buon risultato distingue fatti e valutazioni, mantiene le contraddizioni e formula domande concrete. Vi permette di proseguire senza rileggere tutto il fascicolo senza un orientamento?"
+            "heading": "Valutare l’IA separatamente",
+            "body": "Se utilizzate l’assistente o l’esame esterno, valutatene separatamente l’apporto. Una risposta più lunga non è un riscontro migliore. Annotate anche l’impegno di correzione e le obiezioni trascurate."
           },
           {
             "type": "note",
-            "heading": "Un riscontro utile",
-            "body": "Indicate il passaggio, ciò che vi aspettavate, la differenza osservata e il riferimento al paragrafo o alla fonte. Aggiungete il tempo di attesa approssimativo. Non allegate fascicoli reali come esempio."
-          },
-          {
-            "type": "text",
-            "heading": "Quando la prova non convince ancora",
-            "body": "Un riferimento perso, una contraddizione mascherata, un invio poco chiaro o un testo apparentemente concluso nonostante le lacune sono motivi concreti per migliorare il sistema."
+            "heading": "Riscontro",
+            "body": "Termini cercati, fonte attesa, scostamento osservato e impegno approssimativo bastano spesso. Non utilizzate fascicoli reali o passaggi riservati per illustrare un difetto."
           }
         ],
         "part": "CourtOS nella pratica"
       },
       {
         "id": "knowledge",
-        "title": "La vostra base\ndocumentale",
-        "lead": "Trovare passaggi e consultare la giurisprudenza.",
+        "title": "Ricorrere all’IA\nquando serve",
+        "lead": "Ricerca e copia dei riferimenti funzionano anche senza IA.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Preparare la propria documentazione",
-            "body": "Caricate estratti PDF appropriati nella biblioteca personale. Indicate nel nome autore, titolo breve, edizione o anno e pagine. Organizzateli in cartelle. Il limite è di 5 MiB per file e di 20 MiB di caricamenti complessivi per account. Eliminare un file non ripristina questa quota."
+            "heading": "Proseguire in locale",
+            "body": "«Mit dieser Auswahl fragen» prepara nell’assistente la domanda e i documenti scelti. Solo il vostro invio avvia Gemma 4. «Locale» indica il VPS CourtOS presso Hetzner in Germania, non il vostro dispositivo né la rete del tribunale."
           },
           {
             "type": "text",
-            "heading": "Cercare nei documenti selezionati",
-            "body": "Aprite «Wissensbasis», selezionate i documenti e cercate con alcuni termini pertinenti. I risultati indicano passaggio, pagina PDF e versione del documento. Aprite il riferimento nell’originale. La pagina PDF può non coincidere con il numero stampato."
+            "heading": "Una prospettiva esterna",
+            "body": "Un passaggio pubblico o una risposta locale completata può passare all’area «Frontier-Prüfung». Il testo resta dapprima una bozza modificabile nel browser. Allegati e resto della conversazione non vengono trasmessi. Non vi è anonimizzazione automatica."
+          },
+          {
+            "type": "flow",
+            "items": [
+              "Testo e incarico",
+              "Anteprima e autorizzazione",
+              "Claude Opus 5.5"
+            ]
+          },
+          {
+            "type": "note",
+            "heading": "Conta il contenuto autorizzato",
+            "body": "L’anteprima mostra l’intera richiesta, il fornitore e il modello. Solo la vostra autorizzazione avvia la chiamata ad Anthropic. Usate soltanto materiale non riservato il cui trattamento esterno è consentito. I link sono riferimenti; il modello non ne recupera il contenuto."
           },
           {
             "type": "text",
-            "heading": "Consultare OpenCaseLaw",
-            "body": "Un campo separato cerca nelle decisioni pubblicate di OpenCaseLaw. Inseritevi i vostri termini di ricerca pubblici. La documentazione e i termini della ricerca locale non vengono ripresi automaticamente. La ricerca funziona sul VPS, senza un modello di IA esterno."
-          },
-          {
-            "type": "text",
-            "heading": "Proseguire con l’assistente",
-            "body": "Selezionate come allegati alla domanda i documenti necessari della biblioteca. L’assistente locale può cercarvi passaggi mirati. Chiedete di affiancare le posizioni divergenti con i rispettivi riferimenti, senza forzare una risposta solo apparentemente univoca."
-          },
-          {
-            "type": "text",
-            "heading": "Verificare anche i limiti della ricerca",
-            "body": "Una ricerca per termini non trova tutte le formulazioni equivalenti. Un PDF scansionato senza testo selezionabile richiede prima il riconoscimento del testo. Considerate le indicazioni di copertura parziale. L’assenza di risultati non prova che un’affermazione manchi nell’opera."
+            "heading": "Tornare al proprio lavoro",
+            "body": "La risposta esterna può tornare nell’assistente locale come bozza modificabile, senza invio automatico. Testo in corso e allegati restano invariati. Un testo troppo lungo non viene troncato silenziosamente. Potete anche copiare un passaggio utile nel vostro strumento abituale."
           }
         ],
         "part": "CourtOS nella pratica"
       },
       {
         "id": "access",
-        "title": "Che cosa succede\ndietro le quinte",
-        "lead": "Questi limiti riguardano il test attuale sul VPS.",
+        "title": "Dati\ne gestione",
+        "lead": "Ricerca nel browser; IA soltanto su vostra richiesta esplicita.",
         "blocks": [
           {
             "type": "flow",
@@ -1533,23 +1584,23 @@
           },
           {
             "type": "text",
-            "heading": "«Locale» significa: sul VPS",
-            "body": "Il test funziona presso Hetzner in Germania, non ancora nella rete del vostro tribunale. Cloudflare tratta il traffico web, compresi i documenti e i risultati visualizzati. Nel percorso guidato viene inviato ad Anthropic solo il pacchetto pubblico espressamente autorizzato."
+            "heading": "Trattamento locale ed esterno",
+            "body": "Biblioteca, ricerca locale e Gemma 4 funzionano sul server CourtOS presso Hetzner. Cloudflare tratta il traffico web, compresi i testi visualizzati. Solo la richiesta esterna espressamente autorizzata viene trasmessa all’API Anthropic, attualmente a Claude Opus 5.5."
           },
           {
             "type": "note",
-            "heading": "Nessun fascicolo riservato",
-            "body": "Il controllo dell’accesso non rende questo percorso dei dati un sistema istituzionale autorizzato. I documenti reali riservati restano esclusi. Nessuna anonimizzazione automatica consente di inserirli."
+            "heading": "Non ancora un uso istituzionale",
+            "body": "Controllo degli accessi e conti separati non sostituiscono un’autorizzazione istituzionale. Fascicoli giudiziari reali e documenti riservati restano esclusi. Non è prevista un’anonimizzazione automatica."
           },
           {
             "type": "text",
-            "heading": "Considerare attesa e limiti",
-            "body": "Il modello locale Gemma usa una versione a minore occupazione di memoria fornita da Unsloth, sui processori del server (CPU). Nel test verificato, l’assistente libero ha fornito in circa sei minuti e mezzo una risposta completa con riferimenti verificabili nel PDF fittizio. È un’osservazione su una sola domanda mirata, non una garanzia dei tempi abituali o della qualità generale. Le risposte incomplete sono segnalate."
+            "heading": "Durata e contingente",
+            "body": "Il modello locale utilizza una versione Unsloth su processori del server (CPU). Una domanda PDF mirata ha richiesto diversi minuti in una prova precedente; non ne deriva alcuna garanzia di durata. L’assistente nativo permette tre richieste avviate per persona e giorno UTC; l’esame esterno, un’analisi. Limiti comuni possono intervenire prima. Lettura e anteprima non avviano una richiesta al modello."
           },
           {
             "type": "text",
-            "heading": "Accesso, quote e conservazione",
-            "body": "Usate il vostro account. Nel caso guidato il limite attuale è di tre attività locali e un’analisi esterna per persona e giorno civile UTC. Le attività accettate contano anche se falliscono; i limiti comuni possono ridurre prima la disponibilità. Lettura e anteprima sono libere. Le risposte restano memorizzate fino a una pulizia espressamente disposta; disconnettersi non le cancella. I file scaricati restano sul vostro dispositivo."
+            "heading": "Conservazione",
+            "body": "Le richieste ammesse contano anche in caso di errore del modello. Le risposte restano salvate fino alla pulizia richiesta; uscire dal conto non le elimina. Il testo di passaggio nel browser è distinto e limitato nel tempo. I file scaricati restano sul vostro dispositivo."
           }
         ],
         "part": "CourtOS nella pratica"
@@ -1561,8 +1612,8 @@
         "blocks": [
           {
             "type": "text",
-            "heading": "Scegliere la forma di gestione",
-            "body": "Si possono considerare l’informatica esistente o un servizio separato debitamente autorizzato. La scelta dipende dai compiti, dai dati e dalle competenze."
+            "heading": "In seguito: lavorare con i fascicoli",
+            "body": "Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. Questa funzione e le integrazioni Word e Citecheck non sono ancora realizzate."
           },
           {
             "type": "items",

@@ -1,8 +1,8 @@
 # Il tribunale nell’era dell’IA
-Guida pratica | 9 ottobre 2026
+Guida pratica | 10 ottobre 2026
 
 ## 1. Il tribunale nell’era dell’IA
-Una guida per giudici e cancelliere e cancellieri. Con un’introduzione pratica a CourtOS.
+Una guida per giudici, cancelliere e cancellieri. Con un’introduzione pratica alla ricerca in CourtOS.
 
 ## 2. Partire dallo scopo
 Che cosa deve migliorare per le persone la cui causa è davanti al tribunale?
@@ -63,7 +63,7 @@ Il progetto pilota offre aiuti all’esame degli atti e una ricerca limitata. No
 Come riconoscere un miglioramento del lavoro?
 
 ### Una valutazione comune e circoscritta
-Definite un risultato atteso e difficoltà note. Confrontate lo stesso caso fittizio con e senza assistenza. Contate lettura, attesa, verifica e correzione. La griglia propone una prova, non benefici accertati.
+Definite risultato e difficoltà note sulla base delle vostre fonti ammesse. Confrontate lo stesso ambito con e senza assistenza. Considerate lettura, attesa, verifica e correzione. La matrice propone una valutazione; non descrive un effetto già accertato.
 
 ### Compito · aiuto · esame umano · osservazione
 - Esaminare gli atti: chiedere una cronologia; controllare prove e tipi di date. Contare gli eventi omessi o inventati.
@@ -79,141 +79,151 @@ Discutete anche l’errore più grave e il punto di vista della persona interess
 ### Scegliere il seguito
 Annotate utilità, errori e impegno di controllo. Decidete che cosa continuare, modificare o escludere.
 
-## 6. Dagli atti alla nota di lavoro
-Un breve percorso di prova per le cancelliere, i cancellieri e i giudici.
+## 6. Cercare. Verificare. Proseguire il lavoro.
+Il primo vantaggio: un riferimento pertinente per il vostro lavoro.
 
-Da quattro documenti ricavare un quadro verificabile del fascicolo: quali fatti sono documentati? Dove gli atti si contraddicono? Quale questione rilevante per la decisione resta aperta? CourtOS vuole aiutarvi in questo lavoro.
+### Accedere direttamente alla ricerca
+Aprite https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail personale e il codice monouso di Cloudflare. Non occorre un invito. Potete cercare senza creare un progetto né avviare una conversazione.
 
-- Esaminare gli atti
-- Circoscrivere la domanda
-- Preparare una nota di verifica
+- Cercare
+- Verificare la fonte
+- Riprendere il riferimento
 
-### Il primo percorso
-Aprite https://sandbox.swisslaw.io/pilot e inserite il vostro indirizzo e-mail personale. Cloudflare Access invia un codice monouso. Dopo la conferma, l’account viene creato automaticamente, senza invito. Avviate il caso guidato. Prevedete circa 15 minuti.
+### Un punto di partenza chiaro
+La ricerca pubblica permette di consultare le decisioni pubblicate raccolte in OpenCaseLaw. Potete inoltre cercare nei vostri documenti. Le due aree hanno campi distinti; i testi personali non vengono ripresi automaticamente nella ricerca pubblica.
 
-### Una prova circoscritta
-Il caso guidato utilizza soltanto il fascicolo fittizio. Per la vostra base documentale potete usare anche estratti di pubblicazioni pubbliche che siete autorizzati a memorizzare e trattare qui. I fascicoli reali e i documenti riservati restano esclusi. Gli esempi e la lingua di risposta predefinita sono in tedesco.
+### Mantenere gli strumenti abituali
+Aprite un passaggio pertinente, verificate la fonte originale e copiate testo e riferimenti nella vostra nota, nel programma di scrittura o nel fascicolo esistente. CourtOS non richiede di cambiare la gestione dei fascicoli.
 
-### Il percorso nella guida
-Si parte dalla finalità, dal ruolo e dal modo di lavorare del tribunale. La parte pratica conduce dal fascicolo fittizio a una questione giuridica generale e a una nota verificabile. Seguono la base di conoscenze, i flussi dei dati e il futuro impiego istituzionale. L’indice consente di accedere direttamente al punto desiderato.
+### Per questo progetto pilota
+Sono adatti decisioni pubbliche, letteratura non riservata lecitamente utilizzabile e documenti sintetici. Fascicoli giudiziari reali e documenti riservati restano esclusi da questo server virtuale (VPS) in Germania.
 
-## 7. Esaminare gli atti
-Fate elaborare una cronologia, poi confrontatela con i documenti.
+## 7. Trovare e inquadrare le decisioni
+Cercare nella giurisprudenza pubblica senza chiamare un modello.
 
-### Un fascicolo contenuto
-L’autorità edilizia di Linden e la persona interessata sono inventate. Quattro brevi documenti contengono date differenti, un’annotazione nel registro e una bozza di decisione non firmata. Non è indicato un Cantone specifico.
+### Iniziare con pochi termini
+Inserite termini giuridici significativi nel campo pubblico. Fino a otto termini devono comparire insieme nel testo. Il filtro linguistico può restringere la selezione. Se necessario, riformulate con meno termini o con parole diverse.
 
-### Avviare il passaggio locale
-Aprite i documenti forniti e avviate la cronologia. Il modello locale elabora questi documenti sul VPS. Nessun servizio esterno subentra automaticamente.
+### Aprire il risultato
+L’elenco presenta fino a cinque risultati testuali. Aprite la decisione e leggete il passaggio pertinente. Data, numero di causa e tribunale aiutano a inquadrarla; la fonte originale rimane determinante.
 
-### Osservate tre aspetti
-- I riferimenti ai paragrafi permettono di ritrovare le affermazioni nel fascicolo?
-- Le date contrastanti restano visibili, senza essere fuse in una data presentata come certa?
-- La risposta distingue una bozza ancora aperta da una decisione effettivamente emanata?
+### Verificare il contesto
+- La decisione riguarda la stessa questione giuridica e lo stesso contesto procedurale?
+- Quali presupposti di fatto e di diritto sostengono l’affermazione?
+- Si tratta di un motivo determinante, della posizione di una parte o del richiamo a una decisione precedente?
 
-### Una risposta scorrevole non è ancora un riscontro affidabile.
-La data di una lettera, la spedizione e la notificazione possono essere diverse senza contraddirsi. Per contro, un racconto plausibile non risolve un vero contrasto tra gli atti.
+### Estratto e riferimento ufficiale
+La posizione visualizzata indica caratteri nel testo registrato. Non è un numero di paragrafo ufficiale né di considerando. Individuate nella fonte originale il riferimento da citare.
 
-### Prevedere un’attesa
-Il calcolo sul server può richiedere diversi minuti. Lasciate terminare il lavoro in corso, invece di avviare più volte lo stesso passaggio.
+### La portata della ricerca
+La ricerca testuale avviene sul server CourtOS, senza un modello di IA esterno. Cinque risultati costituiscono una selezione, non una garanzia di completezza.
 
-## 8. Autorizzare una domanda giuridica
-Prima leggete il pacchetto, poi decidete se trasmetterlo.
+## 8. Riprendere un riferimento
+Trasferire insieme il passaggio e la sua provenienza nel proprio lavoro.
 
-### La parte pubblica
-Scegliete una delle domande generali predefinite e le fonti pubbliche previste. Il catalogo attuale contiene la Costituzione federale e due sentenze del Tribunale federale. Non è ancora una ricerca in tempo reale in OpenCaseLaw.
+### Scegliere il passaggio
+Aprite la parte pertinente del testo. Per una decisione pubblica, «Auszug und Quelle kopieren» copia l’estratto visualizzato con i suoi riferimenti. La funzione non produce una nuova sintesi giuridica.
 
-### Esaminare davvero l’anteprima
-L’anteprima mostra la domanda, gli estratti, le istruzioni al modello e il fornitore esterno. Verificate che contenga soltanto questi elementi pubblici. L’autorizzazione riguarda il pacchetto fissato; un riassunto locale del fascicolo non deve farne parte.
+- Aprire il passaggio
+- Copiare con il riferimento
+- Usare nel proprio testo
 
-- Pacchetto pubblico
-- La vostra autorizzazione
-- Claude Sonnet 4.6
+### Per le decisioni pubbliche
+L’estratto è accompagnato dai dati visualizzati sulla decisione, dall’identificativo OpenCaseLaw e dall’indirizzo pubblico della fonte, se disponibile. Verificate riferimento ufficiale e metadati prima di inserirli nella motivazione.
 
-### Né anonimizzazione automatica né richieste libere su un caso.
-Il sistema seleziona testi pubblici prestabiliti. Non promette di eliminare i segreti da qualsiasi testo inserito. Se un’anteprima è poco chiara o inattesa, non autorizzatela.
+### Per i propri documenti
+Per i vostri documenti, «Passage und Quelle kopieren» riprende nome del file, versione fissa e pagina PDF. Quest’ultima può differire dalla pagina stampata. Non viene creato un indirizzo che consenta ad altri di aprire il documento privato.
 
-### Che cosa comporta l’autorizzazione
-Solo la vostra autorizzazione esplicita avvia la chiamata ad Anthropic. Vale per quel pacchetto ed è utilizzabile una sola volta. Un errore non provoca un nuovo invio automatico. Per riprovare servono un nuovo pacchetto e una nuova autorizzazione.
+### Un riferimento utilizzabile
+Completate la citazione secondo le esigenze del vostro testo e il contesto giuridico. La copia conserva un riscontro di partenza; non conferma né l’esattezza della fonte né la portata della sua affermazione.
 
-## 9. Ottenere una nota verificabile
-La valutazione professionale resta un compito umano.
+### Se la copia non è disponibile
+Se il browser nega l’accesso agli appunti, un campo mostra il testo completo da copiare. Selezionatelo e copiatelo a mano. Il lavoro esistente al di fuori di CourtOS rimane invariato.
 
-### Una bozza di lavoro utile
-Dopo l’analisi pubblica, collegate i risultati nel passaggio locale. Cercate una nota concisa in quattro parti: fatti documentati, contraddizioni, questioni rilevanti ancora aperte e verifiche da svolgere. Lo scopo non è redigere una decisione definitiva.
+## 9. Lavorare con le proprie fonti
+Una biblioteca personale a complemento della giurisprudenza.
 
-### Distinguere fonte e interpretazione
-Per un’affermazione importante, aprite la fonte indicata. Controllate il testo e il contesto. Un estratto e un commento redazionale non sono la stessa cosa. Una regola generale sul diritto di essere sentito non risolve un caso soggetto a una specifica procedura cantonale.
+### Aggiungere letteratura
+Aprite la biblioteca e caricate estratti PDF idonei. Autore, titolo breve, edizione o anno e pagine nel nome del file facilitano l’identificazione. Le cartelle organizzano la raccolta. Non occorre un progetto.
 
-### Prima di riprendere un risultato
-- Il riferimento è corretto e sostiene l’affermazione?
-- Il contesto procedurale è pertinente oppure manca un accertamento?
-- Fatti, contraddizioni e valutazione giuridica sono distinguibili?
-- La risposta è completa oppure termina al limite di generazione?
+### Definire la selezione
+Nella ricerca passate alla biblioteca personale e scegliete esplicitamente i documenti. La ricerca resta limitata a questa selezione. Aprite un risultato per leggere il passaggio nel contesto, con versione e pagina PDF.
 
-### Le questioni aperte sono un risultato
-Quale prova di notificazione manca? Esiste una versione finale firmata? I documenti presentati successivamente sono stati davvero esaminati? Una nota utile rende visibili queste lacune, senza colmarle con supposizioni.
+### Riutilizzare il riferimento
+Copiate un passaggio pertinente con i suoi riferimenti nella vostra nota. Chi la leggerà potrebbe aver bisogno di un proprio accesso all’opera. Copiare un riferimento non conferisce diritti di utilizzazione.
 
-## 10. Tre esercizi per la vostra prova
-Valutate se il percorso facilita il vostro lavoro sul fascicolo.
+### I limiti del materiale
+Scansioni senza testo selezionabile, versioni PDF mancanti e indicizzazione parziale limitano i risultati. L’assenza di risultati non prova che nell’opera manchi un’affermazione.
 
-### 1  Documentare una contraddizione
-Create la cronologia e scegliete un contrasto tra date. Un buon risultato riporta entrambe le indicazioni e i paragrafi corretti, distingue la data della lettera dalla notificazione e precisa quale documento manca per chiarire il punto.
+### La dimensione della raccolta di prova
+Ogni file è limitato a 5 MiB; il budget complessivo di caricamento è di 20 MiB per conto. Caricamenti falliti e file eliminati non ripristinano il budget. Iniziate con una raccolta di letteratura circoscritta.
 
-### 2  Circoscrivere la domanda giuridica
-Scegliete la domanda predefinita sul diritto di essere sentito. Esaminate il pacchetto pubblico prima di autorizzarlo, poi verificate un’affermazione nell’originale. Un buon risultato indica il limite procedurale e non afferma una nullità automatica.
+### In prospettiva: il fascicolo locale
+Un futuro fascicolo locale autorizzato permetterebbe di leggere gli originali senza modificarli e di conservare note leggibili accanto ad essi. Accertamenti, allegazioni e punti contestati andrebbero distinti, con fonte e versione. Le note basate su fonti modificate sarebbero segnalate per una nuova verifica. Il collegamento locale tramite Word o browser resta da sviluppare. Oggi la biblioteca riceve copie sul VPS; non lavora nel fascicolo locale.
 
-### 3  Proseguire il lavoro dalla nota
-Fate collegare localmente gli atti e l’analisi pubblica. Un buon risultato distingue fatti e valutazioni, mantiene le contraddizioni e formula domande concrete. Vi permette di proseguire senza rileggere tutto il fascicolo senza un orientamento?
+## 10. Valutare l’utilità nel lavoro quotidiano
+Un risultato utilizzabile nel vostro modo abituale di lavorare.
 
-### Un riscontro utile
-Indicate il passaggio, ciò che vi aspettavate, la differenza osservata e il riferimento al paragrafo o alla fonte. Aggiungete il tempo di attesa approssimativo. Non allegate fascicoli reali come esempio.
+### Scegliere una domanda di lavoro
+Utilizzate fonti ammesse e una domanda di cui conoscete le difficoltà. Definite il risultato atteso: ad esempio un paragrafo documentato, una posizione contraria o una breve rassegna di giurisprudenza.
 
-### Quando la prova non convince ancora
-Un riferimento perso, una contraddizione mascherata, un invio poco chiaro o un testo apparentemente concluso nonostante le lacune sono motivi concreti per migliorare il sistema.
+### Osservare l’intero percorso
+Non misurate soltanto l’attesa fino al primo risultato. Considerate ricerca, lettura, verifica, copia e inserimento nel vostro testo. Confrontate lo stesso ambito con il metodo attuale.
 
-## 11. La vostra base documentale
-Trovare passaggi e consultare la giurisprudenza.
+### Tre domande sul risultato
+- Il passaggio determinante è reperibile e comprensibile nel suo contesto?
+- Un’altra persona può verificare l’affermazione ripresa attraverso i riferimenti?
+- Si ottiene un risultato utilizzabile nello strumento abituale, senza ulteriore lavoro di archiviazione?
 
-### Preparare la propria documentazione
-Caricate estratti PDF appropriati nella biblioteca personale. Indicate nel nome autore, titolo breve, edizione o anno e pagine. Organizzateli in cartelle. Il limite è di 5 MiB per file e di 20 MiB di caricamenti complessivi per account. Eliminare un file non ripristina questa quota.
+### Valutare l’IA separatamente
+Se utilizzate l’assistente o l’esame esterno, valutatene separatamente l’apporto. Una risposta più lunga non è un riscontro migliore. Annotate anche l’impegno di correzione e le obiezioni trascurate.
 
-### Cercare nei documenti selezionati
-Aprite «Wissensbasis», selezionate i documenti e cercate con alcuni termini pertinenti. I risultati indicano passaggio, pagina PDF e versione del documento. Aprite il riferimento nell’originale. La pagina PDF può non coincidere con il numero stampato.
+### Riscontro
+Termini cercati, fonte attesa, scostamento osservato e impegno approssimativo bastano spesso. Non utilizzate fascicoli reali o passaggi riservati per illustrare un difetto.
 
-### Consultare OpenCaseLaw
-Un campo separato cerca nelle decisioni pubblicate di OpenCaseLaw. Inseritevi i vostri termini di ricerca pubblici. La documentazione e i termini della ricerca locale non vengono ripresi automaticamente. La ricerca funziona sul VPS, senza un modello di IA esterno.
+## 11. Ricorrere all’IA quando serve
+Ricerca e copia dei riferimenti funzionano anche senza IA.
 
-### Proseguire con l’assistente
-Selezionate come allegati alla domanda i documenti necessari della biblioteca. L’assistente locale può cercarvi passaggi mirati. Chiedete di affiancare le posizioni divergenti con i rispettivi riferimenti, senza forzare una risposta solo apparentemente univoca.
+### Proseguire in locale
+«Mit dieser Auswahl fragen» prepara nell’assistente la domanda e i documenti scelti. Solo il vostro invio avvia Gemma 4. «Locale» indica il VPS CourtOS presso Hetzner in Germania, non il vostro dispositivo né la rete del tribunale.
 
-### Verificare anche i limiti della ricerca
-Una ricerca per termini non trova tutte le formulazioni equivalenti. Un PDF scansionato senza testo selezionabile richiede prima il riconoscimento del testo. Considerate le indicazioni di copertura parziale. L’assenza di risultati non prova che un’affermazione manchi nell’opera.
+### Una prospettiva esterna
+Un passaggio pubblico o una risposta locale completata può passare all’area «Frontier-Prüfung». Il testo resta dapprima una bozza modificabile nel browser. Allegati e resto della conversazione non vengono trasmessi. Non vi è anonimizzazione automatica.
 
-## 12. Che cosa succede dietro le quinte
-Questi limiti riguardano il test attuale sul VPS.
+- Testo e incarico
+- Anteprima e autorizzazione
+- Claude Opus 5.5
+
+### Conta il contenuto autorizzato
+L’anteprima mostra l’intera richiesta, il fornitore e il modello. Solo la vostra autorizzazione avvia la chiamata ad Anthropic. Usate soltanto materiale non riservato il cui trattamento esterno è consentito. I link sono riferimenti; il modello non ne recupera il contenuto.
+
+### Tornare al proprio lavoro
+La risposta esterna può tornare nell’assistente locale come bozza modificabile, senza invio automatico. Testo in corso e allegati restano invariati. Un testo troppo lungo non viene troncato silenziosamente. Potete anche copiare un passaggio utile nel vostro strumento abituale.
+
+## 12. Dati e gestione
+Ricerca nel browser; IA soltanto su vostra richiesta esplicita.
 
 - Il vostro browser
 - Cloudflare
 - VPS in Germania
 
-### «Locale» significa: sul VPS
-Il test funziona presso Hetzner in Germania, non ancora nella rete del vostro tribunale. Cloudflare tratta il traffico web, compresi i documenti e i risultati visualizzati. Nel percorso guidato viene inviato ad Anthropic solo il pacchetto pubblico espressamente autorizzato.
+### Trattamento locale ed esterno
+Biblioteca, ricerca locale e Gemma 4 funzionano sul server CourtOS presso Hetzner. Cloudflare tratta il traffico web, compresi i testi visualizzati. Solo la richiesta esterna espressamente autorizzata viene trasmessa all’API Anthropic, attualmente a Claude Opus 5.5.
 
-### Nessun fascicolo riservato
-Il controllo dell’accesso non rende questo percorso dei dati un sistema istituzionale autorizzato. I documenti reali riservati restano esclusi. Nessuna anonimizzazione automatica consente di inserirli.
+### Non ancora un uso istituzionale
+Controllo degli accessi e conti separati non sostituiscono un’autorizzazione istituzionale. Fascicoli giudiziari reali e documenti riservati restano esclusi. Non è prevista un’anonimizzazione automatica.
 
-### Considerare attesa e limiti
-Il modello locale Gemma usa una versione a minore occupazione di memoria fornita da Unsloth, sui processori del server (CPU). Nel test verificato, l’assistente libero ha fornito in circa sei minuti e mezzo una risposta completa con riferimenti verificabili nel PDF fittizio. È un’osservazione su una sola domanda mirata, non una garanzia dei tempi abituali o della qualità generale. Le risposte incomplete sono segnalate.
+### Durata e contingente
+Il modello locale utilizza una versione Unsloth su processori del server (CPU). Una domanda PDF mirata ha richiesto diversi minuti in una prova precedente; non ne deriva alcuna garanzia di durata. L’assistente nativo permette tre richieste avviate per persona e giorno UTC; l’esame esterno, un’analisi. Limiti comuni possono intervenire prima. Lettura e anteprima non avviano una richiesta al modello.
 
-### Accesso, quote e conservazione
-Usate il vostro account. Nel caso guidato il limite attuale è di tre attività locali e un’analisi esterna per persona e giorno civile UTC. Le attività accettate contano anche se falliscono; i limiti comuni possono ridurre prima la disponibilità. Lettura e anteprima sono libere. Le risposte restano memorizzate fino a una pulizia espressamente disposta; disconnettersi non le cancella. I file scaricati restano sul vostro dispositivo.
+### Conservazione
+Le richieste ammesse contano anche in caso di errore del modello. Le risposte restano salvate fino alla pulizia richiesta; uscire dal conto non le elimina. Il testo di passaggio nel browser è distinto e limitato nel tempo. I file scaricati restano sul vostro dispositivo.
 
 ## 13. Il passo successivo nell’istituzione
 Dopo il test sul VPS: un progetto distinto per l’impiego istituzionale.
 
-### Scegliere la forma di gestione
-Si possono considerare l’informatica esistente o un servizio separato debitamente autorizzato. La scelta dipende dai compiti, dai dati e dalle competenze.
+### In seguito: lavorare con i fascicoli
+Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. Questa funzione e le integrazioni Word e Citecheck non sono ancora realizzate.
 
 ### Prima dei fascicoli reali
 - Definire compiti autorizzati e responsabilità professionali e operative.

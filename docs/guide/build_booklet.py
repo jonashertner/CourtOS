@@ -189,7 +189,7 @@ for lang,book in BOOKS.items():
 index=head('de')+'<body><header><a class="brand" href="index.html">CourtOS <small>ARBEITSBUCH</small></a><span class="smallprint">DE / FR / IT</span></header><main class="home"><div class="eyebrow">Jonas Hertner · Arbeitsausgabe 01</div><h1>Das Gericht<br>im Zeitalter der KI.</h1><p class="lead">Zweck, Urteilskraft und ein prüfbarer Arbeitsalltag.<br>Ein Arbeitsbuch in drei Sprachen.</p><div class="cards">'
 for lang,book in BOOKS.items():
  index+=f'<article class="card" lang="{lang}-CH"><div class="eyebrow">{book["language"]}</div><h2>{html.escape(book["title"])}</h2><div class="cover-links"><a href="{lang}.html">{LABELS[lang]["read"]} →</a><a href="pdf/courtos-{lang}.pdf">PDF ↗</a></div></article>'
-index+='</div><p class="smallprint"><a href="https://sandbox.swisslaw.io/pilot">CourtOS Pilot</a> · <a href="https://sandbox.swisslaw.io/knowledge">Wissensbasis</a> · <a href="https://github.com/jonashertner/CourtOS">Code</a></p></main></body></html>'
+index+='</div><p class="smallprint"><a href="https://sandbox.swisslaw.io/research">CourtOS Recherche</a> · <a href="https://sandbox.swisslaw.io/library">Meine Bibliothek</a> · <a href="https://github.com/jonashertner/CourtOS">Code</a></p></main></body></html>'
 (OUT/'index.html').write_text(index)
 # Verify local navigation without fetching remote links or loading any app.
 from html.parser import HTMLParser

@@ -1,8 +1,8 @@
 # Das Gericht im Zeitalter der KI
-Arbeitsbuch | 9. Oktober 2026
+Arbeitsbuch | 10. Oktober 2026
 
 ## 1. Das Gericht im Zeitalter der KI
-Ein Arbeitsbuch für Richterinnen, Richter und Gerichtsschreibende. Mit einem praktischen Einstieg in CourtOS.
+Ein Arbeitsbuch für Richterinnen, Richter und Gerichtsschreibende. Mit einem praktischen Einstieg in die Recherche mit CourtOS.
 
 ## 2. Vom Zweck her denken
 Was soll für die Menschen besser werden, deren Sache vor Gericht liegt?
@@ -63,7 +63,7 @@ Der Pilot bietet Aktenhilfen und begrenzte Recherche. Eine vollständige Gericht
 Woran erkennen Sie, dass die Arbeit besser geworden ist?
 
 ### Eine kleine gemeinsame Prüfung
-Vereinbaren Sie Ergebnis und Stolperstellen. Vergleichen Sie denselben Testfall mit und ohne Unterstützung. Erfassen Sie Lesen, Warten, Prüfen und Korrigieren. Die Matrix ist ein Testvorschlag, keine bereits erzielte Wirkung.
+Vereinbaren Sie Ergebnis und bekannte Schwierigkeiten anhand eines eigenen zulässigen Quellenbestands. Vergleichen Sie denselben Ausschnitt mit und ohne Unterstützung. Erfassen Sie Lesen, Warten, Prüfen und Korrigieren. Die Matrix ist ein Testvorschlag, keine bereits erzielte Wirkung.
 
 ### Aufgabe · Unterstützung · menschliche Prüfung · Beobachtung
 - Akten erschliessen: Chronologie vorschlagen lassen; Belege und Datumsarten prüfen. Zählen Sie übersehene sowie erfundene Ereignisse.
@@ -79,141 +79,151 @@ Besprechen Sie auch den schwersten Fehler und die Sicht der betroffenen Person. 
 ### Ein belastbarer nächster Schritt
 Notieren Sie Nutzen, Fehler und Prüfaufwand. Entscheiden Sie gemeinsam, was weiter erprobt, verändert oder vorerst nicht verwendet wird.
 
-## 6. Am Dossier arbeiten
-Ein kurzer Probelauf für Gerichtsschreiberinnen, Gerichtsschreiber, Richterinnen und Richter.
+## 6. Recherchieren. Prüfen. Weiterarbeiten.
+Der erste Nutzen: eine passende Fundstelle für Ihre Arbeit.
 
-Aus vier Dokumenten soll ein nachvollziehbarer Arbeitsstand entstehen: Was ist belegt? Wo widersprechen sich die Akten? Welche entscheidrelevante Frage bleibt offen? CourtOS soll Sie bei dieser Arbeit unterstützen.
+### Direkt zur Recherche
+Öffnen Sie https://sandbox.swisslaw.io/research. Nach der Anmeldung mit persönlicher E-Mail-Adresse und Cloudflare-Einmalcode gelangen Sie zur Recherche. Eine Einladung ist nicht nötig. Sie brauchen weder ein Projekt anzulegen noch einen Chat zu beginnen.
 
-- Akten erschliessen
-- Rechtsfrage klären
-- Prüfvermerk erstellen
+- Suchen
+- Quelle prüfen
+- Fundstelle mitnehmen
 
-### Der erste Durchlauf
-Öffnen Sie https://sandbox.swisslaw.io/pilot und geben Sie Ihre persönliche E-Mail-Adresse ein. Cloudflare Access sendet Ihnen einen Einmalcode. Nach dessen Bestätigung wird Ihr Konto automatisch angelegt; eine Einladung ist nicht nötig. Starten Sie den geführten Fall. Planen Sie etwa 15 Minuten ein.
+### Ein klarer Ausgangspunkt
+Die öffentliche Suche erschliesst veröffentlichte Entscheide aus OpenCaseLaw. Daneben können Sie eigene Bibliotheksdokumente durchsuchen. Die beiden Bereiche haben getrennte Eingaben; persönliche Texte werden nicht automatisch in die öffentliche Suche übernommen.
 
-### Ein überschaubarer Test
-Der geführte Fall verwendet nur die erfundene Akte. Für die eigene Wissensbasis können Sie zusätzlich öffentliche Literaturauszüge verwenden, die Sie hier speichern und bearbeiten dürfen. Echte Fallakten und vertrauliche Unterlagen bleiben ausgeschlossen. Beispielakte und voreingestellte Antwortsprache sind Deutsch.
+### In den gewohnten Werkzeugen bleiben
+Öffnen Sie eine relevante Passage, prüfen Sie die Originalquelle und kopieren Sie Text und Herkunftsangaben in Ihren Vermerk, Ihre Textverarbeitung oder Ihr bestehendes Dossier. CourtOS setzt keinen Wechsel Ihrer Fallführung voraus.
 
-### Ihr Weg durch das Heft
-Beginnen Sie mit den Fragen nach Zweck, Rolle und Arbeitsweise des Gerichts. Der praktische Teil führt von der Beispielakte über eine öffentliche Rechtsfrage zum Prüfvermerk. Danach folgen Ihre Wissensbasis, die Datenwege und der spätere institutionelle Betrieb. Sie können über das Inhaltsverzeichnis direkt einsteigen.
+### Für diesen Pilot
+Öffentliche Entscheide, rechtmässig nutzbare nicht vertrauliche Literatur und synthetische Unterlagen sind geeignet. Echte Fallakten und vertrauliche Dokumente gehören nicht auf diesen virtuellen Server (VPS) in Deutschland.
 
-## 7. Die Akte erschliessen
-Lassen Sie die Chronologie erstellen. Lesen Sie danach gezielt gegen.
+## 7. Entscheide finden und einordnen
+Öffentliche Rechtsprechung durchsuchen, ohne Modellaufruf.
 
-### Ein überschaubares Dossier
-Die Baubehörde Linden und die beteiligte Person sind erfunden. Vier kurze Dokumente enthalten unterschiedliche Datumsangaben, einen Registereintrag und einen ununterzeichneten Verfügungsentwurf. Kein bestimmter Kanton ist festgelegt.
+### Mit wenigen Begriffen beginnen
+Geben Sie im öffentlichen Suchfeld aussagekräftige Rechtsbegriffe ein. Bis zu acht Begriffe müssen gemeinsam im Text vorkommen. Ein Sprachfilter kann die Auswahl eingrenzen. Formulieren Sie bei Bedarf mit weniger oder anderen Begriffen neu.
 
-### Den lokalen Schritt starten
-Öffnen Sie die bereitgestellten Dokumente und starten Sie die Chronologie. Das lokale Modell bearbeitet diese Unterlagen auf dem VPS. Es wird dabei kein externer Ersatzdienst aufgerufen.
+### Den Treffer öffnen
+Die Ergebnisliste zeigt bis zu fünf Texttreffer. Öffnen Sie den Entscheidtext und lesen Sie den passenden Ausschnitt. Datum, Aktenzeichen und Gericht helfen bei der Einordnung; massgeblich bleibt die Originalquelle.
 
-### Achten Sie auf drei Dinge
-- Lassen sich die Aussagen über Absatzkennungen im Dokument wiederfinden?
-- Bleiben widersprüchliche Daten sichtbar, statt zu einem vermeintlich sicheren Datum zu verschmelzen?
-- Unterscheidet die Antwort einen noch offenen Entwurf von einer tatsächlich erlassenen Verfügung?
+### Den Zusammenhang prüfen
+- Betrifft der Entscheid dieselbe Rechtsfrage und denselben Verfahrenskontext?
+- Welche tatsächlichen und rechtlichen Voraussetzungen tragen die Aussage?
+- Handelt es sich um eine tragende Erwägung, eine Parteiposition oder einen wiedergegebenen früheren Entscheid?
 
-### Eine flüssige Antwort ist noch kein guter Befund.
-Ein Briefdatum, ein Versanddatum und eine Zustellung können verschieden sein, ohne sich zu widersprechen. Umgekehrt löst eine plausible Erzählung einen echten Aktenwiderspruch nicht.
+### Ausschnitt und amtliche Fundstelle
+Die Positionsangabe im angezeigten Text bezeichnet Zeichen im erfassten Entscheid. Sie ist keine amtliche Randnummer oder Erwägungsnummer. Ermitteln Sie die zitierfähige Fundstelle in der Originalquelle.
 
-### Wartezeit einplanen
-Die Berechnung auf dem Server kann mehrere Minuten dauern. Lassen Sie einen laufenden Auftrag zunächst arbeiten, statt denselben Schritt mehrfach zu starten.
+### Was die Suche leistet
+Die Recherche läuft als lokale Textsuche auf dem CourtOS-Server. Sie benötigt kein externes KI-Modell. Fünf Treffer sind eine Auswahl, keine Zusicherung einer vollständigen Recherche.
 
-## 8. Eine Rechtsfrage freigeben
-Erst das Paket lesen, dann über seine Übermittlung entscheiden.
+## 8. Eine Fundstelle mitnehmen
+Text und Herkunft gemeinsam in Ihre weitere Arbeit übernehmen.
 
-### Der öffentliche Teil
-Wählen Sie eine der festen allgemeinen Fragen und die vorgesehenen öffentlichen Quellen. Der derzeitige Katalog enthält die Bundesverfassung und zwei Bundesgerichtsurteile. Er ist noch keine Live-Suche in OpenCaseLaw.
+### Die Passage auswählen
+Öffnen Sie den relevanten Textbereich. «Auszug und Quelle kopieren» übernimmt bei öffentlichen Entscheiden den angezeigten Auszug mit seinen Herkunftsangaben. Die Funktion erzeugt keine neue juristische Zusammenfassung.
 
-### Die Vorschau ernst nehmen
-Die Vorschau zeigt die Frage, Quellenauszüge, Modellanweisung und den externen Anbieter. Prüfen Sie, ob nur diese öffentlichen Inhalte enthalten sind. Das festgehaltene Paket ist die Grundlage Ihrer Freigabe; eine lokale Zusammenfassung gehört nicht hinein.
+- Passage öffnen
+- Mit Herkunft kopieren
+- Im eigenen Text nutzen
 
-- Öffentliches Paket
-- Ihre Freigabe
-- Claude Sonnet 4.6
+### Bei öffentlichen Entscheiden
+Zum Auszug gehören die angezeigten Entscheidangaben, die OpenCaseLaw-Kennung und eine vorhandene öffentliche Quellenadresse. Kontrollieren Sie die amtliche Fundstelle und die Metadaten vor einer Übernahme in Ihre Begründung.
 
-### Keine automatische Anonymisierung, kein freier Fallprompt.
-Es werden feste öffentliche Texte ausgewählt. Der Ablauf verspricht nicht, beliebige Eingaben zuverlässig von Geheimnissen zu befreien. Ist eine Vorschau unverständlich oder unerwartet, geben Sie sie nicht frei.
+### Bei eigenen Dokumenten
+«Passage und Quelle kopieren» übernimmt bei eigenen Dokumenten Dateiname, feste Dokumentfassung und PDF-Seite. Die gedruckte Seitenzahl kann abweichen. Es wird keine Adresse erzeugt, über die andere Personen Ihr privates Dokument öffnen könnten.
 
-### Was die Freigabe bewirkt
-Erst Ihre ausdrückliche Freigabe löst den Anthropic-Aufruf aus. Die Freigabe gilt für dieses Paket und ist einmal verwendbar. Nach einem Fehler erfolgt keine automatische Wiederholung. Ein neuer Versuch benötigt ein neues Paket und eine neue Freigabe.
+### Ein verwendbarer Nachweis
+Ergänzen Sie die für Ihren Text erforderliche Zitierweise und den rechtlichen Zusammenhang. Die Kopierfunktion bewahrt einen Ausgangsbeleg; sie bestätigt weder die Richtigkeit der Quelle noch die Tragweite ihrer Aussage.
 
-## 9. Einen prüfbaren Vermerk gewinnen
-Die fachliche Beurteilung bleibt eine menschliche Aufgabe.
+### Falls Kopieren nicht verfügbar ist
+Falls der Browser den Zugriff auf die Zwischenablage verweigert, erscheint ein Textfeld mit der vollständigen Kopiervorlage. Markieren und kopieren Sie diese von Hand. Ihr bestehender Arbeitsstand ausserhalb von CourtOS bleibt erhalten.
 
-### Ein brauchbarer Arbeitsentwurf
-Verbinden Sie nach der öffentlichen Analyse die Ergebnisse im lokalen Schritt. Erwarten Sie einen knappen Vermerk mit vier Teilen: belegter Aktenstand, Widersprüche, entscheidrelevante offene Fragen und nächste Prüfschritte. Eine abschliessende Verfügung ist nicht das Ziel.
+## 9. Mit eigenen Quellen arbeiten
+Eine persönliche Bibliothek als Ergänzung zur Rechtsprechung.
 
-### Quelle und Auslegung auseinanderhalten
-Öffnen Sie bei einer wichtigen Aussage die angegebene Quelle. Prüfen Sie den Wortlaut und den Zusammenhang. Ein kurzer Auszug und eine redaktionelle Einordnung sind nicht dasselbe. Eine allgemeine Aussage zum rechtlichen Gehör beantwortet noch keinen konkreten kantonalen Verfahrensfall.
+### Literatur aufnehmen
+Öffnen Sie die Bibliothek und laden Sie geeignete PDF-Auszüge hoch. Autor, Kurztitel, Auflage oder Jahr und Seiten im Dateinamen erleichtern die spätere Zuordnung. Ordner strukturieren den Bestand. Ein Projekt ist dafür nicht erforderlich.
 
-### Vor jeder Übernahme
-- Stimmt die Fundstelle und trägt sie die Aussage?
-- Passt der Verfahrenskontext, oder fehlt eine Abklärung?
-- Sind Tatsachen, Widersprüche und rechtliche Einschätzung unterscheidbar?
-- Ist die Antwort vollständig, oder endet sie am Ausgabelimit?
+### Die Auswahl bestimmen
+Wechseln Sie in der Recherche zur persönlichen Bibliothek und wählen Sie die Dokumente ausdrücklich aus. Die Suche bleibt auf diese Auswahl begrenzt. Öffnen Sie einen Treffer, um Passage, Dokumentfassung und PDF-Seite im Zusammenhang zu lesen.
 
-### Offene Fragen sind ein Ergebnis
-Welcher Zustellbeleg fehlt? Gibt es eine unterzeichnete Endfassung? Wurden nachgereichte Unterlagen tatsächlich geprüft? Ein hilfreicher Entwurf macht solche Lücken sichtbar, statt sie mit Vermutungen zu schliessen.
+### Den Beleg weiterverwenden
+Kopieren Sie eine relevante Passage mit ihrer Herkunft in den eigenen Vermerk. Wer den Vermerk später liest, benötigt gegebenenfalls selbst Zugang zum betreffenden Werk. Das Kopieren einer Fundstelle erteilt keine Nutzungsrechte.
 
-## 10. Drei Aufgaben für Ihren Probelauf
-Beurteilen Sie, ob der Ablauf Ihre Arbeit am Dossier erleichtert.
+### Grenzen des Materials
+Scans ohne auswählbaren Text, fehlende PDF-Fassungen und teilweise indexierte Dokumente begrenzen die Treffer. Ein fehlender Treffer belegt nicht das Fehlen einer Aussage im Werk.
 
-### 1  Einen Widerspruch nachweisen
-Erstellen Sie die Chronologie und wählen Sie einen Datumskonflikt. Ein gutes Ergebnis nennt beide Angaben mit den passenden Absatzbelegen, unterscheidet Briefdatum und Zustellung und sagt, welcher Beleg zur Klärung fehlt.
+### Umfang des Testbestands
+Pro Datei gelten 5 MiB; insgesamt stehen pro Konto 20 MiB Uploadbudget zur Verfügung. Fehlgeschlagene Uploads und gelöschte Dateien stellen dieses Budget nicht wieder her. Beginnen Sie mit einem überschaubaren Literaturbestand.
 
-### 2  Die Rechtsfrage eng halten
-Wählen Sie die feste Frage zum rechtlichen Gehör. Prüfen Sie das öffentliche Paket vor der Freigabe und danach eine Aussage in der Originalquelle. Ein gutes Ergebnis benennt seine Verfahrensgrenze und behauptet keine automatische Nichtigkeit.
+### Ausblick: der lokale Aktenordner
+Ein künftiger, freigegebener lokaler Aktenordner soll Originale nur lesen und verständliche Notizen daneben ablegen. Feststellungen, Parteibehauptungen und bestrittene Punkte wären mit Quelle und Dokumentfassung zu unterscheiden. Quellenänderungen müssten abhängige Notizen als prüfbedürftig markieren. Die lokale Anbindung über Word oder Browser fehlt noch. Heute lädt die Bibliothek Kopien auf den VPS; sie arbeitet nicht direkt im Aktenordner.
 
-### 3  Einen Vermerk weiterbearbeiten
-Lassen Sie Aktenstand und öffentliche Analyse lokal zusammenführen. Ein gutes Ergebnis trennt Tatsachen und Einschätzung, erhält Widersprüche und formuliert konkrete offene Prüffragen. Können Sie damit sinnvoll weiterarbeiten, ohne die ganze Akte nochmals ungeführt zu lesen?
+## 10. Den Nutzen im Alltag prüfen
+Ein brauchbares Ergebnis in Ihrem bestehenden Arbeitsablauf.
 
-### So wird Ihr Feedback nützlich
-Nennen Sie den Arbeitsschritt, Ihre Erwartung, die beobachtete Abweichung und die Absatz- oder Quellenkennung. Ergänzen Sie die ungefähre Wartezeit. Keine echten Akten als Beispiel mitschicken.
+### Eine echte Arbeitsfrage wählen
+Verwenden Sie einen zulässigen Quellenbestand und eine Frage, deren Schwierigkeiten Sie kennen. Vereinbaren Sie das benötigte Ergebnis: beispielsweise einen belegten Absatz, eine Gegenposition oder eine kurze Rechtsprechungsübersicht.
 
-### Wann der Test noch nicht überzeugt
-Verlorene Belege, überspielte Widersprüche, unklare Übermittlungen oder ein scheinbar fertiger Text trotz Lücken sind konkrete Gründe für eine Verbesserung.
+### Den ganzen Weg beobachten
+Messen Sie nicht nur die Zeit bis zum ersten Treffer. Erfassen Sie Suche, Lesen, Prüfung, Kopieren und Einordnung in den eigenen Text. Vergleichen Sie denselben Ausschnitt mit Ihrem bisherigen Vorgehen.
 
-## 11. Die eigene Wissensbasis
-Literaturstellen finden und Rechtsprechung hinzuziehen.
+### Drei Fragen an das Ergebnis
+- Ist die entscheidende Passage auffindbar und in ihrem Zusammenhang verständlich?
+- Kann eine andere Person die übernommene Aussage anhand der Herkunftsangaben prüfen?
+- Entsteht ein brauchbarer Arbeitsstand im gewohnten Werkzeug, ohne zusätzliche Ablagearbeit?
 
-### Eigene Literatur vorbereiten
-Laden Sie geeignete PDF-Auszüge in Ihre persönliche Bibliothek. Benennen Sie sie mit Autor, Kurztitel, Auflage oder Jahr und Seiten. Ordner helfen bei der Gliederung. Pro Datei sind höchstens 5 MiB, für Ihr Konto insgesamt 20 MiB Uploadbudget vorgesehen. Löschen setzt diese Grenze nicht zurück.
+### KI gesondert bewerten
+Wenn Sie den Assistenten oder die Frontier-Prüfung einsetzen, betrachten Sie deren Zusatznutzen getrennt. Eine längere Antwort ist kein besserer Beleg. Notieren Sie auch Korrekturaufwand und übersehene Gegenargumente.
 
-### In ausgewählten Unterlagen suchen
-Öffnen Sie «Wissensbasis», wählen Sie Ihre Dokumente und suchen Sie mit einigen passenden Begriffen. Die Treffer zeigen Textstellen, PDF-Seite und Dokumentfassung. Öffnen Sie den Beleg im Original. Eine PDF-Seite kann von der gedruckten Seitenzahl abweichen.
+### Rückmeldung
+Suchbegriffe, erwartete Quelle, beobachtete Abweichung und ungefährer Aufwand genügen meist. Verwenden Sie keine echten Akten oder vertraulichen Ausschnitte als Fehlerbeispiel.
 
-### OpenCaseLaw hinzuziehen
-Das separate Suchfeld durchsucht veröffentlichte Entscheide aus OpenCaseLaw. Geben Sie dort eigene öffentliche Suchbegriffe ein. Ihre Literatur und Ihre lokale Suchanfrage werden nicht automatisch übernommen. Die Suche läuft auf dem VPS und benötigt kein externes KI-Modell.
+## 11. KI bei Bedarf hinzunehmen
+Die Recherche und das Kopieren von Belegen funktionieren auch ohne KI.
 
-### Mit dem Assistenten weiterarbeiten
-Wählen Sie für Ihren Auftrag die benötigten Bibliotheksdokumente als Anhänge. Der lokale Assistent kann darin gezielt Textstellen suchen. Lassen Sie unterschiedliche Auffassungen mit ihren Belegen nebeneinanderstehen, statt eine scheinbar eindeutige Antwort zu verlangen.
+### Lokal weiterdenken
+«Mit dieser Auswahl fragen» bereitet Ihre Frage und die gewählten Bibliotheksdokumente im Assistenten vor. Erst Ihr Senden startet Gemma 4. «Lokal» bezeichnet den CourtOS-VPS bei Hetzner in Deutschland, nicht Ihr Gerät oder das Gerichtsnetz.
 
-### Suchgrenzen mitprüfen
-Eine Begriffssuche findet nicht jede sinngleiche Aussage. Gescannte PDFs ohne auswählbaren Text benötigen zuerst Texterkennung. Beachten Sie Hinweise auf nur teilweise erfasste Dokumente. Ein fehlender Treffer beweist nicht, dass eine Aussage im Werk fehlt.
+### Eine externe Perspektive
+Eine öffentliche Entscheidpassage oder eine abgeschlossene lokale Antwort lässt sich zur Frontier-Prüfung übergeben. Der Text liegt zunächst als bearbeitbarer Entwurf im Browser. Anhänge und der übrige Chatverlauf werden nicht mitgegeben. Es gibt keine automatische Anonymisierung.
 
-## 12. Was im Hintergrund geschieht
-Diese Grenzen gelten für den heutigen Test auf dem VPS.
+- Text und Auftrag
+- Vorschau und Freigabe
+- Claude Opus 5.5
+
+### Der freigegebene Inhalt zählt
+Die Vorschau zeigt den vollständigen Anfrageinhalt, Anbieter und Modell. Erst Ihre Freigabe löst den Anthropic-Aufruf aus. Nur extern zulässiges, nicht vertrauliches Material verwenden. Links sind Quellenangaben; das Modell ruft ihren Inhalt nicht ab.
+
+### Zum eigenen Arbeitsstand zurück
+Die externe Antwort kann als bearbeitbarer Entwurf in den lokalen Assistenten zurückkehren; sie wird nicht automatisch gesendet. Bestehende Eingaben und Anhänge bleiben erhalten. Überlange Übergabetexte werden nicht still gekürzt. Alternativ kopieren Sie einen passenden Ausschnitt in Ihr gewohntes Werkzeug.
+
+## 12. Datenwege und Betrieb
+Recherche im Browser; KI nur auf Ihren ausdrücklichen Auftrag.
 
 - Ihr Browser
 - Cloudflare
 - VPS in Deutschland
 
-### «Lokal» bedeutet hier: auf dem VPS
-Der Test läuft bei Hetzner in Deutschland, noch nicht im Netz Ihres Gerichts. Cloudflare verarbeitet den Webverkehr, einschliesslich der im Browser angezeigten Dokumente und Ergebnisse. Nur das ausdrücklich freigegebene öffentliche Paket geht im geführten Ablauf an Anthropic.
+### Lokale und externe Verarbeitung
+Bibliothek, lokale Suche und Gemma 4 laufen auf dem CourtOS-Server bei Hetzner. Cloudflare verarbeitet den Webverkehr einschliesslich angezeigter Texte. Nur die ausdrücklich freigegebene Frontier-Anfrage wird an die externe Anthropic-API übermittelt; derzeit an Claude Opus 5.5.
 
-### Keine vertraulichen Akten
-Die Zugangskontrolle macht diesen Datenweg nicht zu einem freigegebenen Behördenbetrieb. Echte vertrauliche Unterlagen bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung, die solche Eingaben erlauben würde.
+### Noch kein Behördenbetrieb
+Zugangskontrolle und getrennte Konten ersetzen keine institutionelle Freigabe. Echte Fallakten und vertrauliche Unterlagen bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung.
 
-### Mit Wartezeit und Grenzen rechnen
-Das lokale Gemma-Modell nutzt eine speichersparende Fassung von Unsloth auf Serverprozessoren (CPU). Im geprüften Versuch lieferte der freie Assistent nach rund sechseinhalb Minuten eine vollständige Antwort mit überprüfbaren Belegen im synthetischen PDF. Das ist eine einzelne Beobachtung zu einer gezielten Frage, keine allgemeine Laufzeit- oder Qualitätszusage. Unvollständige Ausgaben werden gekennzeichnet.
+### Zeit und Kontingent
+Das lokale Modell verwendet eine Unsloth-Fassung und läuft auf Serverprozessoren (CPU). Eine frühere gezielte PDF-Frage benötigte im beobachteten Versuch mehrere Minuten; daraus folgt keine Laufzeitzusage. Der native Assistent erlaubt drei gestartete Aufträge je Person und UTC-Tag, die Frontier-Prüfung eine externe Analyse. Gemeinsame Tagesgrenzen können früher greifen. Lesen und Vorschau lösen keine Modellanfrage aus.
 
-### Zugang, Kontingent und Aufbewahrung
-Verwenden Sie Ihr eigenes Konto. Im geführten Fall gelten derzeit pro Person und UTC-Kalendertag höchstens drei lokale Aufträge und eine externe Analyse. Angenommene Aufträge zählen auch bei Fehlern; gemeinsame Tagesgrenzen können früher greifen. Lesen und Vorschau sind frei. Antworten bleiben bis zur ausdrücklich veranlassten Bereinigung gespeichert; Abmelden löscht sie nicht. Downloads bleiben auf Ihrem Gerät.
+### Aufbewahrung
+Angenommene Anfragen zählen auch bei Modellfehlern. Antworten bleiben bis zur veranlassten Bereinigung gespeichert; Abmelden löscht sie nicht. Ein Browser-Übergabetext ist davon getrennt und zeitlich begrenzt. Heruntergeladene Dateien bleiben auf Ihrem Gerät.
 
 ## 13. Der nächste Schritt in der Institution
 Erst nach dem VPS-Test: ein eigener Auftrag für den institutionellen Betrieb.
 
-### Betriebsform wählen
-Möglich sind die vorhandene IT oder ein freigegebener, getrennt betriebener Dienst. Die Wahl hängt von Aufgaben, Daten und Zuständigkeiten ab.
+### Später: mit Fallakten arbeiten
+Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Diese Funktion sowie Word- und Citecheck-Anbindungen sind noch nicht umgesetzt.
 
 ### Vor echten Akten klären
 - Erlaubte Aufgaben und fachliche sowie betriebliche Verantwortung bestimmen.
