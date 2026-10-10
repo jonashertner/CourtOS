@@ -120,12 +120,12 @@
           {
             "type": "text",
             "heading": "Öffnen",
-            "body": "Im Browser: https://sandbox.swisslaw.io/research. Melden Sie sich mit Ihrer E-Mail-Adresse und dem zugesandten Code an. In Word öffnen Sie das eingerichtete CourtOS-Add-in. Ein Projekt oder Chat ist für die Recherche nicht nötig."
+            "body": "Im Browser: https://sandbox.swisslaw.io/research. Melden Sie sich mit Ihrer E-Mail-Adresse und dem zugesandten Code an. In Word öffnen Sie das eingerichtete CourtOS-Add-in. Wählen Sie Quellen, bevor Sie eine Frage stellen."
           },
           {
             "type": "text",
             "heading": "Öffentlich recherchieren",
-            "body": "Wählen Sie OpenCaseLaw. Geben Sie eine Entscheidkennung oder wenige öffentliche Suchbegriffe ein und wählen Sie bei Bedarf die Sprache. Die Suche zeigt eine begrenzte Auswahl; fehlende Treffer belegen keine fehlende Rechtsprechung. Vertrauliche Namen und Sachverhalte gehören nicht in diese Eingabe."
+            "body": "Wählen Sie «Rechtsprechung finden» und OpenCaseLaw. Geben Sie eine Entscheidkennung oder wenige Suchbegriffe ein. Die Suche zeigt eine begrenzte Auswahl; fehlende Treffer belegen keine fehlende Rechtsprechung. Vertrauliche Namen und Sachverhalte gehören nicht in diese Eingabe."
           },
           {
             "type": "text",
@@ -147,27 +147,32 @@
       {
         "id": "check",
         "title": "Eigene Quellen\nhinzunehmen",
-        "lead": "Die Bibliothek ergänzt die Rechtsprechung um Ihren ausgewählten Bestand.",
+        "lead": "Wählen Sie Originalquellen. Stellen Sie Fragen. Prüfen Sie die Fundstellen.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Hochladen",
-            "body": "Unter «Bibliothek» laden Sie PDFs hoch. Ein klarer Dateiname mit Autor, Titel und Auflage hilft später. CourtOS speichert eine Kopie auf dem Server; es liest keinen lokalen Aktenordner direkt. Die Oberfläche nennt die Uploadgrenzen."
+            "heading": "Nach Geschäftsnummer ablegen",
+            "body": "Legen Sie in der Bibliothek einen Ordner mit der Geschäftsnummer an. Darunter folgen Parteien, Eingaben und Beilagen; gemeinsame Akten liegen separat. Laden Sie PDFs im passenden Ordner hoch. CourtOS speichert Kopien auf dem Server."
           },
           {
             "type": "text",
-            "heading": "Suchen",
-            "body": "Wählen Sie in der Recherche «Eigene Quellen» und die gewünschten Dokumente. Diese Suche verwendet keine KI. Ein Treffer zeigt Passage, Fassung und PDF-Seite. Bei unlesbaren Scans oder unvollständiger Erschliessung bleibt die Suche lückenhaft."
+            "heading": "Die Quellen wählen",
+            "body": "Über «Eigene Quellen wählen» bestimmen Sie die PDFs für das Gespräch. Für Rechtsprechung öffnen Sie einen OpenCaseLaw-Entscheid, wählen einen kurzen Auszug und übernehmen ihn ins Gespräch. Die reine Suche im eigenen Bestand verwendet keine KI."
           },
           {
             "type": "text",
-            "heading": "Nachweisen",
-            "body": "Öffnen Sie die angegebene Seite und lesen Sie den Zusammenhang. Kopieren oder übernehmen Sie die Passage mit Dateiname, Fassung, Seite und geschütztem Quellenlink. Der Link öffnet die gespeicherte Fassung für das berechtigte Konto; er gewährt anderen Personen keinen Zugriff."
+            "heading": "Fragen und nachfragen",
+            "body": "Fragen Sie etwa, welche Beträge eine Eingabe nennt oder worin sich zwei Darstellungen widersprechen. Gemma arbeitet mit den gewählten Quellen. Folgefragen nutzen dieselben Fassungen; für andere Quellen beginnen Sie ein neues Gespräch. Ohne Quellen ist keine Anfrage möglich."
+          },
+          {
+            "type": "text",
+            "heading": "Die Antwort nachprüfen",
+            "body": "Jeder Antwortabsatz braucht einen geprüften Quellenverweis. Öffnen Sie die Fundstelle und lesen Sie den Zusammenhang. Bei fehlendem Nachweis wird die Antwort zurückgehalten. Links auf eigene PDFs bleiben auf berechtigte Konten beschränkt."
           },
           {
             "type": "note",
-            "heading": "Wortlaut und Bedeutung trennen",
-            "body": "Ein wörtlich gefundenes Zitat kann unvollständig oder für die Rechtsfrage unpassend sein. Prüfen Sie, was die Quelle tatsächlich trägt. Eine PDF-Seite ist nicht zwingend die gedruckte Buchseite."
+            "heading": "Wortlaut ist kein Richtigkeitsbeweis",
+            "body": "Die Prüfung bestätigt Fundstelle und Zitat, nicht die Schlussfolgerung. Eine Parteibehauptung bleibt eine Behauptung. Eine PDF-Seite kann von der gedruckten Seitenzahl abweichen."
           }
         ]
       },
@@ -456,12 +461,12 @@
           {
             "type": "text",
             "heading": "Ouvrir",
-            "body": "Dans le navigateur: https://sandbox.swisslaw.io/research. Connectez-vous avec votre adresse électronique et le code reçu. Dans Word, ouvrez le complément CourtOS installé. La recherche ne demande ni projet ni conversation."
+            "body": "Dans le navigateur: https://sandbox.swisslaw.io/research. Connectez-vous avec votre adresse électronique et le code reçu. Dans Word, ouvrez le complément CourtOS installé. Choisissez les sources avant de poser une question."
           },
           {
             "type": "text",
             "heading": "Chercher dans les sources publiques",
-            "body": "Choisissez OpenCaseLaw. Saisissez la référence d’une décision ou quelques termes publics; sélectionnez une langue si nécessaire. Les résultats sont limités. Une absence de résultat ne prouve pas une absence de jurisprudence. Ne saisissez aucun nom ni fait confidentiel."
+            "body": "Choisissez «Rechercher la jurisprudence», puis OpenCaseLaw. Saisissez la référence d’une décision ou quelques mots-clés. Les résultats sont limités; leur absence ne prouve pas une absence de jurisprudence. Ne saisissez aucun nom ni fait confidentiel."
           },
           {
             "type": "text",
@@ -483,27 +488,32 @@
       {
         "id": "check",
         "title": "Ajouter\nvos propres sources",
-        "lead": "La bibliothèque complète la jurisprudence par les documents que vous choisissez.",
+        "lead": "Choisissez les sources originales. Posez vos questions. Vérifiez les passages cités.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Importer",
-            "body": "Ajoutez des PDF dans «Bibliothèque». Un nom clair avec auteur, titre et édition facilite leur identification. CourtOS stocke une copie sur le serveur; il ne lit pas directement un dossier local. Les limites d’import figurent dans l’interface."
+            "heading": "Classer par numéro de cause",
+            "body": "Créez dans la bibliothèque un dossier portant le numéro de cause. Rangez dessous les parties, leurs écritures et leurs pièces; gardez les actes communs à part. Importez les PDF dans le bon dossier. CourtOS stocke des copies sur le serveur."
           },
           {
             "type": "text",
-            "heading": "Rechercher",
-            "body": "Dans la recherche, choisissez «Vos sources» et les documents voulus. Cette recherche n’utilise pas d’IA. Chaque résultat indique passage, version et page PDF. Des scans illisibles ou une indexation partielle peuvent laisser des lacunes."
+            "heading": "Choisir les sources",
+            "body": "Avec «Choisir vos sources», sélectionnez les PDF de la conversation. Pour la jurisprudence, ouvrez une décision OpenCaseLaw, choisissez un court extrait et ajoutez-le à la conversation. La simple recherche dans vos documents n’utilise pas d’IA."
           },
           {
             "type": "text",
-            "heading": "Conserver la référence",
-            "body": "Ouvrez la page et lisez le contexte. Copiez ou insérez le passage avec nom du fichier, version, page et lien protégé. Ce lien ouvre la version enregistrée pour le compte autorisé; il n’accorde aucun accès à un tiers."
+            "heading": "Poser une question, puis préciser",
+            "body": "Demandez quels montants une écriture mentionne ou en quoi deux versions des faits divergent. Gemma travaille sur les sources choisies. Les questions suivantes utilisent les mêmes versions; commencez une nouvelle conversation pour d’autres sources. Aucune demande ne part sans source."
+          },
+          {
+            "type": "text",
+            "heading": "Vérifier la réponse",
+            "body": "Chaque paragraphe de réponse doit comporter une référence vérifiée. Ouvrez le passage et lisez le contexte. Sans référence valable, la réponse est retenue. Les liens vers vos PDF restent réservés aux comptes autorisés."
           },
           {
             "type": "note",
-            "heading": "Distinguer le texte de sa portée",
-            "body": "Une citation retrouvée mot pour mot peut être incomplète ou sans pertinence pour la question juridique. Vérifiez ce qu’elle permet d’affirmer. La page PDF ne correspond pas nécessairement à la page imprimée."
+            "heading": "Un texte retrouvé ne prouve pas sa portée",
+            "body": "Le contrôle confirme le passage et la citation, pas la conclusion. Une allégation reste une allégation. La page PDF peut différer de la page imprimée."
           }
         ]
       },
@@ -792,12 +802,12 @@
           {
             "type": "text",
             "heading": "Aprire",
-            "body": "Nel browser: https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail e il codice ricevuto. In Word aprite il componente aggiuntivo CourtOS installato. Per la ricerca non servono un progetto o una conversazione."
+            "body": "Nel browser: https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail e il codice ricevuto. In Word aprite il componente aggiuntivo CourtOS installato. Scegliete le fonti prima di porre una domanda."
           },
           {
             "type": "text",
             "heading": "Cercare fonti pubbliche",
-            "body": "Scegliete OpenCaseLaw. Inserite il riferimento di una decisione o pochi termini pubblici e, se necessario, scegliete la lingua. I risultati sono limitati. L’assenza di risultati non prova l’assenza di giurisprudenza. Non inserite nomi o fatti riservati."
+            "body": "Scegliete «Cerca giurisprudenza», poi OpenCaseLaw. Inserite il riferimento di una decisione o poche parole chiave. I risultati sono limitati; la loro assenza non prova l’assenza di giurisprudenza. Non inserite nomi o fatti riservati."
           },
           {
             "type": "text",
@@ -819,27 +829,32 @@
       {
         "id": "check",
         "title": "Aggiungere\nle proprie fonti",
-        "lead": "La biblioteca integra la giurisprudenza con i documenti che scegliete.",
+        "lead": "Scegliete le fonti originali. Ponete domande. Verificate i passaggi citati.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Caricare",
-            "body": "Aggiungete PDF in «Biblioteca». Un nome chiaro con autore, titolo ed edizione ne facilita l’identificazione. CourtOS salva una copia sul server; non legge direttamente una cartella locale. L’interfaccia indica i limiti di caricamento."
+            "heading": "Ordinare per numero di causa",
+            "body": "Create nella biblioteca una cartella con il numero di causa. Al suo interno ordinate le parti, i loro scritti e gli allegati; tenete separati gli atti comuni. Caricate i PDF nella cartella corretta. CourtOS salva copie sul server."
           },
           {
             "type": "text",
-            "heading": "Cercare",
-            "body": "Nella ricerca scegliete «Fonti proprie» e i documenti desiderati. Questa ricerca non usa l’IA. Ogni risultato indica passaggio, versione e pagina PDF. Scansioni illeggibili o un’indicizzazione parziale possono lasciare lacune."
+            "heading": "Scegliere le fonti",
+            "body": "Con «Scegli le tue fonti» selezionate i PDF della conversazione. Per la giurisprudenza aprite una decisione OpenCaseLaw, scegliete un breve estratto e aggiungetelo alla conversazione. La semplice ricerca nei vostri documenti non usa l’IA."
           },
           {
             "type": "text",
-            "heading": "Conservare il riferimento",
-            "body": "Aprite la pagina e leggete il contesto. Copiate o inserite il passaggio con nome del file, versione, pagina e collegamento protetto. Il collegamento apre la versione salvata per l’account autorizzato; non concede accesso a terzi."
+            "heading": "Porre domande e precisarle",
+            "body": "Chiedete quali importi menziona uno scritto o in cosa divergono due ricostruzioni dei fatti. Gemma lavora sulle fonti scelte. Le domande successive usano le stesse versioni; iniziate una nuova conversazione per altre fonti. Senza fonti non parte alcuna richiesta."
+          },
+          {
+            "type": "text",
+            "heading": "Verificare la risposta",
+            "body": "Ogni paragrafo della risposta deve contenere un riferimento verificato. Aprite il passaggio e leggete il contesto. Senza un riferimento valido, la risposta non viene mostrata. I collegamenti ai vostri PDF restano riservati agli account autorizzati."
           },
           {
             "type": "note",
-            "heading": "Distinguere testo e significato",
-            "body": "Una citazione ritrovata alla lettera può essere incompleta o non pertinente alla questione giuridica. Verificate ciò che consente di affermare. La pagina PDF non coincide necessariamente con la pagina stampata."
+            "heading": "Ritrovare il testo non prova la conclusione",
+            "body": "Il controllo conferma il passaggio e la citazione, non la conclusione. Un’allegazione resta un’allegazione. La pagina PDF può differire dalla pagina stampata."
           }
         ]
       },
@@ -1128,12 +1143,12 @@
           {
             "type": "text",
             "heading": "Open",
-            "body": "In the browser: https://sandbox.swisslaw.io/research. Sign in with your email address and the code you receive. In Word, open the installed CourtOS add-in. Research requires neither a project nor a chat."
+            "body": "In the browser: https://sandbox.swisslaw.io/research. Sign in with your email address and the code you receive. In Word, open the installed CourtOS add-in. Choose sources before asking a question."
           },
           {
             "type": "text",
             "heading": "Search public sources",
-            "body": "Choose OpenCaseLaw. Enter a decision reference or a few public search terms, and choose a language if needed. Results are limited. No result does not establish that no relevant decision exists. Keep confidential names and facts out of this field."
+            "body": "Choose “Find case law”, then OpenCaseLaw. Enter a decision reference or a few search terms. Results are limited; no result does not establish that no relevant decision exists. Keep confidential names and facts out of this field."
           },
           {
             "type": "text",
@@ -1155,27 +1170,32 @@
       {
         "id": "check",
         "title": "Add your\nown sources",
-        "lead": "The library complements case law with the material you select.",
+        "lead": "Choose original sources. Ask questions. Check the cited passages.",
         "blocks": [
           {
             "type": "text",
-            "heading": "Upload",
-            "body": "Add PDFs under “Library”. A clear filename with author, title and edition helps identify them later. CourtOS stores a copy on the server; it does not read a local case folder directly. The interface shows upload limits."
+            "heading": "File by case number",
+            "body": "Create a library folder bearing the case number. Below it, organise the parties, their submissions and exhibits; keep shared records separate. Upload PDFs to the right folder. CourtOS stores copies on the server."
           },
           {
             "type": "text",
-            "heading": "Search",
-            "body": "In research, choose “Your sources” and the documents you need. This search uses no AI. A result shows the passage, version and PDF page. Unreadable scans or partial indexing can leave gaps."
+            "heading": "Choose sources",
+            "body": "Use “Choose your sources” to select PDFs for the conversation. For case law, open an OpenCaseLaw decision, select a short excerpt and add it to the conversation. Searching your own documents uses no AI."
           },
           {
             "type": "text",
-            "heading": "Keep the reference",
-            "body": "Open the page and read the context. Copy or insert the passage with filename, version, page and protected source link. The link opens the stored version for the authorised account; it grants no access to anyone else."
+            "heading": "Ask and follow up",
+            "body": "Ask which amounts a submission mentions or how two accounts of the facts differ. Gemma works with the selected sources. Follow-up questions use the same versions; start a new conversation for other sources. No request can start without sources."
+          },
+          {
+            "type": "text",
+            "heading": "Check the answer",
+            "body": "Every answer paragraph needs a checked source reference. Open the passage and read the context. If a reference cannot be verified, the answer is withheld. Links to your PDFs remain restricted to authorised accounts."
           },
           {
             "type": "note",
-            "heading": "Separate wording from meaning",
-            "body": "A verbatim match can still be incomplete or irrelevant to the legal question. Check what the source supports. The PDF page is not necessarily the printed page number."
+            "heading": "Matching words do not prove a conclusion",
+            "body": "The check confirms the passage and quotation, not the inference. A party’s allegation remains an allegation. The PDF page may differ from the printed page number."
           }
         ]
       },

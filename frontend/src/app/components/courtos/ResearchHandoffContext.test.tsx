@@ -21,13 +21,20 @@ function Workspace({ documentScope = scope }: { documentScope?: string | null })
     useEffect(() => register({ getState: () => current.current, applyState: next => setSnapshot(next) }), [register]);
     useEffect(() => { changed(snapshot); }, [snapshot, changed]);
     useEffect(() => { bind(documentScope); }, [bind, documentScope]);
-    return <><input aria-label="Recherchetext" value={snapshot.public.query} onChange={event => { handoff.edited(); setSnapshot(value => ({ ...value, public: { ...value.public, query: event.target.value } })); }} /><button onClick={() => { void handoff.publish(); }} disabled={handoff.busy || handoff.conflict}>Übertragen</button><button onClick={() => setSnapshot(value => ({ ...value, public: { ...value.public } }))}>Lesestand aktualisieren</button><ResearchContinuationStatus /></>;
+    return <><input aria-label="Recherchetext" value={snapshot.public.query} onChange={event => { handoff.edited(); setSnapshot(value => ({ ...value, public: { ...value.public, query: event.target.value } })); }} /><button onClick={() => { void handoff.publish(); }} disabled={handoff.busy || handoff.conflict}>Übertragen</button><button onClick={() => { handoff.setTransferReady(false); void handoff.publish(); }}>Erster Auftrag ohne ID</button><button onClick={() => handoff.setTransferReady(true)}>ID bestätigt</button><button onClick={() => setSnapshot(value => ({ ...value, public: { ...value.public } }))}>Lesestand aktualisieren</button><ResearchContinuationStatus /></>;
 }
 const app = (inWord: boolean, documentScope: string | null = scope) => <ResearchHandoffProvider ownerId="owner" inWord={inWord}><Workspace documentScope={documentScope} /></ResearchHandoffProvider>;
 beforeEach(() => { vi.clearAllMocks(); api.scope.mockResolvedValue(scope); sessionStorage.clear(); history.replaceState(null, "", "/research"); api.create.mockResolvedValue(record()); api.metadata.mockResolvedValue(record()); api.update.mockImplementation(async (_id, revision, snapshot, direction) => ({ ...record(revision + 1), state: snapshot, direction })); api.ack.mockImplementation(async (_id, revision) => ({ ...record(revision, "", "to_word"), acknowledged_revision: revision })); });
 afterEach(() => { vi.useRealTimers(); });
 
 describe("explicit account-bound research continuation", () => {
+    it("refuses even an immediate publish while the first chat ID is unresolved", async () => {
+        render(app(true)); fireEvent.click(screen.getByText("Erster Auftrag ohne ID"));
+        await act(async () => {}); expect(api.create).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByText("Übertragen")); expect(api.create).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByText("ID bestätigt")); fireEvent.click(screen.getByText("Übertragen"));
+        await waitFor(() => expect(api.create).toHaveBeenCalledOnce());
+    });
     it("keeps an active roundtrip in memory for an unsaved Word document without persisting a reload handle", async () => {
         render(app(true, null)); fireEvent.click(screen.getByText("Übertragen"));
         await waitFor(() => expect(api.create).toHaveBeenCalledOnce());

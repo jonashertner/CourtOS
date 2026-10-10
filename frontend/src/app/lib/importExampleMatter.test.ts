@@ -1,6 +1,6 @@
 import {readFileSync} from "node:fs";
 import {webcrypto,createHash} from "node:crypto";
-import {beforeEach,describe,expect,it,vi} from "vitest";
+import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
 import type {Document} from "@/app/components/shared/types";
 import {EXAMPLE_MATTERS} from "./exampleMatters";
 import {importExampleMatter} from "./importExampleMatter";
@@ -10,13 +10,14 @@ const matter=EXAMPLE_MATTERS[0];
 let documents:Document[];
 const fixture=(index:number,previous=false)=>({id:`doc-${index}`,current_version_id:`version-${index}`,status:"ready",filename:matter.documents[index].filename,project_id:null,library_kind:"file",file_type:"pdf",size_bytes:previous?matter.documents[index].previousEditions[0].bytes:matter.documents[index].bytes,content_sha256:previous?matter.documents[index].previousEditions[0].sha256:matter.documents[index].sha256,updated_at:"2026-10-10T14:00:00Z",library_folder_id:null} as Document);
 beforeEach(()=>{
-    vi.clearAllMocks();documents=[];vi.stubGlobal("crypto",webcrypto);vi.stubGlobal("fetch",vi.fn(async(path:string)=>new Response(readFileSync(`public${path}`))));
+    vi.clearAllMocks();vi.spyOn(console,"warn").mockImplementation(()=>undefined);documents=[];vi.stubGlobal("crypto",webcrypto);vi.stubGlobal("fetch",vi.fn(async(path:string)=>new Response(readFileSync(`public${new URL(path,"https://sandbox.test").pathname}`))));
     api.search.mockImplementation(async()=>({documents:documents.map(doc=>({...doc})),documentsHasMore:false}));
     api.folder.mockImplementation(async(_kind,segments)=>({conflict:false,folder_id:segments.join("/"),folders:[]}));
     api.get.mockImplementation(async(id:string)=>({...documents.find(doc=>doc.id===id)}));
     api.move.mockImplementation(async(_kind,id,folderId)=>{const doc=documents.find(item=>item.id===id)!;doc.library_folder_id=folderId;doc.updated_at="2026-10-10T14:01:00Z";return {...doc};});
     api.upload.mockImplementation(async(_kind,files:{clientId:string;file:File;folderId:string}[])=>files.map(({clientId,file,folderId})=>{const index=matter.documents.findIndex(item=>item.id===clientId);const document={...fixture(index),library_folder_id:folderId};documents.push(document);return {clientId,filename:file.name,status:"completed",errorCode:null,result:document};}));
 });
+afterEach(()=>vi.restoreAllMocks());
 describe("explicit structured example import",()=>{
     it("ships four distinct numbered matters with hash-bound PDFs and retained prior editions",()=>{
         expect(EXAMPLE_MATTERS.map(m=>m.language)).toEqual(["de","fr","it","en"]);
@@ -36,6 +37,32 @@ describe("explicit structured example import",()=>{
         for(const party of matter.parties)expect(api.folder).toHaveBeenCalledWith("files",[matter.caseNumber,party.label,party.exhibits],null,"reuse");
         expect(result.sources[0]).toMatchObject({document:{id:"doc-0",current_version_id:"version-0"},role:"claim",party:"A.________ AG · Vermieterin"});
         expect(result.reusedCount).toBe(0);expect(api.move).not.toHaveBeenCalled();expect(fetch).toHaveBeenCalledTimes(4);
+    });
+    it("binds every download to its catalogue SHA and bypasses the browser cache",async()=>{
+        await importExampleMatter(matter,new AbortController().signal);
+        for(const entry of matter.documents)expect(fetch).toHaveBeenCalledWith(`${entry.path}?v=${entry.sha256}`,expect.objectContaining({cache:"no-store",credentials:"same-origin",redirect:"error"}));
+    });
+    it.each(["inventory","existing_file","folder_resolve","file_move"] as const)("classifies %s HTTP failures as library checks, without exposing returned data",async(stage)=>{
+        const failure=Object.assign(new Error("PRIVATE RESPONSE WITH TOKENS"),{status:403,code:"PRIVATE_CODE"});
+        if(stage==="inventory")api.search.mockRejectedValue(failure);
+        if(stage==="existing_file"){documents=[fixture(0)];api.get.mockRejectedValue(failure);}
+        if(stage==="folder_resolve")api.folder.mockRejectedValue(failure);
+        if(stage==="file_move"){documents=[fixture(0)];api.move.mockRejectedValue(failure);}
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({code:"existing",stage,status:403,uploadAttempted:false});
+        expect(console.warn).toHaveBeenCalledExactlyOnceWith("[courtos/example-import]",{stage,status:403,code:"existing"});
+        expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toMatch(/PRIVATE|CourtOS_|doc-0/);
+        expect(api.upload).not.toHaveBeenCalled();
+    });
+    it("distinguishes an HTTP asset failure from a byte-integrity failure",async()=>{
+        vi.mocked(fetch).mockResolvedValueOnce(new Response("private body",{status:503}));
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({code:"asset",stage:"asset_download",status:503,uploadAttempted:false});
+        expect(console.warn).toHaveBeenCalledExactlyOnceWith("[courtos/example-import]",{stage:"asset_download",status:503,code:"asset"});
+        expect(api.search).not.toHaveBeenCalled();expect(api.folder).not.toHaveBeenCalled();
+    });
+    it("keeps an uncertain accepted upload in the upload category and never retries it",async()=>{
+        api.upload.mockRejectedValue(Object.assign(new Error("response lost"),{status:502}));
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({code:"upload",stage:"upload",status:502,uploadAttempted:true});
+        expect(api.upload).toHaveBeenCalledOnce();
     });
     it("reuses exact prior editions without replacing bytes and conditionally files only those samples",async()=>{
         documents=matter.documents.map((_,index)=>fixture(index,true));
@@ -63,7 +90,7 @@ describe("explicit structured example import",()=>{
     });
     it("rejects changed/login-page assets before touching library state",async()=>{
         vi.mocked(fetch).mockResolvedValueOnce(new Response("<html>login</html>"));
-        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({code:"asset",uploadAttempted:false});expect(api.upload).not.toHaveBeenCalled();expect(api.folder).not.toHaveBeenCalled();
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({code:"asset",stage:"asset_integrity",uploadAttempted:false});expect(api.upload).not.toHaveBeenCalled();expect(api.folder).not.toHaveBeenCalled();
     });
     it("does not report a complete selection from an unready resulting version",async()=>{
         api.upload.mockImplementation(async(_kind,files:{clientId:string;file:File}[])=>files.map(({clientId,file},index)=>{const document=fixture(index);document.status="processing";documents.push(document);return {clientId,filename:file.name,status:"completed",result:document};}));

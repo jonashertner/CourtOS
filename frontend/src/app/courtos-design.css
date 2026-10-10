@@ -467,3 +467,23 @@
 @media (max-width: 380px) { .courtos-web .courtos-review-assignments li { grid-template-columns: 1fr; } }
 
 .courtos-web .courtos-review-group th { padding-block: 20px 8px; font-size: 14px; font-weight: 550; border: 0; }
+
+/* The persistent, source-bound conversation is the research starting point. */
+.courtos-web .courtos-conversation { max-width: 800px; margin: 0 auto 36px; min-width: 0; }
+.courtos-web .courtos-conversation-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.courtos-web .courtos-conversation-header h2 { font-size: 24px; line-height: 32px; font-weight: 550; }
+.courtos-web .courtos-conversation-history { margin: 0 0 20px; color: var(--muted-foreground); font-size: 12px; }
+.courtos-web .courtos-conversation-history summary { cursor: pointer; }
+.courtos-web .courtos-conversation-transcript { display: grid; gap: 24px; margin-bottom: 28px; overflow-wrap: anywhere; }
+.courtos-web .courtos-conversation-question { border-left: 2px solid var(--border); padding: 4px 0 4px 16px; font-size: 16px; line-height: 24px; white-space: pre-wrap; }
+.courtos-web .courtos-conversation-sources { display: grid; gap: 6px; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; margin-bottom: 12px; }
+.courtos-web .courtos-conversation-sources p { color: var(--muted-foreground); }
+.courtos-web .courtos-conversation-composer label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 550; }
+.courtos-web .courtos-conversation-composer textarea { resize: vertical; min-height: 112px; }
+.courtos-web .courtos-conversation-hint { margin-top: 8px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-conversation-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
+.courtos-web .courtos-conversation-source-actions { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 20px; }
+.courtos-web .courtos-conversation-source-tools { border-top: 1px solid var(--border); padding-top: 24px; }
+.courtos-web .courtos-conversation-source-tools > h2 { font-size: 18px; line-height: 26px; font-weight: 550; margin-bottom: 18px; }
+.courtos-web .courtos-conversation .font-serif { font-family: var(--font-inter); }
+.courtos-web .courtos-conversation-transcript :is(p,li) { line-height: 1.65; }

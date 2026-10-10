@@ -10,6 +10,8 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { normaliseSourceGroundingIssue, sourceGroundingText } from "@/app/lib/sourceGroundingMessages";
 import { useRouter } from "next/navigation";
 import { stopChatTurn, streamChat, streamProjectChat } from "@/app/lib/mikeApi";
 import {
@@ -46,6 +48,8 @@ interface UseAssistantChatOptions {
   projectId?: string;
   /** Adopts the server id as soon as it arrives, without navigation. */
   onChatCreated?: (chatId: string) => void;
+  /** The host may preserve its composer after an explicit server error frame. */
+  onTurnFailed?: (issue?: import("@mike/contracts").SourceGroundingIssue) => void;
 }
 
 
@@ -54,8 +58,10 @@ export function useAssistantChat({
   chatId: initialChatId,
   projectId,
   onChatCreated,
+  onTurnFailed,
 }: UseAssistantChatOptions = {}) {
   const router = useRouter();
+  const { t } = useCourtOSLocale();
   const {
     replaceChatId,
     loadChats,
@@ -506,6 +512,7 @@ export function useAssistantChat({
             ? assistantHistoryContent(currentMessage)
             : currentMessage.content,
         files: currentMessage.files,
+        public_sources: currentMessage.public_sources,
         workflow: currentMessage.workflow,
       }));
 
@@ -587,7 +594,8 @@ export function useAssistantChat({
           onRejectedApiKey: () => {
             if (isCurrentRequest()) setRejectedApiKey({ model: model ?? null });
           },
-          onErrorFrame: ({ message: frameMessage, safeToDisplay }) => {
+          onErrorFrame: ({ message: frameMessage, safeToDisplay, code, sourceIssue }) => {
+            const sourceText = sourceGroundingText(code, sourceIssue);
             // The bubble records that this turn failed; the toast is where
             // the user gets a way back. A server-side failure is one the
             // user cannot fix, so Contact support rides along with Retry.
@@ -597,7 +605,7 @@ export function useAssistantChat({
             // fail identically, so it gets support without a Retry.
             notifyError(
               new UserVisibleError(
-                safeToDisplay
+                sourceText ? t(sourceText) : safeToDisplay
                   ? frameMessage
                   : "Mike couldn't finish this answer. Try again.",
                 { kind: "server", retryable: !safeToDisplay },
@@ -611,7 +619,7 @@ export function useAssistantChat({
                 },
               },
             );
-            if (isCurrentRequest()) setIsResponseLoading(false);
+            if (isCurrentRequest()) { setIsResponseLoading(false); onTurnFailed?.(sourceIssue); }
           },
         },
       });
@@ -660,6 +668,11 @@ export function useAssistantChat({
         if (cursor.chatId && cursor.turnId) {
           retrySnapshot.recoveryChatId = cursor.chatId;
         }
+        const sourceFailure = error as { code?: unknown; source_issue?: unknown };
+        const sourceIssue = normaliseSourceGroundingIssue(sourceFailure?.source_issue) ?? (sourceFailure?.code === "source_required" ? "required" : null);
+        const sourceText = sourceGroundingText(sourceFailure?.code, sourceIssue);
+        if (isCurrentRequest()) onTurnFailed?.(sourceIssue ?? undefined);
+        const displayError = sourceText ? new UserVisibleError(t(sourceText), { kind: "validation", cause: error }) : error;
         const described = describeError(error, {
           action: "get a response",
           fallback: "Mike couldn't finish this answer. Try again.",
@@ -673,13 +686,13 @@ export function useAssistantChat({
               "The answer may still be running. Check chat history before sending the question again.",
               { cause: error },
             )
-          : error;
+          : displayError;
         if (uncertain && retrySnapshot.chatId) {
           retrySnapshot.recoveryChatId = retrySnapshot.chatId;
         }
         turn.update((assistantMessage) => ({
           ...assistantMessage,
-          error: uncertain ? (failure as UserVisibleError).message : described.message,
+          error: uncertain ? (failure as UserVisibleError).message : sourceText ? t(sourceText) : described.message,
         }));
         notifyError(failure, {
           action: "get a response",

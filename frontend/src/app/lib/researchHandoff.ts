@@ -75,6 +75,7 @@ export function canonicalResearchHandoffState(value: unknown): ResearchHandoffSt
     const pub = object(v.public); const own = object(v.private);
     const state: ResearchHandoffState = {
         version: 1, mode: choice(v.mode, ["public", "private"]),
+        ...(v.conversation !== undefined ? { conversation: (() => { const c = object(v.conversation); return { chat_id: nullable(c.chat_id, uuid), draft: text(c.draft, 12000) }; })() } : {}),
         public: {
             query: text(pub.query, 180), submitted: text(pub.submitted, 180), language: choice(pub.language, ["", "de", "fr", "it"]),
             result: nullable(pub.result, value => {

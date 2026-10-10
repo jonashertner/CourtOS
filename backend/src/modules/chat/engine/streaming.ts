@@ -54,6 +54,8 @@ import { buildMemoryTurn } from "../../../lib/memory/prompt";
 import { prefetchSourceEvidence, sourceEvidencePrompt, SourceGroundingError, type DocumentEvidence } from "./sourceEvidence";
 import { spotlight } from "./contextBuilders";
 import { groundingDiagnostics } from "./groundingDiagnostics";
+import { loadPublicSourceEvidence, publicEvidencePrompt, publicCitation, samePublicEvidence, type PublicSourceEvidence } from "./publicSourceEvidence";
+import { hasUncitedProse, SOURCE_BOUND_ANSWER_RULES } from "./sourceBoundAnswer";
 
 export type { AssistantEvent } from "@mike/contracts";
 import type { AssistantEvent, AssistantErrorCode, SourceGroundingDiagnostics, LocalProviderQueueEvent } from "@mike/contracts";
@@ -105,10 +107,11 @@ export function assistantStreamErrorPayload(error: unknown): {
   message: string;
   safe_to_display?: true;
   code?: AssistantErrorCode;
+  source_issue?: import("@mike/contracts").SourceGroundingIssue;
   grounding_diagnostics?: SourceGroundingDiagnostics;
 } {
   if (error instanceof SourceGroundingError) {
-    return { message: error.message, safe_to_display: true, code: error.code, ...(error.diagnostics ? { grounding_diagnostics: error.diagnostics } : {}) };
+    return { message: error.message, safe_to_display: true, code: error.code, source_issue: error.issue, ...(error.diagnostics ? { grounding_diagnostics: error.diagnostics } : {}) };
   }
   const safe =
     error instanceof AssistantStreamError
@@ -124,6 +127,7 @@ export function assistantStreamErrorPayload(error: unknown): {
     message: safe.message,
     safe_to_display: true,
     ...(safe.code ? { code: safe.code } : {}),
+    ...(safe.source_issue ? { source_issue: safe.source_issue } : {}),
     ...(safe.grounding_diagnostics ? { grounding_diagnostics: safe.grounding_diagnostics } : {}),
   };
 }
@@ -204,6 +208,7 @@ export async function runLLMStream(params: {
   apiMessages: unknown[];
   docStore: DocStore;
   docIndex: DocIndex;
+  publicSources?: import("@mike/contracts").PublicSourceSelection[];
   userId: string;
   /**
    * The caller's authenticated email. Direct (email-keyed) grants are part of
@@ -282,6 +287,7 @@ export async function runLLMStream(params: {
     apiMessages,
     docStore,
     docIndex,
+    publicSources = [],
     userId,
     userEmail,
     db,
@@ -305,7 +311,9 @@ export async function runLLMStream(params: {
     nonce,
     conversationId,
   } = params;
-  const requiresEvidence = courtosPilotEnabled() && docStore.size > 0;
+  // This is shared by every reachable pilot chat surface, including legacy
+  // /assistant. An old transcript or a model's memory never admits a source.
+  const requiresEvidence = courtosPilotEnabled();
   const heldOutput: string[] = [];
   let evidenceReleased = false;
   const write = (chunk: string) => {
@@ -313,7 +321,10 @@ export async function runLLMStream(params: {
     if (requiresEvidence && !evidenceReleased && safe.startsWith("data: ")) {
       try {
         const event = JSON.parse(safe.slice(6).trim()) as { type?: string };
-        if (["content_delta", "reasoning_delta", "reasoning_block_end", "citations"].includes(event.type ?? "")) {
+        // Model reasoning is neither a checked answer nor source evidence.
+        // Never publish it, even after the final answer passes its quote gate.
+        if (["reasoning_delta", "reasoning_block_end"].includes(event.type ?? "")) return;
+        if (["content_delta", "citations"].includes(event.type ?? "")) {
           heldOutput.push(safe);
           return;
         }
@@ -368,7 +379,7 @@ export async function runLLMStream(params: {
     projectId: memoryProjectId,
     sharedAudience: memorySharedAudience,
   });
-  const systemPrompt = memory.systemPrompt;
+  const systemPrompt = requiresEvidence ? `${memory.systemPrompt}\n\n${SOURCE_BOUND_ANSWER_RULES}` : memory.systemPrompt;
   const chatMessages: LlmMessage[] = rawMsgs
     // Prior assistant prose is not evidence and may predate verification.
     // User instructions remain; factual grounding comes from fresh PDFs only.
@@ -387,7 +398,7 @@ export async function runLLMStream(params: {
     // rejects the entire request over one empty text block.
     .filter((m) => m.role === "user" || m.content.trim().length > 0);
   // Before every real turn: see MemoryTurn for why it goes there.
-  if (memory.message) chatMessages.unshift(memory.message);
+  if (memory.message && !requiresEvidence) chatMessages.unshift(memory.message);
 
   const events: AssistantEvent[] = [];
   // One assistant turn produces at most one document_versions row per
@@ -401,6 +412,7 @@ export async function runLLMStream(params: {
   // changes that document so a post-edit verification read can still happen.
   const turnReadState: TurnReadState = new Map();
   let sourceEvidence = new Map<string, DocumentEvidence>();
+  let publicEvidence = new Map<string, PublicSourceEvidence>();
   const courtlistenerTurnState: CourtlistenerTurnState = {
     casesByClusterId: new Map(),
   };
@@ -417,7 +429,7 @@ export async function runLLMStream(params: {
     status: "started" | "partial",
     citations: unknown[],
   ) => {
-    if (buildCitations) return;
+    if (buildCitations || requiresEvidence) return;
     write(
       `data: ${JSON.stringify({ type: "citations", status, citations })}\n\n`,
     );
@@ -520,14 +532,17 @@ export async function runLLMStream(params: {
   try {
     throwIfAborted(signal);
     if (requiresEvidence) {
+      if (!docStore.size && !publicSources.length) throw new SourceGroundingError("Bitte zuerst eigene Dokumente oder eine öffentliche Originalfundstelle auswählen. Das Gespräch verwendet keine unbelegten Antworten aus Modellwissen.", undefined, "required");
       sourceEvidence = await prefetchSourceEvidence(docStore, docIndex, db, userId, userEmail);
+      publicEvidence = await loadPublicSourceEvidence(publicSources);
       throwIfAborted(signal);
-      const sourceText = sourceEvidencePrompt(sourceEvidence);
+      const sourceText = sourceEvidencePrompt(sourceEvidence) + (publicEvidence.size ? `\n${publicEvidencePrompt(publicEvidence)}` : "");
+      if (Buffer.byteLength(sourceText, "utf8") > 14_000) throw new SourceGroundingError("Die ausgewählten Quellen sind für diesen Gesprächsschritt zu umfangreich. Bitte die Auswahl eingrenzen.", undefined, "scope");
       // Fresh source material immediately before the latest user instruction.
       // The existing nonce fence treats all document text as untrusted data.
       chatMessages.splice(Math.max(0, chatMessages.length - 1), 0, {
         role: "user",
-        content: `Application-loaded source evidence. All selected PDF pages are included as extracted text; this is not a finding that their allegations are true.\n${nonce ? spotlight(sourceText, nonce) : sourceText}`,
+        content: `Application-loaded original source evidence. Selected PDFs are complete extracted text; public decisions are only the explicitly selected excerpts. Neither proves the allegations true.\n${nonce ? spotlight(sourceText, nonce) : sourceText}`,
       });
       for (const [label, source] of sourceEvidence) {
         const event: AssistantEvent = { type: "doc_read", filename: source.filename, document_id: source.document_id, version_id: source.version_id, version_number: source.version_number,
@@ -849,6 +864,7 @@ export async function runLLMStream(params: {
         type: "error",
         message,
         ...(safeToDisplay ? { safe_to_display: true } : {}),
+        ...(err instanceof SourceGroundingError ? { source_issue: err.issue } : {}),
         ...(err instanceof SourceGroundingError && err.diagnostics ? { grounding_diagnostics: err.diagnostics } : {}),
         // A rejected key is worth naming: the client turns this into a prompt
         // to go fix the key rather than a suggestion to retry.
@@ -876,7 +892,7 @@ export async function runLLMStream(params: {
     citations = buildCitations(fullText);
   } else {
     const rawCitations = buildCitations ? buildCitations(fullText) : parsedCitations.map((c) =>
-      createCitation(
+      publicCitation(c, publicEvidence) ?? createCitation(
         c,
         docIndex,
         courtlistenerTurnState.casesByClusterId,
@@ -901,8 +917,9 @@ export async function runLLMStream(params: {
       }
       return pending;
     };
-    citations = await verifyCitations(
-      rawCitations,
+    const privateRaw = rawCitations.filter(c => (c as { kind?: string })?.kind !== "public_decision");
+    const privateVerified = await verifyCitations(
+      privateRaw,
       requiresEvidence ? async (docId) => {
         const label = resolveDocLabel(docId, docStore, docIndex);
         return label ? sourceEvidence.get(label) ?? null : null;
@@ -910,20 +927,41 @@ export async function runLLMStream(params: {
       async (clusterId) =>
         getCachedCaseOpinionTexts(courtlistenerTurnState, clusterId),
     );
+    let privateIndex = 0;
+    citations = rawCitations.map(c => (c as { kind?: string })?.kind === "public_decision" ? c : privateVerified[privateIndex++]);
   }
   if (requiresEvidence) {
     const visible = fullText.split(CITATIONS_OPEN_TAG)[0];
     const refs = [...visible.matchAll(/\[(\d+)\]/g)].map((match) => Number(match[1]));
     const verified = citations as { ref?: number; verified?: boolean }[];
-    if (!refs.length || !verified.length || verified.some((citation) => citation.verified !== true) || refs.some((ref) => !verified.some((citation) => citation.ref === ref))) {
+    const uncited = hasUncitedProse(visible, new Set(verified.filter(c => c.verified === true && Number.isSafeInteger(c.ref)).map(c => c.ref!)));
+    const invalidReferences = verified.length > 3 || new Set(verified.map(c => c.ref)).size !== verified.length || verified.some(c => !Number.isSafeInteger(c.ref) || c.ref! < 1);
+    if (!refs.length || !verified.length || invalidReferences || verified.some((citation) => citation.verified !== true) || refs.some((ref) => !verified.some((citation) => citation.ref === ref)) || uncited) {
       const diagnostics = groundingDiagnostics(refs, citations, citationDiagnostics);
+      if (uncited && refs.length && verified.every(c => c.verified === true)) diagnostics.reason = "uncited_paragraph";
       const failure = new SourceGroundingError(undefined, diagnostics);
       console.warn("[chat/grounding] answer withheld", diagnostics);
       const safeEvents = events.filter((event) => !["content", "reasoning"].includes(event.type));
-      safeEvents.push({ type: "error", message: failure.message, safe_to_display: true, code: failure.code, grounding_diagnostics: diagnostics });
+      safeEvents.push({ type: "error", message: failure.message, safe_to_display: true, code: failure.code, source_issue: failure.issue, grounding_diagnostics: diagnostics });
+      throw new AssistantStreamError(failure.message, "", safeEvents.map(sanitizeAssistantEvent), { cause: failure });
+    }
+    try {
+      // Re-admit exactly the same versions/passages after generation. Access
+      // revocation or a changed public original cannot publish stale evidence.
+      const freshPrivate = await prefetchSourceEvidence(docStore, docIndex, db, userId, userEmail);
+      const freshPublic = await loadPublicSourceEvidence(publicSources);
+      if (JSON.stringify([...sourceEvidence]) !== JSON.stringify([...freshPrivate]) || !samePublicEvidence(publicEvidence, freshPublic)) throw new SourceGroundingError(undefined, undefined, "changed");
+      throwIfAborted(signal);
+    } catch (error) {
+      const failure = error instanceof SourceGroundingError ? error : new SourceGroundingError();
+      const safeEvents = events.filter(event => !["content", "reasoning"].includes(event.type));
+      safeEvents.push({ type: "error", message: failure.message, safe_to_display: true, code: failure.code, source_issue: failure.issue });
       throw new AssistantStreamError(failure.message, "", safeEvents.map(sanitizeAssistantEvent), { cause: failure });
     }
     evidenceReleased = true;
+    const sourceBound: AssistantEvent = { type: "source_bound_answer", version: 1 };
+    events.push(sourceBound);
+    unsafeWrite(`data: ${JSON.stringify(sourceBound)}\n\n`);
     // No unverified draft was streamed to the client. Publish the bounded,
     // page-checked result only now; matching quotations is not a merits check.
     for (const chunk of heldOutput) unsafeWrite(chunk);
@@ -945,7 +983,7 @@ export async function runLLMStream(params: {
 
   return {
     fullText,
-    events: events.map(sanitizeAssistantEvent),
+    events: events.filter(event => !requiresEvidence || event.type !== "reasoning").map(sanitizeAssistantEvent),
     citations,
   };
 }

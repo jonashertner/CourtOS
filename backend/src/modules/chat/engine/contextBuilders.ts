@@ -802,6 +802,7 @@ export function stripTransientAssistantEvents(events: AssistantEvent[]) {
 // therefore produces a type error until its textless-turn behavior is chosen
 // deliberately, instead of silently dropping an otherwise useful response.
 const COMPLETES_TEXTLESS_TURN = {
+  source_bound_answer: false,
   reasoning: false,
   ask_inputs: true,
   ask_inputs_response: false,
@@ -1219,13 +1220,13 @@ export async function buildDocContext(
 
   const documentIds = new Set<string>();
   const requestedVersions = new Map<string, string>();
-  for (const m of messages) {
+  for (const m of (courtosPilotEnabled() ? messages.filter(m => m.role === "user").slice(-1) : messages)) {
     for (const f of m.files ?? []) {
       if (f.document_id) documentIds.add(f.document_id);
       if (courtosPilotEnabled() && f.document_id && f.version_id) {
         const previous = requestedVersions.get(f.document_id);
         if (previous && previous !== f.version_id) {
-          throw new SourceGroundingError("Im Gespräch sind verschiedene Fassungen desselben Dokuments ausgewählt. Bitte für diesen Auftrag ein neues Gespräch mit einer eindeutigen Fassung beginnen.");
+          throw new SourceGroundingError("Im Gespräch sind verschiedene Fassungen desselben Dokuments ausgewählt. Bitte für diesen Auftrag ein neues Gespräch mit einer eindeutigen Fassung beginnen.", undefined, "changed");
         }
         requestedVersions.set(f.document_id, f.version_id);
       }
@@ -1238,7 +1239,7 @@ export async function buildDocContext(
   // assistant's `doc_created` / `doc_edited` events. Without this sweep
   // the model loses access to generated docs after the turn that created
   // them, and can't call edit_document / read_document on them.
-  if (chatId) {
+  if (chatId && !courtosPilotEnabled()) {
     const { data: rows } = await db
       .from(messageTable)
       .select("content")
@@ -1343,12 +1344,12 @@ export async function buildDocContext(
     await attachActiveVersionPaths(db, docList);
     if (courtosPilotEnabled()) {
       if (docList.length !== ids.length) {
-        throw new SourceGroundingError("Mindestens eine ausgewählte Quelle ist nicht verfügbar oder noch nicht lesbar. Bitte die Auswahl prüfen; es wird nicht mit einem stillschweigend verkleinerten Bestand gearbeitet.");
+        throw new SourceGroundingError("Mindestens eine ausgewählte Quelle ist nicht verfügbar oder noch nicht lesbar. Bitte die Auswahl prüfen; es wird nicht mit einem stillschweigend verkleinerten Bestand gearbeitet.", undefined, "unavailable");
       }
       for (const doc of docList) {
         const requested = requestedVersions.get(doc.id) ?? doc.current_version_id;
         const version = requested ? await loadActiveVersion(doc.id, db, requested) : null;
-        if (!version) throw new SourceGroundingError("Eine ausgewählte Dokumentfassung ist nicht mehr verfügbar. Bitte die Auswahl prüfen; es wurde keine Ersatzfassung verwendet.");
+        if (!version) throw new SourceGroundingError("Eine ausgewählte Dokumentfassung ist nicht mehr verfügbar. Bitte die Auswahl prüfen; es wurde keine Ersatzfassung verwendet.", undefined, "changed");
         doc.current_version_id = version.id;
         doc.active_version_number = version.version_number;
         doc.filename = version.filename;

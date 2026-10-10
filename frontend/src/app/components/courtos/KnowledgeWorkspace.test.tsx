@@ -1,19 +1,20 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getKnowledgeDraft } from "@/app/lib/knowledgeDraft";
+import { conversationSourceIssue } from "@/app/lib/researchConversation";
 import { CourtOSLocaleProvider } from "@/app/contexts/CourtOSLocaleContext";
 import { setCourtOSLocale } from "@/app/lib/courtosLocale";
 import { KnowledgeWorkspace } from "./KnowledgeWorkspace";
 
-const api = vi.hoisted(() => ({ list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn(), handoff: vi.fn(), research: vi.fn(), model: "gemma" as "gemma" | "claude-opus-5-5" }));
+const api = vi.hoisted(() => ({ list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn(), handoff: vi.fn(), research: vi.fn(), conversation: null as null | { onCitation: (citation: import("@/app/components/shared/types").Citation) => void }, model: "gemma" as "gemma" | "claude-opus-5-5" }));
 vi.mock("@/app/lib/researchModelPreference", () => ({ useResearchModelPreference: () => ({ model: api.model }) }));
 vi.mock("@/app/lib/researchDraft", () => ({ prepareResearchDraft: api.research }));
 vi.mock("@/app/lib/frontierDraft", () => ({ prepareFrontierDraft: api.handoff }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: api.push }) }));
 vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "test-owner" } }) }));
-vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list }));
+vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list, getLibrary: (...args: unknown[]) => api.list(...args), getLibraryFolderChildren: (...args: unknown[]) => api.list(...args) }));
 vi.mock("@/app/lib/knowledgeApi", async (original) => ({ ...(await original<typeof import("@/app/lib/knowledgeApi")>()), searchKnowledge: api.local, searchPublicKnowledge: api.public, getPublicDecision: api.detail }));
+vi.mock("./ResearchConversation", () => ({ ResearchConversation: (props: { candidate: unknown; onCitation: (citation: import("@/app/components/shared/types").Citation) => void }) => { api.conversation = props; return <div data-testid="research-conversation" data-sources={JSON.stringify(props.candidate)}><textarea id="research-question" aria-label="Ihre Frage an die Quellen" /></div>; } }));
 vi.mock("next/dynamic", () => ({ default: () => (props: { document: { document_id: string; version_id: string; quotes: { quote: string; target: { page: number }; verification?: { verified: boolean } }[] }; canEdit: boolean }) => <div data-testid="source-viewer" data-document={props.document.document_id} data-version={props.document.version_id} data-editable={String(props.canEdit)} data-page={props.document.quotes[0]?.target.page} data-verified={String(props.document.quotes[0]?.verification?.verified)}>{props.document.quotes[0]?.quote}</div> }));
 
 const document = { id: "11111111-1111-4111-8111-111111111111", filename: "Muster, Gehör, 2026.pdf", active_version_number: 2, status: "ready", current_version_id: "22222222-2222-4222-8222-222222222222" };
@@ -41,14 +42,44 @@ beforeEach(() => {
 });
 
 describe("personal knowledge workspace", () => {
+    it("navigates case and party folders at offset zero and returns to the root", async () => {
+        const folder = { id: "case-folder", name: "CourtOS-UE-2026-001" };
+        const party = { id: "party-folder", name: "A.________ AG · Klägerin" };
+        api.list.mockImplementation(async (_kind: string, parent: unknown) => typeof parent === "string"
+            ? parent === folder.id ? { documents: [], folders: [party], documentsHasMore: false } : { documents: [document], folders: [], documentsHasMore: false }
+            : { documents: [], folders: [folder], documentsHasMore: false });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
+        await user.click(await screen.findByRole("button", { name: folder.name }));
+        await user.click(await screen.findByRole("button", { name: party.name }));
+        await screen.findByRole("checkbox", { name: /Muster, Gehör/ });
+        expect(api.list).toHaveBeenCalledWith("files", "case-folder", { limit: 20, offset: 0 });
+        expect(api.list).toHaveBeenCalledWith("files", "party-folder", { limit: 20, offset: 0 });
+        await user.click(screen.getByRole("button", { name: "Alle Akten" }));
+        await waitFor(() => expect(screen.queryByRole("checkbox", { name: /Muster, Gehör/ })).toBeNull());
+        expect(screen.queryByRole("button", { name: party.name })).toBeNull();
+        expect(api.public).not.toHaveBeenCalled(); expect(api.local).not.toHaveBeenCalled();
+    });
+    it.each([false, true])("opens generated public citations at exact Unicode offsets and rejects changed wording (%s)", async changed => {
+        const quote = "Dies ist der genaue belegte Wortlaut.";
+        const citation = { type: "citation_data" as const, kind: "public_decision" as const, ref: 1, decision_id: "BGE_137_I_195", title: "Gespeicherter Titel", source_url: "https://example.org/original", pdf_url: null, content_hash: "hash", start: 30, end: 30 + Array.from(quote).length, quote, verified: true };
+        api.detail.mockResolvedValue({ ...citation, title: "Titel aus dem Original", snippet: "", passage: { start: 30, end: 100, total_chars: 100, has_more: false, text: changed ? "Anderer Wortlaut in der Quelle." : quote + " Kontext danach." } });
+        render(<KnowledgeWorkspace />);
+        await act(async () => { api.conversation!.onCitation(citation); });
+        const dialog = await screen.findByRole("dialog");
+        await waitFor(() => expect(api.detail).toHaveBeenCalledWith(citation.decision_id, 30, expect.any(AbortSignal)));
+        if (changed) { expect(await within(dialog).findByRole("alert")).toHaveTextContent(/Quelle|Fassung/); expect(within(dialog).queryByRole("button", { name: "Textstelle und Quelle kopieren" })).toBeNull(); }
+        else { expect(await within(dialog).findByRole("button", { name: "Textstelle und Quelle kopieren" })).toBeEnabled(); expect(within(dialog).getByText(quote)).toBeVisible(); expect(within(dialog).getByRole("heading", { name: "Titel aus dem Original" })).toBeVisible(); }
+        expect(api.public).not.toHaveBeenCalled();
+    });
     it("keeps the searched terms and source text when the interface changes language",async()=>{
         localStorage.clear();setCourtOSLocale("test-owner","de");
         api.public.mockResolvedValue({results:[{decision_id:"case",court:"bger",docket_number:"1C_1/2026",title:"Titre original",snippet:"Le droit d’être entendu est garanti."}],query_mode:"literal_terms",database_generation:null});
         const user=userEvent.setup();render(<CourtOSLocaleProvider ownerId="test-owner"><KnowledgeWorkspace/></CourtOSLocaleProvider>);
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"),"Gehör");await user.click(screen.getByRole("button",{name:"Suchen"}));
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"),"Gehör");await user.click(screen.getByRole("button",{name:"Suchen"}));
         await screen.findByText("Le droit d’être entendu est garanti.");
         for(const locale of ["fr","it","en"] as const)await act(async()=>{setCourtOSLocale("test-owner",locale);});
-        expect(screen.getByRole("textbox",{name:"Public legal terms"})).toHaveValue("Gehör");
+        expect(screen.getByRole("textbox",{name:"Search terms or decision number"})).toHaveValue("Gehör");
         expect(screen.getByText("Le droit d’être entendu est garanti.")).toBeVisible();
         expect(api.public).toHaveBeenCalledOnce();expect(api.local).not.toHaveBeenCalled();expect(api.research).not.toHaveBeenCalled();expect(api.handoff).not.toHaveBeenCalled();
     });
@@ -59,10 +90,7 @@ describe("personal knowledge workspace", () => {
         await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
         await user.click(await screen.findByRole("checkbox", { name: /Stellungnahme.docx/ }));
         await user.type(screen.getByLabelText("Suchbegriffe"), "Stellungnahme");
-        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
-        expect(screen.getByRole("button", { name: "Chronologie erstellen" })).toBeDisabled();
-        expect(screen.getByRole("button", { name: "Mit dieser Auswahl fragen" })).toBeDisabled();
-        expect(screen.getByText(/Word-, Tabellen- und Präsentationsdateien bleiben/)).toBeInTheDocument();
+        expect(conversationSourceIssue(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!))).toBe("unready");
         expect(screen.getByRole("button", { name: "Auswahl durchsuchen" })).toBeEnabled();
         await user.click(screen.getByRole("button", { name: "Auswahl durchsuchen" }));
         expect(api.local).toHaveBeenCalledWith("Stellungnahme", [word.id], expect.any(AbortSignal));
@@ -75,10 +103,7 @@ describe("personal knowledge workspace", () => {
         const searchLocation = screen.getByText("Textsuche ohne KI · Verarbeitung auf dem Server").closest("[data-processing-route]");
         expect(searchLocation).toHaveAttribute("data-processing-route", "server");
         expect(searchLocation).toHaveTextContent("CourtOS-Server");
-        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
-        const modelLocation = screen.getByText("Gemma 4").closest("[data-processing-route]");
-        expect(modelLocation).toHaveAttribute("data-processing-route", "server");
-        expect(modelLocation).toHaveTextContent("Entwurf · noch nicht gesendet");
+        expect(screen.queryByText("Mit Gemma weiterarbeiten")).toBeNull();
         expect(api.local).not.toHaveBeenCalled();
         expect(api.public).not.toHaveBeenCalled();
         expect(api.handoff).not.toHaveBeenCalled();
@@ -92,7 +117,7 @@ describe("personal knowledge workspace", () => {
         expect(screen.getByText("Externer KI-Suchdienst", { exact: false }).closest("[data-processing-route]")).toHaveAttribute("data-processing-route", "external");
         expect(screen.queryByText(/Textsuche ohne KI/)).not.toBeInTheDocument();
         expect(api.public).not.toHaveBeenCalled();
-        await user.type(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" }), "Gehör");
+        await user.type(screen.getByRole("textbox", { name: "Suchbegriffe oder Entscheidnummer" }), "Gehör");
         expect(api.public).not.toHaveBeenCalled();
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         expect(await screen.findByText(/eingeschränkte Rangfolge/)).toBeInTheDocument();
@@ -104,7 +129,7 @@ describe("personal knowledge workspace", () => {
         api.public.mockResolvedValue({ results: [], query_mode: "literal_terms", database_generation: null,
             candidate_limit: 256, candidates_examined: 256, ranking: "bm25_within_rowid_window" });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
-        await user.type(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" }), "Gehör");
+        await user.type(screen.getByRole("textbox", { name: "Suchbegriffe oder Entscheidnummer" }), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await user.click(await screen.findByText("Zum Suchumfang"));
         expect(screen.getByText(/aus einer begrenzten Auswahl/)).toHaveTextContent("höchstens 256 passenden Datensätzen");
@@ -113,7 +138,7 @@ describe("personal knowledge workspace", () => {
     });
     it("starts with public research without loading a library or calling a model", () => {
         render(<KnowledgeWorkspace />);
-        expect(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" })).toHaveValue("");
+        expect(screen.getByRole("textbox", { name: "Suchbegriffe oder Entscheidnummer" })).toHaveValue("");
         expect(api.list).not.toHaveBeenCalled();
         expect(api.local).not.toHaveBeenCalled();
         expect(api.public).not.toHaveBeenCalled();
@@ -124,7 +149,7 @@ describe("personal knowledge workspace", () => {
         api.public.mockResolvedValue({ results: [decision], query_mode: "opencaselaw_ai", database_generation: null });
         api.detail.mockResolvedValue({ ...decision, title: "Berichtigter Titel", source_url: "https://example.org/current", content_hash: null, scraped_at: null, decision_date: "2025-01-01", date_is_estimated: true, source_note: "Wiederhergestellter Text <b>prüfen</b>", passage: { start: 0, end: 25, total_chars: 25, has_more: false, text: "Der genaue Entscheidtext." } });
         const user = userEvent.setup(); const view = render(<KnowledgeWorkspace />);
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await user.click(await screen.findByRole("button", { name: /Entscheidtext öffnen/ }));
         const dialog = screen.getByRole("dialog");
@@ -204,9 +229,9 @@ describe("personal knowledge workspace", () => {
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
         await user.type(screen.getByLabelText("Suchbegriffe"), "private question");
         await user.click(screen.getByRole("button", { name: "OpenCaseLaw" }));
-        expect(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" })).toHaveValue("");
+        expect(screen.getByRole("textbox", { name: "Suchbegriffe oder Entscheidnummer" })).toHaveValue("");
         expect(api.public).not.toHaveBeenCalled();
-        await user.type(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" }), "Gehör");
+        await user.type(screen.getByRole("textbox", { name: "Suchbegriffe oder Entscheidnummer" }), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await screen.findByText(/Die Suche hat keine Entscheide zurückgegeben/);
         expect(api.public).toHaveBeenCalledWith("Gehör", "", expect.any(AbortSignal));
@@ -229,7 +254,7 @@ describe("personal knowledge workspace", () => {
     it("labels public results with submitted terms and clears them when the language changes", async () => {
         api.public.mockResolvedValue({ results: [{ decision_id: "A", title: "Quelle A", snippet: "Ergebnis A" }], query_mode: "opencaselaw_ai" });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
-        const query = screen.getByLabelText("Öffentliche Rechtsbegriffe");
+        const query = screen.getByLabelText("Suchbegriffe oder Entscheidnummer");
         await user.type(query, "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await screen.findByText("Ergebnis A");
@@ -244,7 +269,7 @@ describe("personal knowledge workspace", () => {
         let finish!: (data: unknown) => void;
         api.public.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         const signal = api.public.mock.calls[0][2] as AbortSignal;
         await user.selectOptions(screen.getByLabelText("Sprache"), "it");
@@ -293,7 +318,7 @@ describe("personal knowledge workspace", () => {
         api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 25, total_chars: 25, has_more: false, text: "Der genaue Entscheidtext." } });
         const user = userEvent.setup(); const view = render(<KnowledgeWorkspace />);
         await user.click(screen.getByRole("button", { name: "OpenCaseLaw" }));
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await screen.findByText(decision.snippet);
         expect(window.document.querySelector("img")).toBeNull();
@@ -314,15 +339,9 @@ describe("personal knowledge workspace", () => {
         expect(copied).toContain("Zeichen 0–25 von 25; keine amtlichen Randnummern");
         expect(copied).not.toContain("javascript:");
         expect(within(dialog).getByRole("button", { name: "Nächster Abschnitt" })).toBeDisabled();
-        api.research.mockReturnValueOnce(true);
-        expect(within(dialog).getByText("Gemma 4").closest("[data-processing-route]")).toHaveAttribute("data-processing-route", "server");
-        expect(within(dialog).getByText("Gemma 4").closest("[data-processing-route]")).toHaveTextContent("CourtOS-ServerEntwurf · noch nicht gesendet");
-        await user.click(within(dialog).getByRole("button", { name: "Mit Gemma prüfen" }));
-        expect(api.research).toHaveBeenCalledWith("test-owner", expect.stringContaining("Der genaue Entscheidtext."));
-        expect(api.research.mock.calls[0][1]).toContain("Position im Original nicht geprüft");
-        expect(api.research.mock.calls[0][1]).toContain("OpenCaseLaw-ID: CH_CASE");
-        expect(api.push).toHaveBeenCalledWith("/assistant");
-        expect(api.handoff).not.toHaveBeenCalled();
+        expect(within(dialog).getByRole("button", { name: "Mit dieser Quelle sprechen" })).toBeEnabled();
+        expect(api.research).not.toHaveBeenCalled();
+        expect(api.push).not.toHaveBeenCalled();
         api.model = "claude-opus-5-5";
         view.rerender(<KnowledgeWorkspace />);
         const externalLocation = within(dialog).getByText("Claude Opus 5.5").closest("[data-processing-route]");
@@ -348,7 +367,7 @@ describe("personal knowledge workspace", () => {
         api.detail.mockResolvedValueOnce({ ...decision, passage: { start: 100, end: 100 + passage.length, total_chars: 1000, has_more: true, text: passage } });
         api.detail.mockResolvedValueOnce({ ...decision, passage: { start: 100 + passage.length, end: 1000, total_chars: 1000, has_more: false, text: "Ein weiterer Abschnitt im Originalkontext." } });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await user.click(await screen.findByRole("button", { name: /Entscheidtext öffnen/ }));
         const dialog = screen.getByRole("dialog");
@@ -373,7 +392,7 @@ describe("personal knowledge workspace", () => {
         api.public.mockResolvedValue({ results: [{ decision_id: "source-1", title: null, snippet: "Originalauszug", court: "zh_verwaltungsgericht", docket_number: "VB.2012.00393", decision_date: "2012-03-15" }], query_mode: "literal_terms", database_generation: "test" });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
         await user.click(screen.getByRole("button", { name: "OpenCaseLaw" }));
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         expect(await screen.findByRole("heading", { name: "Verwaltungsgericht Zürich · VB.2012.00393" })).toBeVisible();
         expect(screen.getByText("Verwaltungsgericht Zürich", { exact: true })).toBeVisible();
@@ -381,41 +400,19 @@ describe("personal knowledge workspace", () => {
         await user.click(screen.getByText("Zum Suchumfang"));
         expect(screen.getByText(/Datum und Aktenzeichen stammen aus dem Datenbestand/)).toBeVisible();
     });
-    it("uses the existing new-assistant route without automatic search or submission", async () => {
+    it("binds selected original versions to the embedded conversation without search or auto-send", async () => {
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
         await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
-        await user.type(screen.getByLabelText("Suchbegriffe"), "Gehör?");
-        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
-        await user.click(screen.getByRole("button", { name: "Mit dieser Auswahl fragen" }));
-        expect(api.push).toHaveBeenCalledWith("/assistant");
-        expect(api.local).not.toHaveBeenCalled();
-        expect(api.public).not.toHaveBeenCalled();
+        expect(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!)).toEqual({ files: [{ filename: document.filename, document_id: document.id, version_id: document.current_version_id, version_number: 2 }], public_sources: [] });
+        expect(api.push).not.toHaveBeenCalled(); expect(api.local).not.toHaveBeenCalled(); expect(api.public).not.toHaveBeenCalled();
     });
-
-    it("prepares a chronology from selected ready versions without requiring a query or sending it", async () => {
-        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
-        await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
-        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
-        const action = screen.getByRole("button", { name: "Chronologie erstellen" });
-        expect(action).toBeDisabled();
-        await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
-        expect(screen.getByLabelText("Suchbegriffe")).toHaveValue("");
-        expect(action).toBeEnabled();
-        await user.click(action);
-        expect(api.push).toHaveBeenCalledWith("/assistant");
-        expect(getKnowledgeDraft("test-owner")).toMatchObject({ documents: [document] });
-        expect(getKnowledgeDraft("test-owner")?.prompt).toContain("Chronologie der Tatsachenbehauptungen");
-        expect(api.local).not.toHaveBeenCalled(); expect(api.public).not.toHaveBeenCalled();
-        expect(api.research).not.toHaveBeenCalled(); expect(api.handoff).not.toHaveBeenCalled();
-    });
-    it.each([{ status: "processing" }, { current_version_id: null }])("does not prepare a chronology from an unavailable source version", async override => {
+    it.each([{ status: "processing" }, { current_version_id: null }])("does not enable conversation from an unavailable source version", async override => {
         api.list.mockResolvedValueOnce({ documents: [{ ...document, ...override }], documentsHasMore: false });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
         await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
-        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
-        expect(screen.getByRole("button", { name: "Chronologie erstellen" })).toBeDisabled();
+        expect(conversationSourceIssue(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!))).toBe("unready");
         expect(api.push).not.toHaveBeenCalled();
     });
 
@@ -427,7 +424,7 @@ describe("personal knowledge workspace", () => {
         expect(api.public).not.toHaveBeenCalled();
         await user.click(screen.getByRole("button", { name: "Auswahl aus Word übernehmen" }));
         expect(wordHost.readSelection).toHaveBeenCalledOnce();
-        expect(screen.getByLabelText("Öffentliche Rechtsbegriffe")).toHaveValue("rechtliches Gehör");
+        expect(screen.getByLabelText("Suchbegriffe oder Entscheidnummer")).toHaveValue("rechtliches Gehör");
         expect(api.public).not.toHaveBeenCalled();
         expect(api.research).not.toHaveBeenCalled(); expect(api.handoff).not.toHaveBeenCalled();
         await user.click(screen.getByRole("button", { name: "Suchen" }));
@@ -438,10 +435,10 @@ describe("personal knowledge workspace", () => {
     it("rejects an overlong Word selection without replacing a manually entered query", async () => {
         const wordHost = { kind: "word" as const, readSelection: vi.fn().mockResolvedValue("Wort ".repeat(9)), insertTextAfterSelection: vi.fn(), insertCitationAfterSelection: vi.fn() };
         const user = userEvent.setup(); render(<KnowledgeWorkspace wordHost={wordHost} />);
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Zustellung");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"), "Zustellung");
         await user.click(screen.getByRole("button", { name: "Auswahl aus Word übernehmen" }));
         expect(await screen.findByRole("alert")).toHaveTextContent("bis zu acht Rechtsbegriffe");
-        expect(screen.getByLabelText("Öffentliche Rechtsbegriffe")).toHaveValue("Zustellung");
+        expect(screen.getByLabelText("Suchbegriffe oder Entscheidnummer")).toHaveValue("Zustellung");
         expect(api.public).not.toHaveBeenCalled();
     });
 
@@ -463,7 +460,7 @@ describe("personal knowledge workspace", () => {
         api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 32, total_chars: 32, has_more: false, text: "Der genaue öffentliche Wortlaut." } });
         api.model = "claude-opus-5-5";
         const user = userEvent.setup(); render(<KnowledgeWorkspace wordHost={wordHost} />);
-        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await user.click(await screen.findByRole("button", { name: /Entscheidtext öffnen/ }));
         const dialog = screen.getByRole("dialog");

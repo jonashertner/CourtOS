@@ -533,6 +533,7 @@ chatRouter.post("/", requireAuth, asyncRoute(async (req, res) => {
         if ("internal" in prep) return void sendInternalError(res, prep.error);
         return void res.status(prep.status).json({
             ...(prep.code ? { code: prep.code } : {}),
+            ...(prep.source_issue ? { source_issue: prep.source_issue } : {}),
             detail: prep.detail,
         });
     }
@@ -686,6 +687,7 @@ chatRouter.post("/", requireAuth, asyncRoute(async (req, res) => {
                 apiMessages,
                 docStore,
                 docIndex,
+                publicSources: lastUser?.public_sources,
                 userId,
                 userEmail,
                 db,

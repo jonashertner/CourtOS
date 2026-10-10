@@ -12,8 +12,9 @@ vi.mock("@/app/lib/wordResearchHost", async original => ({ ...(await original<ty
 vi.mock("@/app/lib/researchModelPreference", () => ({ useResearchModelPreference: () => ({ model: "gemma" }) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "owner" } }) }));
-vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list }));
+vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list, getLibrary: (...args: unknown[]) => api.list(...args), getLibraryFolderChildren: (...args: unknown[]) => api.list(...args) }));
 vi.mock("@/app/lib/knowledgeApi", async original => ({ ...(await original<typeof import("@/app/lib/knowledgeApi")>()), searchKnowledge: api.local, searchPublicKnowledge: api.public, getPublicDecision: api.detail }));
+vi.mock("./ResearchConversation", () => ({ ResearchConversation: (props: { candidate: unknown }) => <div data-testid="research-conversation" data-sources={JSON.stringify(props.candidate)}><textarea id="research-question" aria-label="Ihre Frage an die Quellen" /></div> }));
 vi.mock("next/dynamic", () => ({ default: () => (props: { document: { document_id: string; version_id: string; quotes: { target: { page: number } }[] } }) => <div data-testid="source-viewer" data-version={props.document.version_id} data-page={props.document.quotes[0]?.target.page} /> }));
 const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const ownerDocument = "11111111-1111-4111-8111-111111111111", version = "22222222-2222-4222-8222-222222222222";
@@ -34,7 +35,7 @@ const browser = () => <ResearchHandoffProvider ownerId="owner" inWord={false}><R
 describe("restored source research", () => {
     it("restores query, language, results and selected source without repeating search; detail is freshly checked", async () => {
         render(browser());
-        await waitFor(() => expect(screen.getByLabelText("Öffentliche Rechtsbegriffe")).toHaveValue("rechtliches Gehör"));
+        await waitFor(() => expect(screen.getByLabelText("Suchbegriffe oder Entscheidnummer")).toHaveValue("rechtliches Gehör"));
         expect(screen.getByLabelText("Sprache")).toHaveValue("de");
         const dialog = await screen.findByRole("dialog");
         await within(dialog).findByRole("button", { name: "Textstelle und Quelle kopieren" });
@@ -51,7 +52,7 @@ describe("restored source research", () => {
         expect(within(dialog).queryByRole("button", { name: "In Word einfügen" })).toBeNull();
         expect(api.public).not.toHaveBeenCalled();
     });
-    it("publishes the latest explicitly changed mode and closed source, with no full detail body", async () => {
+    it("retains the selected public source for the conversation when closing its reader, without full detail body", async () => {
         const user = userEvent.setup(); render(browser());
         const dialog = await screen.findByRole("dialog"); await within(dialog).findByRole("button", { name: "Textstelle und Quelle kopieren" });
         await user.click(within(dialog).getByRole("button", { name: "Quelle schliessen" }));
@@ -59,7 +60,7 @@ describe("restored source research", () => {
         await user.click(screen.getByRole("button", { name: "In Word fortsetzen" }));
         await waitFor(() => expect(api.update).toHaveBeenCalledOnce());
         const snapshot = api.update.mock.calls[0][2];
-        expect(snapshot.mode).toBe("private"); expect(snapshot.public.source).toBeNull();
+        expect(snapshot.mode).toBe("private"); expect(snapshot.public.source.excerpt.text).toBe(quote);
         expect(snapshot.public.result.results[0]).not.toHaveProperty("passage");
         expect(api.public).not.toHaveBeenCalled();
     });

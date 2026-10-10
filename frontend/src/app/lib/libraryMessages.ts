@@ -1,5 +1,6 @@
 import type { CourtOSText } from "./courtosLocale";
 export const libraryMessages = {
+    openRowActions: { de: "Aktionen öffnen", fr: "Ouvrir les actions", it: "Apri le azioni", en: "Open row actions" },
     "name": {
         "de": "Name",
         "fr": "Nom",

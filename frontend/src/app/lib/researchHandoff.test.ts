@@ -24,6 +24,14 @@ beforeEach(() => { sessionStorage.clear(); window.history.replaceState(null, "",
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); sessionStorage.clear(); });
 
 describe("bounded research handoff projection", () => {
+    it("preserves only the optional chat reference and bounded draft, never a transcript", () => {
+        const legacy = canonicalResearchHandoffState(emptyResearchHandoffState());
+        expect(legacy).not.toHaveProperty("conversation");
+        const state = canonicalResearchHandoffState({ ...legacy, conversation: { chat_id: ID, draft: "Follow-up", messages: [{ content: "DO NOT COPY" }] } });
+        expect(state.conversation).toEqual({ chat_id: ID, draft: "Follow-up" });
+        expect(JSON.stringify(state)).not.toContain("DO NOT COPY");
+        expect(() => canonicalResearchHandoffState({ ...legacy, conversation: { chat_id: ID, draft: "x".repeat(12001) } })).toThrow();
+    });
     it("retains research context but strips incidental raw bodies, HTML and sender verification flags", () => {
         const state = emptyResearchHandoffState();
         state.public.query = "rechtliches Gehör";

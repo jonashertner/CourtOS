@@ -46,6 +46,7 @@ const selected = z.object({
 }).strict();
 const stateSchema = z.object({
   version: z.literal(1), mode: z.enum(["public", "private"]),
+  conversation: z.object({ chat_id: id.nullable(), draft: text(12000) }).strict().optional(),
   public: z.object({ query: text(180), submitted: text(180), language: z.enum(["", "de", "fr", "it"]), result: publicResults.nullable(), source: publicSource.nullable() }).strict(),
   private: z.object({ query: text(300), submitted: text(300), selected: z.array(selected).max(20), result: privateResults.nullable(), source: privateResult.nullable() }).strict(),
 }).strict().refine(value => new Set(value.private.selected.map(document => document.id.toLowerCase())).size === value.private.selected.length);
@@ -67,6 +68,12 @@ type HandoffAction =
   | { action: "ack"; id: string; expectedRevision: number };
 const invalid = () => failure("validation", "Der Recherchekontext ist ungültig oder zu gross.", "handoff_invalid");
 const unavailable = () => failure("unavailable", "Der Recherchekontext ist gerade nicht verfügbar. Bitte erneut versuchen.", "handoff_unavailable");
+async function ownsConversation(db: Db, userId: string, state: ResearchHandoffState): Promise<boolean> {
+  const chatId = state.conversation?.chat_id;
+  if (!chatId) return true;
+  const { data, error } = await db.from("chats").select("id").eq("id", chatId).eq("user_id", userId).is("project_id", null).is("org_id", null).maybeSingle();
+  return !error && !!data && typeof data.id === "string" && data.id.toLowerCase() === chatId.toLowerCase();
+}
 
 /** The RPC atomically owns expiry, access revalidation, capacity and revision CAS.
  * Never log database errors here: database errors can contain a supplied row. */
@@ -77,11 +84,14 @@ export async function researchHandoff(db: Db, userId: string, input: HandoffActi
   const state = "state" in input ? parseResearchHandoffState(input.state) : null;
   if ("state" in input && !state) return invalid();
   try {
+    if (state && !(await ownsConversation(db, userId, state))) return failure("not_found", "Dieser Recherchekontext ist für Ihr Konto nicht verfügbar.", "handoff_not_found");
     const { data, error } = await db.rpc("courtos_research_handoff", {
       p_user_id: userId, p_action: input.action, p_id: "id" in input ? input.id : null,
       p_expected_revision: "expectedRevision" in input ? input.expectedRevision : null,
       p_state: state, p_direction: input.action === "update" ? input.direction : null,
-      p_metadata_only: input.action === "read" && input.metadataOnly,
+      // Chat-reference access is checked below even for metadata polls; the
+      // transcript is never copied and its own GET still performs access checks.
+      p_metadata_only: false,
     });
     if (error || !data || typeof data !== "object") return unavailable();
     if (data.status === "not_found") return failure("not_found", "Dieser Recherchekontext ist abgelaufen oder für Ihr Konto nicht verfügbar.", "handoff_not_found");
@@ -96,10 +106,11 @@ export async function researchHandoff(db: Db, userId: string, input: HandoffActi
       !Number.isInteger(record.acknowledged_revision) || Number(record.acknowledged_revision) < 0 || Number(record.acknowledged_revision) > Number(record.revision) ||
       !["to_word", "to_browser"].includes(String(record.direction)) || typeof record.expires_at !== "string" || !Number.isFinite(Date.parse(record.expires_at))) return unavailable();
     const metadata: ResearchHandoffMetadata = { id: String(record.id), revision: Number(record.revision), expires_at: record.expires_at, direction: record.direction as ResearchHandoffMetadata["direction"], acknowledged_revision: Number(record.acknowledged_revision) };
-    if (input.action === "read" && !input.metadataOnly) {
+    if (input.action === "read") {
       const saved = parseResearchHandoffState(record.state);
       if (!saved) return unavailable();
-      return ok({ ...metadata, state: saved });
+      if (!(await ownsConversation(db, userId, saved))) return failure("not_found", "Dieser Recherchekontext ist für Ihr Konto nicht verfügbar.", "handoff_not_found");
+      return ok(input.metadataOnly ? metadata : { ...metadata, state: saved });
     }
     return ok(metadata);
   } catch { return unavailable(); }

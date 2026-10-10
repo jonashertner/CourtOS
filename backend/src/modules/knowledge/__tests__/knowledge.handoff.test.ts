@@ -9,6 +9,11 @@ const metadata={id:handle,revision:1,acknowledged_revision:0,direction:"to_brows
 const database=(data:unknown={status:"ok",record:metadata},error:unknown=null)=>{const rpc=vi.fn().mockResolvedValue({data,error});return{rpc,db:{rpc} as unknown as Db};};
 
 describe("bounded research handoff state",()=>{
+  it("allows only a bounded optional chat reference and draft, never a transcript",()=>{
+    const value={...state(),conversation:{chat_id:handle,draft:"Continue this question"}};
+    expect(parseResearchHandoffState(value)).toEqual(value);
+    for(const conversation of [{chat_id:handle,draft:"x".repeat(12001)},{chat_id:handle,draft:"",messages:[]},{chat_id:"invalid",draft:""}])expect(parseResearchHandoffState({...state(),conversation})).toBeNull();
+  });
   it("roundtrips draft query separately from submitted results without initiating any search",()=>{
     const value={...state(),public:{...state().public,query:"neuer Begriff",submitted:"Gehör",result:{results:[source],query_mode:"opencaselaw_ai",database_generation:null,ai_assisted:true}}};
     expect(parseResearchHandoffState(value)).toEqual(value);
@@ -42,6 +47,19 @@ describe("bounded research handoff state",()=>{
 });
 
 describe("research handoff persistence boundary",()=>{
+  it("rejects foreign/deleted/shared chat references before creating or returning a handoff",async()=>{
+    const saved={...state(),conversation:{chat_id:handle,draft:"Private draft"}};
+    const {db,rpc}=database({status:"ok",record:{...metadata,state:saved}});
+    const filters:unknown[][]=[];
+    const q={select:()=>q,eq:(...args:unknown[])=>{filters.push(args);return q;},is:(...args:unknown[])=>{filters.push(args);return q;},maybeSingle:vi.fn().mockResolvedValue({data:null,error:null})};
+    Object.assign(db,{from:vi.fn(()=>q)});
+    expect(await researchHandoff(db,owner,{action:"create",state:saved})).toMatchObject({ok:false,code:"handoff_not_found"});
+    expect(rpc).not.toHaveBeenCalled();
+    for(const metadataOnly of [false,true])expect(await researchHandoff(db,owner,{action:"read",id:handle,metadataOnly})).toMatchObject({ok:false,code:"handoff_not_found"});
+    expect(filters).toEqual(expect.arrayContaining([["user_id",owner],["project_id",null],["org_id",null]]));
+    q.maybeSingle.mockResolvedValue({data:{id:handle},error:null});
+    expect(await researchHandoff(db,owner,{action:"read",id:handle,metadataOnly:true})).toEqual({ok:true,data:metadata});
+  });
   it("takes the owner exclusively from authenticated input and calls only the atomic RPC",async()=>{
     const {db,rpc}=database();
     expect(await researchHandoff(db,owner,{action:"create",state:state()})).toEqual({ok:true,data:metadata});
@@ -58,9 +76,9 @@ describe("research handoff persistence boundary",()=>{
     const result=await researchHandoff(db,owner,{action:"read",id:handle,metadataOnly:false});
     expect(result).toMatchObject({ok:false,kind,code});expect(JSON.stringify(result)).not.toContain("SECRET");
   });
-  it("strips any incidental payload from metadata and validates stored state on full reads",async()=>{
+  it("validates stored state before both metadata and full reads",async()=>{
     const {db}=database({status:"ok",record:{...metadata,state:{token:"SECRET"},user_id:"SECRET"}});
-    expect(await researchHandoff(db,owner,{action:"read",id:handle,metadataOnly:true})).toEqual({ok:true,data:metadata});
+    expect(await researchHandoff(db,owner,{action:"read",id:handle,metadataOnly:true})).toMatchObject({ok:false,code:"handoff_unavailable"});
     expect(await researchHandoff(db,owner,{action:"read",id:handle,metadataOnly:false})).toMatchObject({ok:false,code:"handoff_unavailable"});
     const valid=database({status:"ok",record:{...metadata,state:state()}});
     expect(await researchHandoff(valid.db,owner,{action:"read",id:handle,metadataOnly:false})).toEqual({ok:true,data:{...metadata,state:state()}});

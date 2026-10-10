@@ -1,5 +1,7 @@
 "use client";
 import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { COURTOS_LANGUAGE_TAGS } from "@/app/lib/courtosLocale";
 import { useLibraryText } from "@/app/hooks/useLibraryText";
 import { libraryMessages as L } from "@/app/lib/libraryMessages";
 
@@ -97,7 +99,7 @@ import {
     DocIcon,
     DocVersionHistory,
     formatBytes,
-    formatDate,
+    formatDate as formatDocumentDate,
     treeNameCellStyle,
     type ProjectContextMenu,
 } from "@/app/components/projects/ProjectPageParts";
@@ -418,6 +420,8 @@ export function DocTable({
     catalog,
 }: DocTableProps) {
     const t=useLibraryText();
+    const { locale } = useCourtOSLocale();
+    const formatDate = (iso: string) => formatDocumentDate(iso, COURTOS_PILOT_MODE ? COURTOS_LANGUAGE_TAGS[locale] : undefined);
     const localizedTextLayerWarning = (pages: number | null | undefined, missing: number | null | undefined) => {
         if (!COURTOS_PILOT_MODE) return textLayerWarning(pages, missing);
         if (!missing) return null;

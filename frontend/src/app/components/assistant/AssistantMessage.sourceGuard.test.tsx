@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AssistantMessage } from "./AssistantMessage";
-import type { DocumentCitation } from "../shared/types";
+import type { DocumentCitation, PublicDecisionCitation } from "../shared/types";
 
 vi.mock("@/app/lib/courtos", () => ({ COURTOS_PILOT_MODE: true }));
 vi.mock("@/app/components/courtos/FrontierAnswerAction", () => ({ FrontierAnswerAction: () => <button>Mit Frontier prüfen</button> }));
@@ -40,6 +40,28 @@ describe("CourtOS answer source guard", () => {
         expect(screen.queryByRole("alert")).toBeNull();
         expect(screen.getByRole("button", { name: "Copy response" })).toBeVisible();
         expect(screen.queryByText(/Aussage bestätigt/)).toBeNull();
+    });
+
+    it("disables frontier forwarding when embedded while retaining normal source-checked copy", () => {
+        render(<AssistantMessage events={[{ type: "content", text: "Ein Zahlungsauftrag liegt vor." }]} citations={[citation(true)]} citationStatus="final" allowFrontier={false}/>);
+        expect(screen.getByRole("button", { name: "Copy response" })).toBeVisible();
+        expect(screen.queryByRole("button", { name: "Mit Frontier prüfen" })).toBeNull();
+    });
+    it("opens public evidence through the public callback without resolving a private document", () => {
+        const source: PublicDecisionCitation = {type:"citation_data",kind:"public_decision",ref:1,decision_id:"bge_1",title:"BGE 1",source_url:"https://www.bger.ch/test",pdf_url:null,content_hash:null,start:10,end:18,quote:"Wortlaut",verified:true};
+        const onOpenSource=vi.fn(),onOpenDocument=vi.fn();
+        render(<AssistantMessage events={[{type:"content",text:"Ein Auszug [1]."}]} citations={[source]} citationStatus="final" onOpenCitationSource={onOpenSource} onOpenDocument={onOpenDocument} allowFrontier={false}/>);
+        fireEvent.click(screen.getByRole("button",{name:"BGE 1"}));
+        expect(onOpenSource).toHaveBeenCalledWith(source);
+        expect(onOpenDocument).not.toHaveBeenCalled();
+        expect(screen.getByRole("button", {name:"Copy response"})).toBeVisible();
+    });
+    it("blocks a public answer whose claimed Unicode position cannot contain the quote", () => {
+        const source: PublicDecisionCitation = {type:"citation_data",kind:"public_decision",ref:1,decision_id:"bge_1",title:"BGE 1",source_url:null,pdf_url:null,content_hash:null,start:0,end:2,quote:"Longer quote",verified:true};
+        render(<AssistantMessage events={[{type:"content",text:"Nicht freigeben."}]} citations={[source]} citationStatus="final"/>);
+        expect(screen.getByRole("alert")).toBeVisible();
+        expect(screen.queryByRole("button", {name:"Copy response"})).toBeNull();
+        expect(screen.queryByRole("button", {name:"Mit Frontier prüfen"})).toBeNull();
     });
 
     it("copies every prose block in chronological order while excluding tool and reasoning text", async () => {

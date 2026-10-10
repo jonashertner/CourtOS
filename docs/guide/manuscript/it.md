@@ -46,10 +46,10 @@ Usate decisioni pubbliche, dottrina non riservata che avete diritto di utilizzar
 Il riferimento deve accompagnarvi nel vostro strumento di lavoro.
 
 ### Aprire
-Nel browser: https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail e il codice ricevuto. In Word aprite il componente aggiuntivo CourtOS installato. Per la ricerca non servono un progetto o una conversazione.
+Nel browser: https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail e il codice ricevuto. In Word aprite il componente aggiuntivo CourtOS installato. Scegliete le fonti prima di porre una domanda.
 
 ### Cercare fonti pubbliche
-Scegliete OpenCaseLaw. Inserite il riferimento di una decisione o pochi termini pubblici e, se necessario, scegliete la lingua. I risultati sono limitati. L’assenza di risultati non prova l’assenza di giurisprudenza. Non inserite nomi o fatti riservati.
+Scegliete «Cerca giurisprudenza», poi OpenCaseLaw. Inserite il riferimento di una decisione o poche parole chiave. I risultati sono limitati; la loro assenza non prova l’assenza di giurisprudenza. Non inserite nomi o fatti riservati.
 
 ### Riprendere un passaggio
 Aprite la decisione e verificate l’originale. Selezionate un breve passaggio, confermate la selezione e copiate testo e fonte oppure inseriteli in Word. Il collegamento di ricerca nell’originale tenta di ritrovare il passaggio. Non certifica un numero ufficiale di paragrafo; il collegamento all’intero documento non è un riferimento puntuale.
@@ -61,19 +61,22 @@ Da Word aprite il browser e proseguite con lo stesso account. Poi ritrasferite l
 «Citazioni» apre Citecheck separatamente. CourtOS non trasmette alcun testo. Verificate nella decisione originale se sostiene la vostra affermazione.
 
 ## 6. Aggiungere le proprie fonti
-La biblioteca integra la giurisprudenza con i documenti che scegliete.
+Scegliete le fonti originali. Ponete domande. Verificate i passaggi citati.
 
-### Caricare
-Aggiungete PDF in «Biblioteca». Un nome chiaro con autore, titolo ed edizione ne facilita l’identificazione. CourtOS salva una copia sul server; non legge direttamente una cartella locale. L’interfaccia indica i limiti di caricamento.
+### Ordinare per numero di causa
+Create nella biblioteca una cartella con il numero di causa. Al suo interno ordinate le parti, i loro scritti e gli allegati; tenete separati gli atti comuni. Caricate i PDF nella cartella corretta. CourtOS salva copie sul server.
 
-### Cercare
-Nella ricerca scegliete «Fonti proprie» e i documenti desiderati. Questa ricerca non usa l’IA. Ogni risultato indica passaggio, versione e pagina PDF. Scansioni illeggibili o un’indicizzazione parziale possono lasciare lacune.
+### Scegliere le fonti
+Con «Scegli le tue fonti» selezionate i PDF della conversazione. Per la giurisprudenza aprite una decisione OpenCaseLaw, scegliete un breve estratto e aggiungetelo alla conversazione. La semplice ricerca nei vostri documenti non usa l’IA.
 
-### Conservare il riferimento
-Aprite la pagina e leggete il contesto. Copiate o inserite il passaggio con nome del file, versione, pagina e collegamento protetto. Il collegamento apre la versione salvata per l’account autorizzato; non concede accesso a terzi.
+### Porre domande e precisarle
+Chiedete quali importi menziona uno scritto o in cosa divergono due ricostruzioni dei fatti. Gemma lavora sulle fonti scelte. Le domande successive usano le stesse versioni; iniziate una nuova conversazione per altre fonti. Senza fonti non parte alcuna richiesta.
 
-### Distinguere testo e significato
-Una citazione ritrovata alla lettera può essere incompleta o non pertinente alla questione giuridica. Verificate ciò che consente di affermare. La pagina PDF non coincide necessariamente con la pagina stampata.
+### Verificare la risposta
+Ogni paragrafo della risposta deve contenere un riferimento verificato. Aprite il passaggio e leggete il contesto. Senza un riferimento valido, la risposta non viene mostrata. I collegamenti ai vostri PDF restano riservati agli account autorizzati.
+
+### Ritrovare il testo non prova la conclusione
+Il controllo conferma il passaggio e la citazione, non la conclusione. Un’allegazione resta un’allegazione. La pagina PDF può differire dalla pagina stampata.
 
 ## 7. Esaminare gli atti
 Accostare affermazioni e documenti in un elenco da verificare.

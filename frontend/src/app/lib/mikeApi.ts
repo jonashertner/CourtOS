@@ -81,6 +81,7 @@ interface ServerMessage {
     role: "user" | "assistant";
     content: string | AssistantEvent[] | null;
     files?: MessageFile[] | null;
+    public_sources?: import("@mike/contracts").PublicSourceSelection[] | null;
     workflow?: { id: string; title: string } | null;
     citations?: Citation[] | null;
     created_at: string;
@@ -2339,6 +2340,7 @@ export async function getChat(chatId: string): Promise<ChatDetailOut> {
                 role: "user",
                 content: typeof m.content === "string" ? m.content : "",
                 files: m.files ?? undefined,
+                public_sources: m.public_sources ?? undefined,
                 workflow: m.workflow ?? undefined,
             };
         }
@@ -2527,6 +2529,7 @@ export async function streamChat(payload: {
         role: string;
         content: string;
         files?: MessageFile[];
+        public_sources?: import("@mike/contracts").PublicSourceSelection[];
         workflow?: { id: string; title: string };
     }[];
     chat_id?: string;
@@ -2549,6 +2552,7 @@ export async function streamChat(payload: {
 }
 
 type StreamChatMessage = {
+    public_sources?: import("@mike/contracts").PublicSourceSelection[];
     role: string;
     content: string;
     files?: MessageFile[];

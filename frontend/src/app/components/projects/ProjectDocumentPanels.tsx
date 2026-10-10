@@ -103,7 +103,7 @@ export const ProjectDocumentPanels = memo(function ProjectDocumentPanels({
             });
             const annotation = tab.annotation;
             const citedDocument =
-                annotation?.kind === "citation"
+                annotation?.kind === "citation" && annotation.citation.kind !== "public_decision"
                     ? panelDocumentFromCitation(annotation.citation)
                     : undefined;
             const sourceDocument = citedDocument

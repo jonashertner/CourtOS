@@ -1,4 +1,8 @@
 import Image from "next/image";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import type { CourtOSLocale } from "@/app/lib/courtosLocale";
+import { publicCitationMessages as publicMessages } from "@/app/lib/publicCitationMessages";
+import { safePublicCitationUrl } from "@/app/lib/publicCitationLinks";
 import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
 import { Loader2 } from "lucide-react";
 import { FileTypeIcon } from "../../shared/FileTypeIcon";
@@ -24,6 +28,9 @@ function citationSourceKey(annotation: Citation): string {
     if (annotation.kind === "case") {
         return `case:${annotation.cluster_id}`;
     }
+    if (annotation.kind === "public_decision") {
+        return `public:${annotation.decision_id}:${annotation.content_hash ?? "live"}`;
+    }
     return `document:${annotation.document_id}`;
 }
 
@@ -34,19 +41,22 @@ function citationSourceLabel(annotation: Citation): string {
         if (caseName && citation) return `${caseName}, ${citation}`;
         return caseName || citation || `Case ${annotation.cluster_id}`;
     }
+    if (annotation.kind === "public_decision") return annotation.title.trim() || annotation.decision_id;
     return annotation.filename;
 }
 
-export function citationTooltip(annotation: Citation): string {
+export function citationTooltip(annotation: Citation, locale: CourtOSLocale = "de"): string {
     const locator = formatCitationPage(annotation);
     const quote = displayCitationQuote(annotation);
     const source = locator ? `${locator}: "${quote}"` : `"${quote}"`;
-    const verification = citationVerificationDescription(annotation);
+    const verification = annotation.kind === "public_decision" && hasCheckedCitationLocation(annotation)
+        ? [publicMessages.literal[locale], publicMessages.offsets[locale], annotation.content_hash === null ? publicMessages.noHash[locale] : ""].filter(Boolean).join(" ")
+        : citationVerificationDescription(annotation);
     return verification ? `${source} — ${verification}` : source;
 }
 
 function CitationSourceIcon({ annotation }: { annotation: Citation }) {
-    if (annotation.kind === "case") {
+    if (annotation.kind === "case" || annotation.kind === "public_decision") {
         return (
             <Image
                 src="/icons/legal-sources/case-law.svg"
@@ -105,46 +115,56 @@ function appendixPages(page: number | string): number[] {
     return Array.from({ length: last - first + 1 }, (_, index) => first + index);
 }
 
-export function buildCitationAppendix(citations: Citation[], origin?: string) {
+export function buildCitationAppendix(citations: Citation[], origin?: string, locale: CourtOSLocale = "de") {
     if (citations.length === 0) return { html: "", text: "" };
     const entries = citations.map((annotation) => {
-        const version = annotation.kind === "case" ? "" : annotation.version_number
-            ? `Version ${annotation.version_number}` : annotation.version_id ? `Fassung ${annotation.version_id}` : "Fassung nicht angegeben";
-        const label = [citationSourceLabel(annotation), version, formatCitationPage(annotation)].filter(Boolean).join(", ");
-        const pages = annotation.kind === "case" ? [] : (annotation.quotes?.length ? annotation.quotes : [annotation]).flatMap(quote => appendixPages(quote.page));
         const checked = hasCheckedCitationLocation(annotation);
-        const links = annotation.kind === "case" || !origin || !checked ? [] :
-            [...new Set(pages)].flatMap(page => {
-                if (page === null || !annotation.version_id) return [];
-                const url = librarySourceUrl(origin, annotation.document_id, annotation.version_id, page);
-                return url ? [{ page, url }] : [];
-            });
+        const links: {label: string; url: string}[] = [];
+        const notes: string[] = [];
+        let version = "";
+        if (annotation.kind === "public_decision") {
+            notes.push(publicMessages.offsets[locale]);
+            if (checked) notes.push(publicMessages.literal[locale]);
+            notes.push(annotation.content_hash === null ? publicMessages.noHash[locale]
+                : `${publicMessages.fingerprint[locale]}: ${annotation.content_hash}`);
+            const original = safePublicCitationUrl(annotation.source_url);
+            const pdf = safePublicCitationUrl(annotation.pdf_url);
+            if (original) links.push({label: publicMessages.original[locale], url: original});
+            if (pdf && pdf !== original) links.push({label: publicMessages.originalPdf[locale], url: pdf});
+        } else if (annotation.kind !== "case") {
+            version = annotation.version_number ? `Version ${annotation.version_number}`
+                : annotation.version_id ? `Fassung ${annotation.version_id}` : "Fassung nicht angegeben";
+            const pages = (annotation.quotes?.length ? annotation.quotes : [annotation]).flatMap(quote => appendixPages(quote.page));
+            if (origin && checked && annotation.version_id) {
+                for (const page of new Set(pages)) {
+                    const url = librarySourceUrl(origin, annotation.document_id, annotation.version_id, page);
+                    if (url) links.push({label: `Original, PDF-Seite ${page}`, url});
+                }
+            }
+        }
         return {
             number: annotation.ref,
-            label,
-            quote: displayCitationQuote(annotation).trim(),
-            links,
+            label: [citationSourceLabel(annotation), version, formatCitationPage(annotation)].filter(Boolean).join(", "),
+            quote: annotation.kind === "public_decision" ? annotation.quote : displayCitationQuote(annotation).trim(),
+            links, notes,
             unconfirmed: !checked,
         };
     });
     const textLines = [
-        "",
-        "Citations",
+        "", "Citations",
         ...entries.map((entry) => {
             const quote = entry.quote ? ` "${entry.quote}"` : "";
-            return `${entry.number} ${ensureTerminalPeriod(entry.label)}${quote}${entry.unconfirmed ? " [Zitat nicht bestätigt]" : ""}${entry.links.map(link => `\nOriginal, PDF-Seite ${link.page}: ${link.url}`).join("")}`;
+            return `${entry.number} ${ensureTerminalPeriod(entry.label)}${quote}${entry.unconfirmed ? " [Zitat nicht bestätigt]" : ""}${entry.notes.map(note => `\n${note}`).join("")}${entry.links.map(link => `\n${link.label}: ${link.url}`).join("")}`;
         }),
     ];
     const html = [
-        `<section class="copied-citations">`,
-        `<h3>Citations</h3>`,
+        `<section class="copied-citations">`, `<h3>Citations</h3>`,
         ...entries.map((entry) => {
             const label = escapeHtmlText(ensureTerminalPeriod(entry.label));
-            const quote = entry.quote
-                ? ` &quot;${escapeHtmlText(entry.quote)}&quot;`
-                : "";
-            const links = entry.links.map(link => `<br><a href="${escapeHtmlText(link.url)}">Original, PDF-Seite ${link.page}</a>`).join("");
-            return `<p><sup>${entry.number}</sup> ${label}${quote}${entry.unconfirmed ? " [Zitat nicht bestätigt]" : ""}${links}</p>`;
+            const quote = entry.quote ? ` &quot;${escapeHtmlText(entry.quote)}&quot;` : "";
+            const links = entry.links.map(link => `<br><a href="${escapeHtmlText(link.url)}">${escapeHtmlText(link.label)}</a>`).join("");
+            const notes = entry.notes.map(note => `<br>${escapeHtmlText(note)}`).join("");
+            return `<p><sup>${entry.number}</sup> ${label}${quote}${entry.unconfirmed ? " [Zitat nicht bestätigt]" : ""}${notes}${links}</p>`;
         }),
         `</section>`,
     ].join("");
@@ -168,6 +188,7 @@ export function CitationsBlock({
     showWhenEmpty?: boolean;
     isLoading?: boolean;
 }) {
+    const { locale, t } = useCourtOSLocale();
     const rows = buildCitationSourceRows(citations);
     if (rows.length === 0 && !showWhenEmpty) return null;
 
@@ -176,12 +197,19 @@ export function CitationsBlock({
             <div className={`overflow-hidden ${RESPONSE_GLASS_SURFACE}`}>
                 <div className="flex items-center justify-between gap-3 bg-white/25 px-3 py-2">
                     <h3 className="text-base font-serif text-gray-900">
-                        Citations
+                        {t(publicMessages.sources)}
                     </h3>
                     {isLoading && (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />
                     )}
                 </div>
+                {citations.some(citation => citation.kind === "public_decision") && (
+                    <p className="px-3 pt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                        {t(publicMessages.offsets)}
+                        {citations.some(citation => citation.kind === "public_decision" && hasCheckedCitationLocation(citation)) && <> {t(publicMessages.literal)}</>}
+                        {citations.some(citation => citation.kind === "public_decision" && citation.content_hash === null) && <> {t(publicMessages.noHash)}</>}
+                    </p>
+                )}
                 <div>
                     {rows.map((row) => {
                         const sourceIsClickable =
@@ -234,7 +262,7 @@ export function CitationsBlock({
                                                     annotation,
                                                 )}
                                                 title={citationTooltip(
-                                                    annotation,
+                                                    annotation, locale,
                                                 )}
                                             >
                                                 {annotation.ref}

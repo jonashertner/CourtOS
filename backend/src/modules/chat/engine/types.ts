@@ -66,6 +66,7 @@ export type ToolCall = {
 export type ChatMessage = {
   role: string;
   content: string | null;
+  public_sources?: import("@mike/contracts").PublicSourceSelection[];
   files?: {
     filename: string;
     document_id?: string;

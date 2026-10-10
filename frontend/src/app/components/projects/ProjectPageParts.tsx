@@ -49,8 +49,8 @@ export function formatBytes(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString(undefined, {
+export function formatDate(iso: string, locale?: string) {
+    return new Date(iso).toLocaleDateString(locale, {
         day: "numeric",
         month: "short",
         year: "numeric",

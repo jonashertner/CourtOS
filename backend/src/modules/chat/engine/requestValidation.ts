@@ -6,6 +6,7 @@ import {
   type ChatMessage,
 } from "./types";
 import { REASONING_LEVELS, type ReasoningLevel } from "../../../lib/llm/types";
+import { parsePublicSourceSelections } from "./publicSourceEvidence";
 
 type ValidationResult<T> =
   | { ok: true; value: T }
@@ -216,11 +217,14 @@ export function parseChatMessages(
       workflow = parsedWorkflow.value;
     }
 
+    const publicSources = message.public_sources === undefined ? undefined : parsePublicSourceSelections(message.public_sources);
+    if (publicSources === null || publicSources !== undefined && role !== "user") return { ok: false, detail: "Invalid public source selection" };
     messages.push({
       role,
       content: message.content,
       ...(files ? { files } : {}),
       ...(workflow ? { workflow } : {}),
+      ...(publicSources !== undefined ? { public_sources: publicSources } : {}),
     });
   }
 

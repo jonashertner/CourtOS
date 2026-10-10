@@ -66,16 +66,16 @@ const transcript = (messages: Message[]) =>
 
 /** Mirrors /assistant/chat/[id]: mounts holding the carried user message and
  *  auto-sends it from an effect. */
-function AutoSendingChat({ chatId }: { chatId?: string }) {
+function AutoSendingChat({ chatId, message = firstMessage }: { chatId?: string; message?: Message }) {
     const { messages, handleChat } = useAssistantChat({
-        initialMessages: [firstMessage],
+        initialMessages: [message],
         chatId,
     });
     const hasAutoSent = useRef(false);
     useEffect(() => {
         if (hasAutoSent.current || messages.length !== 1) return;
         hasAutoSent.current = true;
-        void handleChat(firstMessage);
+        void handleChat(message);
     }, [messages.length, handleChat]);
     return <div data-testid="transcript">{transcript(messages)}</div>;
 }
@@ -109,6 +109,15 @@ describe("a first message auto-sent on mount", () => {
                 "user:hello | assistant:Hi there",
             ),
         );
+    });
+
+    it("transports exact public selections on a source-bound turn without quote authority", async () => {
+        fetchMock.mockResolvedValue(sseResponse(["data: [DONE]\n\n"]));
+        const public_sources = [{ decision_id: "BGE_137_I_195", start: 20, end: 60, content_hash: null }];
+        render(<AutoSendingChat chatId="source-chat" message={{ role: "user", content: "Quelle erklären", public_sources, model: "courtos-local" }} />);
+        await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+        const call = fetchMock.mock.calls.find(([url]) => String(url).endsWith("/chat"))!;
+        expect(JSON.parse(call[1].body).messages.at(-1)).toEqual({ role: "user", content: "Quelle erklären", public_sources });
     });
 
     it("still invalidates the in-flight request when the host switches threads", async () => {

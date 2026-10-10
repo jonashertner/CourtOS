@@ -46,10 +46,10 @@ Use public decisions, non-confidential literature you are entitled to use, or fi
 The reference should follow you to where you write.
 
 ### Open
-In the browser: https://sandbox.swisslaw.io/research. Sign in with your email address and the code you receive. In Word, open the installed CourtOS add-in. Research requires neither a project nor a chat.
+In the browser: https://sandbox.swisslaw.io/research. Sign in with your email address and the code you receive. In Word, open the installed CourtOS add-in. Choose sources before asking a question.
 
 ### Search public sources
-Choose OpenCaseLaw. Enter a decision reference or a few public search terms, and choose a language if needed. Results are limited. No result does not establish that no relevant decision exists. Keep confidential names and facts out of this field.
+Choose “Find case law”, then OpenCaseLaw. Enter a decision reference or a few search terms. Results are limited; no result does not establish that no relevant decision exists. Keep confidential names and facts out of this field.
 
 ### Take a passage with you
 Open the decision and check the original. Select a short passage, confirm the selection, then copy text and source or insert them into Word. The text-search link attempts to find the passage in the original. It does not certify an official paragraph number; a link to the whole document is not a pinpoint reference.
@@ -61,19 +61,22 @@ Open the browser from Word and continue under the same account. Then return the 
 “Citations” opens Citecheck separately. CourtOS sends it no text. Read the original decision to assess whether it supports your statement.
 
 ## 6. Add your own sources
-The library complements case law with the material you select.
+Choose original sources. Ask questions. Check the cited passages.
 
-### Upload
-Add PDFs under “Library”. A clear filename with author, title and edition helps identify them later. CourtOS stores a copy on the server; it does not read a local case folder directly. The interface shows upload limits.
+### File by case number
+Create a library folder bearing the case number. Below it, organise the parties, their submissions and exhibits; keep shared records separate. Upload PDFs to the right folder. CourtOS stores copies on the server.
 
-### Search
-In research, choose “Your sources” and the documents you need. This search uses no AI. A result shows the passage, version and PDF page. Unreadable scans or partial indexing can leave gaps.
+### Choose sources
+Use “Choose your sources” to select PDFs for the conversation. For case law, open an OpenCaseLaw decision, select a short excerpt and add it to the conversation. Searching your own documents uses no AI.
 
-### Keep the reference
-Open the page and read the context. Copy or insert the passage with filename, version, page and protected source link. The link opens the stored version for the authorised account; it grants no access to anyone else.
+### Ask and follow up
+Ask which amounts a submission mentions or how two accounts of the facts differ. Gemma works with the selected sources. Follow-up questions use the same versions; start a new conversation for other sources. No request can start without sources.
 
-### Separate wording from meaning
-A verbatim match can still be incomplete or irrelevant to the legal question. Check what the source supports. The PDF page is not necessarily the printed page number.
+### Check the answer
+Every answer paragraph needs a checked source reference. Open the passage and read the context. If a reference cannot be verified, the answer is withheld. Links to your PDFs remain restricted to authorised accounts.
+
+### Matching words do not prove a conclusion
+The check confirms the passage and quotation, not the inference. A party’s allegation remains an allegation. The PDF page may differ from the printed page number.
 
 ## 7. Review submissions
 Bring allegations and evidence together in a list you can check.

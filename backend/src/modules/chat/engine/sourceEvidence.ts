@@ -5,7 +5,7 @@ import type { Db } from "../../../lib/supabase";
 import { UserFacingError } from "../../../lib/userFacingError";
 import { ensureDocAccess } from "../../../lib/access";
 import type { DocIndex, DocStore } from "./types";
-import type { SourceGroundingDiagnostics } from "@mike/contracts";
+import type { SourceGroundingDiagnostics, SourceGroundingIssue } from "@mike/contracts";
 
 // These are admission limits, not truncation targets. The provider's separate
 // request-body budget remains enforced after schemas and history are added.
@@ -13,7 +13,7 @@ export const SOURCE_EVIDENCE_LIMITS = { documents: 5, pages: 40, textBytes: 10_0
 
 export class SourceGroundingError extends UserFacingError {
   readonly code = "source_grounding_failed" as const;
-  constructor(message = "Die Antwort wurde zurückgehalten: Nicht alle Quellenverweise konnten an der angegebenen Stelle der ausgewählten Fassung bestätigt werden. Öffnen Sie die Originalquellen und grenzen Sie den Auftrag ein.", readonly diagnostics?: SourceGroundingDiagnostics) {
+  constructor(message = "Die Antwort wurde zurückgehalten: Nicht alle Quellenverweise konnten an der angegebenen Stelle der ausgewählten Fassung bestätigt werden. Öffnen Sie die Originalquellen und grenzen Sie den Auftrag ein.", readonly diagnostics?: SourceGroundingDiagnostics, readonly issue: SourceGroundingIssue = "verification") {
     super(message);
     this.name = "SourceGroundingError";
   }
@@ -34,40 +34,40 @@ export async function loadDocumentEvidence(label: string, docStore: DocStore, do
   const index = docIndex[label];
   const item = docStore.get(label);
   if (!index?.document_id || !index.version_id || !item || item.inline_text !== undefined) {
-    throw new SourceGroundingError("Die ausgewählte Quelle besitzt keine prüfbare gespeicherte PDF-Fassung. Bitte eine PDF-Datei mit auslesbarem Text auswählen.");
+    throw new SourceGroundingError("Die ausgewählte Quelle besitzt keine prüfbare gespeicherte PDF-Fassung. Bitte eine PDF-Datei mit auslesbarem Text auswählen.", undefined, "unavailable");
   }
   const { data: document } = await db.from("documents").select("id,user_id,project_id,org_id,workflow_id,status").eq("id", index.document_id).single();
   if (!document || document.status !== "ready" || !(await ensureDocAccess(document, userId, userEmail ?? null, db)).ok) {
-    throw new SourceGroundingError("Die ausgewählte Quelle ist nicht mehr verfügbar. Bitte die Auswahl prüfen.");
+    throw new SourceGroundingError("Die ausgewählte Quelle ist nicht mehr verfügbar. Bitte die Auswahl prüfen.", undefined, "unavailable");
   }
   const version = await loadActiveVersion(index.document_id, db, index.version_id);
   if (!version || version.id !== index.version_id) {
-    throw new SourceGroundingError("Die ausgewählte Dokumentfassung ist nicht mehr verfügbar. Es wurde keine Ersatzfassung verwendet. Bitte die Auswahl prüfen.");
+    throw new SourceGroundingError("Die ausgewählte Dokumentfassung ist nicht mehr verfügbar. Es wurde keine Ersatzfassung verwendet. Bitte die Auswahl prüfen.", undefined, "changed");
   }
   const isPdf = /(?:application\/pdf|^pdf$)/i.test(version.file_type ?? "") || /\.pdf$/i.test(version.filename ?? "");
   if (!isPdf) {
-    throw new SourceGroundingError("Für diesen belegten Auftrag bitte eine ursprüngliche PDF-Datei auswählen. Die Seiten einer nachträglich erzeugten Word-PDF-Fassung werden hier nicht als Originalfundstelle behandelt.");
+    throw new SourceGroundingError("Für diesen belegten Auftrag bitte eine ursprüngliche PDF-Datei auswählen. Die Seiten einer nachträglich erzeugten Word-PDF-Fassung werden hier nicht als Originalfundstelle behandelt.", undefined, "unavailable");
   }
   const pdfPath = version.storage_path;
   if (!pdfPath || (version.size_bytes ?? 0) > SOURCE_EVIDENCE_LIMITS.fileBytes) {
-    throw new SourceGroundingError("Für diese Quelle fehlt eine lesbare PDF-Fassung innerhalb der Dateigrenze. Es wurde keine Antwort erzeugt.");
+    throw new SourceGroundingError("Für diese Quelle fehlt eine lesbare PDF-Fassung innerhalb der Dateigrenze. Es wurde keine Antwort erzeugt.", undefined, "unavailable");
   }
   const bytes = await downloadFile(pdfPath);
   if (!bytes || bytes.byteLength > SOURCE_EVIDENCE_LIMITS.fileBytes) {
-    throw new SourceGroundingError("Die ausgewählte PDF-Fassung konnte nicht vollständig geladen werden. Bitte die Originalquelle prüfen.");
+    throw new SourceGroundingError("Die ausgewählte PDF-Fassung konnte nicht vollständig geladen werden. Bitte die Originalquelle prüfen.", undefined, "unavailable");
   }
   const pdfHash = contentSha256(bytes);
   const originalHash = pdfHash;
   if (!originalHash || !version.content_sha256 || originalHash !== version.content_sha256) {
-    throw new SourceGroundingError("Die Dateifassung konnte nicht anhand ihres gespeicherten Fingerabdrucks bestätigt werden. Bitte die Quelle erneut prüfen; es wurde keine Antwort erzeugt.");
+    throw new SourceGroundingError("Die Dateifassung konnte nicht anhand ihres gespeicherten Fingerabdrucks bestätigt werden. Bitte die Quelle erneut prüfen; es wurde keine Antwort erzeugt.", undefined, "changed");
   }
   // PDF.js transfers its input. Preserve the digest of precisely these bytes.
   const pages = await readPdfPages(bytes, SOURCE_EVIDENCE_LIMITS.pages, SOURCE_EVIDENCE_LIMITS.textBytes + SOURCE_EVIDENCE_LIMITS.pages * 16);
   if (!pages?.length || pages.some((p) => p.empty)) {
-    throw new SourceGroundingError("Mindestens eine PDF-Seite enthält keinen auslesbaren Text. Die vollständige Textgrundlage ist nicht gesichert; bitte OCR oder eine lesbare Fassung bereitstellen.");
+    throw new SourceGroundingError("Mindestens eine PDF-Seite enthält keinen auslesbaren Text. Die vollständige Textgrundlage ist nicht gesichert; bitte OCR oder eine lesbare Fassung bereitstellen.", undefined, "unavailable");
   }
   if (pages.length !== pages[0].totalPages || pages.some((p, i) => p.truncated || p.page !== i + 1 || p.totalPages !== pages.length)) {
-    throw new SourceGroundingError("Die vollständige Auswahl überschreitet die Grenze von 40 Seiten oder 10 000 UTF-8-Bytes Text. Bitte kleinere Dokumente oder ausdrücklich abgegrenzte Teilbestände auswählen. Es wurde nichts stillschweigend gekürzt.");
+    throw new SourceGroundingError("Die vollständige Auswahl überschreitet die Grenze von 40 Seiten oder 10 000 UTF-8-Bytes Text. Bitte kleinere Dokumente oder ausdrücklich abgegrenzte Teilbestände auswählen. Es wurde nichts stillschweigend gekürzt.", undefined, "scope");
   }
   const extracted = pages.map((p) => {
     // Remove only the extractor's leading marker, never split on document text
@@ -80,7 +80,7 @@ export async function loadDocumentEvidence(label: string, docStore: DocStore, do
 
 export async function prefetchSourceEvidence(docStore: DocStore, docIndex: DocIndex, db: Db, userId: string, userEmail?: string | null): Promise<Map<string, DocumentEvidence>> {
   if (docStore.size > SOURCE_EVIDENCE_LIMITS.documents) {
-    throw new SourceGroundingError("Für einen vollständig belegten Auftrag sind höchstens fünf ausgewählte Dokumente möglich. Bitte den Bestand ausdrücklich aufteilen.");
+    throw new SourceGroundingError("Für einen vollständig belegten Auftrag sind höchstens fünf ausgewählte Dokumente möglich. Bitte den Bestand ausdrücklich aufteilen.", undefined, "scope");
   }
   const evidence = new Map<string, DocumentEvidence>();
   let pageCount = 0;
@@ -90,7 +90,7 @@ export async function prefetchSourceEvidence(docStore: DocStore, docIndex: DocIn
     pageCount += source.pages.length;
     textBytes += source.pages.reduce((sum, p) => sum + Buffer.byteLength(p.text, "utf8"), 0);
     if (pageCount > SOURCE_EVIDENCE_LIMITS.pages || textBytes > SOURCE_EVIDENCE_LIMITS.textBytes) {
-      throw new SourceGroundingError("Die vollständige Auswahl überschreitet insgesamt 40 Seiten oder 10 000 UTF-8-Bytes Text. Bitte einen kleineren Teilbestand auswählen. Eine Gesamtchronologie wurde nicht erzeugt.");
+      throw new SourceGroundingError("Die vollständige Auswahl überschreitet insgesamt 40 Seiten oder 10 000 UTF-8-Bytes Text. Bitte einen kleineren Teilbestand auswählen. Eine Gesamtchronologie wurde nicht erzeugt.", undefined, "scope");
     }
     evidence.set(label, source);
   }

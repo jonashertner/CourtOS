@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { StreamChatParams, StreamChatResult } from "../../../../lib/llm/types";
 import { contentSha256 } from "../../../../lib/documentVersions";
 
-const mocks = vi.hoisted(() => ({ stream: vi.fn<(params: StreamChatParams) => Promise<StreamChatResult>>(), load: vi.fn(), download: vi.fn(), access: vi.fn() }));
+const mocks = vi.hoisted(() => ({ stream: vi.fn<(params: StreamChatParams) => Promise<StreamChatResult>>(), load: vi.fn(), download: vi.fn(), access: vi.fn(), publicRequest: vi.fn() }));
+vi.mock("../../../knowledge/knowledge.service", () => ({ publicKnowledgeRequest: mocks.publicRequest }));
 vi.mock("../../../../lib/llm", () => ({ streamChatWithTools: mocks.stream, resolveModel: (model: string) => model }));
 vi.mock("../../../../lib/routerModels", () => ({ resolveRequestedModel: async (model: string) => model }));
 vi.mock("../../../../lib/mcpConnectors", () => ({ buildUserMcpTools: async () => [] }));
@@ -51,6 +52,55 @@ function emit(text: string, finishReason?: string) {
 }
 
 describe("pilot source prefetch → model → page verification → release", () => {
+  it("rejects a source-free legacy chat before any provider call, including fabricated history citations", async () => {
+    const params = { ...makeParams(), docStore: new Map(), docIndex: {}, apiMessages: [{ role: "assistant", content: "A legal conclusion [1]." }, { role: "user", content: "Tell me more from memory" }] };
+    await expect(runLLMStream(params)).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ code: "source_grounding_failed", source_issue: "required" })]) });
+    expect(mocks.stream).not.toHaveBeenCalled();
+    expect(params.write.mock.calls.map(([chunk]) => chunk).join("")).not.toContain("content_delta");
+  });
+  it("withholds an uncited substantive paragraph despite a valid source in another paragraph", async () => {
+    emit(response().replace("\n<CITATIONS>", "\n\nAn uncited legal conclusion from memory.\n<CITATIONS>"));
+    const params = makeParams();
+    await expect(runLLMStream(params)).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ source_issue: "verification", grounding_diagnostics: expect.objectContaining({ reason: "uncited_paragraph" }) })]) });
+    expect(params.write.mock.calls.map(([chunk]) => chunk).join("")).not.toContain("content_delta");
+  });
+  it("checks private access again before releasing a generated answer", async () => {
+    mocks.access.mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ ok: false });
+    emit(response());
+    await expect(runLLMStream(makeParams())).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ source_issue: "unavailable" })]) });
+  });
+  it("never releases or persists model reasoning as checked answer text", async () => {
+    mocks.stream.mockImplementationOnce(async call => {
+      call.callbacks?.onReasoningDelta?.("UNVERIFIED_MODEL_MEMORY");
+      call.callbacks?.onReasoningBlockEnd?.();
+      call.callbacks?.onContentDelta?.(response());
+      return { fullText: response() };
+    });
+    const params=makeParams(); const result=await runLLMStream(params);
+    expect(JSON.stringify(result)).not.toContain("UNVERIFIED_MODEL_MEMORY");
+    expect(params.write.mock.calls.map(([chunk])=>chunk).join("")).not.toContain("UNVERIFIED_MODEL_MEMORY");
+  });
+  it("binds public references to freshly fetched exact original words and rechecks before release", async () => {
+    const text = "The original public court passage.";
+    const selected = { decision_id: "bge_example", start: 10, end: 10 + text.length, content_hash: "fixed" };
+    mocks.publicRequest.mockResolvedValue({ ok: true, data: { decision_id: selected.decision_id, title: "Original decision", content_hash: "fixed", source_url: "https://example.test/decision", pdf_url: null, passage: { start: 10, end: selected.end, total_chars: 100, text } } });
+    const params = { ...makeParams(), docStore: new Map(), docIndex: {}, publicSources: [selected] };
+    emit(`An interpretation of the selected passage [1].\n<CITATIONS>${JSON.stringify([{ ref: 1, doc_id: "public-0", quote: text }])}</CITATIONS>`);
+    const result = await runLLMStream(params);
+    expect(result.citations).toEqual([expect.objectContaining({ kind: "public_decision", decision_id: "bge_example", source_url: "https://example.test/decision", start: 10, quote: text, verified: true })]);
+    expect(mocks.publicRequest).toHaveBeenCalledTimes(2);
+    expect(mocks.stream.mock.calls[0][0].messages.map(m => m.content).join("\n")).toContain(text);
+    expect(params.write.mock.calls.map(([chunk]) => chunk).join("")).not.toContain('"status":"partial"');
+  });
+  it("withholds public answer when the original changes during inference", async () => {
+    const text = "The original public court passage.";
+    const data = { decision_id: "bge_example", title: "Original", content_hash: null, source_url: null, pdf_url: null, passage: { start: 0, end: text.length, total_chars: 100, text } };
+    mocks.publicRequest.mockResolvedValueOnce({ ok: true, data }).mockResolvedValueOnce({ ok: true, data: { ...data, passage: { ...data.passage, text: text.replace("original", "modified") } } });
+    const params = { ...makeParams(), docStore: new Map(), docIndex: {}, publicSources: [{ decision_id: "bge_example", start: 0, end: text.length, content_hash: null }] };
+    emit(`An interpretation [1].\n<CITATIONS>${JSON.stringify([{ ref: 1, doc_id: "public-0", quote: text }])}</CITATIONS>`);
+    await expect(runLLMStream(params)).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ source_issue: "changed" })]) });
+    expect(params.write.mock.calls.map(([chunk]) => chunk).join("")).not.toContain("content_delta");
+  });
   it.each(["d", "claims.pdf"])("binds an exact unique selected-source alias %s to its server handle and immutable version", async (alias) => {
     emit(response().replace('"doc_id":"doc-0"', `"doc_id":${JSON.stringify(alias)}`));
     const result = await runLLMStream(makeParams());
@@ -125,10 +175,12 @@ describe("pilot source prefetch → model → page verification → release", ()
     });
     const result = await runLLMStream(params);
     expect(result.citations).toEqual([expect.objectContaining({ verified: true, version_id: "v", page: 2 })]);
+    expect(result.events).toContainEqual({type:"source_bound_answer",version:1});
     expect(result.events).toContainEqual(expect.objectContaining({ type: "doc_read", source_coverage: expect.objectContaining({ pages: 3, kind: "complete_extracted_text" }) }));
     const delivered = params.write.mock.calls.map(([chunk]) => chunk).join("");
     expect(delivered).toContain("The exhibit is a draft");
     expect(delivered).toContain('"status":"final"');
+    expect(delivered.indexOf('"type":"source_bound_answer"')).toBeLessThan(delivered.indexOf('"type":"content_delta"'));
   });
   it.each([
     ["wrong page", response(1), "unverified_citation"],

@@ -2,6 +2,10 @@
 
 import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
 import type { CourtOSText } from "@/app/lib/courtosLocale";
+import { ResearchConversation } from "./ResearchConversation";
+import { researchConversationMessages as CM } from "@/app/lib/researchConversationMessages";
+import { emptyConversationSources, type ResearchConversationSources } from "@/app/lib/researchConversation";
+import type { Citation } from "@/app/components/shared/types";
 import { researchMessages as M } from "@/app/lib/researchMessages";
 
 import type { ResearchHandoffState, ResearchHandoffPublicSource } from "@mike/contracts";
@@ -15,16 +19,13 @@ import { librarySourceUrl, selectedSourcePassage, originalTextSearchUrl, type Se
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { prepareFrontierDraft } from "@/app/lib/frontierDraft";
-import { knowledgeAnalysisIssue, prepareChronologyDraft, prepareKnowledgeDraft } from "@/app/lib/knowledgeDraft";
-import { prepareResearchDraft } from "@/app/lib/researchDraft";
 import { useResearchModelPreference } from "@/app/lib/researchModelPreference";
 import { getWordResearchDocumentScope, type WordResearchHost, type WordSourceCitation } from "@/app/lib/wordResearchHost";
 import { BookOpen, Copy, ExternalLink, Search, X } from "lucide-react";
-import { searchLibraryDocuments } from "@/app/lib/mikeApi";
-import { panelDocumentFromCitation, type Document, type DocumentCitation } from "@/app/components/shared/types";
+import { getLibrary, getLibraryFolderChildren, searchLibraryDocuments } from "@/app/lib/mikeApi";
+import { panelDocumentFromCitation, type Document, type LibraryFolder, type DocumentCitation } from "@/app/components/shared/types";
 import { KnowledgeApiError, getPublicDecision, publicSourceUrl, searchKnowledge, searchPublicKnowledge, type KnowledgeResult, type KnowledgeSearch, type PublicDecision, type PublicDecisionDetail, type PublicSearch } from "@/app/lib/knowledgeApi";
 
 function DocumentLoading() { const { t } = useCourtOSLocale(); return <p role="status" className="p-6">{t(M.loadingDocument)}</p>; }
@@ -35,7 +36,6 @@ const field = "courtos-field";
 const link = "courtos-link";
 const apiErrors: Record<string, CourtOSText> = { timeout: M.errorTimeout, busy: M.errorBusy, query: M.errorQuery, session: M.errorSession, changed: M.errorChanged, source: M.errorSource, capacity: M.errorCapacity, input: M.errorInput, unavailable: M.errorUnavailable };
 const errorText = (error: unknown) => error instanceof KnowledgeApiError ? apiErrors[error.code] ?? M.errorUnavailable : M.errorUnavailable;
-const analysisMessages: CourtOSText[] = [M.analysisEmpty, M.analysisMany, M.analysisPending, M.analysisFormat];
 
 function CopySource({ text, label, wordHost, wordCitation }: { text: string; label: string; wordHost?: WordResearchHost | null; wordCitation: WordSourceCitation }) {
     const { t } = useCourtOSLocale();
@@ -117,13 +117,14 @@ export function LocalSource({ result, onClose }: { result: KnowledgeResult; onCl
     </SourceDialog>;
 }
 
-function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?: WordResearchHost | null; inWord?: boolean; initialState: ResearchHandoffState["private"]; onState(state: ResearchHandoffState["private"]): void }) {
+function LocalKnowledge({ wordHost, inWord, initialState, onState, conversationLocked }: { wordHost?: WordResearchHost | null; inWord?: boolean; initialState: ResearchHandoffState["private"]; onState(state: ResearchHandoffState["private"], ready: boolean): void; conversationLocked?: boolean }) {
     const { t } = useCourtOSLocale();
-    const router = useRouter();
-    const { user } = useAuth();
     const edited = useResearchHandoff()?.edited;
     const [documents, setDocuments] = useState<Document[]>([]);
     const [selected, setSelected] = useState<Document[]>(() => initialState.selected.map(doc => ({ ...doc, current_version_id: doc.active_version_id, status: "ready", project_id: null, storage_path: null, pdf_storage_path: null, page_count: null, structure_tree: null, created_at: null })));
+    const [folders, setFolders] = useState<LibraryFolder[]>([]);
+    const [folderPath, setFolderPath] = useState<LibraryFolder[]>([]);
+    const folderId = folderPath.at(-1)?.id;
     const [filename, setFilename] = useState("");
     const [filter, setFilter] = useState("");
     const [refresh, setRefresh] = useState(0);
@@ -138,20 +139,18 @@ function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?
     const [submitted, setSubmitted] = useState(initialState.submitted);
     const [source, setSource] = useState<KnowledgeResult | null>(initialState.source);
     useEffect(() => {
-        onState({ query, submitted, selected: selected.map(doc => ({ id: doc.id, filename: doc.filename, file_type: doc.file_type ?? null, active_version_id: doc.current_version_id ?? null, active_version_number: doc.active_version_number ?? null, size_bytes: doc.size_bytes ?? null })), result, source });
+        onState({ query, submitted, selected: selected.map(doc => ({ id: doc.id, filename: doc.filename, file_type: doc.file_type ?? null, active_version_id: doc.current_version_id ?? null, active_version_number: doc.active_version_number ?? null, size_bytes: doc.size_bytes ?? null })), result, source }, selected.every(doc => doc.status === "ready"));
     }, [query, submitted, selected, result, source, onState]);
-    const analysisRaw = knowledgeAnalysisIssue(selected);
-    const analysisIssue = analysisMessages.find(message => message.de === analysisRaw) ?? null;
     const searchController = useRef<AbortController | null>(null);
     useEffect(() => {
         const controller = new AbortController();
         setLoadingDocuments(true); setListError(null);
-        searchLibraryDocuments("files", { search: filter, limit: 20, offset, sortKey: "name", sortDirection: "asc", signal: controller.signal })
-            .then((data) => { if (!controller.signal.aborted) { setDocuments(data.documents); setHasMore(data.documentsHasMore); } })
+        const request = filter ? searchLibraryDocuments("files", { search: filter, limit: 20, offset, sortKey: "name", sortDirection: "asc", signal: controller.signal }) : folderId ? getLibraryFolderChildren("files", folderId, { limit: 20, offset }) : getLibrary("files", { limit: 20, offset });
+        request.then((data) => { if (!controller.signal.aborted) { setDocuments(data.documents); setFolders("folders" in data ? data.folders as LibraryFolder[] : []); setHasMore(data.documentsHasMore); } })
             .catch(() => { if (!controller.signal.aborted) setListError(M.libraryFailed); })
             .finally(() => { if (!controller.signal.aborted) setLoadingDocuments(false); });
         return () => controller.abort();
-    }, [filter, offset, refresh]);
+    }, [filter, offset, refresh, folderId]);
     useEffect(() => () => searchController.current?.abort(), []);
     function changeSelection(doc: Document) {
         edited?.();
@@ -175,12 +174,15 @@ function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?
         <div className="courtos-library-grid">
             <div className="courtos-source-list">
                 <h3 className="font-medium">{t(M.selectSources)}</h3>
+                {conversationLocked && <p className="mt-2 text-xs">{t(CM.sourceChange)}</p>}
                 <form className="mt-3" onSubmit={(event) => { event.preventDefault(); setFilter(filename.trim()); setOffset(0); setRefresh((value) => value + 1); }}><label htmlFor="library-filter" className="text-sm">{t(M.filename)}</label><div className="flex items-end gap-2"><input id="library-filter" className={field} value={filename} maxLength={200} onChange={(event) => setFilename(event.target.value)} /><button className={secondary} aria-label={t(M.filterFilenames)}><Search size={17} aria-hidden="true" /></button></div></form>
+                {!filter && <nav aria-label={t(CM.folders)} className="mt-3 flex flex-wrap gap-x-2 text-xs"><button type="button" className={link} onClick={() => { setFolderPath([]); setOffset(0); }}>{t(CM.allFiles)}</button>{folderPath.map((folder, index) => <span key={folder.id}> / <button type="button" className={link} onClick={() => { setFolderPath(path => path.slice(0, index + 1)); setOffset(0); }}>{folder.name}</button></span>)}</nav>}
                 <p className="mt-4 text-xs text-muted-foreground" role="status">{t(M.selectedCount, {count: selected.length})}</p>
-                {selected.length > 0 && <div className="mt-2 space-y-1" aria-label={t(M.selectedDocuments)}>{selected.map((doc) => <button key={doc.id} className="flex w-full items-center justify-between gap-2 rounded-lg bg-app-surface-active px-2 py-2 text-left text-xs focus-visible:outline-2 focus-visible:outline-ring" onClick={() => changeSelection(doc)} aria-label={t(M.removeSelected, {name: doc.filename})}><span className="break-all">{doc.filename}</span><X size={14} className="shrink-0" aria-hidden="true" /></button>)}</div>}
+                {selected.length > 0 && <div className="mt-2 space-y-1" aria-label={t(M.selectedDocuments)}>{selected.map((doc) => <button key={doc.id} className="flex w-full items-center justify-between gap-2 rounded-lg bg-app-surface-active px-2 py-2 text-left text-xs focus-visible:outline-2 focus-visible:outline-ring" disabled={conversationLocked} onClick={() => changeSelection(doc)} aria-label={t(M.removeSelected, {name: doc.filename})}><span className="break-all">{doc.filename}</span><X size={14} className="shrink-0" aria-hidden="true" /></button>)}</div>}
                 {loadingDocuments ? <p className="mt-5 text-sm" role="status">{t(M.loadingLibrary)}</p> : listError ? <p className="mt-5 text-sm" role="alert">{listError && t(listError)}</p> : <>
-                    {!documents.length && <p className="mt-5 text-sm leading-relaxed">{filter ? t(M.noFilename) : t(M.noDocuments)}</p>}
-                    <ul className="mt-3 max-h-80 divide-y divide-border overflow-y-auto">{documents.map((doc) => { const checked = selected.some((item) => item.id === doc.id); return <li key={doc.id}><label className="flex min-h-12 cursor-pointer items-start gap-3 py-3 text-sm"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-foreground" checked={checked} disabled={!checked && selected.length >= 20} onChange={() => changeSelection(doc)} /><span className="min-w-0 break-all">{doc.filename}<span className="mt-1 block text-xs text-muted-foreground">{doc.active_version_number ? t(M.version, {number: doc.active_version_number}) : t(M.currentVersion)}</span></span></label></li>; })}</ul>
+                    {!!folders.length && <ul aria-label={t(CM.folders)} className="mt-3 divide-y divide-border">{folders.map(folder => <li key={folder.id}><button type="button" className="courtos-link min-h-11 w-full py-3 text-left" onClick={() => { setFolderPath(path => [...path, folder]); setOffset(0); }}>{folder.name}</button></li>)}</ul>}
+                    {!documents.length && !folders.length && <p className="mt-5 text-sm leading-relaxed">{filter ? t(M.noFilename) : t(M.noDocuments)}</p>}
+                    <ul className="mt-3 max-h-80 divide-y divide-border overflow-y-auto">{documents.map((doc) => { const checked = selected.some((item) => item.id === doc.id); return <li key={doc.id}><label className="flex min-h-12 cursor-pointer items-start gap-3 py-3 text-sm"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-foreground" checked={checked} disabled={conversationLocked || !checked && selected.length >= 20} onChange={() => changeSelection(doc)} /><span className="min-w-0 break-all">{doc.filename}<span className="mt-1 block text-xs text-muted-foreground">{doc.active_version_number ? t(M.version, {number: doc.active_version_number}) : t(M.currentVersion)}</span></span></label></li>; })}</ul>
                     <div className="mt-3 flex items-center justify-between gap-2"><button className={secondary} disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 20))}>{t(M.back)}</button><span className="text-xs">{t(M.page, {page: offset / 20 + 1})}</span><button className={secondary} disabled={!hasMore} onClick={() => setOffset(offset + 20)}>{t(M.next)}</button></div>
                 </>}
             </div>
@@ -191,16 +193,6 @@ function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?
                     <p id="private-search-help" className="mt-2 text-xs leading-relaxed text-muted-foreground">{t(M.scanHelp)}</p>
                     <button className={`${button} mt-4`} disabled={searching || selected.length === 0 || !query.trim()}><Search size={16} aria-hidden="true" />{searching ? t(M.searchingPassages) : t(M.searchSelection)}</button>
                 </form>
-                {!inWord && <details className="mt-4 border-t border-border pt-4">
-                    <summary className="cursor-pointer text-sm">{t(M.continueGemma)}</summary>
-                    <p id="knowledge-analysis-help" className="mt-3 text-xs leading-relaxed text-muted-foreground">{t(M.pdfHelp)}</p>
-                    {analysisIssue && <p id="knowledge-analysis-issue" role="status" className="mt-2 text-sm leading-relaxed">{t(analysisIssue!)}</p>}
-                    <div className="mt-3 flex flex-wrap gap-3">
-                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>{t(M.askSelection)}</button>
-                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>{t(M.chronology)}</button>
-                    </div>
-                    <ProcessingLocation service="gemma" stage="draft" className="mt-3">{t(M.assistantDraftHelp)}</ProcessingLocation>
-                </details>}
                 {searching && <p role="status" className="mt-4 text-sm">{t(M.localSearchRunning)}</p>}
                 {searchError && <p role="alert" className="mt-5 text-sm">{searchError && t(searchError)}</p>}
                 {result && <section aria-label={t(M.localResults)} className="mt-7"><h3 className="font-serif text-xl">{t(M.passageCount, {count: result.results.length, query: submitted})}</h3>
@@ -230,10 +222,9 @@ function handoffDecision(decision: PublicDecision): PublicDecision {
 }
 function decisionTitle(decision: PublicDecision) { return decision.title || [courtLabel(decision.court), decision.docket_number].filter(Boolean).join(" · ") || decision.decision_id; }
 
-function PublicSource({ decision, onClose, wordHost, inWord, initialState, onState }: { decision: PublicDecision; onClose: () => void; wordHost?: WordResearchHost | null; inWord?: boolean; initialState?: ResearchHandoffPublicSource; onState(state: ResearchHandoffPublicSource): void }) {
+function PublicSource({ decision, onClose, wordHost, inWord, initialState, onState, onConversation, initialCitation, conversationLocked }: { decision: PublicDecision; onClose: () => void; wordHost?: WordResearchHost | null; inWord?: boolean; initialState?: ResearchHandoffPublicSource; onState(state: ResearchHandoffPublicSource): void; onConversation?(source: ResearchHandoffPublicSource): void; initialCitation?: Extract<Citation, { kind: "public_decision" }>; conversationLocked?: boolean }) {
     const { t } = useCourtOSLocale();
     const { user } = useAuth();
-    const router = useRouter();
     const edited = useResearchHandoff()?.edited;
     const [handoffError, setHandoffError] = useState<CourtOSText | null>(null);
     const sourceText = useRef<HTMLPreElement>(null);
@@ -248,6 +239,15 @@ function PublicSource({ decision, onClose, wordHost, inWord, initialState, onSta
         const controller = new AbortController(); setLoading(true); setError(null); setExcerpt(null); setSelectionError(null); setHandoffError(null);
         getPublicDecision(decision.decision_id, start, controller.signal).then((data) => {
             if (controller.signal.aborted) return;
+            if (initialCitation) {
+                const offset = initialCitation.start - data.passage.start;
+                const quote = Array.from(data.passage.text).slice(offset, offset + initialCitation.end - initialCitation.start).join("");
+                if (data.decision_id !== initialCitation.decision_id || (start === initialCitation.start && (offset < 0 || quote !== initialCitation.quote)) ||
+                    (initialCitation.content_hash !== null && data.content_hash !== initialCitation.content_hash)) {
+                    setError(M.errorChanged); return;
+                }
+                if (start === initialCitation.start) setExcerpt({ text: quote, start: initialCitation.start, end: initialCitation.end, total_chars: data.passage.total_chars });
+            }
             setDetail(data);
             const restored = restoreSource.current; restoreSource.current = undefined;
             if (restored?.excerpt) {
@@ -257,7 +257,7 @@ function PublicSource({ decision, onClose, wordHost, inWord, initialState, onSta
             }
         }).catch((problem) => { if (!controller.signal.aborted) setError(errorText(problem)); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
-    }, [decision.decision_id, start, retry]);
+    }, [decision.decision_id, start, retry, initialCitation]);
     const authoritative = detail ?? decision;
     useEffect(() => {
         // Transferred excerpts remain inert until the exact source window is freshly fetched.
@@ -286,21 +286,17 @@ function PublicSource({ decision, onClose, wordHost, inWord, initialState, onSta
                 {!originalSearch && <p className="mt-2 text-xs text-muted-foreground">{t(M.noJump)}</p>}
                 <div className="mt-3"><CopySource text={`${excerpt.text}\n\nQuelle: ${excerptReference}`} label={t(M.copySelected)} wordHost={wordHost} wordCitation={publicWordCitation(detail, excerpt, originalSearch,t)} /></div>
             </div>}
-            {!inWord && excerpt && <div className="courtos-source-ai">
-                <button type="button" className={secondary} disabled={!user?.id} onClick={() => {
+            {excerpt && <div className="courtos-source-ai">
+                {onConversation && <button type="button" className={button} disabled={!user?.id || conversationLocked} title={conversationLocked ? t(CM.sourceChange) : undefined} onClick={() => onConversation({ decision: handoffDecision(detail), start, history, excerpt })}>{t(CM.useSource)}</button>}
+                {onConversation && conversationLocked && <p className="mt-2 text-xs">{t(CM.sourceChange)}</p>}
+                <ProcessingLocation service="gemma" stage="draft" className="mt-3" />
+                {!inWord && model !== "gemma" && <button type="button" className={`${secondary} mt-3`} disabled={!user?.id} onClick={() => {
                     if (!user?.id) return;
-                    if (model === "gemma") {
-                        const text = `Prüfe den folgenden Entscheidauszug anhand seiner eigenen Aussagen. Unterscheide belegte Aussagen und offene Fragen. Erfinde keine Quellen und behaupte nicht, den vollständigen Entscheid gelesen zu haben.\n\n${excerptReference}\n\n${excerpt.text}`;
-                        if (prepareResearchDraft(user.id, text)) router.push("/assistant");
-                        else setHandoffError(M.localDraftFailed);
-                    } else {
-                        const text = [excerptReference, excerpt.text].join("\n\n");
-                        if (prepareFrontierDraft(user.id, text)) window.location.assign("/hybrid/");
-                        else setHandoffError(M.frontierDraftFailed);
-                    }
-                }}>{model === "gemma" ? t(M.checkGemma) : t(M.checkOpus)}</button>
-                <ProcessingLocation service={model === "gemma" ? "gemma" : "anthropic"} stage="draft" className="mt-3" />
-                {handoffError && <p role="alert">{handoffError && t(handoffError)}</p>}
+                    if (prepareFrontierDraft(user.id, [excerptReference, excerpt.text].join("\n\n"))) window.location.assign("/hybrid/");
+                    else setHandoffError(M.frontierDraftFailed);
+                }}>{t(M.checkOpus)}</button>}
+                {!inWord && model !== "gemma" && <ProcessingLocation service="anthropic" stage="draft" className="mt-3" />}
+                {handoffError && <p role="alert">{t(handoffError)}</p>}
             </div>}
             <div className="mt-6 flex flex-wrap gap-3"><button className={secondary} disabled={!history.length} onClick={() => { edited?.(); setStart(history[history.length - 1]); setHistory((items) => items.slice(0, -1)); }}>{t(M.previousSection)}</button><button className={secondary} disabled={!detail.passage.has_more} onClick={() => { edited?.(); setHistory((items) => [...items, start]); setStart(detail.passage.end); }}>{t(M.nextSection)}</button></div>
             <details className="mt-6 text-xs leading-relaxed text-muted-foreground"><summary className="cursor-pointer">{t(M.provenance)}</summary><p className="mt-2 break-all">OpenCaseLaw-ID: {detail.decision_id}<br />{t(M.captured, {date: detail.scraped_at || t(M.notGiven)})}<br />{t(M.textHash, {hash: detail.content_hash || t(M.notGiven)})}</p></details>
@@ -308,7 +304,7 @@ function PublicSource({ decision, onClose, wordHost, inWord, initialState, onSta
     </div></SourceDialog>;
 }
 
-function PublicKnowledge({ wordHost, wordHostError, inWord, initialState, onState }: { wordHost?: WordResearchHost | null; wordHostError?: string; inWord?: boolean; initialState: ResearchHandoffState["public"]; onState(state: ResearchHandoffState["public"]): void }) {
+function PublicKnowledge({ wordHost, wordHostError, inWord, initialState, onState, onConversation, conversationLocked }: { wordHost?: WordResearchHost | null; wordHostError?: string; inWord?: boolean; initialState: ResearchHandoffState["public"]; onState(state: ResearchHandoffState["public"]): void; onConversation(source: ResearchHandoffPublicSource): void; conversationLocked?: boolean }) {
     const { t } = useCourtOSLocale();
     const edited = useResearchHandoff()?.edited;
     const [selectionError, setSelectionError] = useState<CourtOSText | null>(null);
@@ -335,7 +331,7 @@ function PublicKnowledge({ wordHost, wordHostError, inWord, initialState, onStat
                 <h2 id="public-knowledge-title" className="sr-only">OpenCaseLaw</h2>
             </div>
             <form onSubmit={search} className="courtos-public-search">
-                <label htmlFor="public-query">{t(M.publicTerms)}</label>
+                <label htmlFor="public-query">{t(CM.publicTerms)}</label>
                 <div className="courtos-search-line">
                     <input id="public-query" placeholder={t(M.legalTerms)} className={field} value={query} maxLength={180} onChange={(event) => { edited?.(); setQuery(event.target.value); }} aria-describedby="public-search-help" />
                     <button className={button} disabled={searching || !query.trim()}><Search size={17} aria-hidden="true" />{searching ? t(M.searching) : t(M.search)}</button>
@@ -376,12 +372,13 @@ function PublicKnowledge({ wordHost, wordHostError, inWord, initialState, onStat
             </li>)}</ol>
             <p className="courtos-results-generation">OpenCaseLaw · {t(result.query_mode === "opencaselaw_ai" ? M.aiSearch : M.publicSearch)} · {t(M.dataset, {id: result.database_generation ?? t(M.notGiven)})}</p>
         </section>}
-        {source && <PublicSource key={source.decision_id} decision={source} onClose={() => { edited?.(); sourceState.current = null; setSource(null); }} wordHost={wordHost} inWord={inWord} initialState={sourceState.current ?? undefined} onState={publishSource} />}
+        {source && <PublicSource key={source.decision_id} decision={source} onClose={() => { edited?.(); sourceState.current = null; setSource(null); }} wordHost={wordHost} inWord={inWord} initialState={sourceState.current ?? undefined} onState={publishSource} conversationLocked={conversationLocked} onConversation={value => { onConversation(value); setSource(null); }} />}
     </section>;
 }
 
 export function KnowledgeWorkspace({ wordHost, wordHostError }: { wordHost?: WordResearchHost | null; wordHostError?: string } = {}) {
     const { t } = useCourtOSLocale();
+    const { user } = useAuth();
     const inWord = wordHost !== undefined;
     const handoff = useResearchHandoff();
     const register = handoff?.register, changed = handoff?.changed, bindWordDocument = handoff?.bindWordDocument;
@@ -395,27 +392,53 @@ export function KnowledgeWorkspace({ wordHost, wordHostError }: { wordHost?: Wor
     const [restored, setRestored] = useState({ state: emptyResearchState(), generation: 0 });
     const [mode, setMode] = useState<"private" | "public">("public");
     const [libraryVisited, setLibraryVisited] = useState(false);
-    const publishPublic = useCallback((value: ResearchHandoffState["public"]) => { state.current = { ...state.current, public: value }; changed?.(state.current); }, [changed]);
-    const publishPrivate = useCallback((value: ResearchHandoffState["private"]) => { state.current = { ...state.current, private: value }; changed?.(state.current); }, [changed]);
+    const [candidate, setCandidate] = useState<ResearchConversationSources>(emptyConversationSources);
+    const [conversationLocked, setConversationLocked] = useState(false);
+    const [activeCitation, setActiveCitation] = useState<Citation | null>(null);
+    const pinnedPublic = useRef<ResearchHandoffPublicSource | null>(null);
+    const privateCandidate = useRef<ResearchConversationSources>(emptyConversationSources());
+    const sourceTools = useRef<HTMLDivElement>(null);
+    const modeRef = useRef(mode); modeRef.current = mode;
+    const publishConversation = useCallback((conversation: NonNullable<ResearchHandoffState["conversation"]>) => { state.current = { ...state.current, conversation }; changed?.(state.current); }, [changed]);
+    const conversationEdited = useCallback(() => { handoff?.edited(); }, [handoff?.edited]);
+    function sourcesFromPrivate(value: ResearchHandoffState["private"]): ResearchConversationSources {
+        return { files: value.selected.map(doc => ({ filename: doc.filename, document_id: doc.id, version_id: doc.active_version_id, version_number: doc.active_version_number })), public_sources: [] };
+    }
+    function sourcesFromPublic(source: ResearchHandoffPublicSource | null): ResearchConversationSources {
+        return source?.excerpt ? { files: [], public_sources: [{ decision_id: source.decision.decision_id, start: source.excerpt.start, end: source.excerpt.end, content_hash: source.decision.content_hash }] } : emptyConversationSources();
+    }
+    function usePublicForConversation(source: ResearchHandoffPublicSource) {
+        pinnedPublic.current = source;
+        state.current = { ...state.current, public: { ...state.current.public, source } }; changed?.(state.current);
+        setCandidate(sourcesFromPublic(source));
+        window.setTimeout(() => document.getElementById("research-question")?.focus(), 0);
+    }
+    const publishPublic = useCallback((value: ResearchHandoffState["public"]) => { state.current = { ...state.current, public: { ...value, source: value.source ?? pinnedPublic.current } }; changed?.(state.current); }, [changed]);
+    const publishPrivate = useCallback((value: ResearchHandoffState["private"], ready: boolean) => { state.current = { ...state.current, private: value }; const next = sourcesFromPrivate(value); if (!ready) next.files = next.files.map(file => ({ ...file, version_id: null })); privateCandidate.current = next; if (modeRef.current === "private") setCandidate(next); changed?.(state.current); }, [changed]);
     useEffect(() => register?.({
-        getState: () => state.current,
+        getState: () => !state.current.conversation?.chat_id && pinnedPublic.current && state.current.mode === "public" ? { ...state.current, public: { ...state.current.public, source: pinnedPublic.current } } : state.current,
         applyState: next => {
-            state.current = next; setMode(next.mode);
+            state.current = next; setMode(next.mode); privateCandidate.current = sourcesFromPrivate(next.private); pinnedPublic.current = next.public.source; setCandidate(next.mode === "private" ? sourcesFromPrivate(next.private) : sourcesFromPublic(next.public.source));
             setLibraryVisited(next.mode === "private" || !!next.private.selected.length || !!next.private.result);
             setRestored(current => ({ state: next, generation: current.generation + 1 }));
         },
     }), [register]);
     function changeMode(next: "private" | "public") {
         if (next !== mode) handoff?.edited();
-        setMode(next); if (next === "private") setLibraryVisited(true);
+        setMode(next); setCandidate(next === "private" ? privateCandidate.current : sourcesFromPublic(pinnedPublic.current)); if (next === "private") setLibraryVisited(true);
         state.current = { ...state.current, mode: next }; changed?.(state.current);
     }
     return <div className="courtos-research-page">
         <h1 className="sr-only">{t(M.research)}</h1>
+        {user?.id && <ResearchConversation key={`${user.id}:${restored.generation}`} owner={user.id} candidate={candidate} initialState={restored.state.conversation} onState={publishConversation} onTransferReady={handoff?.setTransferReady} onBinding={setConversationLocked} onEdit={conversationEdited} onCitation={setActiveCitation} onFindSources={next => { changeMode(next); sourceTools.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />}
+        <div ref={sourceTools} className="courtos-conversation-source-tools"><h2>{t(CM.sourceTools)}</h2>
         <nav aria-label={t(M.sourceType)} className="courtos-source-tabs"><button aria-pressed={mode === "public"} className="courtos-source-tab" onClick={() => changeMode("public")}>OpenCaseLaw</button><button aria-pressed={mode === "private"} className="courtos-source-tab" onClick={() => changeMode("private")}>{t(M.ownSources)}</button></nav>
         <div key={restored.generation}>
-            {libraryVisited && <div hidden={mode !== "private"}><LocalKnowledge wordHost={wordHost} inWord={inWord} initialState={restored.state.private} onState={publishPrivate} /></div>}
-            <div hidden={mode !== "public"}><PublicKnowledge wordHost={wordHost} wordHostError={wordHostError} inWord={inWord} initialState={restored.state.public} onState={publishPublic} /></div>
+            {libraryVisited && <div hidden={mode !== "private"}><LocalKnowledge wordHost={wordHost} inWord={inWord} initialState={restored.state.private} onState={publishPrivate} conversationLocked={conversationLocked} /></div>}
+            <div hidden={mode !== "public"}><PublicKnowledge wordHost={wordHost} wordHostError={wordHostError} inWord={inWord} initialState={restored.state.public} onState={publishPublic} onConversation={usePublicForConversation} conversationLocked={conversationLocked} /></div>
         </div>
+        </div>
+        {activeCitation && activeCitation.kind !== "public_decision" && <SourceDialog title={activeCitation.kind === "case" ? activeCitation.case_name ?? "Original" : activeCitation.filename} onClose={() => setActiveCitation(null)}><div className="min-h-0 flex-1"><DocumentContent document={panelDocumentFromCitation(activeCitation)} mode={{ kind: "citation", citation: activeCitation }} canEdit={false} /></div></SourceDialog>}
+        {activeCitation?.kind === "public_decision" && <PublicSource key={`${activeCitation.decision_id}:${activeCitation.start}`} decision={handoffDecision({ ...activeCitation, snippet: "", court: null, canton: null, docket_number: null, decision_date: null, language: null, scraped_at: null })} initialState={{ decision: handoffDecision({ ...activeCitation, snippet: "", court: null, canton: null, docket_number: null, decision_date: null, language: null, scraped_at: null }), start: activeCitation.start, history: [], excerpt: null }} initialCitation={activeCitation} onState={() => undefined} onClose={() => setActiveCitation(null)} wordHost={wordHost} inWord={inWord} />}
     </div>;
 }

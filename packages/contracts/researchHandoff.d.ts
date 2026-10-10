@@ -69,6 +69,8 @@ export interface ResearchHandoffPrivateResults {
 }
 export interface ResearchHandoffState {
     version: 1;
+    /** Only a reference to an owned personal chat, never its transcript. */
+    conversation?: { chat_id: string | null; draft: string };
     mode: "public" | "private";
     public: {
         query: string;

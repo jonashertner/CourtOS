@@ -4,6 +4,8 @@ import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation"
 import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
 import { courtOSMessages } from "@/app/lib/courtosMessages";
 
+import { openPublicCitationOriginal, publicCitationOriginalUrl } from "@/app/lib/publicCitationLinks";
+import { sourceGroundingText } from "@/app/lib/sourceGroundingMessages";
 import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
 
 import { useRef, useState } from "react";
@@ -42,6 +44,8 @@ import {
 
 interface Props {
     chatId?: string | null;
+    /** Embedded source conversations do not forward an answer to another provider. */
+    allowFrontier?: boolean;
     events?: AssistantEvent[];
     isStreaming?: boolean;
     /**
@@ -121,6 +125,7 @@ interface Props {
 
 export function AssistantMessage({
     chatId,
+    allowFrontier = true,
     events,
     isStreaming = false,
     awaitingInput = false,
@@ -143,7 +148,7 @@ export function AssistantMessage({
     isEditReloading,
     resolvedEditStatuses,
 }: Props) {
-    const { t } = useCourtOSLocale();
+    const { t, locale } = useCourtOSLocale();
     const responseBodyRef = useRef<HTMLDivElement | null>(null);
     const [isCopied, setIsCopied] = useState(false);
     // Per-document override of the download URL, set as Accept/Reject resolves
@@ -176,7 +181,8 @@ export function AssistantMessage({
     const errorEvent = (events ?? []).find(
         (event) => event.type === "error",
     ) as Extract<AssistantEvent, { type: "error" }> | undefined;
-    const effectiveErrorMessage =
+    const sourceError = errorEvent ? sourceGroundingText(errorEvent.code, errorEvent.source_issue) : null;
+    const effectiveErrorMessage = sourceError ? t(sourceError) :
         errorMessage ??
         (errorEvent ? eventErrorMessage(errorEvent) : null) ??
         null;
@@ -197,6 +203,7 @@ export function AssistantMessage({
 
     const isRenderableEvent = (event: AssistantEvent) =>
         event.type !== "error" &&
+        event.type !== "source_bound_answer" &&
         event.type !== "ask_inputs_response" &&
         event.type !== "case_citation" &&
         event.type !== "case_opinions";
@@ -272,6 +279,10 @@ export function AssistantMessage({
             onOpenCitationSource(citation);
             return;
         }
+        if (citation.kind === "public_decision") {
+            openPublicCitationOriginal(citation);
+            return;
+        }
         if (citation.kind === "case" || !onOpenDocument) return;
         onOpenDocument({
             documentId: citation.document_id,
@@ -282,7 +293,7 @@ export function AssistantMessage({
     };
     const canOpenCitationSource = (citation: Citation) =>
         !!onOpenCitationSource ||
-        (citation.kind !== "case" && !!onOpenDocument);
+        (citation.kind === "public_decision" ? !!publicCitationOriginalUrl(citation) : citation.kind !== "case" && !!onOpenDocument);
     const showCitationBlock =
         !!citationStatus || (!isStreaming && citations.length > 0);
     const handleCopy = async () => {
@@ -299,7 +310,7 @@ export function AssistantMessage({
                 });
                 return { html: clone.innerHTML, text: clone.textContent || "" };
             });
-            const appendix = buildCitationAppendix(citations, window.location.origin);
+            const appendix = buildCitationAppendix(citations, window.location.origin, locale);
             const html = copiedBlocks.map(block => block.html).join("\n") + appendix.html;
             const plainText = copiedBlocks.map(block => block.text).join("\n\n") + appendix.text;
             const item = new ClipboardItem({
@@ -459,7 +470,7 @@ export function AssistantMessage({
         }
         if (event.type === "doc_read") {
             const ann = citations.find(
-                (a) => a.kind !== "case" && a.filename === event.filename,
+                (a) => a.kind !== "case" && a.kind !== "public_decision" && a.filename === event.filename,
             );
             return (
                 <DocReadBlock
@@ -1150,7 +1161,7 @@ export function AssistantMessage({
 
                 {/* Copy button */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-sans justify-start">
-                    {COURTOS_PILOT_MODE && !isStreaming && !awaitingInput && !exportBlocked && (
+                    {COURTOS_PILOT_MODE && allowFrontier && !isStreaming && !awaitingInput && !exportBlocked && (
                         <FrontierAnswerAction text={(events ?? []).filter((event): event is Extract<AssistantEvent, { type: "content" }> => event.type === "content").map((event) => event.text).join("\n\n")} chatId={chatId} />
                     )}
                     {!isStreaming && !awaitingInput && !exportBlocked && (

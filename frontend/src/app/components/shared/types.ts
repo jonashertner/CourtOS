@@ -205,6 +205,7 @@ type WireActivity<T extends WireAssistantEvent["type"]> = Extract<
   { type: T }
 >;
 export type AssistantEvent =
+  | WireActivity<"source_bound_answer">
   | (Omit<WireActivity<"reasoning">, "isStreaming"> & { isStreaming?: boolean })
   | (Omit<WireActivity<"error">, "safe_to_display"> & {
       safe_to_display?: boolean;
@@ -359,6 +360,8 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   files?: MessageFile[];
+  /** Explicit public corpus selections, never private document bytes or URLs. */
+  public_sources?: import("@mike/contracts").PublicSourceSelection[];
   workflow?: { id: string; title: string };
   model?: string;
   reasoning?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
@@ -436,7 +439,9 @@ export type CaseCitation = {
  * anchors. Case citations anchor to a CourtListener cluster and include a
  * quoted opinion passage.
  */
-export type Citation = DocumentCitation | CaseCitation;
+export type PublicDecisionCitation = import("@mike/contracts").PublicDecisionCitation;
+export type PublicSourceSelection = import("@mike/contracts").PublicSourceSelection;
+export type Citation = DocumentCitation | CaseCitation | PublicDecisionCitation;
 
 export function panelDocumentType(filename: string): PanelDocumentType {
   const extension = filename.split(".").pop()?.toLowerCase();
@@ -455,6 +460,9 @@ export function panelDocumentFromCitation(
   citation: Citation,
   includeQuotes = true,
 ): PanelDocument {
+  if (citation.kind === "public_decision") {
+    throw new Error("Public decisions must be opened in the public source viewer.");
+  }
   if (citation.document) {
     if (!includeQuotes) return { ...citation.document, quotes: [] };
     const citationQuotes =
@@ -610,7 +618,7 @@ export function expandDocumentQuoteEntry(entry: {
 }
 
 function getDocumentCitationQuotes(a: Citation): DocumentCitationQuote[] {
-  if (a.kind === "case") return [];
+  if (a.kind === "case" || a.kind === "public_decision") return [];
   if (Array.isArray(a.quotes) && a.quotes.length) {
     return a.quotes.filter((entry) => entry.quote.trim().length > 0);
   }
@@ -623,6 +631,7 @@ function getDocumentCitationQuotes(a: Citation): DocumentCitationQuote[] {
  * callers join with `.filter(Boolean)` so the locator is simply omitted.
  */
 export function formatCitationPage(a: Citation): string {
+  if (a.kind === "public_decision") return `OpenCaseLaw ${a.decision_id} · Unicode [${a.start}, ${a.end})`;
   if (a.kind === "case") {
     return a.citation || a.case_name || `Case ${a.cluster_id}`;
   }
@@ -654,6 +663,7 @@ function cleanCitationQuoteText(rawQuote: string): string {
 
 /** Produce a reader-friendly version of the quote (replaces [[PAGE_BREAK]] with "..."). */
 export function displayCitationQuote(a: Citation): string {
+  if (a.kind === "public_decision") return a.quote;
   if (a.kind === "case") {
     return a.quotes
       .map((q) => q.quote.replaceAll(PAGE_BREAK_SENTINEL, "..."))

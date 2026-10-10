@@ -2,6 +2,7 @@
 
 import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
 import type { CourtOSText } from "@/app/lib/courtosLocale";
+import { researchConversationMessages as CM } from "@/app/lib/researchConversationMessages";
 import { researchMessages as M } from "@/app/lib/researchMessages";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -15,6 +16,7 @@ type HandoffContext = {
     inWord: boolean;
     register(workspace: Workspace): () => void;
     changed(state: ResearchHandoffState): void;
+    setTransferReady(ready: boolean): void;
     edited(): void;
     bindWordDocument(scope: string | null): void;
     publish(): Promise<string | null>;
@@ -58,6 +60,9 @@ export function ResearchHandoffProvider({ ownerId, inWord, children }: { ownerId
     const isCurrent = useCallback((epoch: number) => alive.current && operationEpoch.current === epoch, []);
     const [busy, setBusy] = useState(false);
     const [available, setAvailable] = useState(false);
+    const [transferReady, updateTransferReady] = useState(true);
+    const transferReadyRef = useRef(true);
+    const setTransferReady = useCallback((ready: boolean) => { transferReadyRef.current = ready; updateTransferReady(ready); }, []);
     const [linked, setLinked] = useState(false);
     const [status, setStatus] = useState<CourtOSText | null>(null);
     const [error, setError] = useState<CourtOSText | null>(null);
@@ -159,7 +164,7 @@ export function ResearchHandoffProvider({ ownerId, inWord, children }: { ownerId
     }, [inWord, linked, checkReturn]);
 
     async function publish(): Promise<string | null> {
-        if (dispatching.current || busy || !available || conflict) return null;
+        if (!transferReadyRef.current || dispatching.current || busy || !available || conflict) return null;
         dispatching.current = true; setBusy(true); setError(null); setFallbackUrl(null);
         const state = workspace.current?.getState() ?? latest.current;
         const atSend = generation.current;
@@ -194,5 +199,5 @@ export function ResearchHandoffProvider({ ownerId, inWord, children }: { ownerId
         } catch { if (isCurrent(epoch)) setError(M.keepFailed); }
         finally { if (isCurrent(epoch)) setBusy(false); }
     }
-    return <Context.Provider value={{ inWord, register, changed, edited, bindWordDocument, publish, busy, available, linked, status: status ? t(status) : "", error: error ? t(error) : "", fallbackUrl, setFallbackUrl, conflict, acceptReturned, keepLocal }}>{children}</Context.Provider>;
+    return <Context.Provider value={{ inWord, register, changed, edited, bindWordDocument, setTransferReady, publish, busy, available: available && transferReady, linked, status: !transferReady ? t(CM.transferPending) : status ? t(status) : "", error: error ? t(error) : "", fallbackUrl, setFallbackUrl, conflict, acceptReturned, keepLocal }}>{children}</Context.Provider>;
 }

@@ -1,4 +1,5 @@
 // Authored wire contracts. No server, browser, UI or storage dependencies.
+export type { PublicSourceSelection, PublicDecisionCitation } from "./researchConversation";
 /** Server-owned local model status, never a claim about semantic correctness. */
 export type LocalProviderState = "queued" | "dispatching";
 export type LocalProviderQueueEvent = { type: "provider_queue"; state: LocalProviderState };
@@ -307,8 +308,9 @@ export type McpToolEvent = {
 };
 
 /** Text-free provenance diagnostics; never contains prompts, quotations or IDs. */
+export type SourceGroundingIssue = "required" | "scope" | "unavailable" | "changed" | "verification";
 export type SourceGroundingDiagnostics = {
-  reason: "no_references" | "no_citations" | "missing_reference" | "unverified_citation";
+  reason: "no_references" | "no_citations" | "missing_reference" | "unverified_citation" | "uncited_paragraph";
   reference_count: number;
   citation_count: number;
   verified_count: number;
@@ -321,6 +323,9 @@ export type SourceGroundingDiagnostics = {
 };
 
 export type AssistantEvent =
+  /** Emitted and persisted only after this turn's original-source/paragraph
+   * gate. It attests literal source binding, never semantic truth. */
+  | { type: "source_bound_answer"; version: 1 }
   | { type: "reasoning"; text: string }
   | AskInputsEvent
   | {
@@ -422,10 +427,11 @@ export type AssistantEvent =
        * "invalid_api_key": the provider rejected the caller's key.
        */
       code?: AssistantErrorCode;
+      source_issue?: SourceGroundingIssue;
       grounding_diagnostics?: SourceGroundingDiagnostics;
     };
 
-export type AssistantErrorCode = "invalid_api_key" | "source_grounding_failed";
+export type AssistantErrorCode = "invalid_api_key" | "source_grounding_failed" | "source_history_withheld";
 
 export type WordEditApplyMode = "direct" | "approval";
 

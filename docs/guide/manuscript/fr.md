@@ -46,10 +46,10 @@ Utilisez des décisions publiques, de la doctrine non confidentielle que vous av
 La référence doit vous suivre dans votre outil de travail.
 
 ### Ouvrir
-Dans le navigateur: https://sandbox.swisslaw.io/research. Connectez-vous avec votre adresse électronique et le code reçu. Dans Word, ouvrez le complément CourtOS installé. La recherche ne demande ni projet ni conversation.
+Dans le navigateur: https://sandbox.swisslaw.io/research. Connectez-vous avec votre adresse électronique et le code reçu. Dans Word, ouvrez le complément CourtOS installé. Choisissez les sources avant de poser une question.
 
 ### Chercher dans les sources publiques
-Choisissez OpenCaseLaw. Saisissez la référence d’une décision ou quelques termes publics; sélectionnez une langue si nécessaire. Les résultats sont limités. Une absence de résultat ne prouve pas une absence de jurisprudence. Ne saisissez aucun nom ni fait confidentiel.
+Choisissez «Rechercher la jurisprudence», puis OpenCaseLaw. Saisissez la référence d’une décision ou quelques mots-clés. Les résultats sont limités; leur absence ne prouve pas une absence de jurisprudence. Ne saisissez aucun nom ni fait confidentiel.
 
 ### Reprendre un passage
 Ouvrez la décision et vérifiez l’original. Sélectionnez un court passage, confirmez la sélection, puis copiez le texte avec sa source ou insérez-le dans Word. Le lien de recherche dans l’original tente de retrouver le passage. Il ne certifie aucun numéro de paragraphe; un lien vers le document entier n’est pas une référence précise.
@@ -61,19 +61,22 @@ Depuis Word, ouvrez le navigateur et poursuivez avec le même compte. Renvoyez e
 «Citations» ouvre Citecheck séparément. CourtOS ne lui transmet aucun texte. Vérifiez dans l’arrêt original s’il étaye votre affirmation.
 
 ## 6. Ajouter vos propres sources
-La bibliothèque complète la jurisprudence par les documents que vous choisissez.
+Choisissez les sources originales. Posez vos questions. Vérifiez les passages cités.
 
-### Importer
-Ajoutez des PDF dans «Bibliothèque». Un nom clair avec auteur, titre et édition facilite leur identification. CourtOS stocke une copie sur le serveur; il ne lit pas directement un dossier local. Les limites d’import figurent dans l’interface.
+### Classer par numéro de cause
+Créez dans la bibliothèque un dossier portant le numéro de cause. Rangez dessous les parties, leurs écritures et leurs pièces; gardez les actes communs à part. Importez les PDF dans le bon dossier. CourtOS stocke des copies sur le serveur.
 
-### Rechercher
-Dans la recherche, choisissez «Vos sources» et les documents voulus. Cette recherche n’utilise pas d’IA. Chaque résultat indique passage, version et page PDF. Des scans illisibles ou une indexation partielle peuvent laisser des lacunes.
+### Choisir les sources
+Avec «Choisir vos sources», sélectionnez les PDF de la conversation. Pour la jurisprudence, ouvrez une décision OpenCaseLaw, choisissez un court extrait et ajoutez-le à la conversation. La simple recherche dans vos documents n’utilise pas d’IA.
 
-### Conserver la référence
-Ouvrez la page et lisez le contexte. Copiez ou insérez le passage avec nom du fichier, version, page et lien protégé. Ce lien ouvre la version enregistrée pour le compte autorisé; il n’accorde aucun accès à un tiers.
+### Poser une question, puis préciser
+Demandez quels montants une écriture mentionne ou en quoi deux versions des faits divergent. Gemma travaille sur les sources choisies. Les questions suivantes utilisent les mêmes versions; commencez une nouvelle conversation pour d’autres sources. Aucune demande ne part sans source.
 
-### Distinguer le texte de sa portée
-Une citation retrouvée mot pour mot peut être incomplète ou sans pertinence pour la question juridique. Vérifiez ce qu’elle permet d’affirmer. La page PDF ne correspond pas nécessairement à la page imprimée.
+### Vérifier la réponse
+Chaque paragraphe de réponse doit comporter une référence vérifiée. Ouvrez le passage et lisez le contexte. Sans référence valable, la réponse est retenue. Les liens vers vos PDF restent réservés aux comptes autorisés.
+
+### Un texte retrouvé ne prouve pas sa portée
+Le contrôle confirme le passage et la citation, pas la conclusion. Une allégation reste une allégation. La page PDF peut différer de la page imprimée.
 
 ## 7. Examiner les écritures
 Rapprocher les allégations et les pièces dans une liste à vérifier.

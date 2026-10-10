@@ -35,7 +35,10 @@ numerals, balanced headings and readable line lengths. Legacy guide and assistan
 surfaces may retain Timeless Serif.
 
 - **Navigation:** Recherche, Eingaben prüfen, Bibliothek, Zitate; one settings button. Source
-  choice is OpenCaseLaw or Eigene Quellen. No sample matters or dashboard tiles.
+  choice is OpenCaseLaw or Eigene Quellen. Research opens with a source-bound
+  conversation; source discovery is a separate, explicit action. Optional sample
+  matters belong under Eingaben prüfen. Their four fictitious case numbers are
+  library roots, followed by party and submission/exhibit folders.
 - **Settings:** two model choices with explicit processing location, followed by
   account and sign-out. Help is collapsed. Preferences belong to the signed-in
   owner and fail back to Gemma when unavailable or invalid. Own-library text
@@ -46,8 +49,10 @@ surfaces may retain Timeless Serif.
   beside that action. Private documents use server-local Gemma only in this pilot.
 - **Word:** read selected terms only after a click; never read the whole document
   at startup. Insert source text only after a separate click. Host state travels
-  in the library URL, not in an account-wide preference. This candidate disables
-  AI handoffs until Word authentication and a suitable request surface are proven.
+  in the library URL, not in an account-wide preference. Research uses the same
+  source-bound personal conversation as the browser, never the legacy add-in’s
+  implicit whole-document context. The current conversation and unsent draft can
+  travel with the research handoff; each host loads history under its own account.
   **Im Browser fortsetzen** transfers an explicit account-bound research snapshot.
   **In Word fortsetzen** publishes the returned state; an unchanged pane restores it
   automatically, local edits require a choice. It never inserts text automatically.
@@ -63,6 +68,13 @@ surfaces may retain Timeless Serif.
   choices. UI translation never translates quotations or silently changes search
   filters or model prompts. Research has no duplicate page heading or permanent
   promotional footer; source/licence access remains in settings.
+- **Chat:** selected original versions remain fixed for follow-up questions. A
+  new conversation is required to change sources. No-source requests fail before
+  model execution. An answer is withheld until every paragraph has an exact,
+  server-checked source quotation. This is a provenance check, not an entailment
+  or truth guarantee. Older responses without the server release marker are not
+  shown as current source-bound answers. Public search receives only the query
+  explicitly entered there, never private files or conversation history.
 - **Trust:** concise pilot restriction stays visible. Search scope and detailed
   provenance are disclosed on demand. Source text, extraction limitations, copy
   fallbacks, authentication and explicit-send contracts remain intact.

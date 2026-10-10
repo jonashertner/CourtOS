@@ -1,5 +1,7 @@
 "use client";
 
+import { openPublicCitationOriginal } from "@/app/lib/publicCitationLinks";
+
 import { findPendingAskInput } from "@/app/lib/pendingAskInput";
 import { useDocumentViewers } from "@/app/hooks/useDocumentViewers";
 import { useDocumentPermissions } from "@/app/hooks/useDocumentPermissions";
@@ -844,6 +846,10 @@ export default function ProjectAssistantChatPage({ params }: Props) {
         citation: Citation,
         showQuotes = true,
     ) => {
+        if (citation.kind === "public_decision") {
+            openPublicCitationOriginal(citation);
+            return;
+        }
         if (showQuotes && activeCitation === citation && activeTab) {
             handleCloseAnnotation(activeTab.documentId);
             return;

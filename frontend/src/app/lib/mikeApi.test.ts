@@ -1,3 +1,5 @@
+import { loadAssistantChat } from "./assistantTurns";
+import { canDisplaySourceAnswer } from "./researchConversation";
 import { getGoogleWorkspaceStatus, startGoogleWorkspaceOAuth, cancelGoogleWorkspaceOAuth, disconnectGoogleWorkspace, updateGoogleWorkspaceSettings, setGoogleWorkspaceToolEnabled, updateGoogleDriveSettings, setGoogleDriveToolEnabled } from "./mikeApi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AssistantEvent, Chat } from "@/app/components/shared/types";
@@ -751,6 +753,23 @@ describe("getChat message mapping", () => {
         title: "T",
         created_at: "2026-01-01",
     };
+
+    it("keeps the real history release marker and final citations displayable after loadAssistantChat", async () => {
+        const quote = "Dies ist ein exakt belegter Satz.";
+        const citation = { type: "citation_data", kind: "public_decision", ref: 1, decision_id: "CH_CASE", title: "Entscheid", source_url: "https://example.org/original", pdf_url: null, content_hash: null, start: 0, end: Array.from(quote).length, quote, verified: true };
+        const message = { id: "source-answer", role: "assistant", content: [{ type: "source_bound_answer", version: 1 }, { type: "content", text: "Aussage [1]" }], citations: [citation] };
+        fetchMock.mockResolvedValue(jsonResponse({ chat, is_owner: true, access_role: "owner", messages: [message] }));
+        const restored = await loadAssistantChat("c1");
+        expect(restored.messages[0].citationStatus).toBe("final"); expect(canDisplaySourceAnswer(restored.messages[0])).toBe(true);
+        expect(canDisplaySourceAnswer({ ...restored.messages[0], events: [{ type: "content", text: "Nicht freigegebene alte Antwort [1]" }] })).toBe(false);
+    });
+
+    it("preserves public source descriptors on history reload without turning text into source authority", async () => {
+        const public_sources = [{ decision_id: "BGE_137_I_195", start: 20, end: 65, content_hash: null }];
+        fetchMock.mockResolvedValue(jsonResponse({ chat, messages: [{ id: "m1", role: "user", content: "Nachfrage", public_sources }] }));
+        const { messages } = await getChat("c1");
+        expect(messages[0]).toMatchObject({ role: "user", content: "Nachfrage", public_sources });
+    });
 
     it("maps user messages, keeping files and workflow", async () => {
         fetchMock.mockResolvedValue(

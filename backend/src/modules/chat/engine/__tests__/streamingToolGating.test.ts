@@ -41,6 +41,11 @@ vi.mock("../tools/toolDispatcher", () => ({
     runToolCalls(calls),
 }));
 
+// Provider-behaviour tests use an explicitly admitted public fixture. Source-free
+// pilot refusal itself is covered by streamingSourceEvidence.test.ts.
+vi.mock("../../../knowledge/knowledge.service", () => ({ publicKnowledgeRequest: async () => ({ ok: true, data: { decision_id: "public_fixture", title: "Fixture", source_url: null, pdf_url: null, content_hash: null, passage: { start: 0, end: 24, total_chars: 24, text: "A public fixture source." } } }) }));
+const pilotEvidence = { publicSources: [{ decision_id: "public_fixture", start: 0, end: 24, content_hash: null }] };
+
 import { runLLMStream } from "../streaming";
 import { PROJECT_EXTRA_TOOLS } from "../tools/toolSchemas";
 
@@ -229,7 +234,7 @@ describe("CourtOS pilot tool execution boundary", () => {
   it.each([true, false])("announces knowledge retrieval completion before the next model hop (evidence=%s)", async (hasEvidence) => {
     vi.stubEnv("COURTOS_PILOT_MODE", "true");
     vi.stubEnv("COURTOS_KNOWLEDGE_ENABLED", "true");
-    const params = { ...baseParams(), model: "courtos-local" };
+    const params = { ...baseParams(), ...pilotEvidence, model: "courtos-local" };
     const completionFrame = `data: ${JSON.stringify({ type: "tool_call_complete", name: "search_knowledge", has_evidence: hasEvidence })}\n\n`;
     runToolCalls.mockImplementationOnce(async () => {
       expect(params.write).not.toHaveBeenCalledWith(completionFrame);
@@ -245,7 +250,7 @@ describe("CourtOS pilot tool execution boundary", () => {
       expect(params.write).toHaveBeenCalledWith(completionFrame);
       return { fullText: "" };
     });
-    await runLLMStream(params);
+    await expect(runLLMStream(params)).rejects.toMatchObject({ fullText: "" });
   });
   it("rejects hallucinated external, writing and client tools before dispatch", async () => {
     vi.stubEnv("COURTOS_PILOT_MODE", "true");
@@ -260,13 +265,13 @@ describe("CourtOS pilot tool execution boundary", () => {
       ]);
       return { fullText: "" };
     });
-    await runLLMStream({
-      ...baseParams(), model: "courtos-local", includeResearchTools: true,
+    await expect(runLLMStream({
+      ...baseParams(), ...pilotEvidence, model: "courtos-local", includeResearchTools: true,
       clientTools: {
         schemas: [{ type: "function", function: { name: "word_client", description: "client", parameters: { type: "object", properties: {} } } }],
         owns: (name) => name === "word_client", execute: executeClient,
       },
-    });
+    })).rejects.toMatchObject({ fullText: "" });
     expect(advertisedToolNames().sort()).toEqual(["find_in_document", "list_documents", "list_workflows", "read_document", "read_workflow"]);
     expect(runToolCalls.mock.calls[0]![0].map((call) => call.function.name)).toEqual(["read_document"]);
     expect(executeClient).not.toHaveBeenCalled();

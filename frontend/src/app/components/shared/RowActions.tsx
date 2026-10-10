@@ -214,6 +214,7 @@ export function RowActionMenuItems({
 export const ROW_ACTION_MENU_CLASS = "w-48";
 
 export function RowActions(props: Props) {
+    const t = useLibraryText();
     const [open, setOpen] = useState(false);
     // An action often opens something that takes focus itself (an inline
     // rename field, a modal). Returning focus to the button afterwards would
@@ -239,7 +240,7 @@ export function RowActions(props: Props) {
             <DropdownTrigger asChild>
                 <button
                     type="button"
-                    aria-label="Open row actions"
+                    aria-label={t(L.openRowActions)}
                     // The row itself is clickable; opening its menu must not
                     // also activate the row.
                     onClick={(event) => event.stopPropagation()}

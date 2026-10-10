@@ -6,6 +6,20 @@ const SHA256 = /^[a-f0-9]{64}$/i;
 export function hasCheckedCitationLocation(citation: Citation): boolean {
     if (citation.verified !== true) return false;
     if (citation.kind === "case") return true;
+    if (citation.kind === "public_decision") {
+        // A public location is a live corpus excerpt, not a private PDF version.
+        // Upstream may omit a fingerprint; never manufacture one from the quote.
+        return typeof citation.decision_id === "string" && citation.decision_id.trim().length > 0 &&
+            !/[\u0000-\u001f\u007f]/.test(citation.decision_id) &&
+            Number.isSafeInteger(citation.start) && citation.start >= 0 &&
+            Number.isSafeInteger(citation.end) && citation.end > citation.start &&
+            typeof citation.quote === "string" && citation.quote.trim().length > 0 &&
+            !/[\uD800-\uDFFF]/u.test(citation.quote) &&
+            Array.from(citation.quote).length === citation.end - citation.start &&
+            (citation.content_hash === null || (typeof citation.content_hash === "string" &&
+                citation.content_hash.length > 0 && citation.content_hash.length <= 200 &&
+                !/[\u0000-\u001f\u007f]/.test(citation.content_hash)));
+    }
     if (!citation.version_id || !citation.quotes?.length) return false;
     return citation.quotes.every(quote => {
         const verification = quote.verification;

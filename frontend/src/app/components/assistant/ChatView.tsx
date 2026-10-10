@@ -1,5 +1,7 @@
 "use client";
 
+import { openPublicCitationOriginal } from "@/app/lib/publicCitationLinks";
+
 import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
 import { FrontierDraftEntry } from "@/app/components/courtos/FrontierDraftEntry";
 import { findPendingAskInput } from "@/app/lib/pendingAskInput";
@@ -405,6 +407,10 @@ export function ChatView({
      */
     const openCitation = useCallback(
         async (citation: Citation, options?: { showQuotes?: boolean }) => {
+            if (citation.kind === "public_decision") {
+                openPublicCitationOriginal(citation);
+                return;
+            }
             const showQuotes = options?.showQuotes ?? true;
             const resolution = await resolvePanelDocumentVersionResult(
                 panelDocumentFromCitation(citation, showQuotes),

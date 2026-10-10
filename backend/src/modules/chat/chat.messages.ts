@@ -14,6 +14,28 @@
 // route needs to run the stream; it does not stream.
 import { type Db } from "../../lib/supabase";
 import { withoutEmptyAssistantReservations } from "./engine/index";
+import { parsePublicSourceSelections } from "./engine/publicSourceEvidence";
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
+
+/** Do not retrofit a source-bound assurance onto a pre-gate historical draft.
+ * Storage is unchanged; this is the pilot's read projection only. */
+export function sourceBoundHistory(message: Record<string, unknown>): Record<string, unknown> {
+    if (!courtosPilotEnabled() || message.role !== "assistant") return message;
+    const events = Array.isArray(message.content) ? message.content.filter(event => event && typeof event === "object") as Record<string, unknown>[] : [];
+    if (events.some(event => event.type === "source_bound_answer" && event.version === 1)) return message;
+    const errors = events.filter(event => event.type === "error");
+    return { ...message, annotations: null, citations: null, content: errors.length ? errors : [{ type: "error", code: "source_history_withheld", safe_to_display: true,
+        message: "Diese frühere Antwort wurde nicht mit der aktuellen Quellenprüfung freigegeben. Bitte die Originalquellen auswählen und die Frage erneut stellen." }] };
+}
+
+export function restorePublicUserSelection(message: Record<string, unknown>): Record<string, unknown> {
+    if (message.role !== "user" || !Array.isArray(message.content)) return message;
+    const content = message.content.filter(event => event && typeof event === "object" && !Array.isArray(event)) as { type?: unknown; text?: unknown; sources?: unknown }[];
+    const source = content.find(event => event.type === "public_source_selection");
+    if (!source) return message;
+    const selections = parsePublicSourceSelections(source.sources);
+    return { ...message, content: content.filter(event => event.type === "content" && typeof event.text === "string").map(event => event.text).join("\n"), ...(selections ? { public_sources: selections } : {}) };
+}
 
 // Stored doc_edited events capture the `status` at the time the assistant
 // produced the edit (always "pending"). If the user later accepts or rejects,
@@ -142,7 +164,7 @@ export async function getChatMessages(
         .order("created_at", { ascending: true });
 
     return hydrateEditStatuses(
-        withoutEmptyAssistantReservations(messages ?? []),
+        withoutEmptyAssistantReservations(messages ?? []).map(restorePublicUserSelection).map(sourceBoundHistory),
         db,
     );
 }

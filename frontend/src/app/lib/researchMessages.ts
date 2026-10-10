@@ -609,10 +609,10 @@ export const researchMessages = {
         "en": "not provided"
     },
     "publicTerms": {
-        "de": "Öffentliche Rechtsbegriffe",
-        "fr": "Termes juridiques publics",
-        "it": "Termini giuridici pubblici",
-        "en": "Public legal terms"
+        "de": "Suchbegriffe oder Entscheidnummer",
+        "fr": "Mots-clés ou référence de décision",
+        "it": "Parole chiave o numero della decisione",
+        "en": "Search terms or decision number"
     },
     "legalTerms": {
         "de": "Rechtsbegriffe",

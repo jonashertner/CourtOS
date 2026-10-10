@@ -46,10 +46,10 @@ Verwenden Sie öffentliche Entscheide, rechtmässig nutzbare nicht vertrauliche 
 Ein Beleg soll dort ankommen, wo Sie schreiben.
 
 ### Öffnen
-Im Browser: https://sandbox.swisslaw.io/research. Melden Sie sich mit Ihrer E-Mail-Adresse und dem zugesandten Code an. In Word öffnen Sie das eingerichtete CourtOS-Add-in. Ein Projekt oder Chat ist für die Recherche nicht nötig.
+Im Browser: https://sandbox.swisslaw.io/research. Melden Sie sich mit Ihrer E-Mail-Adresse und dem zugesandten Code an. In Word öffnen Sie das eingerichtete CourtOS-Add-in. Wählen Sie Quellen, bevor Sie eine Frage stellen.
 
 ### Öffentlich recherchieren
-Wählen Sie OpenCaseLaw. Geben Sie eine Entscheidkennung oder wenige öffentliche Suchbegriffe ein und wählen Sie bei Bedarf die Sprache. Die Suche zeigt eine begrenzte Auswahl; fehlende Treffer belegen keine fehlende Rechtsprechung. Vertrauliche Namen und Sachverhalte gehören nicht in diese Eingabe.
+Wählen Sie «Rechtsprechung finden» und OpenCaseLaw. Geben Sie eine Entscheidkennung oder wenige Suchbegriffe ein. Die Suche zeigt eine begrenzte Auswahl; fehlende Treffer belegen keine fehlende Rechtsprechung. Vertrauliche Namen und Sachverhalte gehören nicht in diese Eingabe.
 
 ### Eine Stelle mitnehmen
 Öffnen Sie den Entscheid und prüfen Sie das Original. Markieren Sie eine kurze Passage, übernehmen Sie die Auswahl und kopieren Sie Text samt Quelle oder fügen Sie ihn in Word ein. Der Link zur Textsuche im Original versucht, die Stelle zu finden. Er bestätigt keine amtliche Randnummer; ein Link zum ganzen Original ist keine genaue Fundstelle.
@@ -61,19 +61,22 @@ Wählen Sie OpenCaseLaw. Geben Sie eine Entscheidkennung oder wenige öffentlich
 «Zitate» öffnet Citecheck separat. CourtOS übergibt dabei keinen Text. Ob ein angeführter Entscheid Ihre Aussage trägt, prüfen Sie im Original.
 
 ## 6. Eigene Quellen hinzunehmen
-Die Bibliothek ergänzt die Rechtsprechung um Ihren ausgewählten Bestand.
+Wählen Sie Originalquellen. Stellen Sie Fragen. Prüfen Sie die Fundstellen.
 
-### Hochladen
-Unter «Bibliothek» laden Sie PDFs hoch. Ein klarer Dateiname mit Autor, Titel und Auflage hilft später. CourtOS speichert eine Kopie auf dem Server; es liest keinen lokalen Aktenordner direkt. Die Oberfläche nennt die Uploadgrenzen.
+### Nach Geschäftsnummer ablegen
+Legen Sie in der Bibliothek einen Ordner mit der Geschäftsnummer an. Darunter folgen Parteien, Eingaben und Beilagen; gemeinsame Akten liegen separat. Laden Sie PDFs im passenden Ordner hoch. CourtOS speichert Kopien auf dem Server.
 
-### Suchen
-Wählen Sie in der Recherche «Eigene Quellen» und die gewünschten Dokumente. Diese Suche verwendet keine KI. Ein Treffer zeigt Passage, Fassung und PDF-Seite. Bei unlesbaren Scans oder unvollständiger Erschliessung bleibt die Suche lückenhaft.
+### Die Quellen wählen
+Über «Eigene Quellen wählen» bestimmen Sie die PDFs für das Gespräch. Für Rechtsprechung öffnen Sie einen OpenCaseLaw-Entscheid, wählen einen kurzen Auszug und übernehmen ihn ins Gespräch. Die reine Suche im eigenen Bestand verwendet keine KI.
 
-### Nachweisen
-Öffnen Sie die angegebene Seite und lesen Sie den Zusammenhang. Kopieren oder übernehmen Sie die Passage mit Dateiname, Fassung, Seite und geschütztem Quellenlink. Der Link öffnet die gespeicherte Fassung für das berechtigte Konto; er gewährt anderen Personen keinen Zugriff.
+### Fragen und nachfragen
+Fragen Sie etwa, welche Beträge eine Eingabe nennt oder worin sich zwei Darstellungen widersprechen. Gemma arbeitet mit den gewählten Quellen. Folgefragen nutzen dieselben Fassungen; für andere Quellen beginnen Sie ein neues Gespräch. Ohne Quellen ist keine Anfrage möglich.
 
-### Wortlaut und Bedeutung trennen
-Ein wörtlich gefundenes Zitat kann unvollständig oder für die Rechtsfrage unpassend sein. Prüfen Sie, was die Quelle tatsächlich trägt. Eine PDF-Seite ist nicht zwingend die gedruckte Buchseite.
+### Die Antwort nachprüfen
+Jeder Antwortabsatz braucht einen geprüften Quellenverweis. Öffnen Sie die Fundstelle und lesen Sie den Zusammenhang. Bei fehlendem Nachweis wird die Antwort zurückgehalten. Links auf eigene PDFs bleiben auf berechtigte Konten beschränkt.
+
+### Wortlaut ist kein Richtigkeitsbeweis
+Die Prüfung bestätigt Fundstelle und Zitat, nicht die Schlussfolgerung. Eine Parteibehauptung bleibt eine Behauptung. Eine PDF-Seite kann von der gedruckten Seitenzahl abweichen.
 
 ## 7. Eingaben prüfen
 Aus Behauptungen und Belegen wird eine überschaubare Prüfliste.

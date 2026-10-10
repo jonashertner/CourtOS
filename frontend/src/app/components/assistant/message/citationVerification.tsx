@@ -1,3 +1,4 @@
+import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
 import { CircleAlert } from "lucide-react";
 import type { Citation, DocumentCitationQuote } from "../../shared/types";
 import { PillButtonUI } from "@/shared/ui/PillButtonUI";
@@ -25,7 +26,8 @@ const UNVERIFIED_PRESENTATION: VerificationPresentation = {
 export function citationVerificationState(
   citation: Citation,
 ): CitationVerificationDisplayState {
-  return citation.verified === true ? "verified" : "unverified";
+  return (citation.kind === "public_decision" ? hasCheckedCitationLocation(citation) : citation.verified === true)
+    ? "verified" : "unverified";
 }
 
 export function quoteVerificationState(

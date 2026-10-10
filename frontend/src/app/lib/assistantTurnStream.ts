@@ -1,3 +1,4 @@
+import { normaliseSourceGroundingIssue } from "./sourceGroundingMessages";
 "use client";
 
 import { streamChatTurn } from "@/app/lib/mikeApi";
@@ -45,7 +46,7 @@ export type TurnStreamHooks = {
    * goes. `message` is what the bubble shows; `safeToDisplay` marks a
    * configuration refusal that a re-send would repeat.
    */
-  onErrorFrame?: (frame: { message: string; safeToDisplay: boolean }) => void;
+  onErrorFrame?: (frame: { message: string; safeToDisplay: boolean; code?: string; sourceIssue?: import("@mike/contracts").SourceGroundingIssue }) => void;
 };
 
 /**
@@ -62,6 +63,7 @@ export async function chatRequestError(response: Response): Promise<Error> {
     typeof value === "string" && value.trim() ? value.trim() : null;
   let detail: string | null = null;
   let code: string | null = null;
+  let sourceIssue: import("@mike/contracts").SourceGroundingIssue | null = null;
   let requestId = read(response.headers.get("x-request-id"));
   // Only a JSON error body is read: anything else (an HTML proxy page, a
   // stream that never ends) is released unread so the failure still
@@ -72,6 +74,7 @@ export async function chatRequestError(response: Response): Promise<Error> {
     const body = (await response.json()) as Record<string, unknown>;
     detail = read(body?.detail);
     code = read(body?.code);
+    sourceIssue = normaliseSourceGroundingIssue(body?.source_issue);
     requestId = read(body?.request_id) ?? requestId;
   } catch {
     try {
@@ -87,6 +90,7 @@ export async function chatRequestError(response: Response): Promise<Error> {
     {
       status: response.status,
       ...(code ? { code } : {}),
+      ...(sourceIssue ? { source_issue: sourceIssue } : {}),
       ...(requestId ? { requestId } : {}),
     },
   );
@@ -423,9 +427,10 @@ export async function consumeAssistantTurnStream(
               type: "error",
               message,
               ...(safeToDisplay ? { safe_to_display: true } : {}),
-              ...(data.code === "invalid_api_key" || data.code === "source_grounding_failed"
+              ...(data.code === "invalid_api_key" || data.code === "source_grounding_failed" || data.code === "source_history_withheld"
                 ? { code: data.code }
                 : {}),
+              ...(normaliseSourceGroundingIssue(data.source_issue) ? { source_issue: normaliseSourceGroundingIssue(data.source_issue)! } : {}),
             },
           ];
           const snapshot = [...eventsRef.current];
@@ -435,7 +440,13 @@ export async function consumeAssistantTurnStream(
             error: message,
           }));
           turn.setLoadingCitations(false);
-          hooks.onErrorFrame?.({ message, safeToDisplay });
+          hooks.onErrorFrame?.({ message, safeToDisplay, ...(typeof data.code === "string" ? { code: data.code } : {}), ...(normaliseSourceGroundingIssue(data.source_issue) ? { sourceIssue: normaliseSourceGroundingIssue(data.source_issue)! } : {}) });
+          continue;
+        }
+
+        if (data.type === "source_bound_answer" && data.version === 1) {
+          if (!eventsRef.current.some(event => event.type === "source_bound_answer")) eventsRef.current = [...eventsRef.current, { type: "source_bound_answer", version: 1 }];
+          updateLatestAssistantMessage(assistantMessage => ({ ...assistantMessage, events: [...eventsRef.current] }));
           continue;
         }
 

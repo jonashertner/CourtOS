@@ -26,6 +26,11 @@ vi.mock("../tools/toolDispatcher", () => ({
   runToolCalls: vi.fn(),
 }));
 
+// Provider-behaviour tests use an explicitly admitted public fixture. Source-free
+// pilot refusal itself is covered by streamingSourceEvidence.test.ts.
+vi.mock("../../../knowledge/knowledge.service", () => ({ publicKnowledgeRequest: async () => ({ ok: true, data: { decision_id: "public_fixture", title: "Fixture", source_url: null, pdf_url: null, content_hash: null, passage: { start: 0, end: 24, total_chars: 24, text: "A public fixture source." } } }) }));
+const pilotEvidence = { publicSources: [{ decision_id: "public_fixture", start: 0, end: 24, content_hash: null }] };
+
 import { runLLMStream, assistantStreamErrorPayload } from "../streaming";
 
 afterEach(() => vi.unstubAllEnvs());
@@ -151,9 +156,9 @@ describe("CourtOS incomplete output is not a completed answer", () => {
       (params.callbacks as ReasoningCallbacks).onContentDelta(partial);
       return { fullText: partial, finishReason: "length", stopReason: "output_limit" };
     });
-    const args = { ...streamArgs(), model: "courtos-local" };
+    const args = { ...streamArgs(), ...pilotEvidence, model: "courtos-local" };
     const failure = await runLLMStream(args).catch((e: unknown) => e);
-    expect((failure as { events: unknown[] }).events).toContainEqual({ type: "content", text: "A fact [1]." });
+    expect((failure as { events: unknown[] }).events).not.toContainEqual({ type: "content", text: "A fact [1]." });
     expect((failure as { events: unknown[] }).events).toContainEqual(expect.objectContaining({ type: "error", safe_to_display: true, message: expect.stringContaining("Tokenlimit") }));
     const frames = args.write.mock.calls.map((call) => String(call[0])).join("");
     // Routes emit this payload independently of the hidden citation stream
@@ -168,13 +173,13 @@ describe("CourtOS incomplete output is not a completed answer", () => {
       (params.callbacks as ReasoningCallbacks).onContentDelta("A fact [1].");
       return { fullText: "A fact [1].", finishReason: "stop" };
     });
-    const failure = await runLLMStream({ ...streamArgs(), model: "courtos-local" }).catch((e: unknown) => e);
+    const failure = await runLLMStream({ ...streamArgs(), ...pilotEvidence, model: "courtos-local" }).catch((e: unknown) => e);
     expect((failure as { events: unknown[] }).events).toContainEqual(expect.objectContaining({ type: "error", safe_to_display: true, message: expect.stringContaining("Quellenverweise") }));
   });
 
   it("rejects an inline source without an immutable PDF version before inference", async () => {
     vi.stubEnv("COURTOS_PILOT_MODE", "true");
-    const args = { ...streamArgs(), model: "courtos-local", docStore: new Map([["doc-0", { storage_path: "", file_type: "txt", filename: "demo.txt", inline_text: "Eingang am Montag" }]]), docIndex: { "doc-0": { document_id: "synthetic-document", filename: "demo.txt" } } };
+    const args = { ...streamArgs(), ...pilotEvidence, model: "courtos-local", docStore: new Map([["doc-0", { storage_path: "", file_type: "txt", filename: "demo.txt", inline_text: "Eingang am Montag" }]]), docIndex: { "doc-0": { document_id: "synthetic-document", filename: "demo.txt" } } };
     const failure = await runLLMStream(args).catch((error: unknown) => error);
     expect(assistantStreamErrorPayload(failure)).toMatchObject({ code: "source_grounding_failed", safe_to_display: true });
     expect(streamChatWithTools).not.toHaveBeenCalled();
@@ -184,7 +189,7 @@ describe("CourtOS incomplete output is not a completed answer", () => {
   it("marks an exhausted tool budget as incomplete", async () => {
     vi.stubEnv("COURTOS_PILOT_MODE", "true");
     streamChatWithTools.mockImplementationOnce(async () => ({ fullText: "", finishReason: "tool-calls", stopReason: "step_limit" }));
-    const failure = await runLLMStream({ ...streamArgs(), model: "courtos-local" }).catch((e: unknown) => e);
+    const failure = await runLLMStream({ ...streamArgs(), ...pilotEvidence, model: "courtos-local" }).catch((e: unknown) => e);
     expect((failure as { events: unknown[] }).events).toContainEqual(expect.objectContaining({ type: "error", safe_to_display: true, message: expect.stringContaining("Verarbeitungsschritte") }));
   });
 });

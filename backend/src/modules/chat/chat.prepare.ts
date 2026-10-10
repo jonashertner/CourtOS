@@ -25,6 +25,7 @@ import { resolveEffectiveReasoningLevel } from "../../lib/modelSelection";
 import { replaysReasoning } from "../../lib/llm/registry";
 import { beginMemoryConversationTurn, releaseMemoryConversationTurn, type MemoryConversationTurn } from "../../lib/memory/schedule";
 import { getAccessibleChat, validateAccessibleProjectId } from "./chat.access";
+import { courtosPilotEnabled } from "../../lib/courtosPilot";
 
 // ---------------------------------------------------------------------------
 // Pre-stream preparation for POST /chat (streaming)
@@ -101,13 +102,17 @@ export async function prepareChatStream(
     },
 ): Promise<
     | { ok: true; prepared: PreparedChatStream }
-    | { ok: false; status: number; code?: string; detail: string }
+    | { ok: false; status: number; code?: string; source_issue?: import("@mike/contracts").SourceGroundingIssue; detail: string }
     // "internal" carries the raw error so the route can hand it to
     // sendInternalError, preserving the request_id in the body and the
     // [http/internal-error] correlation log.
     | { ok: false; internal: true; error: unknown }
 > {
     const { userId, userEmail, messages } = args;
+    const requestedUser = [...messages].reverse().find(m => m.role === "user");
+    if (courtosPilotEnabled() && !requestedUser?.files?.length && !requestedUser?.public_sources?.length) {
+        return { ok: false, status: 400, code: "source_required", detail: "Bitte zuerst eigene Dokumente oder eine öffentliche Originalfundstelle auswählen. Das Gespräch beantwortet keine Fragen allein aus Modellwissen." };
+    }
     let chatId = args.chatId;
     let chatTitle: string | null = null;
     let chatModel: string | null = null;
@@ -342,7 +347,7 @@ export async function prepareChatStream(
                 id: args.inputMessageId,
                 chat_id: chatId,
                 role: "user",
-                content: lastUser.content,
+                content: lastUser.public_sources?.length ? [{ type: "content", text: lastUser.content ?? "" }, { type: "public_source_selection", sources: lastUser.public_sources }] : lastUser.content,
                 files: lastUser.files ?? null,
                 workflow: lastUser.workflow ?? null,
                 author_user_id: userId,
@@ -469,7 +474,7 @@ export async function prepareChatStream(
             }
         }
         if (error instanceof SourceGroundingError) {
-            return { ok: false, status: 400, code: error.code, detail: error.message };
+            return { ok: false, status: 400, code: error.code, source_issue: error.issue, detail: error.message };
         }
         throw error;
     }

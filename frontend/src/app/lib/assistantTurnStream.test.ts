@@ -4,6 +4,7 @@ import type { ConnectorApprovalItem } from "@mike/contracts";
 import { streamChatTurn } from "./mikeApi";
 import { beginAssistantTurn } from "./assistantTurns";
 import {
+  chatRequestError,
   consumeAssistantTurnStream,
   createTurnCursor,
   createTurnEventSink,
@@ -45,6 +46,31 @@ afterEach(() => {
 });
 
 describe("consumeAssistantTurnStream", () => {
+  it("retains the server release marker once and ignores unsupported versions", async () => {
+    const turn = begin(), sink = createTurnEventSink(turn, []);
+    await consumeAssistantTurnStream(sseResponse([
+      frame(1, { type: "source_bound_answer", version: 2 }),
+      frame(2, { type: "source_bound_answer", version: 1 }),
+      frame(3, { type: "source_bound_answer", version: 1 }),
+      frame(4, { type: "content_delta", text: "Checked response" }),
+      "data: [DONE]\n\n",
+    ]), { turn, sink, cursor: createTurnCursor("chat-a") });
+    expect(turn.turn.assistant.events?.filter(event => event.type === "source_bound_answer")).toEqual([{ type: "source_bound_answer", version: 1 }]);
+    expect(text(turn.turn.assistant)).toBe("Checked response"); turn.finish();
+  });
+
+  it.each(["changed", "RAW SECRET"])('retains only a closed source issue from SSE (%s)', async issue => {
+    const turn = begin(), sink = createTurnEventSink(turn, []);
+    await consumeAssistantTurnStream(sseResponse([frame(1, { type: "error", code: "source_grounding_failed", source_issue: issue, message: "source failed", safe_to_display: true }), "data: [DONE]\n\n"]), { turn, sink, cursor: createTurnCursor("chat-a") });
+    const error = turn.turn.assistant.events?.find(event => event.type === "error");
+    expect(error?.type === "error" ? error.source_issue : undefined).toBe(issue === "changed" ? "changed" : undefined); turn.finish();
+  });
+  it("carries the fixed HTTP source issue without accepting a free-form diagnostic", async () => {
+    const response = (issue: string) => new Response(JSON.stringify({ code: "source_grounding_failed", source_issue: issue, detail: "source unavailable" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    expect(await chatRequestError(response("scope"))).toMatchObject({ status: 400, source_issue: "scope" });
+    expect(await chatRequestError(response("RAW SECRET"))).not.toHaveProperty("source_issue");
+  });
+
   it("tracks the chat, turn and last sequence number from the frames", async () => {
     const turn = begin();
     const sink = createTurnEventSink(turn, []);
@@ -431,6 +457,7 @@ describe("error frames", () => {
     expect(onRejectedApiKey).toHaveBeenCalledTimes(1);
     expect(onErrorFrame).toHaveBeenCalledTimes(1);
     expect(onErrorFrame).toHaveBeenCalledWith({
+      code: "invalid_api_key",
       message: expect.any(String),
       safeToDisplay: expect.any(Boolean),
     });
