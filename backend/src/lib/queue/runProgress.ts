@@ -29,7 +29,7 @@ export interface GenerationErrorUpdate {
     type: "error";
     message: string;
     safe_to_display?: true;
-    code?: "invalid_api_key";
+    code?: import("@mike/contracts").AssistantErrorCode;
 }
 
 export type RunProgressUpdate = CellUpdate | GenerationErrorUpdate;

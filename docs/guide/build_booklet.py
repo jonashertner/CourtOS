@@ -41,7 +41,7 @@ for name,font_path in FONTS.items():
  pdfmetrics.registerFont(TTFont(name,str(font_path)))
 pdfmetrics.registerFontFamily('Sans',normal='Sans',bold='SansBold',italic='Sans',boldItalic='SansBold')
 W,H=180/25.4*72,270/25.4*72
-M=36; CW=W-2*M; INK=colors.HexColor('#203037'); MUTED=colors.HexColor('#626762'); PALE=colors.HexColor('#f8f6ef'); RULE=colors.HexColor('#cfcec5')
+M=36; CW=W-2*M; INK=colors.HexColor('#20211f'); MUTED=colors.HexColor('#63655f'); PALE=colors.white; RULE=colors.HexColor('#dedfd9')
 STYLES={
  'body':ParagraphStyle('body',fontName='Serif',fontSize=11,leading=14.5,textColor=INK,spaceAfter=0),
  'small':ParagraphStyle('small',fontName='Sans',fontSize=10.1,leading=14,textColor=INK),
@@ -61,7 +61,7 @@ def autolink(value, *, pdf):
 
 def rich(s):
  escaped=html.escape(s).replace('\n','<br/>')
- escaped=re.sub(r'\[(\d+(?:, \d+)*)\]',r'<super><link href="#sources">\1</link></super>',escaped)
+ escaped=re.sub(r'\[(\d+(?:, \d+)*)\]',lambda m:'<super>'+', '.join(f'<link href="#source-{n}">{n}</link>' for n in m.group(1).split(', '))+'</super>',escaped)
  return re.sub(r'(https://[^\s<]+)',lambda m:autolink(m.group(1), pdf=True),escaped)
 def para(s,kind='body',width=CW):
  p=Paragraph(rich(s),STYLES[kind]); _,h=p.wrap(width,1000);return p,h
@@ -95,6 +95,8 @@ def draw_block(c,b,y):
   return y-5
  if typ=='links':
   for label,url in b['items']:
+   source=re.match(r'([1-5])\. ',label)
+   if source:c.bookmarkHorizontalAbsolute('source-'+source.group(1),y)
    p=Paragraph(f'<link href="{html.escape(url,quote=True)}"><u>{html.escape(label)}</u></link>',STYLES['link']);_,h=p.wrap(CW,1000);p.drawOn(c,M,y-h);y-=h+4
   return y-5
  raise ValueError(typ)
@@ -151,45 +153,63 @@ def language_links(current,anchor='start'):
  return '<nav class="language" aria-label="Language">'+''.join(f'<a href="{k}.html#{anchor}" lang="{k}"'+(' aria-current="page"' if k==current else '')+f'>{v["language"]}</a>' for k,v in BOOKS.items())+'</nav>'
 def htext(s):
  escaped=html.escape(s).replace('\n','<br>')
- escaped=re.sub(r'\[(\d+(?:, \d+)*)\]',r'<a class="noteref" href="#sources"><sup>\1</sup></a>',escaped)
+ escaped=re.sub(r'\[(\d+(?:, \d+)*)\]',lambda m:'<sup class="references">'+', '.join(f'<a class="noteref" data-source="{n}" href="#source-{n}" aria-label="{CURRENT_LABELS["source_one"]} {n}">{n}</a>' for n in m.group(1).split(', '))+'</sup>',escaped)
  return re.sub(r'(https://[^\s<]+)',lambda m:autolink(m.group(1), pdf=False),escaped)
 def block_html(b):
  heading=f'<h3>{html.escape(b["heading"])}</h3>' if b.get('heading') else ''
  if b['type'] in ('text','note'):
   body=heading+f'<p>{htext(b["body"])}</p>'
-  return f'<div class="note">{body}</div>' if b['type']=='note' else body
+  return f'<div class="{("note" if b["type"]=="note" else "text-block")}">{body}</div>'
  if b['type'] in ('items','flow'):
-  cls='flow' if b['type']=='flow' else 'checklist';return heading+f'<ol class="{cls}">'+''.join(f'<li>{htext(x)}</li>' for x in b['items'])+'</ol>'
- return heading+'<ul class="links">'+''.join(f'<li><a href="{html.escape(url,quote=True)}">{html.escape(label)}</a></li>' for label,url in b['items'])+'</ul>'
+  cls='flow' if b['type']=='flow' else 'checklist'
+  return f'<div class="list-block">{heading}<ol class="{cls}">'+''.join(f'<li>{htext(x)}</li>' for x in b['items'])+'</ol></div>'
+ return '<div class="link-block">'+heading+'<ul class="links">'+''.join(f'<li><a href="{html.escape(url,quote=True)}" target="_blank" rel="noopener noreferrer">{html.escape(label)}</a></li>' for label,url in b['items'])+'</ul></div>'
+def source_blocks(blocks):
+ result=[];i=0
+ while i<len(blocks):
+  block=blocks[i]
+  if block['type']=='links' and re.match(r'[1-5]\. ',block['items'][0][0]):
+   number=block['items'][0][0][0]
+   result.append(f'<div class="source-entry" id="source-{number}" tabindex="-1">'+block_html(block))
+   if i+1<len(blocks) and blocks[i+1]['type']=='text':
+    i+=1;result.append(block_html(blocks[i]))
+   result.append('</div>')
+  else:result.append(block_html(block))
+  i+=1
+ return ''.join(result)
 ASSET_TAG=hashlib.sha256((BASE/'reader.css').read_bytes()+(BASE/'reader.js').read_bytes()).hexdigest()[:12]
 head=lambda lang:f'<!doctype html><html class="no-js" lang="{lang}-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title></title><link rel="stylesheet" href="style.css?v={ASSET_TAG}"><script src="reader.js?v={ASSET_TAG}" defer></script></head>'
 LABELS={
- 'de':{'book':'Buch','read':'Lesen','chapter':'Kapitel','previous':'Zurück','next':'Weiter','work':'Arbeitsbuch','edition':'Arbeitsausgabe 01','source':'Quellen und Gestaltung'},
- 'fr':{'book':'Livre','read':'Lecture','chapter':'Chapitre','previous':'Précédent','next':'Suivant','work':'Guide pratique','edition':'Édition de travail 01','source':'Sources et composition'},
- 'it':{'book':'Libro','read':'Lettura','chapter':'Capitolo','previous':'Indietro','next':'Avanti','work':'Guida pratica','edition':'Edizione di lavoro 01','source':'Fonti e composizione'},
+ 'de':{'book':'Buch','read':'Lesen','chapter':'Kapitel','previous':'Zurück','next':'Weiter','work':'Arbeitsbuch','edition':'Arbeitsausgabe 01','source':'Quellen und Gestaltung','source_one':'Quelle','close':'Zurück zum Text','contents':'Inhalt','pages':'Seiten','all_sources':'Alle Quellen','open_app':'CourtOS öffnen','view':'Leseansicht','unavailable':'Für diese Fenstergrösse steht die fortlaufende Leseansicht bereit.'},
+ 'fr':{'book':'Livre','read':'Lecture','chapter':'Chapitre','previous':'Précédent','next':'Suivant','work':'Guide pratique','edition':'Édition de travail 01','source':'Sources et composition','source_one':'Source','close':'Retour au texte','contents':'Sommaire','pages':'Pages','all_sources':'Toutes les sources','open_app':'Ouvrir CourtOS','view':'Mode de lecture','unavailable':'La lecture continue est disponible pour cette taille de fenêtre.'},
+ 'it':{'book':'Libro','read':'Lettura','chapter':'Capitolo','previous':'Indietro','next':'Avanti','work':'Guida pratica','edition':'Edizione di lavoro 01','source':'Fonti e composizione','source_one':'Fonte','close':'Torna al testo','contents':'Indice','pages':'Pagine','all_sources':'Tutte le fonti','open_app':'Aprire CourtOS','view':'Modalità di lettura','unavailable':'Per queste dimensioni della finestra è disponibile la lettura continua.'},
 }
 for lang,book in BOOKS.items():
- labels=LABELS[lang]
- body=head(lang)+f'<body><a class="skip" href="#content">{book["contents"]}</a><header><a class="brand" href="index.html">CourtOS <small>{labels["work"].upper()}</small></a>{language_links(lang)}</header>'
- body+=f'<div class="reader-tools"><div class="reader-location"><label for="chapter">{labels["chapter"]}</label><select id="chapter" aria-label="{labels["chapter"]}">'
- for section in book['pages']:body+=f'<option value="{section["id"]}">{html.escape(section["title"].replace(chr(10)," "))}</option>'
- body+=f'</select></div><div class="modes" aria-label="{labels["read"]}"><button type="button" data-mode="book" aria-pressed="false">{labels["book"]}</button><button type="button" data-mode="read" aria-pressed="true">{labels["read"]}</button></div></div>'
- body+=f'<div class="layout"><aside aria-label="{book["contents"]}"><div class="nav-heading">{book["contents"]}</div><ol>'
- for section in book['pages']:body+=f'<li><a href="#{section["id"]}">{html.escape(section["title"].replace(chr(10)," "))}</a></li>'
- body+=f'</ol><a class="pdf" href="pdf/courtos-{lang}.pdf">{book["pdf_label"]} ↗</a><p class="muted">{book["date"]}<br>{labels["edition"]}</p></aside><main id="content">'
+ labels=LABELS[lang];CURRENT_LABELS=labels
+ body=head(lang)+f'<body data-page-label="{labels["pages"]}" data-book-unavailable="{labels["unavailable"]}"><a class="skip" href="#content">{labels["read"]}</a><header><a class="brand" href="index.html">CourtOS <small>{labels["work"].upper()}</small></a>{language_links(lang)}</header>'
+ body+=f'<div class="reader-tools"><button type="button" class="contents-toggle" aria-haspopup="dialog" aria-controls="contents-dialog">{labels["contents"]}<span aria-hidden="true"> +</span></button><div class="reader-location"><label for="chapter">{labels["chapter"]}</label><select id="chapter" aria-label="{labels["chapter"]}">'
+ for i,section in enumerate(book['pages']):body+=f'<option value="{section["id"]}">{i:02} · {html.escape(section["title"].replace(chr(10)," "))}</option>'
+ body+=f'</select></div><div class="modes" role="group" aria-label="{labels["view"]}"><button type="button" data-mode="read" aria-pressed="true">{labels["read"]}</button><button type="button" data-mode="book" aria-pressed="false">{labels["book"]}</button></div></div>'
+ toc=f'<nav class="toc" aria-label="{book["contents"]}"><div class="nav-heading">{book["contents"]}</div><ol>'
+ for i,section in enumerate(book['pages']):toc+=f'<li><a href="#{section["id"]}"><span class="toc-number" aria-hidden="true">{i:02}</span><span>{html.escape(section["title"].replace(chr(10)," "))}</span></a></li>'
+ toc+=f'</ol><div class="toc-links"><a class="pdf" href="pdf/courtos-{lang}.pdf">{book["pdf_label"]} ↗</a><a href="https://sandbox.swisslaw.io/research">{labels["open_app"]} ↗</a></div><p class="muted">{book["date"]}<br>{labels["edition"]}</p></nav>'
+ body+=f'<div class="layout"><aside>{toc}</aside><main id="content" tabindex="-1">'
  for i,p in enumerate(book['pages']):
   cover=p.get('kind')=='cover';tag='h1' if cover else 'h2'
-  body+=f'<section class="section'+(' cover' if cover else '')+f'" id="{p["id"]}" aria-labelledby="heading-{p["id"]}"><div class="eyebrow"><span>{html.escape(p.get("part",book["label"]))}</span><span class="mark">{i:02}</span></div><{tag} id="heading-{p["id"]}">{htext(p["title"])}</{tag}><p class="lead">{htext(p["lead"])}</p>'
+  body+=f'<section class="section'+(' cover' if cover else '')+f'" id="{p["id"]}" aria-labelledby="heading-{p["id"]}"><div class="chapter-heading"><div class="eyebrow"><span>{html.escape(p.get("part",book["label"]))}</span><span class="mark">{i:02}</span></div><{tag} id="heading-{p["id"]}" tabindex="-1">{htext(p["title"])}</{tag}><p class="lead">{htext(p["lead"])}</p></div>'
   if cover:body+=f'<p class="author">Jonas Hertner</p><p class="cover-statement">{html.escape(p["statement"])}</p><div class="cover-bottom"><span>{book["date"]}<br>{p["edition"]}</span><span class="cover-sign">CourtOS</span></div>'
   else:
-   body+='<div class="prose">'+''.join(block_html(b) for b in p['blocks'])+'</div>'
-   body+=f'<div class="section-footer"><span>CourtOS · {i+1:02}</span><span class="section-prevnext">'
+   body+='<div class="prose">'+(source_blocks(p['blocks']) if p['id']=='sources' else ''.join(block_html(b) for b in p['blocks']))+'</div>'
+   body+=f'<div class="section-footer"><span>CourtOS · {i:02}</span><span class="section-prevnext">'
    if i:body+=f'<a href="#{book["pages"][i-1]["id"]}">{book["previous"]}</a> · '
    if i<len(book['pages'])-1:body+=f'<a href="#{book["pages"][i+1]["id"]}">{book["next"]}</a>'
    else:body+=f'<a href="#start">{book["back"]}</a>'
    body+='</span></div>'
   body+='</section>'
- body+=f'</main></div><nav class="spread-controls" aria-label="{labels["book"]}"><button type="button" id="previous-spread">← {labels["previous"]}</button><span id="reading-progress" aria-live="polite"></span><button type="button" id="next-spread">{labels["next"]} →</button></nav>'
+ body+='</main><div id="book-reader" role="main" hidden tabindex="-1"><div id="book-spread"></div></div></div>'
+ body+=f'<nav class="spread-controls" aria-label="{labels["book"]}"><button type="button" id="previous-spread">← {labels["previous"]}</button><span id="reading-progress" aria-live="polite"></span><button type="button" id="next-spread">{labels["next"]} →</button></nav>'
+ body+=f'<dialog id="contents-dialog" aria-labelledby="contents-title"><div class="dialog-bar"><h2 id="contents-title">{labels["contents"]}</h2><button type="button" data-close-dialog>{labels["close"]} ×</button></div>{toc}</dialog>'
+ body+=f'<dialog id="source-dialog" aria-labelledby="source-dialog-title"><div class="dialog-bar"><h2 id="source-dialog-title">{labels["source_one"]}</h2><button type="button" data-close-dialog>{labels["close"]} ×</button></div><div id="source-dialog-content"></div><a class="all-sources" href="#sources">{labels["all_sources"]} →</a></dialog><p id="reader-status" class="visually-hidden" role="status"></p>'
  body+='<footer class="colophon">Timeless Serif · Timeless Sans · Paper Mono. <a href="https://www.timeless.co/type/license">Timeless</a> / <a href="https://github.com/paper-design/paper-mono">Paper Mono</a>. <a href="https://github.com/jonashertner/CourtOS">CourtOS · AGPL-3.0</a>.</footer></body></html>'
  (OUT/f'{lang}.html').write_text(body)
 index=head('de')+'<body><header><a class="brand" href="index.html">CourtOS <small>ARBEITSBUCH</small></a><span class="smallprint">DE / FR / IT</span></header><main class="home"><div class="eyebrow">Jonas Hertner · Arbeitsausgabe 01</div><h1>Das Gericht<br>im Zeitalter der KI.</h1><p class="lead">Zweck, Urteilskraft und ein prüfbarer Arbeitsalltag.<br>Ein Arbeitsbuch in drei Sprachen.</p><div class="cards">'

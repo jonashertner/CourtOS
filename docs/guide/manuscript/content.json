@@ -269,14 +269,14 @@
           {
             "type": "text",
             "heading": "Die Passage auswählen",
-            "body": "Öffnen Sie den relevanten Textbereich. «Auszug und Quelle kopieren» übernimmt bei öffentlichen Entscheiden den angezeigten Auszug mit seinen Herkunftsangaben. Die Funktion erzeugt keine neue juristische Zusammenfassung."
+            "body": "Markieren Sie im Entscheid 20–800 zusammenhängende Zeichen und wählen Sie «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» übernimmt nur diese markierte Passage mit ihrer Herkunft, ohne neue Zusammenfassung."
           },
           {
             "type": "flow",
             "items": [
-              "Passage öffnen",
-              "Mit Herkunft kopieren",
-              "Im eigenen Text nutzen"
+              "Passage markieren",
+              "Stelle übernehmen",
+              "Mit Herkunft kopieren"
             ]
           },
           {
@@ -287,7 +287,7 @@
           {
             "type": "text",
             "heading": "Bei eigenen Dokumenten",
-            "body": "«Passage und Quelle kopieren» übernimmt bei eigenen Dokumenten Dateiname, feste Dokumentfassung und PDF-Seite. Die gedruckte Seitenzahl kann abweichen. Es wird keine Adresse erzeugt, über die andere Personen Ihr privates Dokument öffnen könnten."
+            "body": "Bei eigenen Dokumenten enthält die Kopie Dateiname, feste Fassung, PDF-Seite und einen Link zu genau dieser Fassung und Seite. Die gedruckte Seitenzahl kann abweichen. Der Link verlangt Anmeldung und bestehende Zugriffsrechte; er erteilt keine öffentliche Freigabe."
           },
           {
             "type": "note",
@@ -385,12 +385,17 @@
           {
             "type": "text",
             "heading": "Lokal weiterdenken",
-            "body": "«Mit dieser Auswahl fragen» bereitet Ihre Frage und die gewählten Bibliotheksdokumente im Assistenten vor. Erst Ihr Senden startet Gemma 4. «Lokal» bezeichnet den CourtOS-VPS bei Hetzner in Deutschland, nicht Ihr Gerät oder das Gerichtsnetz."
+            "body": "«Mit dieser Auswahl fragen» oder «Chronologie erstellen» bereitet einen Entwurf mit den gewählten PDFs vor. Erst Ihr Senden startet Gemma 4. Verwenden Sie eine kleine, vollständig lesbare Auswahl; bei überschrittenem Umfang wird abgebrochen. Trennen Sie Parteibehauptungen, bestrittene und belegte Tatsachen und prüfen Sie die genaue Quellenseite."
+          },
+          {
+            "type": "note",
+            "heading": "Prüfmassstab",
+            "body": "CourtOS muss die ausgewählten Quellen vor einer Aktenantwort tatsächlich lesen. Ein passendes Zitat bestätigt zunächst nur den Wortlaut an einer bestimmten Stelle; ob dieser die Aussage trägt, prüfen Sie am Original."
           },
           {
             "type": "text",
             "heading": "Eine externe Perspektive",
-            "body": "Eine öffentliche Entscheidpassage oder eine abgeschlossene lokale Antwort lässt sich zur Frontier-Prüfung übergeben. Der Text liegt zunächst als bearbeitbarer Entwurf im Browser. Anhänge und der übrige Chatverlauf werden nicht mitgegeben. Es gibt keine automatische Anonymisierung."
+            "body": "Öffentliche Fundstellen oder eine lokale Antwort können Sie als bearbeitbaren Entwurf zur Frontier-Prüfung übergeben. Anhänge und übriger Chatverlauf bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung."
           },
           {
             "type": "flow",
@@ -408,7 +413,7 @@
           {
             "type": "text",
             "heading": "Zum eigenen Arbeitsstand zurück",
-            "body": "Die externe Antwort kann als bearbeitbarer Entwurf in den lokalen Assistenten zurückkehren; sie wird nicht automatisch gesendet. Bestehende Eingaben und Anhänge bleiben erhalten. Überlange Übergabetexte werden nicht still gekürzt. Alternativ kopieren Sie einen passenden Ausschnitt in Ihr gewohntes Werkzeug."
+            "body": "Die externe Antwort kehrt auf Wunsch als bearbeitbarer Entwurf in den lokalen Assistenten zurück; sie wird nicht automatisch gesendet. Vorhandene Eingaben und Anhänge bleiben erhalten. Zu lange Übergaben werden abgewiesen. Alternativ kopieren Sie einen passenden Ausschnitt."
           }
         ],
         "part": "CourtOS in der Praxis"
@@ -847,14 +852,14 @@
           {
             "type": "text",
             "heading": "Choisir le passage",
-            "body": "Ouvrez la partie pertinente du texte. Pour une décision publique, «Auszug und Quelle kopieren» copie l’extrait affiché avec ses références. Cette fonction ne produit pas un nouveau résumé juridique."
+            "body": "Dans la décision, sélectionnez 20–800 caractères consécutifs, puis «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» reprend uniquement ce passage sélectionné avec sa provenance, sans produire de nouveau résumé."
           },
           {
             "type": "flow",
             "items": [
-              "Ouvrir le passage",
-              "Copier avec la référence",
-              "Utiliser dans votre texte"
+              "Sélectionner le passage",
+              "Confirmer la sélection",
+              "Copier avec la provenance"
             ]
           },
           {
@@ -865,7 +870,7 @@
           {
             "type": "text",
             "heading": "Pour vos documents",
-            "body": "Pour vos documents, «Passage und Quelle kopieren» reprend le nom du fichier, la version fixe et la page PDF. Celle-ci peut différer de la pagination imprimée. Aucune adresse donnant accès à votre document privé n’est créée."
+            "body": "Pour vos documents, la copie contient le nom du fichier, la version fixe, la page PDF et un lien vers cette version et cette page précises. La pagination imprimée peut différer. Le lien exige une connexion et des droits existants ; il ne donne aucun accès public."
           },
           {
             "type": "note",
@@ -963,12 +968,17 @@
           {
             "type": "text",
             "heading": "Poursuivre localement",
-            "body": "«Mit dieser Auswahl fragen» prépare votre question et les documents choisis dans l’assistant. Seul votre envoi lance Gemma 4. «Local» désigne le VPS CourtOS chez Hetzner en Allemagne, pas votre appareil ni le réseau du tribunal."
+            "body": "«Mit dieser Auswahl fragen» ou «Chronologie erstellen» prépare un projet avec les PDF choisis. Seul votre envoi lance Gemma 4. Limitez-vous à une petite sélection entièrement lisible ; un dépassement du périmètre interrompt le traitement. Distinguez allégations, faits contestés et faits étayés ; vérifiez la page source précise."
+          },
+          {
+            "type": "note",
+            "heading": "Exigence de vérification",
+            "body": "Avant de répondre sur un dossier, CourtOS doit avoir effectivement lu les sources sélectionnées. Une citation retrouvée confirme d’abord le texte à un endroit précis ; vérifiez dans l’original si ce passage étaye réellement l’affirmation."
           },
           {
             "type": "text",
             "heading": "Un regard externe",
-            "body": "Un passage public ou une réponse locale terminée peut être transmis à l’espace «Frontier-Prüfung». Le texte reste d’abord un projet modifiable dans le navigateur. Pièces jointes et reste de la conversation ne l’accompagnent pas. Il n’existe aucune anonymisation automatique."
+            "body": "Une référence publique ou une réponse locale peut être transmise comme projet modifiable à «Frontier-Prüfung». Les pièces jointes et le reste de la conversation en sont exclus. Il n’existe aucune anonymisation automatique."
           },
           {
             "type": "flow",
@@ -986,7 +996,7 @@
           {
             "type": "text",
             "heading": "Revenir à votre travail",
-            "body": "La réponse externe peut revenir dans l’assistant local comme projet modifiable, sans envoi automatique. Votre texte en cours et les pièces jointes restent inchangés. Un texte trop long n’est pas tronqué silencieusement. Vous pouvez aussi copier un passage utile dans votre outil habituel."
+            "body": "La réponse externe peut revenir comme projet modifiable dans l’assistant local, sans envoi automatique. Votre texte et vos pièces jointes restent préservés. Une transmission trop longue est refusée. Vous pouvez aussi copier un passage approprié."
           }
         ],
         "part": "CourtOS en pratique"
@@ -1425,14 +1435,14 @@
           {
             "type": "text",
             "heading": "Scegliere il passaggio",
-            "body": "Aprite la parte pertinente del testo. Per una decisione pubblica, «Auszug und Quelle kopieren» copia l’estratto visualizzato con i suoi riferimenti. La funzione non produce una nuova sintesi giuridica."
+            "body": "Nella decisione, selezionate 20–800 caratteri consecutivi e scegliete «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» riprende soltanto il passaggio selezionato con la sua provenienza, senza creare un nuovo riassunto."
           },
           {
             "type": "flow",
             "items": [
-              "Aprire il passaggio",
-              "Copiare con il riferimento",
-              "Usare nel proprio testo"
+              "Selezionare il passaggio",
+              "Confermare la selezione",
+              "Copiare con la provenienza"
             ]
           },
           {
@@ -1443,7 +1453,7 @@
           {
             "type": "text",
             "heading": "Per i propri documenti",
-            "body": "Per i vostri documenti, «Passage und Quelle kopieren» riprende nome del file, versione fissa e pagina PDF. Quest’ultima può differire dalla pagina stampata. Non viene creato un indirizzo che consenta ad altri di aprire il documento privato."
+            "body": "Per i vostri documenti, la copia contiene nome del file, versione fissa, pagina PDF e un collegamento a quella precisa versione e pagina. La numerazione stampata può differire. Il collegamento richiede accesso autenticato e diritti esistenti; non concede accesso pubblico."
           },
           {
             "type": "note",
@@ -1541,12 +1551,17 @@
           {
             "type": "text",
             "heading": "Proseguire in locale",
-            "body": "«Mit dieser Auswahl fragen» prepara nell’assistente la domanda e i documenti scelti. Solo il vostro invio avvia Gemma 4. «Locale» indica il VPS CourtOS presso Hetzner in Germania, non il vostro dispositivo né la rete del tribunale."
+            "body": "«Mit dieser Auswahl fragen» o «Chronologie erstellen» prepara una bozza con i PDF scelti. Solo il vostro invio avvia Gemma 4. Usate una piccola selezione interamente leggibile; il superamento dei limiti interrompe il trattamento. Distinguete allegazioni, fatti contestati e fatti documentati; verificate la pagina precisa della fonte."
+          },
+          {
+            "type": "note",
+            "heading": "Requisito di verifica",
+            "body": "Prima di rispondere su un fascicolo, CourtOS deve aver effettivamente letto le fonti selezionate. Una citazione riscontrata conferma anzitutto il testo in un punto preciso; verificate nell’originale se il passaggio sostiene davvero l’affermazione."
           },
           {
             "type": "text",
             "heading": "Una prospettiva esterna",
-            "body": "Un passaggio pubblico o una risposta locale completata può passare all’area «Frontier-Prüfung». Il testo resta dapprima una bozza modificabile nel browser. Allegati e resto della conversazione non vengono trasmessi. Non vi è anonimizzazione automatica."
+            "body": "Una fonte pubblica o una risposta locale può passare come bozza modificabile a «Frontier-Prüfung». Gli allegati e il resto della conversazione rimangono esclusi. Non vi è alcuna anonimizzazione automatica."
           },
           {
             "type": "flow",
@@ -1564,7 +1579,7 @@
           {
             "type": "text",
             "heading": "Tornare al proprio lavoro",
-            "body": "La risposta esterna può tornare nell’assistente locale come bozza modificabile, senza invio automatico. Testo in corso e allegati restano invariati. Un testo troppo lungo non viene troncato silenziosamente. Potete anche copiare un passaggio utile nel vostro strumento abituale."
+            "body": "La risposta esterna può tornare come bozza modificabile nell’assistente locale, senza invio automatico. Testo e allegati esistenti restano preservati. Le trasmissioni troppo lunghe sono rifiutate. In alternativa copiate un passaggio appropriato."
           }
         ],
         "part": "CourtOS nella pratica"

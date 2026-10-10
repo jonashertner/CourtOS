@@ -1,12 +1,13 @@
 "use client";
 
+import { librarySourceUrl, selectedSourcePassage, originalTextSearchUrl, type SelectedSourcePassage } from "@/app/lib/sourceLinks";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { prepareFrontierDraft } from "@/app/lib/frontierDraft";
-import { prepareKnowledgeDraft } from "@/app/lib/knowledgeDraft";
+import { prepareChronologyDraft, prepareKnowledgeDraft } from "@/app/lib/knowledgeDraft";
 import { prepareResearchDraft } from "@/app/lib/researchDraft";
 import { useResearchModelPreference } from "@/app/lib/researchModelPreference";
 import type { WordResearchHost } from "@/app/lib/wordResearchHost";
@@ -42,7 +43,8 @@ function CopySource({ text, label, wordHost }: { text: string; label: string; wo
 }
 
 function libraryExcerpt(hit: KnowledgeResult) {
-    return `${hit.quote}\n\nQuelle: ${hit.filename}, Version ${hit.version_number ?? "nicht nummeriert"}, PDF-Seite ${hit.page}.\nAuszug aus dem erfassten Dokumenttext; Zitat an der Quelle prüfen.`;
+    const url = typeof window !== "undefined" ? librarySourceUrl(window.location.origin, hit.document_id, hit.version_id, hit.page) : null;
+    return `${hit.quote}\n\nQuelle: ${hit.filename}, Version ${hit.version_number ?? "nicht nummeriert"}, PDF-Seite ${hit.page}.${url ? `\nQuelle öffnen (Anmeldung erforderlich): ${url}` : ""}\nAuszug aus dem erfassten Dokumenttext; Zitat an der Quelle prüfen.`;
 }
 
 function publicReference(decision: PublicDecision) {
@@ -135,7 +137,7 @@ function LocalKnowledge({ wordHost, inWord }: { wordHost?: WordResearchHost | nu
                     <p id="private-search-help" className="mt-2 text-xs leading-relaxed text-muted-foreground">Durchsucht den erfassten Text. Bildscans benötigen eine Textebene.</p>
                     <button className={`${button} mt-4`} disabled={searching || selected.length === 0 || !query.trim()}><Search size={16} aria-hidden="true" />{searching ? "Passagen werden gesucht…" : "Auswahl durchsuchen"}</button>
                 </form>
-                {!inWord && <details className="mt-4 border-t border-border pt-4"><summary className="cursor-pointer text-sm">Mit Gemma weiterarbeiten</summary><button type="button" className={`${secondary} mt-3`} disabled={!user?.id || selected.length === 0 || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>Mit dieser Auswahl fragen</button><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Öffnet einen Entwurf mit Ihrer Frage und Quellenauswahl. Gemma verarbeitet den gesendeten Auftrag auf dem CourtOS-Server in Deutschland.</p></details>}
+                {!inWord && <details className="mt-4 border-t border-border pt-4"><summary className="cursor-pointer text-sm">Mit Gemma weiterarbeiten</summary><div className="mt-3 flex flex-wrap gap-3"><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>Mit dieser Auswahl fragen</button><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || selected.some(doc => doc.status !== "ready" || !doc.current_version_id)} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>Chronologie erstellen</button></div><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Öffnet einen Entwurf mit Auftrag und Quellenauswahl. Gemma verarbeitet den gesendeten Auftrag auf dem CourtOS-Server in Deutschland.</p></details>}
                 {searching && <p role="status" className="mt-4 text-sm">Die Dokumenttexte werden lokal geprüft. Dies kann beim ersten Aufruf etwas dauern.</p>}
                 {searchError && <p role="alert" className="mt-5 text-sm">{searchError}</p>}
                 {result && <section aria-label="Lokale Suchergebnisse" className="mt-7"><h3 className="font-serif text-xl">{result.results.length} Passagen zu «{submitted}»</h3>
@@ -152,7 +154,7 @@ function LocalKnowledge({ wordHost, inWord }: { wordHost?: WordResearchHost | nu
 
 function OriginalLinks({ decision }: { decision: PublicDecision }) {
     const source = publicSourceUrl(decision.source_url); const pdf = publicSourceUrl(decision.pdf_url);
-    return <div className="flex flex-wrap gap-x-5">{source && <a href={source} target="_blank" rel="noopener noreferrer" className={link}>Originalquelle <ExternalLink size={14} aria-hidden="true" /></a>}{pdf && pdf !== source && <a href={pdf} target="_blank" rel="noopener noreferrer" className={link}>Original-PDF <ExternalLink size={14} aria-hidden="true" /></a>}</div>;
+    return <div className="flex flex-wrap gap-x-5">{source && <a href={source} target="_blank" rel="noopener noreferrer" className={link}>Ganzes Original <ExternalLink size={14} aria-hidden="true" /></a>}{pdf && pdf !== source && <a href={pdf} target="_blank" rel="noopener noreferrer" className={link}>Ganzes Original-PDF <ExternalLink size={14} aria-hidden="true" /></a>}</div>;
 }
 // Only known source identifiers are expanded. Unknown metadata is displayed as supplied.
 function courtLabel(court: string | null | undefined) {
@@ -165,33 +167,51 @@ function PublicSource({ decision, onClose, wordHost, inWord }: { decision: Publi
     const { user } = useAuth();
     const router = useRouter();
     const [handoffError, setHandoffError] = useState("");
+    const sourceText = useRef<HTMLPreElement>(null);
+    const [excerpt, setExcerpt] = useState<SelectedSourcePassage | null>(null);
+    const [selectionError, setSelectionError] = useState("");
     const { model } = useResearchModelPreference(user?.id, !inWord);
     const [detail, setDetail] = useState<PublicDecisionDetail | null>(null);
     const [start, setStart] = useState(0); const [history, setHistory] = useState<number[]>([]);
     const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [retry, setRetry] = useState(0);
     useEffect(() => {
-        const controller = new AbortController(); setLoading(true); setError("");
+        const controller = new AbortController(); setLoading(true); setError(""); setExcerpt(null); setSelectionError(""); setHandoffError("");
         getPublicDecision(decision.decision_id, start, controller.signal).then((data) => { if (!controller.signal.aborted) setDetail(data); }).catch((problem) => { if (!controller.signal.aborted) setError(errorText(problem)); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
     }, [decision.decision_id, start, retry]);
     const authoritative = detail ?? decision;
+    const originalSearch = detail && excerpt ? originalTextSearchUrl(publicSourceUrl(detail.source_url), publicSourceUrl(detail.pdf_url), excerpt.text) : null;
+    const excerptReference = detail && excerpt ? `${publicReference(detail)}\nAusgewählte Textstelle: Zeichen ${excerpt.start}–${excerpt.end} von ${excerpt.total_chars}; keine amtlichen Randnummern.${originalSearch ? `\nTextstelle im Original suchen: ${originalSearch}` : ""}\nPosition im Original nicht geprüft; Wortlaut und Kontext an der Originalquelle prüfen.` : "";
     return <SourceDialog title={decisionTitle(authoritative)} onClose={onClose}><div className="courtos-source-reading">
         <p className="text-sm text-muted-foreground">{[courtLabel(authoritative.court), authoritative.docket_number, authoritative.decision_date, authoritative.language?.toUpperCase()].filter(Boolean).join(" · ")}</p><OriginalLinks decision={authoritative} />
         {loading ? <p role="status" className="mt-6">Entscheidtext wird geladen…</p> : error ? <div role="alert" className="mt-6"><p>{error}</p><button className={`${secondary} mt-3`} onClick={() => setRetry((value) => value + 1)}>Erneut laden</button></div> : detail && <>
             {detail.date_is_estimated && <p className="mt-4 text-sm text-muted-foreground">Das Entscheidungsdatum ist im Quellenbestand nur geschätzt.</p>}
             {detail.source_note && <p className="mt-4 text-sm text-muted-foreground">Hinweis von OpenCaseLaw: {detail.source_note}</p>}
-            <div className="mt-5"><CopySource text={`${detail.passage.text}\n\nQuelle: ${publicReference(detail)}\nErfasster Auszug: Zeichen ${detail.passage.start}–${detail.passage.end} von ${detail.passage.total_chars}; keine amtlichen Randnummern. Zitat an der Originalquelle prüfen.`} label="Auszug und Quelle kopieren" wordHost={wordHost} /></div>
-            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">Erfasster Text · Zeichenposition {detail.passage.start}–{detail.passage.end} von {detail.passage.total_chars}. Diese Positionen beginnen bei 0 und sind keine amtlichen Randnummern. Prüfen Sie Zitate an der Originalquelle.</p>
-            <pre className="courtos-decision-text">{detail.passage.text}</pre>
-            {!inWord && <div className="courtos-source-ai">
+            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">Erfasster Text · Zeichenposition {detail.passage.start}–{detail.passage.end} von {detail.passage.total_chars}. Diese Positionen beginnen bei 0 und sind keine amtlichen Randnummern.</p>
+            <p className="mt-3 text-sm">Kurze Textstelle markieren (20–800 Zeichen).</p>
+            <pre ref={sourceText} tabIndex={0} aria-label="Erfasster Entscheidtext" className="courtos-decision-text">{detail.passage.text}</pre>
+            <button type="button" className={secondary} onMouseDown={(event) => event.preventDefault()} onClick={() => {
+                const selected = selectedSourcePassage(sourceText.current, window.getSelection(), detail.passage);
+                if (!selected) { setExcerpt(null); setSelectionError("Bitte eine zusammenhängende Textstelle mit 20–800 Zeichen im Entscheidtext markieren."); return; }
+                setExcerpt(selected); setSelectionError(""); setHandoffError("");
+            }}>Markierte Stelle übernehmen</button>
+            {selectionError && <p role="alert" className="mt-3 text-sm">{selectionError}</p>}
+            {excerpt && <div className="mt-5 border-t border-border pt-4" aria-label="Ausgewählte Textstelle">
+                <blockquote className="whitespace-pre-wrap text-sm leading-relaxed">{excerpt.text}</blockquote>
+                <p className="mt-2 text-xs text-muted-foreground">Zeichen {excerpt.start}–{excerpt.end} · Position im Original nicht geprüft</p>
+                {originalSearch && <><a className={`${link} mt-3`} href={originalSearch} target="_blank" rel="noopener noreferrer">Textstelle im Original suchen</a><p className="mt-2 text-xs text-muted-foreground">Der Textsprung hängt von Website und Browser ab.</p></>}
+                {!originalSearch && <p className="mt-2 text-xs text-muted-foreground">Für diese Quelle steht kein Textsprung zur Verfügung. Die Stelle im ganzen Original prüfen.</p>}
+                <div className="mt-3"><CopySource text={`${excerpt.text}\n\nQuelle: ${excerptReference}`} label="Textstelle und Quelle kopieren" wordHost={wordHost} /></div>
+            </div>}
+            {!inWord && excerpt && <div className="courtos-source-ai">
                 <button type="button" className={secondary} disabled={!user?.id} onClick={() => {
                     if (!user?.id) return;
                     if (model === "gemma") {
-                        const text = `Prüfe den folgenden Entscheidauszug anhand seiner eigenen Aussagen. Unterscheide belegte Aussagen und offene Fragen. Erfinde keine Quellen und behaupte nicht, den vollständigen Entscheid gelesen zu haben.\n\n${publicReference(detail)}\nErfasster Auszug: Zeichen ${detail.passage.start}–${detail.passage.end} von ${detail.passage.total_chars}; keine amtlichen Randnummern.\n\n${detail.passage.text}`;
+                        const text = `Prüfe den folgenden Entscheidauszug anhand seiner eigenen Aussagen. Unterscheide belegte Aussagen und offene Fragen. Erfinde keine Quellen und behaupte nicht, den vollständigen Entscheid gelesen zu haben.\n\n${excerptReference}\n\n${excerpt.text}`;
                         if (prepareResearchDraft(user.id, text)) router.push("/assistant");
                         else setHandoffError("Der Auszug konnte nicht übergeben werden. Bitte kopieren Sie ihn in den lokalen Assistenten.");
                     } else {
-                        const text = [publicReference(detail), `Erfasster Auszug: Zeichen ${detail.passage.start}–${detail.passage.end} von ${detail.passage.total_chars}; keine amtlichen Randnummern.`, detail.passage.text].join("\n\n");
+                        const text = [excerptReference, excerpt.text].join("\n\n");
                         if (prepareFrontierDraft(user.id, text)) window.location.assign("/hybrid/");
                         else setHandoffError("Der Auszug konnte nicht übergeben werden. Bitte die Frontier-Prüfung separat öffnen.");
                     }

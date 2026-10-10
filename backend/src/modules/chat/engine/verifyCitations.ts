@@ -1,5 +1,6 @@
 import type { QuoteVerification } from "./types";
 import { normalizeWithMap } from "./tools/documentOps";
+import type { DocumentEvidence } from "./sourceEvidence";
 
 // Mirrors the frontend: cross-page quotes join two page segments with this
 // sentinel (see expandDocumentQuoteEntry in
@@ -365,6 +366,61 @@ export async function verifyCaseCitationAnnotation(
   };
 }
 
+/** Page verification never changes digits/punctuation or accepts part of a token. */
+function verifyPageQuote(source: string, quote: string): QuoteVerificationResult {
+  const fragments = quote.split(ELLIPSIS_PATTERN).map((part) => part.trim());
+  if (fragments.some((part) => !part || !/[\p{L}\p{N}]/u.test(part))) return { verified: false, needs_correction: false };
+  const locations: QuoteLocation[] = [];
+  let cursor = 0;
+  for (const fragment of fragments) {
+    let found: QuoteLocation | null = null;
+    for (let attempt = 0; attempt < MAX_LOCATE_ATTEMPTS; attempt++) {
+      const location = locateNormalized(source.slice(cursor), fragment, {});
+      if (!location) break;
+      const start = cursor + location.start;
+      const end = cursor + location.end;
+      const token = /[\p{L}\p{N}]/u;
+      const splitsStart = token.test(source[start] ?? "") && token.test(source[start - 1] ?? "");
+      const splitsEnd = token.test(source[end - 1] ?? "") && token.test(source[end] ?? "");
+      cursor = start + 1;
+      if (!splitsStart && !splitsEnd) { found = { start, end, excerpt: source.slice(start, end) }; break; }
+    }
+    if (!found) return { verified: false, needs_correction: false };
+    locations.push(found);
+    cursor = found.end;
+  }
+  const excerpt = locations.map((location) => location.excerpt).join(" … ");
+  return { verified: true, needs_correction: quote !== excerpt, source_excerpt: excerpt,
+    ...(locations.length === 1 ? { start_char: locations[0].start, end_char: locations[0].end } : {}) };
+}
+
+/** A page claim is a constraint, never a hint for a whole-document search. */
+function verifyQuoteAgainstPages(source: DocumentEvidence | null, annotation: Record<string, unknown>, entry: DocQuoteEntry): QuoteVerificationResult {
+  const failed = { verified: false, needs_correction: false };
+  if (!source || annotation.version_id !== source.version_id || annotation.document_id !== source.document_id) return failed;
+  const pageText = String(entry.page ?? "");
+  const match = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(pageText);
+  if (!match) return failed;
+  const first = Number(match[1]);
+  const last = Number(match[2] ?? match[1]);
+  if (first < 1 || last < first || last > source.pages.length || last - first > 2) return failed;
+  const fragments = entry.quote.split(PAGE_BREAK_SENTINEL).map((part) => part.trim());
+  if (fragments.length !== last - first + 1 || fragments.some((part) => !part)) return failed;
+  const pages = source.pages.slice(first - 1, last);
+  if (pages.some((page, i) => page.page !== first + i)) return failed;
+  const checks = fragments.map((fragment, i) => verifyPageQuote(pages[i].text, fragment));
+  if (checks.some((check) => !check.verified)) return failed;
+  return {
+    verified: true,
+    needs_correction: checks.some((check) => check.needs_correction),
+    source_excerpt: checks.map((check, i) => check.source_excerpt ?? fragments[i]).join(` ${PAGE_BREAK_SENTINEL} `),
+    ...(checks.length === 1 ? { start_char: checks[0].start_char, end_char: checks[0].end_char } : {}),
+    version_id: source.version_id,
+    pdf_sha256: source.pdf_sha256,
+    page_hashes: pages.map(({ page, sha256 }) => ({ page, sha256 })),
+  };
+}
+
 /**
  * Attach server-side verification to one document citation annotation.
  * Case-law annotations are handled separately by
@@ -375,7 +431,7 @@ export async function verifyCaseCitationAnnotation(
  */
 export async function verifyDocumentCitationAnnotation(
   annotation: unknown,
-  getSourceText: (docId: string) => Promise<string>,
+  getSourceText: (docId: string) => Promise<string | DocumentEvidence | null>,
 ): Promise<unknown> {
   if (!annotation || typeof annotation !== "object") return annotation;
   const a = annotation as Record<string, unknown>;
@@ -390,7 +446,7 @@ export async function verifyDocumentCitationAnnotation(
       : [];
   if (!entries.length) return annotation;
 
-  let source: string;
+  let source: string | DocumentEvidence | null;
   try {
     source = await getSourceText(docId);
   } catch {
@@ -398,7 +454,9 @@ export async function verifyDocumentCitationAnnotation(
   }
 
   const verifiedQuotes = entries.map((entry) => {
-    const result = verifyQuoteAgainstSource(source, entry.quote);
+    const result = typeof source === "string"
+      ? verifyQuoteAgainstSource(source, entry.quote)
+      : verifyQuoteAgainstPages(source, a, entry);
     const { needs_correction, ...verification } = result;
     // Swap the exact source text into the displayed quote when it drifted,
     // so a drifted quote is never surfaced as the source's words.
@@ -433,7 +491,7 @@ export async function verifyDocumentCitationAnnotation(
  */
 export async function verifyCitations(
   annotations: unknown[],
-  getSourceText: (docId: string) => Promise<string>,
+  getSourceText: (docId: string) => Promise<string | DocumentEvidence | null>,
   getCaseOpinions: (clusterId: number) => Promise<CaseOpinionSource[]>,
 ): Promise<unknown[]> {
   return Promise.all(

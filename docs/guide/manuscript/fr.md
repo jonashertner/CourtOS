@@ -122,17 +122,17 @@ OpenCaseLaw peut analyser la requête et classer les résultats avec l’IA. Cet
 Transférer ensemble le passage et son origine dans votre travail.
 
 ### Choisir le passage
-Ouvrez la partie pertinente du texte. Pour une décision publique, «Auszug und Quelle kopieren» copie l’extrait affiché avec ses références. Cette fonction ne produit pas un nouveau résumé juridique.
+Dans la décision, sélectionnez 20–800 caractères consécutifs, puis «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» reprend uniquement ce passage sélectionné avec sa provenance, sans produire de nouveau résumé.
 
-- Ouvrir le passage
-- Copier avec la référence
-- Utiliser dans votre texte
+- Sélectionner le passage
+- Confirmer la sélection
+- Copier avec la provenance
 
 ### Pour les décisions publiques
 L’extrait est accompagné des indications affichées sur la décision, de son identifiant OpenCaseLaw et de l’adresse publique de la source lorsqu’elle est disponible. Contrôlez référence officielle et métadonnées avant de les intégrer à votre motivation.
 
 ### Pour vos documents
-Pour vos documents, «Passage und Quelle kopieren» reprend le nom du fichier, la version fixe et la page PDF. Celle-ci peut différer de la pagination imprimée. Aucune adresse donnant accès à votre document privé n’est créée.
+Pour vos documents, la copie contient le nom du fichier, la version fixe, la page PDF et un lien vers cette version et cette page précises. La pagination imprimée peut différer. Le lien exige une connexion et des droits existants ; il ne donne aucun accès public.
 
 ### Une référence exploitable
 Complétez la citation selon les exigences de votre texte et son contexte juridique. La copie conserve un point d’appui; elle ne confirme ni l’exactitude de la source ni la portée de son affirmation.
@@ -185,10 +185,13 @@ Termes recherchés, source attendue, écart constaté et effort approximatif suf
 La recherche dans vos propres sources et la copie des références fonctionnent sans IA. Pour aller plus loin, choisissez le modèle.
 
 ### Poursuivre localement
-«Mit dieser Auswahl fragen» prépare votre question et les documents choisis dans l’assistant. Seul votre envoi lance Gemma 4. «Local» désigne le VPS CourtOS chez Hetzner en Allemagne, pas votre appareil ni le réseau du tribunal.
+«Mit dieser Auswahl fragen» ou «Chronologie erstellen» prépare un projet avec les PDF choisis. Seul votre envoi lance Gemma 4. Limitez-vous à une petite sélection entièrement lisible ; un dépassement du périmètre interrompt le traitement. Distinguez allégations, faits contestés et faits étayés ; vérifiez la page source précise.
+
+### Exigence de vérification
+Avant de répondre sur un dossier, CourtOS doit avoir effectivement lu les sources sélectionnées. Une citation retrouvée confirme d’abord le texte à un endroit précis ; vérifiez dans l’original si ce passage étaye réellement l’affirmation.
 
 ### Un regard externe
-Un passage public ou une réponse locale terminée peut être transmis à l’espace «Frontier-Prüfung». Le texte reste d’abord un projet modifiable dans le navigateur. Pièces jointes et reste de la conversation ne l’accompagnent pas. Il n’existe aucune anonymisation automatique.
+Une référence publique ou une réponse locale peut être transmise comme projet modifiable à «Frontier-Prüfung». Les pièces jointes et le reste de la conversation en sont exclus. Il n’existe aucune anonymisation automatique.
 
 - Texte et demande
 - Aperçu et autorisation
@@ -198,7 +201,7 @@ Un passage public ou une réponse locale terminée peut être transmis à l’es
 L’aperçu montre toute la requête, le fournisseur et le modèle. Seule votre autorisation déclenche l’appel à Anthropic. Utilisez uniquement du matériel non confidentiel dont le traitement externe est permis. Les liens sont des références; le modèle n’en consulte pas le contenu.
 
 ### Revenir à votre travail
-La réponse externe peut revenir dans l’assistant local comme projet modifiable, sans envoi automatique. Votre texte en cours et les pièces jointes restent inchangés. Un texte trop long n’est pas tronqué silencieusement. Vous pouvez aussi copier un passage utile dans votre outil habituel.
+La réponse externe peut revenir comme projet modifiable dans l’assistant local, sans envoi automatique. Votre texte et vos pièces jointes restent préservés. Une transmission trop longue est refusée. Vous pouvez aussi copier un passage approprié.
 
 ## 12. Données et exploitation
 Bibliothèque personnelle, recherche publique et requêtes aux modèles suivent des circuits distincts.

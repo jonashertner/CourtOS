@@ -66,6 +66,10 @@ export type QuoteVerification = {
   start_char?: number;
   end_char?: number;
   source_excerpt?: string;
+  /** Present only for page-local checks of a fixed stored PDF version. */
+  version_id?: string;
+  pdf_sha256?: string;
+  page_hashes?: { page: number; sha256: string }[];
 };
 
 // ---------------------------------------------------------------------------
@@ -311,6 +315,13 @@ export type AssistantEvent =
       document_id?: string;
       version_id?: string | null;
       version_number?: number | null;
+      source_coverage?: {
+        kind: "complete_extracted_text";
+        pages: number;
+        text_bytes: number;
+        pdf_sha256: string;
+        version_sha256: string;
+      };
     }
   | {
       type: "doc_find";
@@ -389,7 +400,7 @@ export type AssistantEvent =
       code?: AssistantErrorCode;
     };
 
-export type AssistantErrorCode = "invalid_api_key";
+export type AssistantErrorCode = "invalid_api_key" | "source_grounding_failed";
 
 export type WordEditApplyMode = "direct" | "approval";
 

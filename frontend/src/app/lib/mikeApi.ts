@@ -2353,6 +2353,7 @@ export async function getChat(chatId: string): Promise<ChatDetailOut> {
                     .map((e) => (e as { type: "content"; text: string }).text)
                     .join("") ?? "",
             citations: m.citations ?? undefined,
+            citationStatus: m.citations !== undefined ? "final" : undefined,
             events,
         };
     });

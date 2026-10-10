@@ -1376,7 +1376,7 @@ export async function getTurnReadIdentity(params: {
 
   const documentId = docIndex?.[docLabel]?.document_id;
   if (documentId && db) {
-    const active = await loadActiveVersion(documentId, db);
+    const active = await loadActiveVersion(documentId, db, docIndex?.[docLabel]?.version_id);
     if (active?.storage_path) {
       return {
         key: `${documentId}:${active.id}`,
@@ -1522,6 +1522,7 @@ export async function readDocumentContent(
           `[read_document] using current version path="${sourcePath}" (bytes=${raw.byteLength})`,
         );
       } else {
+        if (versionId) return "Document could not be read.";
         devLog(
           `[read_document] loadCurrentVersionBytes returned null for documentId="${documentId}", falling back to original storage_path`,
         );

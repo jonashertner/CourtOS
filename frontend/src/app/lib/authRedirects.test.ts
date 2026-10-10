@@ -13,6 +13,11 @@ describe("safeCourtOSResearchNext", () => {
     it.each(["/word/research", "/research"])("accepts the exact research return path %s", (path) => {
         expect(safeCourtOSResearchNext(path, "/pilot")).toBe(path);
     });
+    it("retains only an exact validated source reference across sign-in", () => {
+        const path = "/sources/library/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222?page=7";
+        expect(safeCourtOSResearchNext(path, "/research")).toBe(path);
+        for (const candidate of [path + "&next=https://evil.example", path + "#quote", path.replace("page=7", "page=0"), path.replace("/11111111-", "/../11111111-")]) expect(safeCourtOSResearchNext(candidate, "/research")).toBe("/research");
+    });
     it.each([null, undefined, "", "//evil.example", "https://evil.example", "/word\\research", "/word/research\n", "/word/research?x=1", "/word/research#x", "/word/research/../login", "%2Fword%2Fresearch"])("fails closed for %s", (path) => {
         expect(safeCourtOSResearchNext(path, "/research")).toBe("/research");
     });

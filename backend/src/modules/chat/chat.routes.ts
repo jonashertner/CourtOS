@@ -914,11 +914,10 @@ chatRouter.post("/", requireAuth, asyncRoute(async (req, res) => {
             }
             console.error("[chat/stream] error:", err);
             const errorPayload = assistantStreamErrorPayload(err);
-            const message = errorPayload.message;
             const errorEvents =
                 err instanceof AssistantStreamError
                     ? stripTransientAssistantEvents(err.events)
-                    : [{ type: "error" as const, message }];
+                    : [{ type: "error" as const, ...errorPayload }];
             const errorFullText =
                 err instanceof AssistantStreamError ? err.fullText : "";
             try {

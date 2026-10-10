@@ -12,6 +12,7 @@ import { FullScreenLoader } from "@/app/components/shared/FullScreenLoader";
 import { HeaderButtonUI, HeaderButtonsUI } from "@/shared/ui/HeaderButtonsUI";
 import { cn } from "@/app/lib/utils";
 import { COURTOS_PILOT_MODE, isResearchShellPath, isWordResearchContext } from "@/app/lib/courtos";
+import { safeCourtOSResearchNext } from "@/app/lib/authRedirects";
 import { ResearchShell } from "@/app/components/courtos/ResearchShell";
 import { PilotNotice } from "@/app/components/courtos/PilotNotice";
 
@@ -112,7 +113,7 @@ export default function MikeLayout({
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
             const next = isWordResearchContext(pathname, new URLSearchParams(window.location.search).get("host"))
-                ? "/word/research" : pathname === "/research" ? "/research" : null;
+                ? "/word/research" : safeCourtOSResearchNext(pathname + window.location.search, "");
             router.push(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
         }
     }, [authLoading, isAuthenticated, pathname, router]);

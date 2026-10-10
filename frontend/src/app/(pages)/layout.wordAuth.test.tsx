@@ -29,6 +29,14 @@ describe("Word authentication return", () => {
         render(<MikeLayout>Private library</MikeLayout>);
         await waitFor(() => expect(state.push).toHaveBeenCalledWith("/login"));
     });
+    it("preserves an authenticated source version and page through a fresh login", async () => {
+        state.pathname = "/sources/library/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222";
+        const path = state.pathname + "?page=7";
+        window.history.replaceState({}, "", path);
+        render(<MikeLayout>Private source</MikeLayout>);
+        await waitFor(() => expect(state.push).toHaveBeenCalledWith(`/login?next=${encodeURIComponent(path)}`));
+        expect(screen.queryByText("Private source")).toBeNull();
+    });
     it("waits for authentication to settle before redirecting", () => {
         state.loading = true;
         render(<MikeLayout>Private research</MikeLayout>);

@@ -832,6 +832,27 @@ describe("getChat message mapping", () => {
         expect(messages[0].content).toBe("Part one. Part two.");
         expect(messages[0].events).toEqual(events);
         expect(messages[0].citations).toEqual([{ ref: 1 }]);
+        expect(messages[0].citationStatus).toBe("final");
+    });
+
+    it.each([{ citations: [] }, { citations: null }])("retains a completed empty citation check on reload (%j)", async ({ citations }) => {
+        fetchMock.mockResolvedValue(jsonResponse({ chat, messages: [{
+            id: "m1", chat_id: "c1", role: "assistant", created_at: "2026-01-01",
+            content: [{ type: "content", text: "Unconfirmed assertion." }], citations,
+        }] }));
+        const { messages } = await getChat("c1");
+        expect(messages[0].citationStatus).toBe("final");
+        expect(messages[0].citations ?? []).toEqual([]);
+    });
+
+    it("does not invent a completed check for legacy history with no citations property", async () => {
+        fetchMock.mockResolvedValue(jsonResponse({ chat, messages: [{
+            id: "m1", chat_id: "c1", role: "assistant", created_at: "2026-01-01",
+            content: [{ type: "content", text: "Legacy assertion." }],
+        }] }));
+        const { messages } = await getChat("c1");
+        expect(messages[0].citationStatus).toBeUndefined();
+        expect(messages[0].citations).toBeUndefined();
     });
 
     it("maps a legacy string assistant body to empty content without events", async () => {

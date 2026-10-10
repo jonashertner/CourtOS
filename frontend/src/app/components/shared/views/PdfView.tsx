@@ -28,6 +28,8 @@ interface Props {
     /** Back-compat single-quote API. Ignored if `quotes` is provided. */
     quote?: string;
     fallbackPage?: number;
+    /** Exact PDF page requested by a durable source reference; never silently clamp. */
+    initialPage?: number;
     rounded?: ViewRounding;
 }
 
@@ -39,6 +41,7 @@ const ZOOM_MAX = 3.0;
 const ZOOM_STEP = 0.25;
 
 type RenderedPage = {
+    pageNumber: number;
     page: import("pdfjs-dist").PDFPageProxy;
     viewport: import("pdfjs-dist").PageViewport;
     wrapper: HTMLDivElement;
@@ -206,6 +209,7 @@ export function PdfView({
     quoteFocusKey,
     quote,
     fallbackPage,
+    initialPage,
     rounded = true,
 }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -241,6 +245,7 @@ export function PdfView({
     const [zoom, setZoom] = useState(1.0);
     const [currentPage, setCurrentPage] = useState(1);
     const [numPages, setNumPages] = useState(0);
+    const [quoteWarning, setQuoteWarning] = useState("");
     const [pdfLoadError, setPdfLoadError] = useState<{
         result: DocResult;
         message: string;
@@ -279,19 +284,19 @@ export function PdfView({
             const pages = renderedPagesRef.current;
             if (!pages.length) return;
             const scrollCenter = scrollEl.scrollTop + scrollEl.clientHeight / 2;
-            let closest = 0;
+            let closest = 1;
             let closestDist = Infinity;
-            pages.forEach((p, i) => {
+            pages.forEach((p) => {
                 const pageCenter =
                     p.wrapper.offsetTop + p.wrapper.clientHeight / 2;
                 const dist = Math.abs(pageCenter - scrollCenter);
                 if (dist < closestDist) {
                     closestDist = dist;
-                    closest = i;
+                    closest = p.pageNumber;
                 }
             });
-            currentPageRef.current = closest + 1;
-            setCurrentPage(closest + 1);
+            currentPageRef.current = closest;
+            setCurrentPage(closest);
         };
 
         scrollEl.addEventListener("scroll", handleScroll, { passive: true });
@@ -307,11 +312,12 @@ export function PdfView({
                 clearHighlights(p.textDivs);
 
             let firstHitPage: number | null = null;
+            let missing = false;
             for (const entry of list) {
                 let hitPage: number | null = null;
 
-                if (entry.page) {
-                    const target = renderedPagesRef.current[entry.page - 1];
+                if (entry.page !== undefined) {
+                    const target = renderedPagesRef.current.find(page => page.pageNumber === entry.page);
                     if (target) {
                         const found = await highlightQuote(
                             target.textDivs,
@@ -322,29 +328,23 @@ export function PdfView({
                     }
                 }
 
-                // Fall back to scanning all pages for this quote
-                if (hitPage === null) {
-                    console.warn(
-                        `Quote not found on hinted page, scanning all pages: "${entry.quote.slice(0, 60)}..."`,
-                    );
-                    for (let i = 0; i < renderedPagesRef.current.length; i++) {
-                        const p = renderedPagesRef.current[i];
-                        const found = await highlightQuote(
-                            p.textDivs,
-                            entry.quote,
-                            p.readingOrder,
-                        );
-                        if (found) {
-                            hitPage = i + 1;
+                // A supplied page is an evidentiary locator, not a hint. Never
+                // conceal a wrong page by finding the same words elsewhere.
+                if (hitPage === null && entry.page === undefined) {
+                    for (const page of renderedPagesRef.current) {
+                        if (await highlightQuote(page.textDivs, entry.quote, page.readingOrder)) {
+                            hitPage = page.pageNumber;
                             break;
                         }
                     }
                 }
+                if (hitPage === null) missing = true;
 
                 if (hitPage !== null && firstHitPage === null) {
                     firstHitPage = hitPage;
                 }
             }
+            setQuoteWarning(missing ? "Der Wortlaut wurde auf der angegebenen PDF-Seite nicht gefunden. Bitte die Quelle prüfen." : "");
             return firstHitPage;
         },
         [],
@@ -356,9 +356,11 @@ export function PdfView({
     // positioned text layer can scroll just the overlay while leaving the
     // canvas untouched, which is why we don't use it here.
     const scrollToHighlightOnPage = useCallback((pageNum: number) => {
-        const pageEntry = renderedPagesRef.current[pageNum - 1];
+        const pageEntry = renderedPagesRef.current.find(page => page.pageNumber === pageNum);
         const scrollEl = scrollContainerRef.current;
         if (!pageEntry || !scrollEl) return;
+        currentPageRef.current = pageNum;
+        setCurrentPage(pageNum);
 
         const highlightEl = pageEntry.wrapper.querySelector<HTMLElement>(
             ".pdf-text-highlight",
@@ -414,8 +416,9 @@ export function PdfView({
             lib.TextLayer.cleanup();
 
             setNumPages(doc.numPages);
-            setCurrentPage(1);
-            currentPageRef.current = 1;
+            const retainedPage = scrollToPage && scrollToPage >= 1 && scrollToPage <= doc.numPages ? scrollToPage : 1;
+            setCurrentPage(retainedPage);
+            currentPageRef.current = retainedPage;
 
             const hasCitation = list.length > 0;
             if (hasCitation && scrollContainerRef.current) {
@@ -447,6 +450,7 @@ export function PdfView({
                 wrapper.style.margin = "0 auto 8px";
                 wrapper.style.width = "fit-content";
                 wrapper.className = "shadow-md";
+                wrapper.dataset.pdfPage = String(pageNum);
 
                 const canvas = document.createElement("canvas");
                 canvas.width = viewport.width;
@@ -455,8 +459,17 @@ export function PdfView({
                 wrapper.appendChild(canvas);
                 container.appendChild(wrapper);
 
+                const renderedPage: RenderedPage = { pageNumber: pageNum, page, viewport, wrapper, canvas, textDivs: [], readingOrder: undefined };
+                renderedPagesRef.current.push(renderedPage);
+                const showPageFailure = () => {
+                    canvas.hidden = true;
+                    const notice = document.createElement("p");
+                    notice.setAttribute("role", "alert");
+                    notice.textContent = `PDF-Seite ${pageNum} konnte nicht dargestellt werden.`;
+                    wrapper.appendChild(notice);
+                };
                 const ctx = canvas.getContext("2d");
-                if (!ctx) continue;
+                if (!ctx) { showPageFailure(); continue; }
 
                 const task = page.render({
                     canvas,
@@ -473,7 +486,7 @@ export function PdfView({
                         (e as { name?: string })?.name !==
                         "RenderingCancelledException"
                     ) {
-                        console.error("PDF render error", e);
+                        showPageFailure();
                     }
                     continue;
                 } finally {
@@ -517,14 +530,8 @@ export function PdfView({
                 );
                 if (isStale()) return;
 
-                renderedPagesRef.current.push({
-                    page,
-                    viewport,
-                    wrapper,
-                    canvas,
-                    textDivs,
-                    readingOrder,
-                });
+                renderedPage.textDivs = textDivs;
+                renderedPage.readingOrder = readingOrder;
             }
 
             if (isStale()) return;
@@ -542,14 +549,8 @@ export function PdfView({
             }
             if (targetPage && targetPage >= 1) {
                 scrollToHighlightOnPage(targetPage);
-            } else if (!hasCitation && scrollToPage && scrollToPage > 1) {
-                // Restore scroll position after zoom re-render
-                const pageEntry = renderedPagesRef.current[scrollToPage - 1];
-                if (pageEntry)
-                    pageEntry.wrapper.scrollIntoView({
-                        behavior: "instant" as ScrollBehavior,
-                        block: "start",
-                    });
+            } else if (!hasCitation && scrollToPage && scrollToPage >= 1) {
+                scrollToHighlightOnPage(scrollToPage);
             }
 
             reveal();
@@ -682,6 +683,8 @@ export function PdfView({
         if (!result || result.type !== "pdf") return;
         pdfDocRef.current = null;
         renderedPagesRef.current = [];
+        containerRef.current?.replaceChildren();
+        if (scrollContainerRef.current) scrollContainerRef.current.style.opacity = "1";
         quoteListRef.current = quoteList;
         zoomRef.current = 1.0;
         const list = quoteList;
@@ -694,6 +697,7 @@ export function PdfView({
             setZoom(1.0);
             setNumPages(0);
             setPdfLoadError(null);
+            setQuoteWarning("");
         });
 
         (async () => {
@@ -707,8 +711,12 @@ export function PdfView({
             });
             const pdfDoc = await loadingTask.promise;
             if (cancelled) return;
+            if (initialPage !== undefined && (!Number.isSafeInteger(initialPage) || initialPage < 1 || initialPage > pdfDoc.numPages)) {
+                setPdfLoadError({ result, message: "Die angegebene PDF-Seite ist in dieser Dokumentversion nicht vorhanden." });
+                return;
+            }
             pdfDocRef.current = pdfDoc;
-            await renderPDF(pdfDoc, list);
+            await renderPDF(pdfDoc, list, initialPage);
         })().catch(() => {
             if (!cancelled)
                 setPdfLoadError({ result, message: "Failed to load document." });
@@ -720,14 +728,14 @@ export function PdfView({
             renderedPagesRef.current = [];
             void loadingTask?.destroy().catch(() => {});
         };
-    }, [result, renderPDF]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [result, renderPDF, initialPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Re-render at new scale when container is resized (debounced 150ms)
     useEffect(() => {
         if (!pdfDocRef.current) return;
         const timer = setTimeout(() => {
             if (pdfDocRef.current) {
-                renderPDF(pdfDocRef.current, quoteListRef.current);
+                renderPDF(pdfDocRef.current, quoteListRef.current, currentPageRef.current);
             }
         }, 150);
         return () => clearTimeout(timer);
@@ -776,6 +784,7 @@ export function PdfView({
         <div
             className={`document-canvas relative flex flex-col flex-1 overflow-hidden ${viewRoundingClass(rounded)}`}
         >
+            {quoteWarning && <p role="status" className="px-3 pt-3 text-sm text-muted-foreground">{quoteWarning}</p>}
             <div
                 ref={scrollContainerRef}
                 data-document-scroll-viewport
@@ -809,6 +818,8 @@ export function PdfView({
                         className={`absolute bottom-4 right-4 flex items-center gap-px rounded-full px-1 py-1 ${LIQUID_GLASS_TRANSLUCENT_CLASS}`}
                     >
                         <button
+                            type="button"
+                            aria-label="Verkleinern"
                             onClick={handleZoomOut}
                             disabled={zoom <= ZOOM_MIN}
                             className="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 hover:bg-white/80 disabled:opacity-30 transition-colors"
@@ -819,6 +830,8 @@ export function PdfView({
                             {Math.round(zoom * 100)}%
                         </span>
                         <button
+                            type="button"
+                            aria-label="Vergrössern"
                             onClick={handleZoomIn}
                             disabled={zoom >= ZOOM_MAX}
                             className="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 hover:bg-white/80 disabled:opacity-30 transition-colors"

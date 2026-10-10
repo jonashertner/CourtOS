@@ -122,17 +122,17 @@ OpenCaseLaw kann die Anfrage mit KI auswerten und Treffer gewichten. Die Suche l
 Text und Herkunft gemeinsam in Ihre weitere Arbeit übernehmen.
 
 ### Die Passage auswählen
-Öffnen Sie den relevanten Textbereich. «Auszug und Quelle kopieren» übernimmt bei öffentlichen Entscheiden den angezeigten Auszug mit seinen Herkunftsangaben. Die Funktion erzeugt keine neue juristische Zusammenfassung.
+Markieren Sie im Entscheid 20–800 zusammenhängende Zeichen und wählen Sie «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» übernimmt nur diese markierte Passage mit ihrer Herkunft, ohne neue Zusammenfassung.
 
-- Passage öffnen
+- Passage markieren
+- Stelle übernehmen
 - Mit Herkunft kopieren
-- Im eigenen Text nutzen
 
 ### Bei öffentlichen Entscheiden
 Zum Auszug gehören die angezeigten Entscheidangaben, die OpenCaseLaw-Kennung und eine vorhandene öffentliche Quellenadresse. Kontrollieren Sie die amtliche Fundstelle und die Metadaten vor einer Übernahme in Ihre Begründung.
 
 ### Bei eigenen Dokumenten
-«Passage und Quelle kopieren» übernimmt bei eigenen Dokumenten Dateiname, feste Dokumentfassung und PDF-Seite. Die gedruckte Seitenzahl kann abweichen. Es wird keine Adresse erzeugt, über die andere Personen Ihr privates Dokument öffnen könnten.
+Bei eigenen Dokumenten enthält die Kopie Dateiname, feste Fassung, PDF-Seite und einen Link zu genau dieser Fassung und Seite. Die gedruckte Seitenzahl kann abweichen. Der Link verlangt Anmeldung und bestehende Zugriffsrechte; er erteilt keine öffentliche Freigabe.
 
 ### Ein verwendbarer Nachweis
 Ergänzen Sie die für Ihren Text erforderliche Zitierweise und den rechtlichen Zusammenhang. Die Kopierfunktion bewahrt einen Ausgangsbeleg; sie bestätigt weder die Richtigkeit der Quelle noch die Tragweite ihrer Aussage.
@@ -185,10 +185,13 @@ Suchbegriffe, erwartete Quelle, beobachtete Abweichung und ungefährer Aufwand g
 Eigene Quellen durchsuchen und Belege kopieren geht ohne KI. Für weitergehende Arbeit wählen Sie das Modell.
 
 ### Lokal weiterdenken
-«Mit dieser Auswahl fragen» bereitet Ihre Frage und die gewählten Bibliotheksdokumente im Assistenten vor. Erst Ihr Senden startet Gemma 4. «Lokal» bezeichnet den CourtOS-VPS bei Hetzner in Deutschland, nicht Ihr Gerät oder das Gerichtsnetz.
+«Mit dieser Auswahl fragen» oder «Chronologie erstellen» bereitet einen Entwurf mit den gewählten PDFs vor. Erst Ihr Senden startet Gemma 4. Verwenden Sie eine kleine, vollständig lesbare Auswahl; bei überschrittenem Umfang wird abgebrochen. Trennen Sie Parteibehauptungen, bestrittene und belegte Tatsachen und prüfen Sie die genaue Quellenseite.
+
+### Prüfmassstab
+CourtOS muss die ausgewählten Quellen vor einer Aktenantwort tatsächlich lesen. Ein passendes Zitat bestätigt zunächst nur den Wortlaut an einer bestimmten Stelle; ob dieser die Aussage trägt, prüfen Sie am Original.
 
 ### Eine externe Perspektive
-Eine öffentliche Entscheidpassage oder eine abgeschlossene lokale Antwort lässt sich zur Frontier-Prüfung übergeben. Der Text liegt zunächst als bearbeitbarer Entwurf im Browser. Anhänge und der übrige Chatverlauf werden nicht mitgegeben. Es gibt keine automatische Anonymisierung.
+Öffentliche Fundstellen oder eine lokale Antwort können Sie als bearbeitbaren Entwurf zur Frontier-Prüfung übergeben. Anhänge und übriger Chatverlauf bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung.
 
 - Text und Auftrag
 - Vorschau und Freigabe
@@ -198,7 +201,7 @@ Eine öffentliche Entscheidpassage oder eine abgeschlossene lokale Antwort läss
 Die Vorschau zeigt den vollständigen Anfrageinhalt, Anbieter und Modell. Erst Ihre Freigabe löst den Anthropic-Aufruf aus. Nur extern zulässiges, nicht vertrauliches Material verwenden. Links sind Quellenangaben; das Modell ruft ihren Inhalt nicht ab.
 
 ### Zum eigenen Arbeitsstand zurück
-Die externe Antwort kann als bearbeitbarer Entwurf in den lokalen Assistenten zurückkehren; sie wird nicht automatisch gesendet. Bestehende Eingaben und Anhänge bleiben erhalten. Überlange Übergabetexte werden nicht still gekürzt. Alternativ kopieren Sie einen passenden Ausschnitt in Ihr gewohntes Werkzeug.
+Die externe Antwort kehrt auf Wunsch als bearbeitbarer Entwurf in den lokalen Assistenten zurück; sie wird nicht automatisch gesendet. Vorhandene Eingaben und Anhänge bleiben erhalten. Zu lange Übergaben werden abgewiesen. Alternativ kopieren Sie einen passenden Ausschnitt.
 
 ## 12. Datenwege und Betrieb
 Eigene Bibliothek, öffentliche Suche und Modellanfragen haben getrennte Datenwege.

@@ -116,8 +116,10 @@ function normalizeCitationPage(value: unknown): number | string {
   } else if (typeof value === "string" && /^\d+\s*-\s*\d+$/.test(value)) {
     return value;
   } else {
-    const n = parseInt(String(value ?? ""), 10);
-    if (!Number.isFinite(n)) return 1;
+    const raw = String(value ?? "").trim();
+    const n = /^\d+$/.test(raw) ? Number(raw) : NaN;
+    // Zero is an invalid locator. Do not invent page 1 for a missing page.
+    if (!Number.isFinite(n)) return 0;
     return n;
   }
 }

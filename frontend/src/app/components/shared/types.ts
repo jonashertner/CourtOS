@@ -381,12 +381,7 @@ export interface CitationQuote {
   quote: string;
 }
 
-export type QuoteVerification = {
-  verified: boolean;
-  source_excerpt?: string;
-  start_char?: number;
-  end_char?: number;
-};
+export type QuoteVerification = import("@mike/contracts").QuoteVerification;
 
 export type DocumentCitationQuote = {
   page: number | string;

@@ -57,12 +57,14 @@ export interface ActiveVersion {
     size_bytes: number | null;
     page_count: number | null;
     textless_page_count: number | null;
+    content_sha256?: string | null;
 }
 
 /**
  * Resolve storage paths for a document. Prefers the version pointed to by
- * `versionId` (if it belongs to this document); else falls back to
- * `documents.current_version_id`. Returns null if no usable version exists.
+ * `versionId` (if it belongs to this document). When no explicit version is
+ * supplied, uses `documents.current_version_id`. Never substitutes for a
+ * missing explicit version. Returns null if no usable version exists.
  *
  * After the storage_path/pdf_storage_path columns moved off `documents`,
  * every read-from-storage path goes through here.
@@ -86,7 +88,7 @@ export async function loadActiveVersion(
     const { data: v } = await db
         .from("document_versions")
         .select(
-            "id, document_id, storage_path, pdf_storage_path, version_number, filename, source, file_type, size_bytes, page_count, textless_page_count",
+            "id, document_id, storage_path, pdf_storage_path, version_number, filename, source, file_type, size_bytes, page_count, textless_page_count, content_sha256",
         )
         .eq("id", targetVersionId)
         .is("deleted_at", null)
@@ -104,6 +106,7 @@ export async function loadActiveVersion(
         page_count: (v.page_count as number | null) ?? null,
         textless_page_count:
             (v.textless_page_count as number | null) ?? null,
+        content_sha256: (v.content_sha256 as string | null) ?? null,
     };
 }
 

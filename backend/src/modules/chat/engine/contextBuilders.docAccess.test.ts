@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ---------------------------------------------------------------------------
 // buildDocContext — which attached documents the model may actually read.
@@ -17,6 +17,7 @@ vi.mock("../../../lib/supabase", () => ({ createServerSupabase: vi.fn() }));
 vi.mock("../../../lib/storage", () => ({ downloadFile: vi.fn() }));
 
 const ensureDocAccess = vi.fn(async (..._args: unknown[]) => ({ ok: true }));
+const loadVersion = vi.hoisted(() => vi.fn());
 vi.mock("../../../lib/access", () => ({
   ensureDocAccess: (...args: unknown[]) => ensureDocAccess(...args),
 }));
@@ -24,6 +25,7 @@ vi.mock("../../../lib/access", () => ({
 // Version enrichment is a separate concern; give every surviving doc a path
 // so the builder's "no bytes yet" skip never masks an access result.
 vi.mock("../../../lib/documentVersions", () => ({
+  loadActiveVersion: loadVersion,
   attachActiveVersionPaths: vi.fn(
     async (_db: unknown, docs: Record<string, unknown>[]) => {
       for (const doc of docs) {
@@ -45,6 +47,7 @@ type Doc = {
   org_id?: string | null;
   workflow_id?: string | null;
   status?: string;
+  current_version_id?: string;
 };
 
 /**
@@ -95,8 +98,36 @@ const message = (documentIds: string[]) => [
 ] as never;
 
 describe("buildDocContext access scoping", () => {
+  afterEach(() => vi.unstubAllEnvs());
   beforeEach(() => {
     ensureDocAccess.mockReset().mockResolvedValue({ ok: true });
+    loadVersion.mockReset();
+  });
+
+  it("binds a pilot attachment to its selected historical version rather than current", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    loadVersion.mockResolvedValue({ id: "old-v", filename: "old.pdf", storage_path: "old.pdf", file_type: "pdf", version_number: 1 });
+    const db = makeDb([{ id: "d1", user_id: "u1", project_id: null, status: "ready", current_version_id: "new-v" }]);
+    const { docIndex, docStore } = await buildDocContext([{ role: "user", content: "Read", files: [{ document_id: "d1", filename: "old.pdf", version_id: "old-v" }] }], "u1", db);
+    expect(loadVersion).toHaveBeenCalledWith("d1", db, "old-v");
+    expect(docIndex["doc-0"].version_id).toBe("old-v");
+    expect(docStore.get("doc-0")?.storage_path).toBe("old.pdf");
+  });
+
+  it("blocks missing or forbidden pilot attachments without silently reducing the selection", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    const db = makeDb([{ id: "d1", user_id: "u1", project_id: null, status: "ready" }]);
+    await expect(buildDocContext(message(["d1", "missing"]), "u1", db)).rejects.toMatchObject({ code: "source_grounding_failed" });
+    ensureDocAccess.mockResolvedValue({ ok: false });
+    await expect(buildDocContext(message(["d1"]), "u1", db)).rejects.toMatchObject({ code: "source_grounding_failed" });
+  });
+
+  it("never replaces a deleted explicitly selected pilot version", async () => {
+    vi.stubEnv("COURTOS_PILOT_MODE", "true");
+    loadVersion.mockResolvedValue(null);
+    const db = makeDb([{ id: "d1", user_id: "u1", project_id: null, status: "ready", current_version_id: "new-v" }]);
+    await expect(buildDocContext([{ role: "user", content: "Read", files: [{ document_id: "d1", filename: "old.pdf", version_id: "old-v" }] }], "u1", db)).rejects.toMatchObject({ code: "source_grounding_failed" });
+    expect(loadVersion).toHaveBeenCalledWith("d1", db, "old-v");
   });
 
   it("includes documents the caller did not upload but may read", async () => {

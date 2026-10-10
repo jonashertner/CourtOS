@@ -356,6 +356,27 @@ describe("stream identity frames", () => {
 });
 
 describe("error frames", () => {
+  it("preserves a source-grounding rejection without treating it as a rejected key", async () => {
+    const turn = begin();
+    const onRejectedApiKey = vi.fn();
+    await consumeAssistantTurnStream(
+      sseResponse([
+        frame(1, { type: "content_done" }),
+        frame(2, { type: "error", code: "source_grounding_failed", safe_to_display: true,
+          message: "Die Antwort konnte nicht an den Originalseiten belegt werden." }),
+        "data: [DONE]\n\n",
+      ]),
+      { turn, sink: createTurnEventSink(turn, []), cursor: createTurnCursor("chat-a"), hooks: { onRejectedApiKey } },
+    );
+    expect(turn.turn.assistant.events).toEqual([{
+      type: "error", code: "source_grounding_failed", safe_to_display: true,
+      message: "Die Antwort konnte nicht an den Originalseiten belegt werden.",
+    }]);
+    expect(turn.turn.loadingCitations).toBe(false);
+    expect(onRejectedApiKey).not.toHaveBeenCalled();
+    turn.finish();
+  });
+
   it("shows the server's message only when it is marked safe to display", async () => {
     const message = await run([
       { type: "error", message: "  Upstream is down  ", safe_to_display: true },
@@ -1572,10 +1593,14 @@ describe("citation frames", () => {
     expect(message.events).toEqual([{ type: "content", text: "answer" }]);
   });
 
-  it("treats an unknown status as final and leaves no status when there are no citations", async () => {
-    const message = await run([{ type: "citations", status: "halfway" }]);
+  it.each(["final", "halfway"])("retains a completed empty source check (%s), rather than erasing its status", async (status) => {
+    const message = await run([
+      { type: "content_delta", text: "A response without confirmed source quotations." },
+      { type: "citations", status, citations: [] },
+    ]);
     expect(message.citations).toEqual([]);
-    expect(message.citationStatus).toBeUndefined();
+    expect(message.citationStatus).toBe("final");
+    expect(message.events).toEqual([{ type: "content", text: "A response without confirmed source quotations." }]);
   });
 });
 

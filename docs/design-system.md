@@ -38,7 +38,9 @@ surfaces may retain Timeless Serif.
   choice is OpenCaseLaw or Eigene Quellen. No sample matters or dashboard tiles.
 - **Settings:** two model choices with explicit processing location, followed by
   account and sign-out. Help is collapsed. Preferences belong to the signed-in
-  owner and fail back to Gemma when unavailable or invalid. Search uses no LLM.
+  owner and fail back to Gemma when unavailable or invalid. Own-library text
+  search uses no LLM; public OpenCaseLaw search uses an external AI-assisted
+  service. State this difference beside the respective search.
 - **Source actions:** open original, copy passage with provenance, or explicitly
   prepare an AI request. The selected model and processing location are visible
   beside that action. Private documents use server-local Gemma only in this pilot.

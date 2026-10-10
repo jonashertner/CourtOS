@@ -51,6 +51,8 @@ import {
 } from "./tools/documentOps";
 import { verifyCitations } from "./verifyCitations";
 import { buildMemoryTurn } from "../../../lib/memory/prompt";
+import { prefetchSourceEvidence, sourceEvidencePrompt, SourceGroundingError, type DocumentEvidence } from "./sourceEvidence";
+import { spotlight } from "./contextBuilders";
 
 export type { AssistantEvent } from "@mike/contracts";
 import type { AssistantEvent, AssistantErrorCode } from "@mike/contracts";
@@ -103,6 +105,9 @@ export function assistantStreamErrorPayload(error: unknown): {
   safe_to_display?: true;
   code?: AssistantErrorCode;
 } {
+  if (error instanceof SourceGroundingError) {
+    return { message: error.message, safe_to_display: true, code: error.code };
+  }
   const safe =
     error instanceof AssistantStreamError
       ? [...error.events]
@@ -297,8 +302,22 @@ export async function runLLMStream(params: {
     nonce,
     conversationId,
   } = params;
-  const write = (chunk: string) =>
-    unsafeWrite(sanitizeAssistantSseChunk(chunk));
+  const requiresEvidence = courtosPilotEnabled() && docStore.size > 0;
+  const heldOutput: string[] = [];
+  let evidenceReleased = false;
+  const write = (chunk: string) => {
+    const safe = sanitizeAssistantSseChunk(chunk);
+    if (requiresEvidence && !evidenceReleased && safe.startsWith("data: ")) {
+      try {
+        const event = JSON.parse(safe.slice(6).trim()) as { type?: string };
+        if (["content_delta", "reasoning_delta", "reasoning_block_end", "citations"].includes(event.type ?? "")) {
+          heldOutput.push(safe);
+          return;
+        }
+      } catch { /* Non-JSON terminators follow the normal path. */ }
+    }
+    unsafeWrite(safe);
+  };
   const researchTools = includeResearchTools && !courtosPilotEnabled() ? COURTLISTENER_TOOLS : [];
   const mcpTools = await buildUserMcpTools(userId, db);
   const googleDriveTools = await buildGoogleDriveTools(userId, db);
@@ -348,7 +367,9 @@ export async function runLLMStream(params: {
   });
   const systemPrompt = memory.systemPrompt;
   const chatMessages: LlmMessage[] = rawMsgs
-    .filter((m) => m.role !== "system")
+    // Prior assistant prose is not evidence and may predate verification.
+    // User instructions remain; factual grounding comes from fresh PDFs only.
+    .filter((m) => m.role !== "system" && (!requiresEvidence || m.role !== "assistant"))
     .map(
       (m): LlmMessage =>
         m.role === "assistant" && m.reasoning
@@ -376,6 +397,7 @@ export async function runLLMStream(params: {
   // one assistant response. The guard is invalidated when edit_document
   // changes that document so a post-edit verification read can still happen.
   const turnReadState: TurnReadState = new Map();
+  let sourceEvidence = new Map<string, DocumentEvidence>();
   const courtlistenerTurnState: CourtlistenerTurnState = {
     casesByClusterId: new Map(),
   };
@@ -494,6 +516,24 @@ export async function runLLMStream(params: {
 
   try {
     throwIfAborted(signal);
+    if (requiresEvidence) {
+      sourceEvidence = await prefetchSourceEvidence(docStore, docIndex, db, userId, userEmail);
+      throwIfAborted(signal);
+      const sourceText = sourceEvidencePrompt(sourceEvidence);
+      // Fresh source material immediately before the latest user instruction.
+      // The existing nonce fence treats all document text as untrusted data.
+      chatMessages.splice(Math.max(0, chatMessages.length - 1), 0, {
+        role: "user",
+        content: `Application-loaded source evidence. All selected PDF pages are included as extracted text; this is not a finding that their allegations are true.\n${nonce ? spotlight(sourceText, nonce) : sourceText}`,
+      });
+      for (const [label, source] of sourceEvidence) {
+        const event: AssistantEvent = { type: "doc_read", filename: source.filename, document_id: source.document_id, version_id: source.version_id, version_number: source.version_number,
+          source_coverage: { kind: "complete_extracted_text", pages: source.pages.length, text_bytes: source.pages.reduce((sum, page) => sum + Buffer.byteLength(page.text, "utf8"), 0), pdf_sha256: source.pdf_sha256, version_sha256: source.version_sha256 } };
+        events.push(event);
+        write(`data: ${JSON.stringify(event)}\n\n`);
+        turnReadState.set(`${source.document_id}:${source.version_id}`, { docLabel: label, filename: source.filename, documentId: source.document_id, versionId: source.version_id, versionNumber: source.version_number, storagePath: docStore.get(label)!.storage_path });
+      }
+    }
     // Single request-time choke point for every runLLMStream caller (chat,
     // project chat, Word chat, tabular): router-prefixed models must be in the
     // user's saved selection.
@@ -777,8 +817,8 @@ export async function runLLMStream(params: {
     } else if (isAbortError(err)) {
       flushPartialTurn({ emit: false });
       throw new AssistantStreamAbortError(
-        fullText,
-        events.map(sanitizeAssistantEvent),
+        requiresEvidence ? "" : fullText,
+        events.filter((event) => !requiresEvidence || !["content", "reasoning"].includes(event.type)).map(sanitizeAssistantEvent),
       );
     } else {
       flushPartialTurn();
@@ -807,12 +847,12 @@ export async function runLLMStream(params: {
         // to go fix the key rather than a suggestion to retry.
         ...(err instanceof InvalidApiKeyError
           ? { code: "invalid_api_key" as const }
-          : {}),
+          : requiresEvidence || err instanceof SourceGroundingError ? { code: "source_grounding_failed" as const } : {}),
       });
       throw new AssistantStreamError(
         message,
-        fullText,
-        events.map(sanitizeAssistantEvent),
+        requiresEvidence ? "" : fullText,
+        events.filter((event) => !requiresEvidence || !["content", "reasoning"].includes(event.type)).map(sanitizeAssistantEvent),
         { cause: err },
       );
     }
@@ -824,11 +864,11 @@ export async function runLLMStream(params: {
   const { citations: parsedCitations, diagnostics: citationDiagnostics } =
     parseCitationsWithDiagnostics(fullText);
   let citations: unknown[];
-  if (buildCitations) {
+  if (buildCitations && !requiresEvidence) {
     // Custom builders (tabular) bypass document-citation verification.
     citations = buildCitations(fullText);
   } else {
-    const rawCitations = parsedCitations.map((c) =>
+    const rawCitations = buildCitations ? buildCitations(fullText) : parsedCitations.map((c) =>
       createCitation(
         c,
         docIndex,
@@ -856,10 +896,28 @@ export async function runLLMStream(params: {
     };
     citations = await verifyCitations(
       rawCitations,
-      getSourceText,
+      requiresEvidence ? async (docId) => {
+        const label = resolveDocLabel(docId, docStore, docIndex);
+        return label ? sourceEvidence.get(label) ?? null : null;
+      } : getSourceText,
       async (clusterId) =>
         getCachedCaseOpinionTexts(courtlistenerTurnState, clusterId),
     );
+  }
+  if (requiresEvidence) {
+    const visible = fullText.split(CITATIONS_OPEN_TAG)[0];
+    const refs = [...visible.matchAll(/\[(\d+)\]/g)].map((match) => Number(match[1]));
+    const verified = citations as { ref?: number; verified?: boolean }[];
+    if (!refs.length || !verified.length || verified.some((citation) => citation.verified !== true) || refs.some((ref) => !verified.some((citation) => citation.ref === ref))) {
+      const failure = new SourceGroundingError();
+      const safeEvents = events.filter((event) => !["content", "reasoning"].includes(event.type));
+      safeEvents.push({ type: "error", message: failure.message, safe_to_display: true, code: failure.code });
+      throw new AssistantStreamError(failure.message, "", safeEvents.map(sanitizeAssistantEvent), { cause: failure });
+    }
+    evidenceReleased = true;
+    // No unverified draft was streamed to the client. Publish the bounded,
+    // page-checked result only now; matching quotations is not a merits check.
+    for (const chunk of heldOutput) unsafeWrite(chunk);
   }
   devLog("[chat/stream] final citations", {
     hasCitationsBlock: citationDiagnostics.hasBlock,

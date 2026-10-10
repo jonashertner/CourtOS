@@ -423,8 +423,8 @@ export async function consumeAssistantTurnStream(
               type: "error",
               message,
               ...(safeToDisplay ? { safe_to_display: true } : {}),
-              ...(data.code === "invalid_api_key"
-                ? { code: "invalid_api_key" as const }
+              ...(data.code === "invalid_api_key" || data.code === "source_grounding_failed"
+                ? { code: data.code }
                 : {}),
             },
           ];
@@ -1283,7 +1283,7 @@ export async function consumeAssistantTurnStream(
           updateLatestAssistantMessage((message) => ({
             ...message,
             citations: incoming,
-            citationStatus: incoming.length ? "final" : undefined,
+            citationStatus: "final",
           }));
           continue;
         }

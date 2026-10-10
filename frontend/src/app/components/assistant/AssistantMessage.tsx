@@ -1,5 +1,7 @@
 "use client";
 
+import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
+
 import { useRef, useState } from "react";
 import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
 import { FrontierAnswerAction } from "@/app/components/courtos/FrontierAnswerAction";
@@ -137,7 +139,7 @@ export function AssistantMessage({
     isEditReloading,
     resolvedEditStatuses,
 }: Props) {
-    const contentDivRef = useRef<HTMLDivElement | null>(null);
+    const responseBodyRef = useRef<HTMLDivElement | null>(null);
     const [isCopied, setIsCopied] = useState(false);
     // Per-document override of the download URL, set as Accept/Reject resolves
     // each tracked change and produces a new version.
@@ -174,6 +176,12 @@ export function AssistantMessage({
         (errorEvent ? eventErrorMessage(errorEvent) : null) ??
         null;
     const hasError = isError || !!effectiveErrorMessage;
+    const sourceCheckPending = COURTOS_PILOT_MODE && (citationStatus === "started" || citationStatus === "partial");
+    const hasResponseText = events?.some(event => event.type === "content" && event.text.trim());
+    const sourceCheckFailed = COURTOS_PILOT_MODE && !isStreaming && !awaitingInput &&
+        (citations.some(citation => !hasCheckedCitationLocation(citation)) ||
+            (citations.length === 0 && (hasResponseText || citationStatus === "final")));
+    const exportBlocked = hasError || sourceCheckPending || sourceCheckFailed;
     const status: StatusState = hasError
         ? "error"
         : isStreaming
@@ -273,13 +281,10 @@ export function AssistantMessage({
     const showCitationBlock =
         !!citationStatus || (!isStreaming && citations.length > 0);
     const handleCopy = async () => {
+        if (exportBlocked) return;
         try {
-            let html = "";
-            let plainText = "";
-            if (contentDivRef.current) {
-                const clone = contentDivRef.current.cloneNode(
-                    true,
-                ) as HTMLElement;
+            const copiedBlocks = Array.from(responseBodyRef.current?.querySelectorAll("[data-assistant-copy-content]") ?? []).map(block => {
+                const clone = block.cloneNode(true) as HTMLElement;
                 clone.querySelectorAll("[data-citation-ref]").forEach((el) => {
                     const ref = el.getAttribute("data-citation-ref");
                     if (!ref) return;
@@ -287,12 +292,11 @@ export function AssistantMessage({
                     sup.textContent = ref;
                     el.replaceWith(sup);
                 });
-                html = clone.innerHTML;
-                plainText = clone.textContent || "";
-            }
-            const appendix = buildCitationAppendix(citations);
-            html += appendix.html;
-            plainText += appendix.text;
+                return { html: clone.innerHTML, text: clone.textContent || "" };
+            });
+            const appendix = buildCitationAppendix(citations, window.location.origin);
+            const html = copiedBlocks.map(block => block.html).join("\n") + appendix.html;
+            const plainText = copiedBlocks.map(block => block.text).join("\n\n") + appendix.text;
             const item = new ClipboardItem({
                 "text/html": new Blob([html], { type: "text/html" }),
                 "text/plain": new Blob([plainText], { type: "text/plain" }),
@@ -829,16 +833,16 @@ export function AssistantMessage({
         <div style={{ minHeight }}>
             <ResponseStatus status={status} />
             {COURTOS_PILOT_MODE && <p className="mt-2 text-xs text-muted-foreground">Gemma 4 · lokal auf dem CourtOS-Server</p>}
+            {sourceCheckFailed && <div role="alert" className="my-4 border-l-2 border-destructive pl-4 text-sm leading-relaxed">
+                <p className="font-semibold">Antwort nicht belegt</p>
+                <p>Die Quellenprüfung ist unvollständig oder fehlgeschlagen. Diese Antwort kann nicht als Ergebnis kopiert oder weitergegeben werden. Die Originalquellen bleiben prüfbar.</p>
+            </div>}
             <div className="w-full font-inter relative mt-2">
                 {events && events.length > 0 ? (
-                    <div className="flex flex-col gap-4">
+                    <div ref={responseBodyRef} className="flex flex-col gap-4">
                         {groups.map((g, gIdx) => {
                             if (g.kind === "content") {
-                                const isLastContent =
-                                    g.index === lastContentIdx;
-                                return (
-                                    <div key={`c-${g.index}`}>
-                                        <MarkdownContent
+                                const content = <MarkdownContent
                                             text={processedTexts[g.index]}
                                             inlineCitationTargets={
                                                 inlineCitationTargets
@@ -848,14 +852,11 @@ export function AssistantMessage({
                                             activeCitation={activeCitation}
                                             onCitationClick={onCitationClick}
                                             onCaseClick={onCaseClick}
-                                            divRef={
-                                                isLastContent
-                                                    ? contentDivRef
-                                                    : undefined
-                                            }
-                                        />
-                                    </div>
-                                );
+                                        />;
+                                return sourceCheckFailed ? <details key={`c-${g.index}`} className="text-sm">
+                                    <summary className="cursor-pointer py-2 underline underline-offset-4">Unbestätigten Antworttext ansehen</summary>
+                                    {content}
+                                </details> : <div key={`c-${g.index}`} data-assistant-copy-content>{content}</div>;
                             }
                             const subsequentContent = hasContentAfter(gIdx);
                             const pendingAskInput = hasPendingAskInput(g);
@@ -1142,10 +1143,10 @@ export function AssistantMessage({
 
                 {/* Copy button */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-sans justify-start">
-                    {COURTOS_PILOT_MODE && !isStreaming && !awaitingInput && !hasError && (
+                    {COURTOS_PILOT_MODE && !isStreaming && !awaitingInput && !exportBlocked && (
                         <FrontierAnswerAction text={(events ?? []).filter((event): event is Extract<AssistantEvent, { type: "content" }> => event.type === "content").map((event) => event.text).join("\n\n")} chatId={chatId} />
                     )}
-                    {!isStreaming && !awaitingInput && (
+                    {!isStreaming && !awaitingInput && !exportBlocked && (
                         <button
                             type="button"
                             aria-label={

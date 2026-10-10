@@ -774,6 +774,28 @@ describe("POST /chat — streaming endpoint", () => {
         expect(res.text).toContain("[DONE]");
     });
 
+    it("persists and replays a source-grounding block without answer prose or unverified citations", async () => {
+        dbControl.assistantMessageRows = [];
+        const { AssistantStreamError } = await import("../../modules/chat/engine/index.js");
+        const message = "Die Antwort wurde zurückgehalten: Quellenverweise nicht bestätigt.";
+        const events: AssistantEvent[] = [
+            { type: "doc_read", filename: "claims.pdf", document_id: "doc-a", version_id: "version-a", source_coverage: { kind: "complete_extracted_text", pages: 3, text_bytes: 400, pdf_sha256: "a".repeat(64), version_sha256: "a".repeat(64) } },
+            { type: "error", message, safe_to_display: true, code: "source_grounding_failed" },
+        ];
+        runLLMStream.mockRejectedValueOnce(new AssistantStreamError(message, "", events));
+        const res = await request(app).post("/chat").set("Authorization", "Bearer test").send(VALID_BODY);
+        expect(res.status).toBe(200);
+        expect(res.text).toContain('"code":"source_grounding_failed"');
+        expect(res.text).toContain('"safe_to_display":true');
+        expect(res.text).toContain("[DONE]");
+        expect(res.text).not.toContain('"type":"content_delta"');
+        expect(dbUpdates).toContainEqual(expect.objectContaining({ table: "chat_messages", value: expect.objectContaining({ content: events, citations: null }) }));
+        expect(scheduleMemoryConsolidation).not.toHaveBeenCalled();
+        const loaded = await request(app).get("/chat/chat-1").set("Authorization", "Bearer test");
+        expect(loaded.status).toBe(200);
+        expect(loaded.body.messages).toEqual(expect.arrayContaining([expect.objectContaining({ role: "assistant", content: events, citations: null })]));
+    });
+
     it("keeps an unexplained failure generic and uncoded", async () => {
         // Only errors the engine marked safe may reach the user; anything else
         // still collapses to the generic message with no actionable code.

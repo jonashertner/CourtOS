@@ -15,6 +15,7 @@
 import { type Db } from "../../lib/supabase";
 import { resolveRequestTimeZone } from "../../lib/userTime";
 import { attachPriorReasoning, buildDocContext, buildMessages, buildUserPersonalisationPrompt, devLog, enrichWithPriorEvents, loadUserMessageSentTimes, buildWorkflowStore, appendAskInputsResponseToAssistantMessage, runApprovedConnectorActions, generateSpotlightNonce, type AskInputsResponseRequest, type ChatMessage } from "./engine/index";
+import { SourceGroundingError } from "./engine/sourceEvidence";
 import type { McpToolEvent } from "@mike/contracts";
 import { getUserModelSettings, resolveUserChatSelection } from "../user/user.service";
 import { checkProjectAccess, projectHasSharedAudience, resolveContentOrgId } from "../../lib/access";
@@ -466,6 +467,9 @@ export async function prepareChatStream(
                     chatId,
                 });
             }
+        }
+        if (error instanceof SourceGroundingError) {
+            return { ok: false, status: 400, code: error.code, detail: error.message };
         }
         throw error;
     }

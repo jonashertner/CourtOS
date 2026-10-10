@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getKnowledgeDraft } from "@/app/lib/knowledgeDraft";
 import { KnowledgeWorkspace } from "./KnowledgeWorkspace";
 
 const api = vi.hoisted(() => ({ list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn(), handoff: vi.fn(), research: vi.fn(), model: "gemma" as "gemma" | "claude-opus-5-5" }));
@@ -13,10 +14,21 @@ vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list }));
 vi.mock("@/app/lib/knowledgeApi", async (original) => ({ ...(await original<typeof import("@/app/lib/knowledgeApi")>()), searchKnowledge: api.local, searchPublicKnowledge: api.public, getPublicDecision: api.detail }));
 vi.mock("next/dynamic", () => ({ default: () => (props: { document: { document_id: string; version_id: string; quotes: { quote: string; target: { page: number }; verification?: { verified: boolean } }[] }; canEdit: boolean }) => <div data-testid="source-viewer" data-document={props.document.document_id} data-version={props.document.version_id} data-editable={String(props.canEdit)} data-page={props.document.quotes[0]?.target.page} data-verified={String(props.document.quotes[0]?.verification?.verified)}>{props.document.quotes[0]?.quote}</div> }));
 
-const document = { id: "personal-a", filename: "Muster, Gehör, 2026.pdf", active_version_number: 2 };
-const hit = { document_id: document.id, version_id: "fixed-version-2", version_number: 2, filename: document.filename, page: 7, quote: "Die Stellungnahme ist zu prüfen. <script>kein HTML</script>", score: 1 };
+const document = { id: "11111111-1111-4111-8111-111111111111", filename: "Muster, Gehör, 2026.pdf", active_version_number: 2, status: "ready", current_version_id: "22222222-2222-4222-8222-222222222222" };
+const hit = { document_id: document.id, version_id: "22222222-2222-4222-8222-222222222222", version_number: 2, filename: document.filename, page: 7, quote: "Die Stellungnahme ist zu prüfen. <script>kein HTML</script>", score: 1 };
+async function selectPublicExcerpt(user: ReturnType<typeof userEvent.setup>, dialog: HTMLElement, start = 0, end?: number) {
+    const pre = within(dialog).getByLabelText("Erfasster Entscheidtext");
+    const range = window.document.createRange();
+    range.setStart(pre.firstChild!, start);
+    range.setEnd(pre.firstChild!, end ?? pre.textContent!.length);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges(); selection.addRange(range);
+    await user.click(within(dialog).getByRole("button", { name: "Markierte Stelle übernehmen" }));
+}
 beforeEach(() => {
     vi.clearAllMocks();
+    api.detail.mockReset(); api.public.mockReset();
+    window.getSelection()?.removeAllRanges();
     api.model = "gemma";
     api.handoff.mockReturnValue(false);
     Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
@@ -64,7 +76,7 @@ describe("personal knowledge workspace", () => {
     it("uses fetched metadata consistently in the source, copied citations and Opus handoff", async () => {
         const decision = { decision_id: "CH_CASE", title: "Alter Titel", snippet: "Auszug", court: "bge", decision_date: "2025-01-02", source_url: "https://example.org/old", content_hash: "old-hash", scraped_at: "old-capture" };
         api.public.mockResolvedValue({ results: [decision], query_mode: "opencaselaw_ai", database_generation: null });
-        api.detail.mockResolvedValue({ ...decision, title: "Berichtigter Titel", source_url: "https://example.org/current", content_hash: null, scraped_at: null, decision_date: "2025-01-01", date_is_estimated: true, source_note: "Wiederhergestellter Text <b>prüfen</b>", passage: { start: 0, end: 4, total_chars: 4, has_more: false, text: "Text" } });
+        api.detail.mockResolvedValue({ ...decision, title: "Berichtigter Titel", source_url: "https://example.org/current", content_hash: null, scraped_at: null, decision_date: "2025-01-01", date_is_estimated: true, source_note: "Wiederhergestellter Text <b>prüfen</b>", passage: { start: 0, end: 25, total_chars: 25, has_more: false, text: "Der genaue Entscheidtext." } });
         const user = userEvent.setup(); const view = render(<KnowledgeWorkspace />);
         await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
@@ -72,13 +84,16 @@ describe("personal knowledge workspace", () => {
         const dialog = screen.getByRole("dialog");
         expect(await within(dialog).findByText(/Entscheidungsdatum ist im Quellenbestand nur geschätzt/)).toBeInTheDocument();
         expect(within(dialog).getByText(/Wiederhergestellter Text <b>prüfen<\/b>/)).toBeInTheDocument();
+        expect(within(dialog).queryByRole("button", { name: "Textstelle und Quelle kopieren" })).toBeNull();
+        expect(within(dialog).queryByRole("button", { name: /Mit (Gemma|Opus) prüfen/ })).toBeNull();
+        await selectPublicExcerpt(user, dialog);
         const clipboard = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValueOnce();
-        await user.click(within(dialog).getByRole("button", { name: "Auszug und Quelle kopieren" }));
+        await user.click(within(dialog).getByRole("button", { name: "Textstelle und Quelle kopieren" }));
         expect(clipboard.mock.calls[0][0]).toContain("2025-01-01 (Datum geschätzt)");
         expect(clipboard.mock.calls[0][0]).toContain("Hinweis von OpenCaseLaw: Wiederhergestellter Text <b>prüfen</b>");
         expect(clipboard.mock.calls[0][0]).not.toContain("2025-01-02");
         expect(dialog).toHaveAccessibleName("Berichtigter Titel");
-        expect(within(dialog).getByRole("link", { name: "Originalquelle" })).toHaveAttribute("href", "https://example.org/current");
+        expect(within(dialog).getByRole("link", { name: "Ganzes Original" })).toHaveAttribute("href", "https://example.org/current");
         expect(within(dialog).getByText(/Text-Hash:/)).toHaveTextContent("Text-Hash: nicht angegeben");
         expect(dialog).not.toHaveTextContent("old-hash");
         expect(dialog.querySelector("b")).toBeNull();
@@ -90,8 +105,8 @@ describe("personal knowledge workspace", () => {
         expect(outgoing).toContain("2025-01-01 (Datum geschätzt)");
         expect(outgoing).toContain("https://example.org/current");
         expect(outgoing).toContain("Hinweis von OpenCaseLaw: Wiederhergestellter Text <b>prüfen</b>");
-        expect(outgoing).toContain("Zeichen 0–4 von 4");
-        expect(outgoing).toContain("Text");
+        expect(outgoing).toContain("Zeichen 0–25 von 25");
+        expect(outgoing).toContain("Der genaue Entscheidtext.");
         for (const stale of ["Alter Titel", "2025-01-02", "https://example.org/old", "old-hash"]) expect(outgoing).not.toContain(stale);
     });
     it("offers the exact passage for manual copy if clipboard access is denied", async () => {
@@ -125,11 +140,12 @@ describe("personal knowledge workspace", () => {
         expect(copied).toContain(hit.quote);
         expect(copied).toContain("Version 2, PDF-Seite 7");
         expect(copied).toContain(document.filename);
-        expect(copied).not.toContain("https://");
+        expect(copied).toContain(`${window.location.origin}/sources/library/${document.id}/${hit.version_id}?page=7`);
+        expect(copied).not.toMatch(/token=|signature=|\/storage\//);
         expect(screen.getByText(/Nur teilweise erfasst/)).toHaveTextContent("8 von 12 Seiten");
         await user.click(screen.getByRole("button", { name: "Beleg im Dokument öffnen" }));
         const viewer = await screen.findByTestId("source-viewer");
-        expect(viewer).toHaveAttribute("data-version", "fixed-version-2");
+        expect(viewer).toHaveAttribute("data-version", "22222222-2222-4222-8222-222222222222");
         expect(viewer).toHaveAttribute("data-editable", "false");
         expect(viewer).toHaveAttribute("data-page", "7");
         expect(viewer).toHaveAttribute("data-verified", "true");
@@ -228,43 +244,78 @@ describe("personal knowledge workspace", () => {
     it("renders public snippets as text and loads only the selected decision", async () => {
         const decision = { decision_id: "CH_CASE", title: "Öffentlicher Entscheid", snippet: "<img src=x onerror=alert(1)>", court: "Bundesgericht", source_url: "https://example.org/case", pdf_url: "javascript:alert(1)", decision_date: "2025-01-02" };
         api.public.mockResolvedValue({ results: [decision], query_mode: "literal_terms", database_generation: "test" });
-        api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 20, total_chars: 20, has_more: false, text: "Der genaue Entscheidtext." } });
+        api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 25, total_chars: 25, has_more: false, text: "Der genaue Entscheidtext." } });
         const user = userEvent.setup(); const view = render(<KnowledgeWorkspace />);
         await user.click(screen.getByRole("button", { name: "OpenCaseLaw" }));
         await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await screen.findByText(decision.snippet);
         expect(window.document.querySelector("img")).toBeNull();
-        expect(screen.queryByRole("link", { name: "Original-PDF" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: "Ganzes Original-PDF" })).not.toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: /Entscheidtext öffnen/ }));
         await waitFor(() => expect(api.detail).toHaveBeenCalledWith("CH_CASE", 0, expect.any(AbortSignal)));
         const dialog = screen.getByRole("dialog");
         await within(dialog).findByText("Der genaue Entscheidtext.");
+        expect(within(dialog).queryByRole("button", { name: "Textstelle und Quelle kopieren" })).toBeNull();
+        expect(within(dialog).queryByRole("button", { name: /Mit (Gemma|Opus) prüfen/ })).toBeNull();
+        await selectPublicExcerpt(user, dialog);
         const clipboard = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValueOnce();
-        await user.click(within(dialog).getByRole("button", { name: "Auszug und Quelle kopieren" }));
+        await user.click(within(dialog).getByRole("button", { name: "Textstelle und Quelle kopieren" }));
         const copied = clipboard.mock.calls[0][0];
         expect(copied).toContain("Der genaue Entscheidtext.");
         expect(copied).toContain("https://example.org/case");
         expect(copied).toContain("OpenCaseLaw-ID: CH_CASE");
-        expect(copied).toContain("Zeichen 0–20 von 20; keine amtlichen Randnummern");
+        expect(copied).toContain("Zeichen 0–25 von 25; keine amtlichen Randnummern");
         expect(copied).not.toContain("javascript:");
         expect(within(dialog).getByRole("button", { name: "Nächster Abschnitt" })).toBeDisabled();
         api.research.mockReturnValueOnce(true);
         await user.click(within(dialog).getByRole("button", { name: "Mit Gemma prüfen" }));
-        expect(api.research).toHaveBeenCalledWith("test-owner", "Prüfe den folgenden Entscheidauszug anhand seiner eigenen Aussagen. Unterscheide belegte Aussagen und offene Fragen. Erfinde keine Quellen und behaupte nicht, den vollständigen Entscheid gelesen zu haben.\n\nÖffentlicher Entscheid\nBundesgericht · 2025-01-02\nhttps://example.org/case\nOpenCaseLaw-ID: CH_CASE\nErfasster Auszug: Zeichen 0–20 von 20; keine amtlichen Randnummern.\n\nDer genaue Entscheidtext.");
+        expect(api.research).toHaveBeenCalledWith("test-owner", expect.stringContaining("Der genaue Entscheidtext."));
+        expect(api.research.mock.calls[0][1]).toContain("Position im Original nicht geprüft");
+        expect(api.research.mock.calls[0][1]).toContain("OpenCaseLaw-ID: CH_CASE");
         expect(api.push).toHaveBeenCalledWith("/assistant");
         expect(api.handoff).not.toHaveBeenCalled();
         api.model = "claude-opus-5-5";
         view.rerender(<KnowledgeWorkspace />);
         await user.click(within(dialog).getByRole("button", { name: "Mit Opus prüfen" }));
-        expect(api.handoff).toHaveBeenCalledWith("test-owner", "Öffentlicher Entscheid\nBundesgericht · 2025-01-02\nhttps://example.org/case\nOpenCaseLaw-ID: CH_CASE\n\nErfasster Auszug: Zeichen 0–20 von 20; keine amtlichen Randnummern.\n\nDer genaue Entscheidtext.");
+        expect(api.handoff).toHaveBeenCalledWith("test-owner", expect.stringContaining("Bundesgericht · 2025-01-02"));
         const text = api.handoff.mock.calls[0][1];
         expect(text).toContain("OpenCaseLaw-ID: CH_CASE");
-        expect(text).toContain("Zeichen 0–20 von 20");
-        expect(text).not.toContain("personal-a");
+        expect(text).toContain("Zeichen 0–25 von 25");
+        expect(text).not.toContain("11111111-1111-4111-8111-111111111111");
         expect(text).not.toContain("javascript:");
         expect(api.local).not.toHaveBeenCalled();
         expect(within(dialog).getByRole("alert")).toHaveTextContent("Der Auszug konnte nicht übergeben werden");
+    });
+    it("copies only a short selected passage, keeps full context readable and resets selection on navigation", async () => {
+        const passage = "Kontext davor. Der genaue Wortlaut steht ausschliesslich hier. Kontext danach.";
+        const selected = "Der genaue Wortlaut steht ausschliesslich hier.";
+        const start = passage.indexOf(selected);
+        const decision = { decision_id: "EXCERPT", title: "Original", snippet: "Suchvorschau", source_url: "https://example.org/original#known-anchor" };
+        api.public.mockResolvedValueOnce({ results: [decision] });
+        api.detail.mockResolvedValueOnce({ ...decision, passage: { start: 100, end: 100 + passage.length, total_chars: 1000, has_more: true, text: passage } });
+        api.detail.mockResolvedValueOnce({ ...decision, passage: { start: 100 + passage.length, end: 1000, total_chars: 1000, has_more: false, text: "Ein weiterer Abschnitt im Originalkontext." } });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
+        await user.click(screen.getByRole("button", { name: "Suchen" }));
+        await user.click(await screen.findByRole("button", { name: /Entscheidtext öffnen/ }));
+        const dialog = screen.getByRole("dialog");
+        await within(dialog).findByText(passage);
+        await selectPublicExcerpt(user, dialog, start, start + selected.length);
+        expect(within(dialog).getByLabelText("Erfasster Entscheidtext")).toHaveTextContent(passage);
+        const preview = within(dialog).getByLabelText("Ausgewählte Textstelle");
+        expect(preview).toHaveTextContent(selected);
+        expect(preview).not.toHaveTextContent("Kontext davor");
+        expect(within(dialog).getByRole("link", { name: "Textstelle im Original suchen" }).getAttribute("href")).toContain("#known-anchor:~:text=");
+        const clipboard = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValueOnce();
+        await user.click(within(dialog).getByRole("button", { name: "Textstelle und Quelle kopieren" }));
+        expect(clipboard.mock.calls[0][0]).toContain(`Zeichen ${100 + start}–${100 + start + selected.length}`);
+        expect(clipboard.mock.calls[0][0]).not.toContain("Kontext danach");
+        expect(api.research).not.toHaveBeenCalled(); expect(api.handoff).not.toHaveBeenCalled();
+        await user.click(within(dialog).getByRole("button", { name: "Nächster Abschnitt" }));
+        await within(dialog).findByText("Ein weiterer Abschnitt im Originalkontext.");
+        expect(within(dialog).queryByRole("button", { name: "Textstelle und Quelle kopieren" })).toBeNull();
+        expect(within(dialog).queryByLabelText("Ausgewählte Textstelle")).toBeNull();
     });
     it("labels known courts without changing source dates or docket numbers", async () => {
         api.public.mockResolvedValue({ results: [{ decision_id: "source-1", title: null, snippet: "Originalauszug", court: "zh_verwaltungsgericht", docket_number: "VB.2012.00393", decision_date: "2012-03-15" }], query_mode: "literal_terms", database_generation: "test" });
@@ -288,6 +339,32 @@ describe("personal knowledge workspace", () => {
         expect(api.push).toHaveBeenCalledWith("/assistant");
         expect(api.local).not.toHaveBeenCalled();
         expect(api.public).not.toHaveBeenCalled();
+    });
+
+    it("prepares a chronology from selected ready versions without requiring a query or sending it", async () => {
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
+        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
+        const action = screen.getByRole("button", { name: "Chronologie erstellen" });
+        expect(action).toBeDisabled();
+        await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
+        expect(screen.getByLabelText("Suchbegriffe")).toHaveValue("");
+        expect(action).toBeEnabled();
+        await user.click(action);
+        expect(api.push).toHaveBeenCalledWith("/assistant");
+        expect(getKnowledgeDraft("test-owner")).toMatchObject({ documents: [document] });
+        expect(getKnowledgeDraft("test-owner")?.prompt).toContain("Chronologie der Tatsachenbehauptungen");
+        expect(api.local).not.toHaveBeenCalled(); expect(api.public).not.toHaveBeenCalled();
+        expect(api.research).not.toHaveBeenCalled(); expect(api.handoff).not.toHaveBeenCalled();
+    });
+    it.each([{ status: "processing" }, { current_version_id: null }])("does not prepare a chronology from an unavailable source version", async override => {
+        api.list.mockResolvedValueOnce({ documents: [{ ...document, ...override }], documentsHasMore: false });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
+        await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
+        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
+        expect(screen.getByRole("button", { name: "Chronologie erstellen" })).toBeDisabled();
+        expect(api.push).not.toHaveBeenCalled();
     });
 
     it("reads a Word selection only on request and waits for a separate search action", async () => {
@@ -331,19 +408,22 @@ describe("personal knowledge workspace", () => {
         const wordHost = { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn().mockResolvedValue(undefined) };
         const decision = { decision_id: "WORD_CASE", title: "Geprüfte Quelle", snippet: "Öffentlicher Auszug", source_url: "https://example.org/word-case" };
         api.public.mockResolvedValue({ results: [decision], query_mode: "literal_terms", database_generation: "test" });
-        api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 18, total_chars: 18, has_more: false, text: "Der genaue Wortlaut" } });
+        api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 32, total_chars: 32, has_more: false, text: "Der genaue öffentliche Wortlaut." } });
         api.model = "claude-opus-5-5";
         const user = userEvent.setup(); render(<KnowledgeWorkspace wordHost={wordHost} />);
         await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Gehör");
         await user.click(screen.getByRole("button", { name: "Suchen" }));
         await user.click(await screen.findByRole("button", { name: /Entscheidtext öffnen/ }));
         const dialog = screen.getByRole("dialog");
-        await within(dialog).findByText("Der genaue Wortlaut");
+        await within(dialog).findByText("Der genaue öffentliche Wortlaut.");
+        await selectPublicExcerpt(user, dialog);
         expect(wordHost.readSelection).not.toHaveBeenCalled();
         expect(wordHost.insertTextAfterSelection).not.toHaveBeenCalled();
         expect(within(dialog).queryByRole("button", { name: /Mit (Gemma|Opus) prüfen/ })).toBeNull();
         await user.click(within(dialog).getByRole("button", { name: "In Word einfügen" }));
-        expect(wordHost.insertTextAfterSelection).toHaveBeenCalledExactlyOnceWith("\n\nDer genaue Wortlaut\n\nQuelle: Geprüfte Quelle\nhttps://example.org/word-case\nOpenCaseLaw-ID: WORD_CASE\nErfasster Auszug: Zeichen 0–18 von 18; keine amtlichen Randnummern. Zitat an der Originalquelle prüfen.\n");
+        expect(wordHost.insertTextAfterSelection).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("\n\nDer genaue öffentliche Wortlaut.\n\nQuelle: Geprüfte Quelle"));
+        expect(wordHost.insertTextAfterSelection.mock.calls[0][0]).toContain("OpenCaseLaw-ID: WORD_CASE");
+        expect(wordHost.insertTextAfterSelection.mock.calls[0][0]).toContain("Position im Original nicht geprüft");
         expect(await within(dialog).findByText("In Word eingefügt.")).toBeVisible();
         expect(api.research).not.toHaveBeenCalled(); expect(api.handoff).not.toHaveBeenCalled();
     });

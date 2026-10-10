@@ -1,8 +1,10 @@
 import Image from "next/image";
+import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
 import { Loader2 } from "lucide-react";
 import { FileTypeIcon } from "../../shared/FileTypeIcon";
 import { displayCitationQuote, formatCitationPage } from "../../shared/types";
 import type { Citation } from "../../shared/types";
+import { librarySourceUrl } from "@/app/lib/sourceLinks";
 import { CitationPillUI } from "@/shared/ui/CitationPillUI";
 import { RESPONSE_GLASS_SURFACE } from "./messageStyles";
 import {
@@ -93,20 +95,36 @@ function ensureTerminalPeriod(value: string): string {
     return /[.!?]$/.test(value.trim()) ? value.trim() : `${value.trim()}.`;
 }
 
-export function buildCitationAppendix(citations: Citation[]) {
+function appendixPages(page: number | string): number[] {
+    const match = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(String(page));
+    if (!match) return [];
+    const first = Number(match[1]);
+    const last = Number(match[2] ?? match[1]);
+    // Match the page verifier's bounded cross-page representation.
+    if (!Number.isSafeInteger(first) || !Number.isSafeInteger(last) || first < 1 || last < first || last - first > 2) return [];
+    return Array.from({ length: last - first + 1 }, (_, index) => first + index);
+}
+
+export function buildCitationAppendix(citations: Citation[], origin?: string) {
     if (citations.length === 0) return { html: "", text: "" };
-    let previousSourceKey: string | null = null;
     const entries = citations.map((annotation) => {
-        const sourceKey = citationSourceKey(annotation);
-        const label =
-            sourceKey === previousSourceKey
-                ? "Id."
-                : citationSourceLabel(annotation);
-        previousSourceKey = sourceKey;
+        const version = annotation.kind === "case" ? "" : annotation.version_number
+            ? `Version ${annotation.version_number}` : annotation.version_id ? `Fassung ${annotation.version_id}` : "Fassung nicht angegeben";
+        const label = [citationSourceLabel(annotation), version, formatCitationPage(annotation)].filter(Boolean).join(", ");
+        const pages = annotation.kind === "case" ? [] : (annotation.quotes?.length ? annotation.quotes : [annotation]).flatMap(quote => appendixPages(quote.page));
+        const checked = hasCheckedCitationLocation(annotation);
+        const links = annotation.kind === "case" || !origin || !checked ? [] :
+            [...new Set(pages)].flatMap(page => {
+                if (page === null || !annotation.version_id) return [];
+                const url = librarySourceUrl(origin, annotation.document_id, annotation.version_id, page);
+                return url ? [{ page, url }] : [];
+            });
         return {
             number: annotation.ref,
             label,
             quote: displayCitationQuote(annotation).trim(),
+            links,
+            unconfirmed: !checked,
         };
     });
     const textLines = [
@@ -114,7 +132,7 @@ export function buildCitationAppendix(citations: Citation[]) {
         "Citations",
         ...entries.map((entry) => {
             const quote = entry.quote ? ` "${entry.quote}"` : "";
-            return `${entry.number} ${ensureTerminalPeriod(entry.label)}${quote}`;
+            return `${entry.number} ${ensureTerminalPeriod(entry.label)}${quote}${entry.unconfirmed ? " [Zitat nicht bestätigt]" : ""}${entry.links.map(link => `\nOriginal, PDF-Seite ${link.page}: ${link.url}`).join("")}`;
         }),
     ];
     const html = [
@@ -125,7 +143,8 @@ export function buildCitationAppendix(citations: Citation[]) {
             const quote = entry.quote
                 ? ` &quot;${escapeHtmlText(entry.quote)}&quot;`
                 : "";
-            return `<p><sup>${entry.number}</sup> ${label}${quote}</p>`;
+            const links = entry.links.map(link => `<br><a href="${escapeHtmlText(link.url)}">Original, PDF-Seite ${link.page}</a>`).join("");
+            return `<p><sup>${entry.number}</sup> ${label}${quote}${entry.unconfirmed ? " [Zitat nicht bestätigt]" : ""}${links}</p>`;
         }),
         `</section>`,
     ].join("");

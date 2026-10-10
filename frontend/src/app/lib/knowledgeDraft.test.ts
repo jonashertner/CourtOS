@@ -1,9 +1,21 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Document } from "@/app/components/shared/types";
-import { consumeKnowledgeDraft, getKnowledgeDraft, prepareKnowledgeDraft } from "./knowledgeDraft";
+import { consumeKnowledgeDraft, getKnowledgeDraft, prepareKnowledgeDraft, prepareChronologyDraft } from "./knowledgeDraft";
 const doc = { id: "doc-a", filename: "Literatur.pdf", current_version_id: "version-a" } as Document;
 afterEach(() => { getKnowledgeDraft("clear-owner"); vi.restoreAllMocks(); });
 describe("same-tab knowledge draft", () => {
+    it("requires immutable selected sources for a chronology and preserves the other party", () => {
+        const reply = { ...doc, id: "doc-b", filename: "Klageantwort.pdf", current_version_id: "version-b" } as Document;
+        expect(prepareChronologyDraft("user-a", [doc, reply])).toBe(true);
+        const draft = getKnowledgeDraft("user-a")!;
+        expect(draft.documents.map(value => value.current_version_id)).toEqual(["version-a", "version-b"]);
+        expect(draft.prompt).toContain("sämtlichen ausgewählten Dokumenten");
+        expect(draft.prompt).toContain("abweichende Darstellungen separat");
+        expect(draft.prompt).toContain("ohne bestimmbares Datum");
+        consumeKnowledgeDraft(draft);
+        expect(prepareChronologyDraft("user-a", [{ ...doc, current_version_id: null } as Document])).toBe(false);
+        expect(getKnowledgeDraft("user-a")).toBeNull();
+    });
     it("retains explicit document/version references and can be consumed once", () => {
         expect(prepareKnowledgeDraft("user-a", "Gehör?", [doc])).toBe(true);
         const draft = getKnowledgeDraft("user-a")!;

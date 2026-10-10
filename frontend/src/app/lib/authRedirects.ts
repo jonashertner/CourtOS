@@ -1,3 +1,5 @@
+import { parseLibrarySourcePath } from "./sourceLinks";
+
 const AUTH_REDIRECT_PATHS = new Set([
     "/pilot",
     "/assistant",
@@ -8,9 +10,9 @@ const AUTH_REDIRECT_PATHS = new Set([
     "/onboarding/practice",
 ]);
 
-/** CourtOS entry accepts only these exact research routes, without query or fragment. */
+/** Only exact research routes or validated immutable library references may return after login. */
 export function safeCourtOSResearchNext(candidate: string | null | undefined, fallback: string): string {
-    return candidate === "/word/research" || candidate === "/research" ? candidate : fallback;
+    return candidate && (candidate === "/word/research" || candidate === "/research" || parseLibrarySourcePath(candidate)) ? candidate : fallback;
 }
 
 export function safeAuthNext(

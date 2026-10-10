@@ -122,17 +122,17 @@ OpenCaseLaw può analizzare la richiesta e ordinare i risultati con l’IA. La r
 Trasferire insieme il passaggio e la sua provenienza nel proprio lavoro.
 
 ### Scegliere il passaggio
-Aprite la parte pertinente del testo. Per una decisione pubblica, «Auszug und Quelle kopieren» copia l’estratto visualizzato con i suoi riferimenti. La funzione non produce una nuova sintesi giuridica.
+Nella decisione, selezionate 20–800 caratteri consecutivi e scegliete «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» riprende soltanto il passaggio selezionato con la sua provenienza, senza creare un nuovo riassunto.
 
-- Aprire il passaggio
-- Copiare con il riferimento
-- Usare nel proprio testo
+- Selezionare il passaggio
+- Confermare la selezione
+- Copiare con la provenienza
 
 ### Per le decisioni pubbliche
 L’estratto è accompagnato dai dati visualizzati sulla decisione, dall’identificativo OpenCaseLaw e dall’indirizzo pubblico della fonte, se disponibile. Verificate riferimento ufficiale e metadati prima di inserirli nella motivazione.
 
 ### Per i propri documenti
-Per i vostri documenti, «Passage und Quelle kopieren» riprende nome del file, versione fissa e pagina PDF. Quest’ultima può differire dalla pagina stampata. Non viene creato un indirizzo che consenta ad altri di aprire il documento privato.
+Per i vostri documenti, la copia contiene nome del file, versione fissa, pagina PDF e un collegamento a quella precisa versione e pagina. La numerazione stampata può differire. Il collegamento richiede accesso autenticato e diritti esistenti; non concede accesso pubblico.
 
 ### Un riferimento utilizzabile
 Completate la citazione secondo le esigenze del vostro testo e il contesto giuridico. La copia conserva un riscontro di partenza; non conferma né l’esattezza della fonte né la portata della sua affermazione.
@@ -185,10 +185,13 @@ Termini cercati, fonte attesa, scostamento osservato e impegno approssimativo ba
 La ricerca nelle proprie fonti e la copia dei riferimenti funzionano senza IA. Per approfondire, scegliete il modello.
 
 ### Proseguire in locale
-«Mit dieser Auswahl fragen» prepara nell’assistente la domanda e i documenti scelti. Solo il vostro invio avvia Gemma 4. «Locale» indica il VPS CourtOS presso Hetzner in Germania, non il vostro dispositivo né la rete del tribunale.
+«Mit dieser Auswahl fragen» o «Chronologie erstellen» prepara una bozza con i PDF scelti. Solo il vostro invio avvia Gemma 4. Usate una piccola selezione interamente leggibile; il superamento dei limiti interrompe il trattamento. Distinguete allegazioni, fatti contestati e fatti documentati; verificate la pagina precisa della fonte.
+
+### Requisito di verifica
+Prima di rispondere su un fascicolo, CourtOS deve aver effettivamente letto le fonti selezionate. Una citazione riscontrata conferma anzitutto il testo in un punto preciso; verificate nell’originale se il passaggio sostiene davvero l’affermazione.
 
 ### Una prospettiva esterna
-Un passaggio pubblico o una risposta locale completata può passare all’area «Frontier-Prüfung». Il testo resta dapprima una bozza modificabile nel browser. Allegati e resto della conversazione non vengono trasmessi. Non vi è anonimizzazione automatica.
+Una fonte pubblica o una risposta locale può passare come bozza modificabile a «Frontier-Prüfung». Gli allegati e il resto della conversazione rimangono esclusi. Non vi è alcuna anonimizzazione automatica.
 
 - Testo e incarico
 - Anteprima e autorizzazione
@@ -198,7 +201,7 @@ Un passaggio pubblico o una risposta locale completata può passare all’area �
 L’anteprima mostra l’intera richiesta, il fornitore e il modello. Solo la vostra autorizzazione avvia la chiamata ad Anthropic. Usate soltanto materiale non riservato il cui trattamento esterno è consentito. I link sono riferimenti; il modello non ne recupera il contenuto.
 
 ### Tornare al proprio lavoro
-La risposta esterna può tornare nell’assistente locale come bozza modificabile, senza invio automatico. Testo in corso e allegati restano invariati. Un testo troppo lungo non viene troncato silenziosamente. Potete anche copiare un passaggio utile nel vostro strumento abituale.
+La risposta esterna può tornare come bozza modificabile nell’assistente locale, senza invio automatico. Testo e allegati esistenti restano preservati. Le trasmissioni troppo lunghe sono rifiutate. In alternativa copiate un passaggio appropriato.
 
 ## 12. Dati e gestione
 Biblioteca personale, ricerca pubblica e richieste ai modelli seguono percorsi distinti.

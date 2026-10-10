@@ -139,3 +139,46 @@ Citechecks eigenständiger lokaler Prüfmodus behält seine eigene Datenflussgre
 5. Erst nach gesonderter Betriebs- und Schutzprüfung reale Fallakten. Die heutige öffentliche VPS-Sandbox erhält durch dieses Dokument keine entsprechende Freigabe.
 
 Der erste produktive Nutzen wäre damit konkret: Eine Frage über mehrere eigene Unterlagen stellen, die Antwort an Originalstellen prüfen, den Arbeitsstand lesbar behalten und bei Bedarf genau ausgewählte Textstellen einem stärkeren Modell vorlegen. Die Originalablage und die Entscheidung darüber, was nach aussen geht, bleiben beim Nutzer.
+
+
+## Lokale Modellzuverlässigkeit und MCP – Recherche vom 10. Oktober 2026
+
+**Empfehlung für den nächsten Ausbau, keine Behauptung bereits erreichter Zuverlässigkeit.** Ein lokaler, lesender MCP-Dienst ist eine sinnvolle gemeinsame Schnittstelle für Word, Browser und institutionelle Clients. Die Zuverlässigkeit entsteht durch den Quellen- und Prüfablauf dahinter. MCP standardisiert Werkzeugbeschreibungen, strukturierte Ergebnisse und Fehler; weder ein erfolgreiches Werkzeug noch gültiges JSON beweist eine Aussage. Die Spezifikation unterscheidet ausdrücklich serverseitige `structuredContent`-Daten von strukturierten Modellantworten. [MCP, Tools: Structured Content, Output Schema und Security Considerations](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content).
+
+### Zuerst lesen, dann formulieren
+
+Ein konkreter CourtOS-Test hat die Priorität gezeigt: Der gespeicherte Auftrag enthielt die richtige Dokumentfassung, aber die Antwort entstand ohne Dokument-Leseereignis. Der Kontext enthielt zunächst nur Dokumentkennungen. Die nachträgliche Quellenprüfung erkannte erfundene Zitate. Das belegt eine Lücke im Anwendungsablauf, keine isolierte Messung der Fähigkeiten von Gemma. Direkter interner Prüfstand: `wiki/courtos-ops-2026-10-10/workflow-qa/local-grounding-failure.dom.txt` und synthetisches Original `workflow-qa/fixtures/CourtOS-QA-Quellenvergleich.pdf`, Seiten 1–3.
+
+Bei Fragen zu ausgewählten Akten beschafft CourtOS deshalb die erforderlichen Originalpassagen **vor** der Generierung und hält Dokumentkennung, unveränderliche Fassung, Seite, Extraktionsstand und Umfang fest. Kleine ausgewählte Dokumente werden vollständig bereitgestellt. Grössere Bestände brauchen eine dokumentierte Suche mit Nachbarabschnitten und anschliessendem vollständigem Lesen der relevanten Abschnitte. Für eine Chronologie oder einen vollständigen Parteivergleich genügt eine Top-k-Suche nicht: sämtliche ausgewählten Unterlagen müssen verarbeitet werden, gegebenenfalls in nachvollziehbaren Teilaufträgen. Ein überschrittenes Budget ist eine sichtbare Grenze; stille Kürzung ist unzulässig.
+
+Das Modell kann zusätzliche Such- und Leseaufrufe anfordern. Es darf den obligatorischen Quellenabruf nicht durch eine freie Antwort überspringen. Gemma 4 unterstützt Werkzeugaufrufe, benötigt aber die richtige Modellvorlage und Darstellung der Werkzeugantworten. Vor einem Modellwechsel sind Runner, Vorlage, Parser und tatsächlich gelieferte Belege zu prüfen. [Google, Function calling with Gemma 4: Developer’s Turn und Final Response](https://ai.google.dev/gemma/docs/capabilities/text/function-calling-gemma4); [llama.cpp, Function Calling: Universal support](https://github.com/ggml-org/llama.cpp/blob/master/docs/function-calling.md#universal-support-w-native--generic-handlers).
+
+### Werkzeugvertrag
+
+Die vorhandene Fachlogik wird zuerst intern aufgerufen. Ein späterer MCP-Adapter stellt dieselben geprüften Funktionen bereit, statt Suche und Rechteprüfung zu duplizieren:
+
+| Werkzeug | Ergebnis und Grenze |
+|---|---|
+| `list_case_sources` | Freigegebene Dokumentfassungen mit Lese-/OCR-/Umfangsstatus. Die Fallberechtigung kommt aus der Sitzung. |
+| `search_case_passages` | Begrenzte Text- und semantische Suche, mit Originalstellen und Suchumfang. Kein Schluss aus einem Nulltreffer auf das Nichtvorhandensein einer Tatsache. |
+| `read_source_passage` | Exakte freigegebene Fassung, Seite/Abschnitt und bei Bedarf Nachbartext. Keine frei gewählte URL oder beliebiger Dateipfad. |
+| `verify_reference` | Deterministischer Abgleich von Quellenkennung, Fassung, Seite und wörtlichem Zitat; unverändert gespeicherte Belegkennung zurückgeben. |
+
+Das Modell wählt aus ausgegebenen Belegkennungen. Links und bibliografische Angaben erzeugt die Anwendung aus dem Quellenregister. Originalschreibzugriffe, allgemeine Shell-Werkzeuge und unbegrenzte externe Netzaufrufe gehören nicht in diesen Lesedienst. Ein Desktop-Client kann MCP über stdio verwenden; ein institutioneller Dienst benötigt angemessen authentifiziertes Streamable HTTP. Word-WebViews erhalten den Zugang über die autorisierte Begleitanwendung, nicht durch eine beliebige öffentlich erreichbare Loopback-API. [MCP, Transports: stdio und Streamable HTTP](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
+
+### Was die Qualität voraussichtlich stärker verbessert
+
+1. **Extraktionsqualität und Herkunft.** PDF-Seite, Tabellen, Fussnoten, OCR-Unsicherheit und Absatzgrenzen erhalten. Bei DOCX ursprünglichen Absatz-/Teilanker von der Seite einer gerenderten Ableitung unterscheiden.
+2. **Passende Suche.** Exakte Begriffe, Namen, Beträge und Normbezeichnungen über Volltext; Paraphrasen zusätzlich über ein lokales mehrsprachiges Embeddingmodell. Relevante Gegenpositionen und Nachbartext mitlesen. EmbeddingGemma ist ein kleiner, lokal einsetzbarer Kandidat, muss aber an Schweizer DE/FR/IT-Akten geprüft werden. [Google, EmbeddingGemma model card: Description, Inputs and outputs, Prompt Instructions](https://ai.google.dev/gemma/docs/embeddinggemma/model_card#description).
+3. **Kurze, zusammenhängende Belegpakete.** Lange Kontextfenster ersetzen keine Auswahlprüfung. Die Studie *Lost in the Middle* zeigt Positionsabhängigkeit bei den damaligen Modellen; sie ist kein aktueller Gemma-Benchmark. [Liu et al., TACL 2024, S. 157–159](https://aclanthology.org/2024.tacl-1.9.pdf#page=1).
+4. **Belege vor Behauptungen.** Für Extraktion und Chronologie zuerst strukturierte Felder mit Belegkennungen; erst danach verständliche Formulierungen. Ein JSON-Schema beschränkt die Form, nicht den Wahrheitsgehalt. [llama.cpp, GBNF: JSON Schemas → GBNF, insbesondere Note](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md#json-schemas--gbnf).
+5. **Getrennte Prüfungen.** Existiert die Quelle? Steht der Wortlaut auf der angegebenen Seite? Trägt dieser Wortlaut die Aussage? Wurden alle wesentlichen Aussagen belegt? Nur die ersten beiden Fragen lassen sich eng deterministisch prüfen. Semantische Unterstützung bleibt eine gesonderte, fehlbare Beurteilung. [Gao et al., ALCE, EMNLP 2023, Abschnitt 3.3, S. 6468](https://aclanthology.org/2023.emnlp-main.398.pdf#page=4); [Rashkin et al., AIS, Abstract und Bewertungsrahmen](https://research.google/pubs/measuring-attribution-in-natural-language-generation-models/).
+6. **Gegenprüfungen vor Modellwechsel.** Gleiche festgehaltene Quellenpakete mit der aktuellen quantisierten Gemma-Ausgabe und einer passenden Alternative prüfen. Unsloth stellt Quantisierungen und Laufzeit-/Trainingshilfen bereit; daraus folgt keine Genauigkeitsgarantie. Mehr Modellparameter können helfen, kosten auf dem CPU-VPS aber Speicher und Zeit. Erst nach Messung wechseln. [Unsloth, Gemma 4: Hardware requirements und Recommended Settings](https://unsloth.ai/docs/models/gemma-4).
+
+Anthropics eigene Versuche sprechen für Kombinationen aus Volltext, Embeddings, kontextbezogenen Segmenten und Reranking. Die dort berichteten Verbesserungen betreffen Retrieval in den untersuchten Datensätzen, nicht Rechtsrichtigkeit oder unsere Installation. Generierter Segmentkontext darf nur der Suche dienen und nie als Originalzitat erscheinen. [Anthropic, Contextual Retrieval: Methodology, Performance improvements und Cost and latency considerations](https://www.anthropic.com/engineering/contextual-retrieval).
+
+### Konkrete Abnahme für CourtOS
+
+Ein festes Testdossier enthält widersprechende Parteien, ähnliche Beträge, nicht ausgeführte Zahlungsaufträge, unklare Daten, fehlende Beilagen, wiederholte Zitate auf unterschiedlichen Seiten, geänderte Fassungen sowie Anweisungen im Dokument, die der Assistent ignorieren muss. Die Referenzantworten und Originalstellen werden vor dem Modellversuch festgelegt. Messen: gefundene relevante Stellen, falsche beziehungsweise fehlende Belege, erfundene Angaben, falsche Parteizuordnung, korrekt erklärte Nichtbeantwortbarkeit und Laufzeit. Dieselben Prüfungen laufen in DE/FR/IT und nach Änderungen an Modell, Quantisierung, Vorlage oder Extraktion erneut.
+
+Eine zweckmässige Reihenfolge ist: obligatorischer Quellenabruf und seitengenaue Prüfung; danach strukturierte Chronologie mit Prüfspur; anschliessend hybride Suche und Vergleichsmessung; schliesslich MCP-Verpackung für weitere Clients. Eine Grenze von null erfundenen Dokumentkennungen, Seiten oder Zitaten ist eine kontrollierbare Freigaberegel für Ausgaben. Hundertprozentige inhaltliche Richtigkeit eines Sprachmodells ist dadurch nicht zugesichert.

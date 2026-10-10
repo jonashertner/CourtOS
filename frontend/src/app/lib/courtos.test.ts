@@ -11,7 +11,7 @@ describe("research entry scope", () => {
     it("uses the research shell for research and nested personal-library routes only", async () => {
         const { COURTOS_HOME, isResearchShellPath } = await settings(true, true);
         expect(COURTOS_HOME).toBe("/research");
-        for (const path of ["/research", "/word/research", "/knowledge", "/library", "/library/folders/folder-a"]) expect(isResearchShellPath(path)).toBe(true);
+        for (const path of ["/research", "/word/research", "/knowledge", "/library", "/library/folders/folder-a", "/sources/library/doc/version"]) expect(isResearchShellPath(path)).toBe(true);
         for (const path of ["/assistant", "/assistant/chat/one", "/projects", "/workflows", "/library-other", "/word", "/word/research-other"]) expect(isResearchShellPath(path)).toBe(false);
     });
     it.each([[false, true], [true, false]])("does not alter the inherited shell without both flags (%s/%s)", async (pilot, knowledge) => {

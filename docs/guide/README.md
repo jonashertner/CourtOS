@@ -3,7 +3,9 @@
 `manuscript/content.json` is the editable source for all three languages.
 `output/` contains the reviewed static guide and three fourteen-page PDFs (180 × 270 mm).
 Deploy its contents together, preserving relative paths, under `/guide/`.
-The web guide works without JavaScript and uses local font assets. Its optional book view, chapter navigation and responsive page controls use local reader.js, with no network calls or persistent storage.
+The web guide works without JavaScript and uses local font assets. The continuous reader adapts to phone, tablet and desktop. On larger screens an optional book view measures complete text blocks after fonts load and lays them out in one or two pages. Its page numbers depend on the viewport and are not PDF page numbers. If a block cannot fit, it returns to the complete continuous text rather than clipping it.
+
+Each numbered reference has an individual source anchor. With JavaScript it opens a native dialog containing the existing source link, exact reviewed locator and scope limitation; Escape returns focus to the citing reference without changing the reading position. Without JavaScript the same reference leads to its source entry. Original links in these entries open a separate tab. Native dialogs, chapter navigation and responsive page controls use local `reader.js`, with no network calls or persistent storage. The three PDFs retain fixed fourteen-page pagination and individual source-entry destinations. Neither layout certifies a source claim or removes the stated review limits.
 
 The edition begins with four source-grounded chapters on purpose, judicial
 responsibility, reviewable work and evaluation. The practical entry is now
@@ -13,13 +15,20 @@ project or chat is required for this work. Public search calls the existing Open
 compatible route; personal source import and management use `/library`.
 Public and personal search keep separate inputs and source scopes.
 
-The copy action returns plain text. For public decisions it includes the shown
-passage, decision metadata, safe public source/PDF URL when available,
-OpenCaseLaw identifier and character-position context (not official paragraph
-numbers). For personal sources it includes the quote, filename, fixed version
-and PDF page, with no private document URL. A manual text field is offered when
-clipboard access fails. These references remain subject to checking against
-the original; copying does not certify their correctness or confer source rights.
+The copy action returns plain text. For public decisions the user first marks
+20–800 contiguous characters and explicitly accepts that selection. Copying
+includes only the selected passage, decision metadata, safe public source/PDF
+URL when available, OpenCaseLaw identifier and character-position context
+(not official paragraph numbers). Personal-source copies include the quote,
+filename, immutable version, PDF page and an authenticated link to that exact
+version and page. The link does not grant access to another account and is not
+a signed storage URL. A manual text field is offered when clipboard access
+fails. These references remain subject to checking against the original;
+copying does not certify correctness, establish a proposition or confer source
+rights. The chronology action prepares a draft for a small, fully readable PDF
+selection; it does not send automatically. The stated verification requirement
+distinguishes matching quotation text from whether it supports a factual or
+legal claim.
 
 Beyond public search, separate AI work remains optional: explicit personal-source
 selection for local Gemma 4 work on the CourtOS server, or a separately reviewed
@@ -57,6 +66,8 @@ python ../../frontend/scripts/fetch-timeless-fonts.py --accept-license
 python prepare_fonts.py
 COURTOS_GUIDE_FONT_DIR=.font-cache python build_booklet.py
 python -m unittest discover -s . -p test_prepare_fonts.py
+# With the frontend development dependencies already installed:
+node --test test_reader.cjs
 ```
 
 `prepare_fonts.py` obtains the original variable Timeless WOFF2 files directly
@@ -112,7 +123,9 @@ location and build there.
 
 ## Verification and metadata
 
-The builder checks that each language has one page per manuscript section, page overflow, basic text
+The reader regression tests verify exact-source routing, retained source scope, chapter/language navigation, no-JavaScript anchors and safe pagination fallback. Responsive browser QA must also check actual measured page overflow, keyboard focus return, content navigation, and phone/tablet/wide views after fonts load.
+
+The builder checks that each language has one PDF page per manuscript section, page overflow, basic text
 extraction, local HTML targets and section anchors. Render the PDFs and inspect
 changed pages before publication, for example with Poppler:
 

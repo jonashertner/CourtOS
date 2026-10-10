@@ -4,7 +4,9 @@ import { deadlineMessage, type StreamStopReason } from "../../../lib/streamRuns"
 import crypto from "crypto";
 import type { Db } from "../../../lib/supabase";
 import { ensureDocAccess } from "../../../lib/access";
-import { attachActiveVersionPaths } from "../../../lib/documentVersions";
+import { attachActiveVersionPaths, loadActiveVersion } from "../../../lib/documentVersions";
+import { courtosPilotEnabled } from "../../../lib/courtosPilot";
+import { SourceGroundingError } from "./sourceEvidence";
 import {
   type DocStore,
   type DocIndex,
@@ -1216,9 +1218,17 @@ export async function buildDocContext(
   const docStore: DocStore = new Map();
 
   const documentIds = new Set<string>();
+  const requestedVersions = new Map<string, string>();
   for (const m of messages) {
     for (const f of m.files ?? []) {
       if (f.document_id) documentIds.add(f.document_id);
+      if (courtosPilotEnabled() && f.document_id && f.version_id) {
+        const previous = requestedVersions.get(f.document_id);
+        if (previous && previous !== f.version_id) {
+          throw new SourceGroundingError("Im Gespräch sind verschiedene Fassungen desselben Dokuments ausgewählt. Bitte für diesen Auftrag ein neues Gespräch mit einer eindeutigen Fassung beginnen.");
+        }
+        requestedVersions.set(f.document_id, f.version_id);
+      }
     }
   }
 
@@ -1331,6 +1341,21 @@ export async function buildDocContext(
       if (ok) docList.push(doc);
     }
     await attachActiveVersionPaths(db, docList);
+    if (courtosPilotEnabled()) {
+      if (docList.length !== ids.length) {
+        throw new SourceGroundingError("Mindestens eine ausgewählte Quelle ist nicht verfügbar oder noch nicht lesbar. Bitte die Auswahl prüfen; es wird nicht mit einem stillschweigend verkleinerten Bestand gearbeitet.");
+      }
+      for (const doc of docList) {
+        const requested = requestedVersions.get(doc.id) ?? doc.current_version_id;
+        const version = requested ? await loadActiveVersion(doc.id, db, requested) : null;
+        if (!version) throw new SourceGroundingError("Eine ausgewählte Dokumentfassung ist nicht mehr verfügbar. Bitte die Auswahl prüfen; es wurde keine Ersatzfassung verwendet.");
+        doc.current_version_id = version.id;
+        doc.active_version_number = version.version_number;
+        doc.filename = version.filename;
+        doc.file_type = version.file_type;
+        doc.storage_path = version.storage_path;
+      }
+    }
     for (let i = 0; i < docList.length; i++) {
       const doc = docList[i];
       if (!doc.storage_path) continue;

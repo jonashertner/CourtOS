@@ -109,7 +109,7 @@ describe("parseCitations (document citations)", () => {
         expect((citation as { quote: string }).quote).toBe("aliased");
     });
 
-    it("normalizes pages: numbers kept, ranges kept, junk becomes 1", () => {
+    it("normalizes pages without inventing page 1 for an invalid locator", () => {
         const citations = parseCitations(
             citationsBlock(
                 '[{"ref": 1, "doc_id": "d", "page": 5, "quote": "a"},' +
@@ -122,7 +122,7 @@ describe("parseCitations (document citations)", () => {
             5,
             "3-5",
             12,
-            1,
+            0,
         ]);
     });
 

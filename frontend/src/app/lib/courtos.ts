@@ -16,7 +16,7 @@ export const COURTOS_HOME = COURTOS_KNOWLEDGE_ENABLED ? "/research" : "/pilot";
 /** Keep specialised workspaces reachable without putting them in research navigation. */
 export function isResearchShellPath(pathname: string): boolean {
     return COURTOS_KNOWLEDGE_ENABLED && (pathname === "/research" || pathname === "/word/research" || pathname === "/knowledge" ||
-        pathname === "/library" || pathname.startsWith("/library/"));
+        pathname === "/library" || pathname.startsWith("/library/") || pathname.startsWith("/sources/library/"));
 }
 
 /** A URL-scoped presentation hint only; never stored and never used for authorization. */
