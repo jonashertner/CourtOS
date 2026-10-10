@@ -7,6 +7,7 @@ vi.mock("../lib/observability/sentry", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../lib/observability/sentry")>()),
   reportMessage,
 }));
+import { failure, sendServiceFailure } from "../lib/serviceResult";
 import {
   INTERNAL_ERROR_CODE,
   INTERNAL_ERROR_MESSAGE,
@@ -96,6 +97,38 @@ describe("protectInternalErrorResponses", () => {
       expect(consoleError).toHaveBeenCalledOnce();
     },
   );
+
+  it.each([
+    ["public_research_timeout", "Die Suche hat zu lange gedauert."],
+    ["public_research_busy", "Die öffentliche Suche ist ausgelastet."],
+  ])("preserves a known operational 503 through the real service/HTTP middleware path: %s", async (code, message) => {
+    const app = express();
+    app.use((_req, res, next) => { res.locals.requestId = "trusted-request-id"; next(); });
+    app.use(protectInternalErrorResponses);
+    app.post("/knowledge/public/search", (_req, res) => {
+      sendServiceFailure(res, failure("unavailable", "PRIVATE_DEPENDENCY_DETAIL", code));
+    });
+    const response = await request(app).post("/knowledge/public/search").send({ query: "synthetic public terms" });
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({ code, detail: expect.stringContaining(message), request_id: "trusted-request-id" });
+    expect(response.text).not.toContain("PRIVATE_DEPENDENCY_DETAIL");
+    expect(reportMessage).not.toHaveBeenCalled();
+  });
+
+  it("never forwards extra fields or handler-supplied text for a known operational code", async () => {
+    const response = await request(testApp(503, {
+      code: "public_research_timeout", detail: "PRIVATE_DETAIL", stack: "PRIVATE_STACK", request_id: "untrusted-id",
+    })).get("/test");
+    expect(response.body).toEqual({ code: "public_research_timeout", detail: expect.stringContaining("Die Suche hat zu lange gedauert."), request_id: "req-test-123" });
+    expect(response.text).not.toContain("PRIVATE");
+    expect(response.text).not.toContain("untrusted-id");
+  });
+
+  it("does not exempt a known code from sanitizing other 5xx statuses", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const response = await request(testApp(500, { code: "public_research_timeout", detail: "PRIVATE_DETAIL" })).get("/test");
+    expect(response.body).toEqual({ code: INTERNAL_ERROR_CODE, detail: INTERNAL_ERROR_MESSAGE, request_id: "req-test-123" });
+  });
 
   it("does not rewrite intentional client errors", async () => {
     const body = { code: "invalid_filename", detail: "Filename is required" };

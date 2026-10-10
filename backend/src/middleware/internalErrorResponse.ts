@@ -20,6 +20,13 @@ type ErrorBody = {
   request_id?: unknown;
 };
 
+// Known operational limits are safe only through fixed messages owned here.
+// Never forward a dependency/handler detail, even alongside a recognised code.
+const PUBLIC_RESEARCH_UNAVAILABLE_MESSAGES = new Map([
+  ["public_research_timeout", "Die Suche hat zu lange gedauert. Bitte erneut versuchen oder präzisere Begriffe verwenden."],
+  ["public_research_busy", "Die öffentliche Suche ist ausgelastet. Bitte kurz warten und erneut suchen."],
+]);
+
 export function protectInternalErrorResponses(
   req: Request,
   res: Response,
@@ -41,6 +48,16 @@ export function protectInternalErrorResponses(
       body && typeof body === "object" && !Array.isArray(body)
         ? (body as ErrorBody)
         : null;
+    const intentionalDetail = res.statusCode === 503 && typeof errorBody?.code === "string"
+      ? PUBLIC_RESEARCH_UNAVAILABLE_MESSAGES.get(errorBody.code)
+      : undefined;
+    if (intentionalDetail) {
+      return originalJson({
+        code: errorBody!.code,
+        detail: intentionalDetail,
+        ...(requestId ? { request_id: requestId } : {}),
+      });
+    }
     const hasUnexpectedFields =
       errorBody &&
       Object.keys(errorBody).some(

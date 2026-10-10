@@ -24,6 +24,20 @@ Die konkreten Citecheck-Anschlüsse stehen in [check.js](https://github.com/jona
 
 Im CourtOS-Repository sind die nutzbaren Word-Anschlüsse [useWordDoc.ts](../../word-addin/src/taskpane/hooks/useWordDoc.ts) (`selectDocumentText`, `readDocumentMarkdown`, `applyTrackedEdits`) und die Navigation in [citations.ts](../../word-addin/src/taskpane/lib/citations.ts). Die automatische Ganzdokument-Lektüre sitzt in [useWordAssistantChat.ts](../../word-addin/src/taskpane/hooks/useWordAssistantChat.ts). Eine reine Auswahl-Lesefunktion und ein dedizierter Befehl zum Einfügen eines bibliografischen Nachweises wurden im geprüften Add-in nicht gefunden; sie sind neue Arbeit. Gemeinsame Oberflächen gehören gemäss Repository-Vertrag in `frontend/src/shared/`, mit getrennten Word- und Browseradaptern.
 
+Der heutige KI-Ablauf arbeitet mit einer bewusst übernommenen öffentlichen Passage oder dem vorhandenen Werkzeug für ausgewählte eigene Wissensbasisdateien. Er verfügt damit noch nicht über eine autonome OpenCaseLaw-Recherche oder die gesamte entfernte MCP-Werkzeugsammlung.
+
+## Gemeinsamer Quellenzugriff des Assistenten
+
+Für den Ausbau wird ein kleiner, berechtigungsgebundener Werkzeugvertrag vorgeschlagen; dieses gemeinsame Werkzeugset ist noch nicht implementiert:
+
+- `search_case_passages`: Suche ausschliesslich in den für die Sitzung ausgewählten Fallquellen. Nutzer, Fall und zulässige Dokumentversionen stammen aus dem vertrauenswürdigen Sitzungskontext; das Modell darf diese Berechtigungen nicht durch frei gewählte IDs erweitern.
+- `search_public_decisions`: Begrenzte Suche in einem ausdrücklich konfigurierten öffentlichen Rechtsquellenbestand. Läuft dieser Bestand vollständig im lokalen oder institutionellen Schutzbereich, kann dort auch eine fallbezogene Suchformulierung verarbeitet werden. Ein externer Rechercheanbieter oder Reranker erhält eine solche Formulierung erst nach gesonderter Prüfung und Freigabe; es gibt keinen stillen externen Ersatzpfad.
+- `get_source`: Liefert einen begrenzten Abschnitt zu einem bereits autorisierten Quellenhandle, einer bestimmten Version und einer Fundstelle. Es akzeptiert keine beliebige URL oder Dateipfadangabe des Modells.
+
+Alle Rückgaben tragen Quellen-ID, Version beziehungsweise Inhaltshash, Fundstelle und wörtlichen Ausschnitt. Private Ergebnisse werden vor Ausschnitten und Rangbildung auf die erlaubten Quellen eingeschränkt; Originalstellen lassen sich im jeweiligen Host öffnen. Öffentliche und private Quellen behalten getrennte Namensräume. Für private PDF-Dateien sind etwa Seite und überprüfbares Zitat sinnvoll; für einen öffentlichen Entscheid ohne verlässliche Seiten- oder Erwägungsstruktur darf nur der tatsächlich vorhandene Textanker angegeben werden.
+
+Auch das Fallgedächtnis wird bedarfsbezogen abgerufen: wenige passende Aussagen mit ihren Quellen, Gegenpositionen und Aktualitätszuständen innerhalb eines festen Kontextbudgets. Das gesamte Wiki wird weder pauschal an das Modell angehängt noch automatisch extern weitergereicht. Suchergebnisse, Dokumenttext und Wiki-Einträge sind Quellenmaterial; darin enthaltene Anweisungen begründen keine zusätzlichen Werkzeuge, Dateirechte oder Sendeberechtigungen.
+
 ## Originale und Fallgedächtnis
 
 Die Begleitanwendung bekommt lesenden Zugriff auf ausdrücklich gewählte Wurzeln und Schreibzugriff nur auf ihren eigenen Arbeitsbereich und ausdrücklich gewählte Exporte. Sie darf keine Originale umbenennen, überschreiben oder löschen. Ein Pfad aus Modelltext ist niemals eine Dateiberechtigung. Relative Pfade werden gegen die gewählte Wurzel aufgelöst; Traversal und Symlinks ausserhalb dieses Bereichs werden abgewiesen. Der Prozess indexiert keine anderen Fallordner nebenbei.
@@ -71,6 +85,18 @@ Rechtliche Argumente erhalten eine parallele Struktur: vertretene Rechtsfolge, t
 Beide Strukturen hängen zusammen: Ändert sich die Fassung einer Beilage oder entfällt eine Tatsachenannahme, werden die betroffene Belegzuordnung und darauf aufbauende Argumente als prüfbedürftig markiert. Bestehende Würdigungen, Gegenpositionen und menschliche Korrekturen werden nicht überschrieben. Nutzer können Einzelaussagen teilen, Zuordnungen lösen, Quellen ergänzen und eine strittige Einordnung begründet korrigieren. Der Originalbeleg ist aus jeder Zeile erreichbar.
 
 Der erste Abnahmesatz braucht zusammengehörige synthetische Klage, Klageantwort und Beilagen: eine direkt gestützte Aussage, eine bestrittene Aussage mit Gegenbeleg, eine nur mittelbare Stütze, ein falsch zugeordnetes Beweismittel, einen fehlenden Anhang, ein nicht lesbares Bild, einen Namenskonflikt und eine später ersetzte Quelle. Gemessen werden insbesondere falsche Zuschreibungen, übersehene Gegenargumente, unbelegte Feststellungen, richtig aufgelöste Quellenstellen und die gesamte menschliche Prüfzeit. Ein technisch erzeugtes Verzeichnis allein belegt keinen Nutzen.
+
+## Parteischriften gegen OpenCaseLaw prüfen
+
+**Weitere Kernanforderung von Jonas vom 10. Oktober; noch nicht implementiert:** Die rechtlichen Aussagen beider Parteien werden mit der tatsächlichen Rechtsprechung verglichen. Jede Prüfung beginnt bei einer konkret lokalisierten Aussage und führt wieder zu ihr zurück. Sie umfasst drei getrennte Schritte:
+
+1. **Formaler Nachweis:** Existieren Entscheid, zitierte Erwägung und gegebenenfalls zitierter Wortlaut? Der gemeinsame Citecheck-Kern prüft Bezeichnungen und verfügbare Struktur- beziehungsweise Metadaten. Die Prüfung eines wörtlichen Zitats benötigt zusätzlich den tatsächlichen Entscheidtext. Ein fehlender Listentreffer oder fehlende Gliederungsdaten beweisen keine Nichtexistenz. Ein korrekter Nachweis schliesst diesen Schritt ab, nicht die inhaltliche Prüfung.
+2. **Inhalt und Kontext:** Stützt die Originalpassage die ihr zugeschriebene Aussage? Massgebend sind der tatsächlich gelesene Entscheidtext, seine Einschränkungen, der Verfahrenskontext und gegebenenfalls die entscheidenden Tatsachen. Regeste, Parteivorbringen und gerichtliche Erwägung dürfen nicht verwechselt werden. Fehlender Volltext oder nicht gelesene Abschnitte werden ausdrücklich ausgewiesen.
+3. **Einordnung der Argumentation:** Weitere einschlägige, abweichende oder spätere Entscheide suchen; tragende Unterschiede und offene Übertragungsfragen benennen. Die Suche folgt derselben Prüfungsmethode für beide Parteien. Eine fehlende Gegenfundstelle begründet weder Vollständigkeit noch die Behauptung gefestigter aktueller Rechtsprechung.
+
+Eine Prüfzeile zeigt nebeneinander: Aussage der Partei mit Aktenstelle; angeführte Rechtsprechung; Originalpassage; begründeten Zuordnungsvorschlag; Gegenfundstellen oder Unterschiede; Suchumfang und offene Prüfung. Kriterien wie «zutreffend wiedergegeben», «verkürzt», «in diesem Kontext nicht getragen» oder «noch nicht prüfbar» sind überprüfbare Einschätzungen mit Herkunft, keine automatischen Entscheidungen. Richterliche Korrekturen und alternative Lesarten bleiben erhalten.
+
+Der gemeinsame Recherchekern braucht dafür ausdrückliche, fallgebundene Werkzeuge zum Finden eigener Passagen, Suchen öffentlicher Entscheide und Öffnen genauer Quellenstellen. Jeder Treffer trägt eine Quellen-ID, Version und lesbaren Herkunftsnachweis. Das aktuelle Browserfenster kann öffentliche Fundstellen an ein Modell übergeben und ausgewählte, auf den Testserver hochgeladene Bibliotheksdateien im dortigen Index durchsuchen; es implementiert noch keine vollständige autonome Prüfung einer Parteischrift. Kontext und Fallgedächtnis werden auf relevante belegte Passagen begrenzt, nicht vollständig an jedes Modell angehängt. Enthält eine Rechtsfrage private Fallangaben, bleibt sie lokal oder wird vor einer externen Recherche bewusst bereinigt und freigegeben.
 
 ## Einheitliche Zuordnung im ganzen Dossier
 
