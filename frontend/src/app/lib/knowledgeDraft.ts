@@ -4,9 +4,18 @@ type KnowledgeDraft = { owner: string; created: number; prompt: string; document
 let pending: KnowledgeDraft | null = null;
 const LIFETIME_MS = 5 * 60 * 1000;
 
+/** Mirrors bounded original-PDF admission; extraction and page coverage stay server-side. */
+export function knowledgeAnalysisIssue(documents: Document[]): string | null {
+    if (!documents.length) return "Wählen Sie zuerst die PDF-Quellen für die Analyse aus.";
+    if (documents.length > 5) return "Für eine belegte Analyse höchstens fünf PDF-Dateien auswählen. Die Textsuche bleibt für die ganze Auswahl verfügbar.";
+    if (documents.some(document => document.status !== "ready" || !document.current_version_id)) return "Mindestens eine Quelle ist noch nicht bereit oder hat keine gespeicherte Fassung. Aktualisieren Sie den Bestand, sobald die Verarbeitung abgeschlossen ist.";
+    if (documents.some(document => !/\.pdf$/i.test(document.filename) && !["pdf", "application/pdf"].includes(document.file_type?.toLowerCase() ?? ""))) return "Für eine belegte Analyse bitte ursprüngliche PDF-Dateien auswählen. Word-, Tabellen- und Präsentationsdateien bleiben für die Bibliothekssuche verfügbar.";
+    return null;
+}
+
 /** A same-tab hand-off, never persisted in browser storage or a URL. */
 export function prepareKnowledgeDraft(owner: string, question: string, documents: Document[]) {
-    if (!owner || !question.trim() || documents.length < 1 || documents.length > 20) return false;
+    if (!owner || !question.trim() || knowledgeAnalysisIssue(documents)) return false;
     pending = {
         owner, created: Date.now(), documents: documents.map((document) => ({ ...document })),
         prompt: `Frage: ${question.trim()}\n\nSuche gezielt in den beigefügten Quellen. Begründe die Antwort mit wörtlichen Belegen, Dokument, Fassung und Seite. Unterscheide belegte Aussagen, abweichende Aussagen und offene Fragen. Weise auf nicht erfasste oder nicht lesbare Stellen hin. Erfinde keine Quellen und keinen Entscheid.`,
@@ -16,7 +25,7 @@ export function prepareKnowledgeDraft(owner: string, question: string, documents
 
 /** A chronology reads the complete selected set; top-ranked search hits are insufficient. */
 export function prepareChronologyDraft(owner: string, documents: Document[]) {
-    if (!owner || documents.length < 1 || documents.length > 20 || documents.some(document => !document.current_version_id)) return false;
+    if (!owner || knowledgeAnalysisIssue(documents)) return false;
     pending = {
         owner, created: Date.now(), documents: documents.map(document => ({ ...document })),
         prompt: `Erstelle eine Chronologie der Tatsachenbehauptungen der Parteien aus sämtlichen ausgewählten Dokumenten. Verwende ausschliesslich deren vollständig bereitgestellten Text. Wenn Quellen oder Seiten fehlen, beginne keine scheinbar vollständige Chronologie; benenne den fehlenden Umfang.

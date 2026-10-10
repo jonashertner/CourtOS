@@ -12,7 +12,7 @@ describe("visible assistant hand-off", () => {
         const prepare = vi.fn().mockReturnValue(true);
         const inputRef = createRef<ChatInputHandle>();
         inputRef.current = { addDoc: vi.fn(), addFiles: vi.fn(), startWorkflow: vi.fn(), startWorkflowDocumentSelection: vi.fn(), prepareKnowledgeDraft: prepare };
-        prepareKnowledgeDraft("user-a", "Gehör?", [{ id: "doc-a", filename: "Literatur.pdf" } as Document]);
+        prepareKnowledgeDraft("user-a", "Gehör?", [{ id: "doc-a", filename: "Literatur.pdf", status: "ready", current_version_id: "version-a" } as Document]);
         render(<KnowledgeDraftEntry owner="user-a" inputRef={inputRef} />);
         expect(prepare).toHaveBeenCalledWith(expect.stringContaining("Gehör?"), [expect.objectContaining({ id: "doc-a" })]);
         expect(await screen.findByRole("status")).toHaveTextContent("erst mit Senden");
@@ -21,7 +21,7 @@ describe("visible assistant hand-off", () => {
     it("keeps the queued draft when an existing composer refuses replacement", () => {
         const inputRef = createRef<ChatInputHandle>();
         inputRef.current = { addDoc: vi.fn(), addFiles: vi.fn(), startWorkflow: vi.fn(), startWorkflowDocumentSelection: vi.fn(), prepareKnowledgeDraft: vi.fn().mockReturnValue(false) };
-        prepareKnowledgeDraft("user-a", "Gehör?", [{ id: "doc-a" } as Document]);
+        prepareKnowledgeDraft("user-a", "Gehör?", [{ id: "doc-a", filename: "Literatur.pdf", status: "ready", current_version_id: "version-a" } as Document]);
         render(<KnowledgeDraftEntry owner="user-a" inputRef={inputRef} />);
         expect(screen.getByText(/Ihr vorhandener Entwurf bleibt erhalten/)).toBeInTheDocument();
         expect(getKnowledgeDraft("user-a")).not.toBeNull();

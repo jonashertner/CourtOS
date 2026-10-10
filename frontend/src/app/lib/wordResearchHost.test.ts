@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { connectWordResearchHost, createWordResearchHost, WORD_RESEARCH_TEXT_LIMIT, type WordResearchEnvironment, type WordResearchRuntime } from "./wordResearchHost";
 
 function fixture(text = "Nur die markierte Passage") {
-    const selection = { text, load: vi.fn(), insertText: vi.fn() };
+    const selection = { text, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn() };
     const getSelection = vi.fn(() => selection);
     const bodyRead = vi.fn(() => { throw new Error("Whole document must never be accessed"); });
     const document = { getSelection, get body() { return bodyRead(); } };
@@ -54,6 +54,72 @@ describe("CourtOS Word selection boundary", () => {
         expect(f.selection.load).not.toHaveBeenCalled();
         expect(f.sync).toHaveBeenCalledOnce();
         expect(f.bodyRead).not.toHaveBeenCalled();
+    });
+
+    it("appends an escaped quotation and compact clickable provenance without displaying long URLs", async () => {
+        const f = fixture();
+        const quote = '<script>kein HTML</script> & "wortgetreu"';
+        const sourceUrl = 'https://example.org/entscheid?key=a&other=%22test%22';
+        const pinpointUrl = `${sourceUrl}#:~:text=${encodeURIComponent(quote)}`;
+        await createWordResearchHost(f.runtime).insertCitationAfterSelection({ quote, source: 'Gericht <I> & "Quelle"', pinpoint: 'Version 2, PDF-Seite 7', sourceUrl, pinpointUrl, notes: ['Position <nicht geprüft> & Original ansehen.'] });
+        expect(f.selection.insertHtml).toHaveBeenCalledExactlyOnceWith(expect.any(String), "End");
+        const html = f.selection.insertHtml.mock.calls[0][0];
+        const fragment = document.createElement('div'); fragment.innerHTML = html;
+        expect(fragment.querySelector('script')).toBeNull();
+        expect(fragment.querySelector('i')).toBeNull();
+        expect(fragment.querySelectorAll('a')).toHaveLength(2);
+        expect(fragment.querySelectorAll('p')[1].textContent).toBe(quote);
+        expect(fragment.querySelectorAll('a')[0].textContent).toBe('Gericht <I> & "Quelle"');
+        expect(fragment.querySelectorAll('a')[0].getAttribute('href')).toBe(sourceUrl);
+        expect(fragment.querySelectorAll('a')[1].getAttribute('href')).toBe(pinpointUrl);
+        expect(fragment.querySelectorAll('a')[1].textContent).toBe('Textstelle suchen');
+        expect(fragment.textContent).toContain('Version 2, PDF-Seite 7');
+        expect(fragment.textContent).toContain('Position <nicht geprüft> & Original ansehen.');
+        expect(fragment.textContent).not.toContain('https://');
+        expect(f.selection.insertText).not.toHaveBeenCalled();
+        expect(f.selection.load).not.toHaveBeenCalled();
+        expect(f.bodyRead).not.toHaveBeenCalled();
+    });
+
+    it("keeps quote line breaks and immutable private source/page URLs", async () => {
+        const f = fixture();
+        const sourceUrl = 'https://court.example/sources/library/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222?page=7';
+        await createWordResearchHost(f.runtime).insertCitationAfterSelection({ quote: 'Zeile eins\r\nZeile zwei\nZeile drei', source: 'Beilage.pdf', pinpoint: 'Version 2, PDF-Seite 7', sourceUrl });
+        const fragment = document.createElement('div'); fragment.innerHTML = f.selection.insertHtml.mock.calls[0][0];
+        expect(fragment.querySelectorAll('p')[1].innerHTML).toBe('Zeile eins<br>Zeile zwei<br>Zeile drei');
+        expect(fragment.querySelector('a')?.getAttribute('href')).toBe(sourceUrl);
+    });
+
+    it.each(['javascript:alert(1)', 'data:text/html,unsafe', 'file:///tmp/source.pdf', '//example.org/source', 'https://user:password@example.org/source', 'https://example.org/\nsource'])("rejects unsafe citation links before any Word write (%s)", async sourceUrl => {
+        const f = fixture();
+        await expect(createWordResearchHost(f.runtime).insertCitationAfterSelection({ quote: 'Zitat', source: 'Quelle', pinpoint: 'Seite 1', sourceUrl })).rejects.toMatchObject({ code: 'insert_failed' });
+        expect(f.run).not.toHaveBeenCalled();
+        expect(f.selection.insertText).not.toHaveBeenCalled();
+    });
+
+    it("uses the current selection on insertion, not a stale range from the earlier search", async () => {
+        const f = fixture(); const host = createWordResearchHost(f.runtime);
+        await host.readSelection();
+        const current = { text: 'Neue Auswahl', load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn() };
+        f.getSelection.mockReturnValue(current);
+        await host.insertCitationAfterSelection({ quote: 'Zitat', source: 'Quelle', pinpoint: 'Seite 1' });
+        expect(current.insertHtml).toHaveBeenCalledExactlyOnceWith(expect.any(String), 'End');
+        expect(f.selection.insertHtml).not.toHaveBeenCalled();
+        expect(current.load).not.toHaveBeenCalled();
+    });
+
+    it("never retries or falls back to plain text after an uncertain rich insertion", async () => {
+        const f = fixture(); let reject!: (error: Error) => void;
+        f.sync.mockReturnValue(new Promise<void>((_, fail) => { reject = fail; }));
+        const host = createWordResearchHost(f.runtime);
+        const citation = { quote: 'Zitat', source: 'Quelle', pinpoint: 'Seite 1' };
+        const first = host.insertCitationAfterSelection(citation);
+        const failed = expect(first).rejects.toMatchObject({ code: 'insert_failed', message: expect.not.stringContaining('sensitive') });
+        await expect(host.insertCitationAfterSelection(citation)).rejects.toMatchObject({ code: 'busy' });
+        reject(new Error('sensitive Office error')); await failed;
+        expect(f.run).toHaveBeenCalledOnce();
+        expect(f.selection.insertHtml).toHaveBeenCalledOnce();
+        expect(f.selection.insertText).not.toHaveBeenCalled();
     });
 
     it.each(["", " ", "x".repeat(WORD_RESEARCH_TEXT_LIMIT + 1)])("rejects invalid insertion before invoking Word", async (text) => {

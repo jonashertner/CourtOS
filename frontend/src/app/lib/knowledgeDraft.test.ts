@@ -1,9 +1,23 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Document } from "@/app/components/shared/types";
-import { consumeKnowledgeDraft, getKnowledgeDraft, prepareKnowledgeDraft, prepareChronologyDraft } from "./knowledgeDraft";
-const doc = { id: "doc-a", filename: "Literatur.pdf", current_version_id: "version-a" } as Document;
+import { consumeKnowledgeDraft, getKnowledgeDraft, knowledgeAnalysisIssue, prepareKnowledgeDraft, prepareChronologyDraft } from "./knowledgeDraft";
+const doc = { id: "doc-a", filename: "Literatur.pdf", current_version_id: "version-a", status: "ready" } as Document;
 afterEach(() => { getKnowledgeDraft("clear-owner"); vi.restoreAllMocks(); });
 describe("same-tab knowledge draft", () => {
+    it.each(["docx", "xlsx", "pptx"])("rejects a ready %s even if it has a derived PDF", type => {
+        const source = { ...doc, filename: `Quelle.${type}`, file_type: type, pdf_storage_path: "derived.pdf" };
+        expect(knowledgeAnalysisIssue([source])).toContain("ursprüngliche PDF");
+        expect(prepareChronologyDraft("user-a", [source])).toBe(false);
+        expect(prepareKnowledgeDraft("user-a", "Vergleichen", [source])).toBe(false);
+        expect(getKnowledgeDraft("user-a")).toBeNull();
+    });
+    it("requires ready fixed versions and at most five sources without silently reducing selection", () => {
+        expect(knowledgeAnalysisIssue([{ ...doc, status: "processing" }])).toContain("noch nicht bereit");
+        expect(prepareChronologyDraft("user-a", Array(6).fill(doc))).toBe(false);
+        expect(prepareKnowledgeDraft("user-a", "Vergleichen", Array(6).fill(doc))).toBe(false);
+        expect(getKnowledgeDraft("user-a")).toBeNull();
+        expect(knowledgeAnalysisIssue([{ ...doc, filename: "QUELLE.PDF" }])).toBeNull();
+    });
     it("requires immutable selected sources for a chronology and preserves the other party", () => {
         const reply = { ...doc, id: "doc-b", filename: "Klageantwort.pdf", current_version_id: "version-b" } as Document;
         expect(prepareChronologyDraft("user-a", [doc, reply])).toBe(true);

@@ -1,16 +1,28 @@
 /** Small, selection-only Office boundary. No document body, network or storage access. */
 export const WORD_RESEARCH_TEXT_LIMIT = 12_000;
 
+/** Text and ordinary links only; callers cannot supply Office HTML. */
+export interface WordSourceCitation {
+    quote: string;
+    source: string;
+    pinpoint: string;
+    sourceUrl?: string | null;
+    pinpointUrl?: string | null;
+    notes?: string[];
+}
+
 export interface WordResearchHost {
     readonly kind: "word";
     readSelection(): Promise<string>;
     insertTextAfterSelection(text: string): Promise<void>;
+    insertCitationAfterSelection(citation: WordSourceCitation): Promise<void>;
 }
 
 interface SelectionRange {
     readonly text: string;
     load(property: "text"): void;
     insertText(text: string, location: "End"): unknown;
+    insertHtml(html: string, location: "End"): unknown;
 }
 
 /** Only the Word capabilities this adapter needs; deliberately no body/settings API. */
@@ -52,6 +64,30 @@ function checkText(text: string, emptyCode: "empty_selection" | "empty_text") {
     if (text.length > WORD_RESEARCH_TEXT_LIMIT) throw new WordResearchHostError("text_too_long");
 }
 
+function citationHtml(citation: WordSourceCitation): string {
+    checkText(citation.quote, "empty_text");
+    checkText(citation.source, "empty_text");
+    checkText(citation.pinpoint, "empty_text");
+    const notes = citation.notes ?? [];
+    if (!Array.isArray(notes) || notes.some(note => typeof note !== "string")) throw new WordResearchHostError("empty_text");
+    checkText([citation.quote, citation.source, citation.pinpoint, ...notes, citation.sourceUrl ?? "", citation.pinpointUrl ?? ""].join("\n"), "empty_text");
+    const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    const text = (value: string) => escape(value).replace(/\r\n|\r|\n/g, "<br />");
+    const link = (url: string | null | undefined, label: string) => {
+        if (!url) return text(label);
+        // Refuse unsafe links before queuing a write. Never downgrade a failed write to plain text.
+        try {
+            const parsed = new URL(url);
+            if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password || /[\u0000-\u0020\u007f]/.test(url)) throw new Error();
+            return `<a href="${escape(parsed.href)}">${text(label)}</a>`;
+        } catch { throw new WordResearchHostError("insert_failed"); }
+    };
+    const pinpointLink = citation.pinpointUrl ? ` · ${link(citation.pinpointUrl, "Textstelle suchen")}` : "";
+    // Paragraph boundaries keep the current selection and its surrounding text intact.
+    // No font or size override: the citation follows the user's document formatting.
+    return `<p><br /></p><p>${text(citation.quote)}</p><p>Quelle: ${link(citation.sourceUrl, citation.source)} · ${text(citation.pinpoint)}${pinpointLink}</p>${notes.length ? `<p>${notes.map(text).join("<br />")}</p>` : ""}<p><br /></p>`;
+}
+
 /** Creation is inert. The UI must call each operation from its explicit action. */
 export function createWordResearchHost(runtime: WordResearchRuntime): WordResearchHost {
     let active = false;
@@ -78,6 +114,13 @@ export function createWordResearchHost(runtime: WordResearchRuntime): WordResear
             await runtime.run(async (context) => {
                 // Resolve the current selection at the moment of the click. End preserves it.
                 context.document.getSelection().insertText(text, "End");
+                await context.sync();
+            });
+        }, "insert_failed"),
+        insertCitationAfterSelection: (citation) => run(async () => {
+            const html = citationHtml(citation);
+            await runtime.run(async (context) => {
+                context.document.getSelection().insertHtml(html, "End");
                 await context.sync();
             });
         }, "insert_failed"),

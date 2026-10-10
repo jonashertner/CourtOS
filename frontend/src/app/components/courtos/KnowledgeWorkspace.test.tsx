@@ -39,6 +39,22 @@ beforeEach(() => {
 });
 
 describe("personal knowledge workspace", () => {
+    it("keeps non-PDF library search available while blocking both grounded-analysis actions", async () => {
+        const word = { ...document, filename: "Stellungnahme.docx", file_type: "docx", pdf_storage_path: "derived.pdf" };
+        api.list.mockResolvedValue({ documents: [word], documentsHasMore: false });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
+        await user.click(await screen.findByRole("checkbox", { name: /Stellungnahme.docx/ }));
+        await user.type(screen.getByLabelText("Suchbegriffe"), "Stellungnahme");
+        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
+        expect(screen.getByRole("button", { name: "Chronologie erstellen" })).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Mit dieser Auswahl fragen" })).toBeDisabled();
+        expect(screen.getByText(/Word-, Tabellen- und Präsentationsdateien bleiben/)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Auswahl durchsuchen" })).toBeEnabled();
+        await user.click(screen.getByRole("button", { name: "Auswahl durchsuchen" }));
+        expect(api.local).toHaveBeenCalledWith("Stellungnahme", [word.id], expect.any(AbortSignal));
+        expect(api.push).not.toHaveBeenCalled();
+    });
     it("keeps private search and its optional Gemma draft on the server route despite an external model preference", async () => {
         api.model = "claude-opus-5-5";
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
@@ -391,7 +407,7 @@ describe("personal knowledge workspace", () => {
     });
 
     it("reads a Word selection only on request and waits for a separate search action", async () => {
-        const wordHost = { kind: "word" as const, readSelection: vi.fn().mockResolvedValue("rechtliches Gehör"), insertTextAfterSelection: vi.fn() };
+        const wordHost = { kind: "word" as const, readSelection: vi.fn().mockResolvedValue("rechtliches Gehör"), insertTextAfterSelection: vi.fn(), insertCitationAfterSelection: vi.fn() };
         const user = userEvent.setup(); render(<KnowledgeWorkspace wordHost={wordHost} />);
         expect(wordHost.readSelection).not.toHaveBeenCalled();
         expect(wordHost.insertTextAfterSelection).not.toHaveBeenCalled();
@@ -407,7 +423,7 @@ describe("personal knowledge workspace", () => {
     });
 
     it("rejects an overlong Word selection without replacing a manually entered query", async () => {
-        const wordHost = { kind: "word" as const, readSelection: vi.fn().mockResolvedValue("Wort ".repeat(9)), insertTextAfterSelection: vi.fn() };
+        const wordHost = { kind: "word" as const, readSelection: vi.fn().mockResolvedValue("Wort ".repeat(9)), insertTextAfterSelection: vi.fn(), insertCitationAfterSelection: vi.fn() };
         const user = userEvent.setup(); render(<KnowledgeWorkspace wordHost={wordHost} />);
         await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"), "Zustellung");
         await user.click(screen.getByRole("button", { name: "Auswahl aus Word übernehmen" }));
@@ -416,7 +432,7 @@ describe("personal knowledge workspace", () => {
         expect(api.public).not.toHaveBeenCalled();
     });
 
-    it.each([null, { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn() }])("keeps private Word research free of AI handoff, including host initialisation (%s)", async (wordHost) => {
+    it.each([null, { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn(), insertCitationAfterSelection: vi.fn() }])("keeps private Word research free of AI handoff, including host initialisation (%s)", async (wordHost) => {
         const user = userEvent.setup(); render(<KnowledgeWorkspace wordHost={wordHost} />);
         await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
@@ -428,7 +444,7 @@ describe("personal knowledge workspace", () => {
     });
 
     it("inserts the selected public passage and its provenance only after an explicit Word action", async () => {
-        const wordHost = { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn().mockResolvedValue(undefined) };
+        const wordHost = { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn(), insertCitationAfterSelection: vi.fn().mockResolvedValue(undefined) };
         const decision = { decision_id: "WORD_CASE", title: "Geprüfte Quelle", snippet: "Öffentlicher Auszug", source_url: "https://example.org/word-case" };
         api.public.mockResolvedValue({ results: [decision], query_mode: "literal_terms", database_generation: "test" });
         api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 32, total_chars: 32, has_more: false, text: "Der genaue öffentliche Wortlaut." } });
@@ -444,15 +460,20 @@ describe("personal knowledge workspace", () => {
         expect(wordHost.insertTextAfterSelection).not.toHaveBeenCalled();
         expect(within(dialog).queryByRole("button", { name: /Mit (Gemma|Opus) prüfen/ })).toBeNull();
         await user.click(within(dialog).getByRole("button", { name: "In Word einfügen" }));
-        expect(wordHost.insertTextAfterSelection).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("\n\nDer genaue öffentliche Wortlaut.\n\nQuelle: Geprüfte Quelle"));
-        expect(wordHost.insertTextAfterSelection.mock.calls[0][0]).toContain("OpenCaseLaw-ID: WORD_CASE");
-        expect(wordHost.insertTextAfterSelection.mock.calls[0][0]).toContain("Position im Original nicht geprüft");
+        expect(wordHost.insertCitationAfterSelection).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+            quote: "Der genaue öffentliche Wortlaut.", source: "Geprüfte Quelle",
+            sourceUrl: "https://example.org/word-case",
+            pinpointUrl: expect.stringContaining("#:~:text="),
+            pinpoint: "Zeichen 0–32 von 32 im erfassten Text; keine amtlichen Randnummern",
+            notes: [expect.stringContaining("OpenCaseLaw-ID: WORD_CASE. Position im Original nicht geprüft")],
+        }));
+        expect(wordHost.insertTextAfterSelection).not.toHaveBeenCalled();
         expect(await within(dialog).findByText("In Word eingefügt.")).toBeVisible();
         expect(api.research).not.toHaveBeenCalled(); expect(api.handoff).not.toHaveBeenCalled();
     });
 
     it("warns about an unconfirmed Word insertion without retrying or exposing the host error", async () => {
-        const wordHost = { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn().mockRejectedValue(new Error("private Office diagnostic")) };
+        const wordHost = { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn(), insertCitationAfterSelection: vi.fn().mockRejectedValue(new Error("private Office diagnostic")) };
         const user = userEvent.setup(); const view = render(<KnowledgeWorkspace wordHost={wordHost} />);
         await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
@@ -465,7 +486,11 @@ describe("personal knowledge workspace", () => {
         expect(screen.queryByText("private Office diagnostic")).toBeNull();
         expect(screen.queryByText("In Word eingefügt.")).toBeNull();
         view.rerender(<KnowledgeWorkspace wordHost={wordHost} />);
-        expect(wordHost.insertTextAfterSelection).toHaveBeenCalledOnce();
+        expect(wordHost.insertCitationAfterSelection).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+            quote: hit.quote, source: hit.filename, pinpoint: "Version 2, PDF-Seite 7",
+            sourceUrl: expect.stringContaining(`/sources/library/${hit.document_id}/${hit.version_id}?page=7`),
+        }));
+        expect(wordHost.insertTextAfterSelection).not.toHaveBeenCalled();
         expect(wordHost.readSelection).not.toHaveBeenCalled();
     });
 });

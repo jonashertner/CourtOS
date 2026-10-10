@@ -9,10 +9,10 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { prepareFrontierDraft } from "@/app/lib/frontierDraft";
-import { prepareChronologyDraft, prepareKnowledgeDraft } from "@/app/lib/knowledgeDraft";
+import { knowledgeAnalysisIssue, prepareChronologyDraft, prepareKnowledgeDraft } from "@/app/lib/knowledgeDraft";
 import { prepareResearchDraft } from "@/app/lib/researchDraft";
 import { useResearchModelPreference } from "@/app/lib/researchModelPreference";
-import type { WordResearchHost } from "@/app/lib/wordResearchHost";
+import type { WordResearchHost, WordSourceCitation } from "@/app/lib/wordResearchHost";
 import { BookOpen, Copy, ExternalLink, Search, X } from "lucide-react";
 import { searchLibraryDocuments } from "@/app/lib/mikeApi";
 import { panelDocumentFromCitation, type Document, type DocumentCitation } from "@/app/components/shared/types";
@@ -25,7 +25,7 @@ const field = "courtos-field";
 const link = "courtos-link";
 const errorText = (error: unknown) => error instanceof Error ? error.message : "Das Laden ist fehlgeschlagen. Bitte versuchen Sie es erneut.";
 
-function CopySource({ text, label, wordHost }: { text: string; label: string; wordHost?: WordResearchHost | null }) {
+function CopySource({ text, label, wordHost, wordCitation }: { text: string; label: string; wordHost?: WordResearchHost | null; wordCitation: WordSourceCitation }) {
     const [insertStatus, setInsertStatus] = useState<"idle" | "inserting" | "inserted" | "error">("idle");
     const [status, setStatus] = useState<"idle" | "copied" | "manual">("idle");
     useEffect(() => { setStatus("idle"); setInsertStatus("idle"); }, [text]);
@@ -36,7 +36,7 @@ function CopySource({ text, label, wordHost }: { text: string; label: string; wo
         }}><Copy size={15} aria-hidden="true" />{label}</button>
         {wordHost && <><button type="button" className={`${link} ml-4`} disabled={insertStatus === "inserting"} onClick={async () => {
             setInsertStatus("inserting");
-            try { await wordHost.insertTextAfterSelection(`\n\n${text}\n`); setInsertStatus("inserted"); }
+            try { await wordHost.insertCitationAfterSelection(wordCitation); setInsertStatus("inserted"); }
             catch { setInsertStatus("error"); }
         }}>In Word einfügen</button>{insertStatus === "inserted" && <p role="status" className="mt-2 text-xs">In Word eingefügt.</p>}{insertStatus === "error" && <p role="alert" className="mt-2 text-xs">Einfügen nicht bestätigt. Prüfen Sie zuerst das Word-Dokument; der Text könnte bereits eingefügt sein.</p>}</>}
         {status === "copied" && <p role="status" className="mt-2 text-xs text-muted-foreground">Kopiert. In Ihrem Dokument einfügen.</p>}
@@ -47,6 +47,28 @@ function CopySource({ text, label, wordHost }: { text: string; label: string; wo
 function libraryExcerpt(hit: KnowledgeResult) {
     const url = typeof window !== "undefined" ? librarySourceUrl(window.location.origin, hit.document_id, hit.version_id, hit.page) : null;
     return `${hit.quote}\n\nQuelle: ${hit.filename}, Version ${hit.version_number ?? "nicht nummeriert"}, PDF-Seite ${hit.page}.${url ? `\nQuelle öffnen (Anmeldung erforderlich): ${url}` : ""}\nAuszug aus dem erfassten Dokumenttext; Zitat an der Quelle prüfen.`;
+}
+
+function libraryWordCitation(hit: KnowledgeResult): WordSourceCitation {
+    return {
+        quote: hit.quote, source: hit.filename,
+        pinpoint: `Version ${hit.version_number ?? "nicht nummeriert"}, PDF-Seite ${hit.page}`,
+        sourceUrl: typeof window !== "undefined" ? librarySourceUrl(window.location.origin, hit.document_id, hit.version_id, hit.page) : null,
+        notes: ["Quelle öffnen: Anmeldung erforderlich. Auszug aus dem erfassten Dokumenttext; Zitat an der Quelle prüfen."],
+    };
+}
+
+function publicWordCitation(decision: PublicDecision, excerpt: SelectedSourcePassage, originalSearch: string | null): WordSourceCitation {
+    const date = decision.decision_date ? `${decision.decision_date}${decision.date_is_estimated ? " (Datum geschätzt)" : ""}` : null;
+    const metadata = [courtLabel(decision.court), decision.docket_number, date].filter(Boolean).join(" · ");
+    return {
+        quote: excerpt.text,
+        source: [decisionTitle(decision), metadata].filter(Boolean).join(" · "),
+        pinpoint: `Zeichen ${excerpt.start}–${excerpt.end} von ${excerpt.total_chars} im erfassten Text; keine amtlichen Randnummern`,
+        sourceUrl: publicSourceUrl(decision.source_url) || publicSourceUrl(decision.pdf_url),
+        pinpointUrl: originalSearch,
+        notes: [`OpenCaseLaw-ID: ${decision.decision_id}. Position im Original nicht geprüft; Wortlaut und Kontext an der Originalquelle prüfen.`, ...(decision.source_note ? [`Hinweis von OpenCaseLaw: ${decision.source_note}`] : [])],
+    };
 }
 
 function publicReference(decision: PublicDecision) {
@@ -92,6 +114,7 @@ function LocalKnowledge({ wordHost, inWord }: { wordHost?: WordResearchHost | nu
     const [result, setResult] = useState<KnowledgeSearch | null>(null);
     const [submitted, setSubmitted] = useState("");
     const [source, setSource] = useState<KnowledgeResult | null>(null);
+    const analysisIssue = knowledgeAnalysisIssue(selected);
     const searchController = useRef<AbortController | null>(null);
     useEffect(() => {
         const controller = new AbortController();
@@ -139,14 +162,23 @@ function LocalKnowledge({ wordHost, inWord }: { wordHost?: WordResearchHost | nu
                     <p id="private-search-help" className="mt-2 text-xs leading-relaxed text-muted-foreground">Durchsucht den erfassten Text. Bildscans benötigen eine Textebene.</p>
                     <button className={`${button} mt-4`} disabled={searching || selected.length === 0 || !query.trim()}><Search size={16} aria-hidden="true" />{searching ? "Passagen werden gesucht…" : "Auswahl durchsuchen"}</button>
                 </form>
-                {!inWord && <details className="mt-4 border-t border-border pt-4"><summary className="cursor-pointer text-sm">Mit Gemma weiterarbeiten</summary><div className="mt-3 flex flex-wrap gap-3"><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>Mit dieser Auswahl fragen</button><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || selected.some(doc => doc.status !== "ready" || !doc.current_version_id)} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>Chronologie erstellen</button></div><ProcessingLocation service="gemma" stage="draft" className="mt-3">Öffnet Auftrag und Quellenauswahl. Erst im Assistenten senden.</ProcessingLocation></details>}
+                {!inWord && <details className="mt-4 border-t border-border pt-4">
+                    <summary className="cursor-pointer text-sm">Mit Gemma weiterarbeiten</summary>
+                    <p id="knowledge-analysis-help" className="mt-3 text-xs leading-relaxed text-muted-foreground">Bis zu fünf PDF-Dateien mit auslesbarem Text.</p>
+                    {analysisIssue && <p id="knowledge-analysis-issue" role="status" className="mt-2 text-sm leading-relaxed">{analysisIssue}</p>}
+                    <div className="mt-3 flex flex-wrap gap-3">
+                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>Mit dieser Auswahl fragen</button>
+                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>Chronologie erstellen</button>
+                    </div>
+                    <ProcessingLocation service="gemma" stage="draft" className="mt-3">Öffnet Auftrag und Quellenauswahl. Erst im Assistenten senden.</ProcessingLocation>
+                </details>}
                 {searching && <p role="status" className="mt-4 text-sm">Die Dokumenttexte werden auf dem CourtOS-Server durchsucht · ohne KI.</p>}
                 {searchError && <p role="alert" className="mt-5 text-sm">{searchError}</p>}
                 {result && <section aria-label="Lokale Suchergebnisse" className="mt-7"><h3 className="font-serif text-xl">{result.results.length} Passagen zu «{submitted}»</h3>
                     {result.notices.map((notice, index) => <p key={index} className="mt-2 text-sm leading-relaxed">{notice}</p>)}
                     <details className="mt-4 rounded-xl border border-border p-3 text-sm"><summary className="cursor-pointer">Umfang der erfassten Quellen prüfen</summary><ul className="mt-3 space-y-2">{result.documents.map((doc) => <li key={doc.document_id} className="break-words"><strong className="font-medium">{selected.find((item) => item.id === doc.document_id)?.filename ?? "Dokument"}</strong>: {doc.index_status === "ready" ? "Text erfasst" : doc.index_status === "partial" ? "Nur teilweise erfasst" : "Kein durchsuchbarer Text"} · {doc.indexed_pages} von {doc.total_pages} Seiten</li>)}</ul></details>
                     {result.results.length === 0 && <p className="mt-4 text-sm leading-relaxed">Keine passende Passage in den erfassten Seiten. Versuchen Sie einen anderen Begriff und prüfen Sie oben den Erfassungsumfang.</p>}
-                    <ol className="mt-4 space-y-4">{result.results.map((hit, index) => <li key={`${hit.document_id}-${hit.version_id}-${hit.page}-${index}`} className="courtos-source-hit"><p className="courtos-source-meta">{hit.filename} · Version {hit.version_number ?? "nicht nummeriert"} · PDF-Seite {hit.page}</p><blockquote className="mt-3 whitespace-pre-wrap break-words font-serif text-base leading-relaxed">{hit.quote}</blockquote><div className="mt-3 flex flex-wrap items-start gap-x-5 gap-y-3"><button className={link} onClick={() => setSource(hit)}>Beleg im Dokument öffnen <BookOpen size={15} aria-hidden="true" /></button><CopySource text={libraryExcerpt(hit)} label="Passage und Quelle kopieren" wordHost={wordHost} /></div></li>)}</ol>
+                    <ol className="mt-4 space-y-4">{result.results.map((hit, index) => <li key={`${hit.document_id}-${hit.version_id}-${hit.page}-${index}`} className="courtos-source-hit"><p className="courtos-source-meta">{hit.filename} · Version {hit.version_number ?? "nicht nummeriert"} · PDF-Seite {hit.page}</p><blockquote className="mt-3 whitespace-pre-wrap break-words font-serif text-base leading-relaxed">{hit.quote}</blockquote><div className="mt-3 flex flex-wrap items-start gap-x-5 gap-y-3"><button className={link} onClick={() => setSource(hit)}>Beleg im Dokument öffnen <BookOpen size={15} aria-hidden="true" /></button><CopySource text={libraryExcerpt(hit)} label="Passage und Quelle kopieren" wordHost={wordHost} wordCitation={libraryWordCitation(hit)} /></div></li>)}</ol>
                 </section>}
             </div>
         </div>
@@ -203,7 +235,7 @@ function PublicSource({ decision, onClose, wordHost, inWord }: { decision: Publi
                 <p className="mt-2 text-xs text-muted-foreground">Zeichen {excerpt.start}–{excerpt.end} · Position im Original nicht geprüft</p>
                 {originalSearch && <><a className={`${link} mt-3`} href={originalSearch} target="_blank" rel="noopener noreferrer">Textstelle im Original suchen</a><p className="mt-2 text-xs text-muted-foreground">Der Textsprung hängt von Website und Browser ab.</p></>}
                 {!originalSearch && <p className="mt-2 text-xs text-muted-foreground">Für diese Quelle steht kein Textsprung zur Verfügung. Die Stelle im ganzen Original prüfen.</p>}
-                <div className="mt-3"><CopySource text={`${excerpt.text}\n\nQuelle: ${excerptReference}`} label="Textstelle und Quelle kopieren" wordHost={wordHost} /></div>
+                <div className="mt-3"><CopySource text={`${excerpt.text}\n\nQuelle: ${excerptReference}`} label="Textstelle und Quelle kopieren" wordHost={wordHost} wordCitation={publicWordCitation(detail, excerpt, originalSearch)} /></div>
             </div>}
             {!inWord && excerpt && <div className="courtos-source-ai">
                 <button type="button" className={secondary} disabled={!user?.id} onClick={() => {
