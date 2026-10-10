@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useEffect, useRef, type ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
@@ -35,8 +36,8 @@ export function ResearchIntroduction({ children }: { children: ReactNode }) {
             }}>Recherche öffnen</PillButtonUI>
         </div>
         <dl className="courtos-introduction-models">
-            <div><dt>Gemma</dt><dd>CourtOS-Server in Deutschland</dd></div>
-            <div><dt>Claude Opus 5.5</dt><dd>Anthropic · erst nach Vorschau und Ihrer Freigabe</dd></div>
+            <div data-processing-route="server"><dt>Gemma 4</dt><dd>CourtOS-Server in Deutschland</dd></div>
+            <div data-processing-route="external"><dt>Claude Opus 5.5</dt><dd>Anthropic · externe API, erst nach Ihrer Freigabe</dd></div>
         </dl>
         <p className="courtos-introduction-note">Eigene Quellen und öffentliche Rechtsprechung bleiben getrennt. Das Arbeitsbuch erläutert die Datenwege und Grenzen des Piloten.</p>
     </section>;

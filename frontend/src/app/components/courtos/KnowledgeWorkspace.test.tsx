@@ -39,11 +39,28 @@ beforeEach(() => {
 });
 
 describe("personal knowledge workspace", () => {
+    it("keeps private search and its optional Gemma draft on the server route despite an external model preference", async () => {
+        api.model = "claude-opus-5-5";
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
+        const searchLocation = screen.getByText("Textsuche ohne KI · Verarbeitung auf dem Server").closest("[data-processing-route]");
+        expect(searchLocation).toHaveAttribute("data-processing-route", "server");
+        expect(searchLocation).toHaveTextContent("CourtOS-Server · Deutschland");
+        await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
+        const modelLocation = screen.getByText("Gemma 4").closest("[data-processing-route]");
+        expect(modelLocation).toHaveAttribute("data-processing-route", "server");
+        expect(modelLocation).toHaveTextContent("Entwurf · noch nicht gesendet");
+        expect(api.local).not.toHaveBeenCalled();
+        expect(api.public).not.toHaveBeenCalled();
+        expect(api.handoff).not.toHaveBeenCalled();
+    });
+
     it("discloses public AI processing before any explicit search and labels degraded results", async () => {
         api.public.mockResolvedValue({ results: [], query_mode: "opencaselaw_ai", ai_assisted: true, degraded: true, database_generation: null });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
-        expect(screen.getByText(/OpenCaseLaw · KI-gestützte Suche · Bis zu acht Begriffe/)).toBeInTheDocument();
-        expect(screen.getByText(/Ihre Suchbegriffe werden an den öffentlichen OpenCaseLaw-Dienst übermittelt/)).toBeInTheDocument();
+        expect(screen.getByText(/KI-gestützte Suche · Bis zu acht Begriffe/)).toBeInTheDocument();
+        expect(screen.getByText(/Mit «Suchen» werden Ihre Begriffe übermittelt/)).toBeInTheDocument();
+        expect(screen.getByText("Externer KI-Suchdienst", { exact: false }).closest("[data-processing-route]")).toHaveAttribute("data-processing-route", "external");
         expect(screen.queryByText(/Textsuche ohne KI/)).not.toBeInTheDocument();
         expect(api.public).not.toHaveBeenCalled();
         await user.type(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" }), "Gehör");
@@ -269,6 +286,8 @@ describe("personal knowledge workspace", () => {
         expect(copied).not.toContain("javascript:");
         expect(within(dialog).getByRole("button", { name: "Nächster Abschnitt" })).toBeDisabled();
         api.research.mockReturnValueOnce(true);
+        expect(within(dialog).getByText("Gemma 4").closest("[data-processing-route]")).toHaveAttribute("data-processing-route", "server");
+        expect(within(dialog).getByText("Gemma 4").closest("[data-processing-route]")).toHaveTextContent("DeutschlandEntwurf · noch nicht gesendet");
         await user.click(within(dialog).getByRole("button", { name: "Mit Gemma prüfen" }));
         expect(api.research).toHaveBeenCalledWith("test-owner", expect.stringContaining("Der genaue Entscheidtext."));
         expect(api.research.mock.calls[0][1]).toContain("Position im Original nicht geprüft");
@@ -277,6 +296,10 @@ describe("personal knowledge workspace", () => {
         expect(api.handoff).not.toHaveBeenCalled();
         api.model = "claude-opus-5-5";
         view.rerender(<KnowledgeWorkspace />);
+        const externalLocation = within(dialog).getByText("Claude Opus 5.5").closest("[data-processing-route]");
+        expect(externalLocation).toHaveAttribute("data-processing-route", "external");
+        expect(externalLocation).toHaveTextContent("Anthropic · externe API");
+        expect(externalLocation).toHaveTextContent("Entwurf · noch nicht gesendet");
         await user.click(within(dialog).getByRole("button", { name: "Mit Opus prüfen" }));
         expect(api.handoff).toHaveBeenCalledWith("test-owner", expect.stringContaining("Bundesgericht · 2025-01-02"));
         const text = api.handoff.mock.calls[0][1];

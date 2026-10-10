@@ -1,5 +1,7 @@
 "use client";
 
+import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
+
 import {
     useState,
     useCallback,
@@ -749,7 +751,7 @@ function ChatInputForChatImpl(
                         LIQUID_GLASS_TRANSLUCENT_CLASS,
                     )}
                 >
-                    {COURTOS_PILOT_MODE && <p className="px-4 pt-3 text-xs text-muted-foreground">Gemma 4 · lokal auf dem CourtOS-Server</p>}
+                    {COURTOS_PILOT_MODE && <div className="px-4 pt-3"><ProcessingLocation service="gemma" stage={isLoading ? "pending" : "draft"} /></div>}
                     {/* Attached chips */}
                     {(selectedWorkflow || attachedDocs.length > 0) && (
                         <div className="flex flex-wrap gap-1.5 px-2 pt-2">

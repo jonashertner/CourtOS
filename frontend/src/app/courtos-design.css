@@ -5,6 +5,10 @@
     --font-inter: "Timeless Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-eb-garamond: "Timeless Serif", "EB Garamond", Georgia, serif;
     --font-courtos-mono: "Paper Mono", ui-monospace, monospace;
+    --courtos-server: #286249;
+    --courtos-server-surface: #f4f8f5;
+    --courtos-external: #65508a;
+    --courtos-external-surface: #f7f5fa;
     --background: #ffffff;
     --foreground: #191919;
     --app-background: var(--background);
@@ -73,6 +77,10 @@
     font-feature-settings: "ss01";
 }
 .dark .courtos-web {
+    --courtos-server: #92c8aa;
+    --courtos-server-surface: #21362a;
+    --courtos-external: #c5b2e5;
+    --courtos-external-surface: #30283f;
     --background: #191919;
     --foreground: #f5f5f5;
     --app-surface: #202020;
@@ -295,8 +303,8 @@
 .courtos-web .courtos-settings-models { display: grid; gap: 8px; }
 .courtos-web .courtos-settings-models legend { margin-bottom: 12px; font-size: 16px; line-height: 24px; font-weight: 550; }
 .courtos-web .courtos-settings-model { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px; border: 1px solid var(--border); cursor: pointer; }
-.courtos-web .courtos-settings-model:has(input:checked) { border-color: var(--foreground); }
-.courtos-web .courtos-settings-model input { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--foreground); }
+.courtos-web .courtos-settings-model:has(input:checked) { border-color: var(--processing-accent, var(--foreground)); background: var(--processing-surface, var(--background)); }
+.courtos-web .courtos-settings-model input { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--processing-accent, var(--foreground)); }
 .courtos-web .courtos-settings-model span { min-width: 0; }
 .courtos-web .courtos-settings-model strong { display: block; font-size: 14px; line-height: 22px; font-weight: 550; }
 .courtos-web .courtos-settings-model small { display: block; color: var(--muted-foreground); font-size: 12px; line-height: 18px; }
@@ -359,3 +367,19 @@
     .courtos-web .courtos-research-footer a { min-height: 44px; display: inline-flex; align-items: center; }
     .courtos-web .courtos-result-scope summary { min-height: 44px; padding-block: 13px; }
 }
+
+/* Data destinations use an accent and visible words, never colour alone. */
+.courtos-web [data-processing-route="server"] { --processing-accent: var(--courtos-server); --processing-surface: var(--courtos-server-surface); }
+.courtos-web [data-processing-route="external"] { --processing-accent: var(--courtos-external); --processing-surface: var(--courtos-external-surface); }
+.courtos-web .courtos-processing-location { display: block; min-width: 0; border-inline-start: 2px solid var(--processing-accent); padding-inline-start: 10px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.courtos-web .courtos-processing-destination { display: block; color: var(--processing-accent); }
+.courtos-web .courtos-processing-destination strong { font-weight: 550; }
+.courtos-web :is(.courtos-processing-state,.courtos-processing-detail) { display: block; margin-top: 3px; }
+.courtos-web .courtos-processing-state { color: var(--foreground); }
+.courtos-web .courtos-settings-model { border-inline-start: 2px solid var(--processing-accent); }
+.courtos-web .courtos-settings-model .courtos-processing-location { border: 0; padding: 0; }
+.courtos-web .courtos-settings-model .courtos-processing-destination strong { display: inline; font-size: inherit; line-height: inherit; }
+.courtos-web .courtos-route-note { min-width: 0; }
+.courtos-web .courtos-introduction-models > [data-processing-route] { border-inline-start: 2px solid var(--processing-accent); padding-inline-start: 12px; }
+.courtos-web .courtos-introduction-models > [data-processing-route] dt { color: var(--processing-accent); }
+.courtos-web .courtos-library-location { margin: 0 var(--research-gutter) 18px; }

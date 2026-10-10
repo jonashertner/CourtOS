@@ -1,5 +1,7 @@
 "use client";
 
+import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
+
 import { librarySourceUrl, selectedSourcePassage, originalTextSearchUrl, type SelectedSourcePassage } from "@/app/lib/sourceLinks";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
@@ -116,7 +118,7 @@ function LocalKnowledge({ wordHost, inWord }: { wordHost?: WordResearchHost | nu
     }
     return <section aria-labelledby="private-knowledge-title" className="courtos-private-workspace">
         <h2 id="private-knowledge-title" className="courtos-research-section-title">Eigene Quellen</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">Literatur und Dokumente durchsuchen · Ohne KI</p>
+        <ProcessingLocation service="library" className="mt-3">Textsuche ohne KI · Verarbeitung auf dem Server</ProcessingLocation>
         <div className="mt-5 flex flex-wrap gap-5"><Link href={inWord ? "/library?host=word" : "/library"} target={inWord ? undefined : "_blank"} rel="noopener noreferrer" className={link}>Dokumente hinzufügen <ExternalLink size={14} aria-hidden="true" /></Link><button className={link} onClick={() => setRefresh((value) => value + 1)}>Bestand aktualisieren</button></div>
         <div className="courtos-library-grid">
             <div className="courtos-source-list">
@@ -137,8 +139,8 @@ function LocalKnowledge({ wordHost, inWord }: { wordHost?: WordResearchHost | nu
                     <p id="private-search-help" className="mt-2 text-xs leading-relaxed text-muted-foreground">Durchsucht den erfassten Text. Bildscans benötigen eine Textebene.</p>
                     <button className={`${button} mt-4`} disabled={searching || selected.length === 0 || !query.trim()}><Search size={16} aria-hidden="true" />{searching ? "Passagen werden gesucht…" : "Auswahl durchsuchen"}</button>
                 </form>
-                {!inWord && <details className="mt-4 border-t border-border pt-4"><summary className="cursor-pointer text-sm">Mit Gemma weiterarbeiten</summary><div className="mt-3 flex flex-wrap gap-3"><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>Mit dieser Auswahl fragen</button><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || selected.some(doc => doc.status !== "ready" || !doc.current_version_id)} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>Chronologie erstellen</button></div><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Öffnet einen Entwurf mit Auftrag und Quellenauswahl. Gemma verarbeitet den gesendeten Auftrag auf dem CourtOS-Server in Deutschland.</p></details>}
-                {searching && <p role="status" className="mt-4 text-sm">Die Dokumenttexte werden lokal geprüft. Dies kann beim ersten Aufruf etwas dauern.</p>}
+                {!inWord && <details className="mt-4 border-t border-border pt-4"><summary className="cursor-pointer text-sm">Mit Gemma weiterarbeiten</summary><div className="mt-3 flex flex-wrap gap-3"><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>Mit dieser Auswahl fragen</button><button type="button" className={secondary} disabled={!user?.id || selected.length === 0 || selected.some(doc => doc.status !== "ready" || !doc.current_version_id)} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>Chronologie erstellen</button></div><ProcessingLocation service="gemma" stage="draft" className="mt-3">Öffnet Auftrag und Quellenauswahl. Erst im Assistenten senden.</ProcessingLocation></details>}
+                {searching && <p role="status" className="mt-4 text-sm">Die Dokumenttexte werden auf dem CourtOS-Server durchsucht · ohne KI.</p>}
                 {searchError && <p role="alert" className="mt-5 text-sm">{searchError}</p>}
                 {result && <section aria-label="Lokale Suchergebnisse" className="mt-7"><h3 className="font-serif text-xl">{result.results.length} Passagen zu «{submitted}»</h3>
                     {result.notices.map((notice, index) => <p key={index} className="mt-2 text-sm leading-relaxed">{notice}</p>)}
@@ -216,7 +218,7 @@ function PublicSource({ decision, onClose, wordHost, inWord }: { decision: Publi
                         else setHandoffError("Der Auszug konnte nicht übergeben werden. Bitte die Frontier-Prüfung separat öffnen.");
                     }
                 }}>{model === "gemma" ? "Mit Gemma prüfen" : "Mit Opus prüfen"}</button>
-                <p>{model === "gemma" ? "CourtOS-Server · Deutschland" : "Anthropic · extern"} · Auftrag vor dem Senden prüfen</p>
+                <ProcessingLocation service={model === "gemma" ? "gemma" : "anthropic"} stage="draft" className="mt-3" />
                 {handoffError && <p role="alert">{handoffError}</p>}
             </div>}
             <div className="mt-6 flex flex-wrap gap-3"><button className={secondary} disabled={!history.length} onClick={() => { setStart(history[history.length - 1]); setHistory((items) => items.slice(0, -1)); }}>Vorheriger Abschnitt</button><button className={secondary} disabled={!detail.passage.has_more} onClick={() => { setHistory((items) => [...items, start]); setStart(detail.passage.end); }}>Nächster Abschnitt</button></div>
@@ -252,10 +254,10 @@ function PublicKnowledge({ wordHost, wordHostError, inWord }: { wordHost?: WordR
                     <button className={button} disabled={searching || !query.trim()}><Search size={17} aria-hidden="true" />{searching ? "Suche läuft…" : "Suchen"}</button>
                 </div>
                 <div className="courtos-search-options">
-                    <p id="public-search-help">OpenCaseLaw · KI-gestützte Suche · Bis zu acht Begriffe</p>
+                    <p id="public-search-help">KI-gestützte Suche · Bis zu acht Begriffe</p>
                     <label htmlFor="public-language"><span className="sr-only">Sprache</span><select id="public-language" value={language} onChange={(event) => { controller.current?.abort(); setLanguage(event.target.value); setSearching(false); setResult(null); setError(""); }} className={field}><option value="">Alle Sprachen</option><option value="de">Deutsch</option><option value="fr">Französisch</option><option value="it">Italienisch</option></select></label>
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">Ihre Suchbegriffe werden an den öffentlichen OpenCaseLaw-Dienst übermittelt. Dieser nutzt KI für die Suche. Keine Namen oder Angaben aus vertraulichen Verfahren eingeben.</p>
+                <ProcessingLocation service="opencaselaw">Mit «Suchen» werden Ihre Begriffe übermittelt. Keine vertraulichen Angaben eingeben.</ProcessingLocation>
                 {inWord && <div className="courtos-word-selection"><button type="button" className={link} disabled={!wordHost || readingSelection} onClick={async () => {
                     if (!wordHost) return;
                     setReadingSelection(true); setSelectionError("");
@@ -266,7 +268,7 @@ function PublicKnowledge({ wordHost, wordHostError, inWord }: { wordHost?: WordR
                     } catch { setSelectionError("Die Auswahl konnte nicht gelesen werden. Bitte Rechtsbegriffe eingeben."); }
                     finally { setReadingSelection(false); }
                 }}>{readingSelection ? "Auswahl wird gelesen…" : "Auswahl aus Word übernehmen"}</button>{(selectionError || wordHostError) && <p role="alert">{selectionError || wordHostError}</p>}</div>}
-                {searching && <p role="status" className="courtos-search-state">Öffentliche Quellen werden durchsucht…</p>}
+                {searching && <p role="status" className="courtos-search-state">Anfrage an OpenCaseLaw läuft…</p>}
                 {error && <p role="alert" className="courtos-search-state courtos-search-state--error">{error}</p>}
             </form>
         </div>

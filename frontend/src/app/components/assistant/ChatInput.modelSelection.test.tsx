@@ -148,7 +148,7 @@ describe("ChatInput model selection vs. a degraded profile", () => {
         render(<ReadyComposer />);
         const field = screen.getByPlaceholderText("Ihre Frage oder Ihr Arbeitsauftrag…");
         expect(field).toHaveValue("Externe Prüfung mit Quellen");
-        expect(screen.getByRole("status")).toHaveTextContent("noch nicht an das lokale Modell gesendet");
+        expect(screen.getByRole("status")).toHaveTextContent("Entwurf · noch nicht gesendet");
         expect(onSubmit).not.toHaveBeenCalled();
         fireEvent.change(field, { target: { value: "Bewusst überarbeiteter Auftrag" } });
         expect(sessionStorage.getItem(FRONTIER_RETURN_KEY)).toBeNull();
@@ -161,7 +161,7 @@ describe("ChatInput model selection vs. a degraded profile", () => {
         const ref = createRef<ChatInputHandle>();
         const onSubmit = vi.fn();
         render(<ChatInput ref={ref} onSubmit={onSubmit} onCancel={vi.fn()} isLoading={false} />);
-        expect(screen.getByText("Gemma 4 · lokal auf dem CourtOS-Server")).toBeVisible();
+        expect(screen.getByText("Gemma 4").closest("[data-processing-route]")).toHaveTextContent("CourtOS-Server · Deutschland");
         expect(screen.queryByRole("button", { name: "Select test model" })).not.toBeInTheDocument();
         const field = screen.getByPlaceholderText("Ihre Frage oder Ihr Arbeitsauftrag…");
         let accepted: boolean | undefined;

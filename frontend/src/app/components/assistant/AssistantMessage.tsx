@@ -1,5 +1,7 @@
 "use client";
 
+import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
+
 import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
 
 import { useRef, useState } from "react";
@@ -832,7 +834,7 @@ export function AssistantMessage({
     return (
         <div style={{ minHeight }}>
             <ResponseStatus status={status} />
-            {COURTOS_PILOT_MODE && <p className="mt-2 text-xs text-muted-foreground">Gemma 4 · lokal auf dem CourtOS-Server</p>}
+            {COURTOS_PILOT_MODE && <ProcessingLocation service="gemma" stage={isStreaming ? "pending" : undefined} className="mt-2" />}
             {sourceCheckFailed && <div role="alert" className="my-4 border-l-2 border-destructive pl-4 text-sm leading-relaxed">
                 <p className="font-semibold">Antwort nicht belegt</p>
                 <p>Die Quellenprüfung ist unvollständig oder fehlgeschlagen. Diese Antwort kann nicht als Ergebnis kopiert oder weitergegeben werden. Die Originalquellen bleiben prüfbar.</p>

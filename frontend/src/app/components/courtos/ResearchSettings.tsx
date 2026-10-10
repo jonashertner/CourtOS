@@ -1,5 +1,7 @@
 "use client";
 
+import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
+
 import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { COURTOS_GUIDE_PATH, COURTOS_SOURCE_URL } from "@/app/lib/courtos";
@@ -51,10 +53,10 @@ export function ResearchSettings({
         <div className="courtos-settings-body">
             <fieldset className="courtos-settings-models" disabled={!modelsAvailable || !userId || signingOut}>
                 <legend>KI-Modell</legend>
-                <label className="courtos-settings-model"><input type="radio" name={modelName} value="gemma" checked={model === "gemma"} onChange={() => chooseModel("gemma")} /><span><strong>Gemma</strong><small>CourtOS-Server · Deutschland</small></span></label>
-                <label className="courtos-settings-model"><input type="radio" name={modelName} value="claude-opus-5-5" checked={model === "claude-opus-5-5"} disabled={!externalAvailable} onChange={() => chooseModel("claude-opus-5-5")} /><span><strong>Claude Opus 5.5</strong><small>Anthropic · extern{!externalAvailable && " · derzeit nicht verfügbar"}</small></span></label>
+                <label className="courtos-settings-model" data-processing-route="server"><input type="radio" name={modelName} value="gemma" checked={model === "gemma"} onChange={() => chooseModel("gemma")} /><ProcessingLocation service="gemma" /></label>
+                <label className="courtos-settings-model" data-processing-route="external"><input type="radio" name={modelName} value="claude-opus-5-5" checked={model === "claude-opus-5-5"} disabled={!externalAvailable} onChange={() => chooseModel("claude-opus-5-5")} /><ProcessingLocation service="anthropic">{!externalAvailable && "Derzeit nicht verfügbar"}</ProcessingLocation></label>
             </fieldset>
-            <p className="courtos-settings-note">{modelsAvailable ? "Für öffentliche Auszüge. Eigene Dokumente werden mit Gemma verarbeitet." : "KI-Aufträge sind in dieser Word-Testfassung noch nicht verfügbar."}</p>
+            <p className="courtos-settings-note">{modelsAvailable ? "Für öffentliche Auszüge. Eigene Dokumente bleiben für KI-Aufträge bei Gemma. Der CourtOS-Server steht in Deutschland, nicht auf Ihrem Gerät." : "KI-Aufträge sind in dieser Word-Testfassung noch nicht verfügbar."}</p>
             {modelsAvailable && storageNotice && <p role="status" className="courtos-settings-notice">Die Auswahl konnte nicht gespeichert werden. Gemma bleibt ausgewählt.</p>}
             <div className="courtos-settings-facts"><p>Eigene Quellen: Suche ohne KI</p>{modelsAvailable && <p>Externe Aufträge: Vorschau vor dem Senden</p>}</div>
             <section className="courtos-settings-account" aria-label="Konto">

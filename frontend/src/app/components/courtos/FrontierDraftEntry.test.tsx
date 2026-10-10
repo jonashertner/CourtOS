@@ -20,7 +20,7 @@ describe("frontier return to local composer", () => {
         const fetch = vi.spyOn(globalThis, "fetch");
         const { prepare } = setup(true);
         expect(prepare).toHaveBeenCalledWith("Externe Prüfung", expect.any(Function));
-        expect(screen.getByRole("status")).toHaveTextContent("noch nicht an das lokale Modell gesendet");
+        expect(screen.getByRole("status")).toHaveTextContent("Entwurf · noch nicht gesendet");
         expect(sessionStorage.getItem(FRONTIER_RETURN_KEY)).not.toBeNull();
         prepare.mock.calls[0][1]();
         expect(sessionStorage.getItem(FRONTIER_RETURN_KEY)).toBeNull();

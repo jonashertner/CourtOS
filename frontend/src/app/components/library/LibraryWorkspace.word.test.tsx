@@ -27,6 +27,10 @@ describe("library Word navigation", () => {
         state.host = host;
         render(<LibraryWorkspaceLayout><LibraryCollectionPage kind="files" /></LibraryWorkspaceLayout>);
         await waitFor(() => expect(screen.getByText("Ready")).toBeVisible());
+        const location = screen.getByText("Eigene Quellen").closest("[data-processing-route]");
+        expect(location).toHaveAttribute("data-processing-route", "server");
+        expect(location).toHaveTextContent("CourtOS-Server · Deutschland");
+        expect(location).toHaveTextContent("Uploads werden hier gespeichert");
         const query = host ? "?host=word" : "";
         fireEvent.click(screen.getByRole("button", { name: "Open folder" }));
         expect(state.push).toHaveBeenLastCalledWith(`/library/folders/folder-a${query}`, { scroll: false });

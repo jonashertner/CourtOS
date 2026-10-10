@@ -14,8 +14,12 @@ describe("compact research settings", () => {
     it("keeps model selection separate from sending and account actions", () => {
         const signOut = vi.fn(); const close = vi.fn(); const fetch = vi.spyOn(globalThis, "fetch");
         render(<ResearchSettings open onClose={close} userId="settings-owner" email="reader@example.org" onSignOut={signOut} />);
-        expect(screen.getByRole("radio", { name: /Gemma/ })).toBeChecked();
-        fireEvent.click(screen.getByRole("radio", { name: /Claude Opus/ }));
+        const server = screen.getByRole("radio", { name: /Gemma 4.*CourtOS-Server.*Deutschland/ });
+        const external = screen.getByRole("radio", { name: /Claude Opus 5.5.*Anthropic.*externe API/ });
+        expect(server).toBeChecked();
+        expect(server.closest("label")).toHaveAttribute("data-processing-route", "server");
+        expect(external.closest("label")).toHaveAttribute("data-processing-route", "external");
+        fireEvent.click(external);
         expect(getResearchModelPreference("settings-owner")).toBe("claude-opus-5-5");
         expect(fetch).not.toHaveBeenCalled(); expect(signOut).not.toHaveBeenCalled();
         expect(screen.getByText("Eigene Quellen: Suche ohne KI")).toBeVisible();

@@ -1,5 +1,7 @@
 "use client";
 
+import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
+
 import {
     createContext,
     type Dispatch,
@@ -981,6 +983,7 @@ export function LibraryCollectionPage({
                     },
                 ]}
             />
+            {COURTOS_PILOT_MODE && <ProcessingLocation service="library" className="courtos-library-location">Uploads werden hier gespeichert. Keine Übermittlung an Anthropic.</ProcessingLocation>}
             </LibraryChrome>
 
             <div className={COURTOS_PILOT_MODE ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex h-full min-h-0 flex-1 flex-col overflow-hidden"}>
