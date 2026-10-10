@@ -180,6 +180,31 @@ for the one case that cannot be a run: a tabular review chat whose
 preparation produced no chat id, so there is no key to register under and
 nothing that could ever attach.
 
+#### CourtOS pilot local-model scheduling
+
+The pilot's native backend has one FIFO lane per configured local model
+endpoint, with one provider operation running and at most two waiting. A lease
+covers the operation's tool rounds; the next admitted operation starts only
+when that lease is released. The existing database admission, per-account and
+daily limits remain authoritative. Waiting is labelled separately from dispatch.
+Cancelling a waiter removes it without a model request or model-start charge.
+The start is marked immediately before inference HTTP dispatch, after the local
+context preflight. Queue position is arrival at the provider boundary, after
+source loading, rather than the original HTTP arrival order.
+
+A waiting run receives a bounded server heartbeat every 15 seconds. Local
+prefill receives the same heartbeat only until its first meaningful output;
+the configured first-output deadline still applies. Neither heartbeat creates
+model output or a claim of semantic progress. The existing 20-minute native
+admission budget includes both waiting and execution, and waiting does not
+consume the provider's separate first-output budget. Queued work is not
+resumed after a backend restart. This is a single-process native scheduler,
+not a distributed queue: the separate Python hybrid service's legacy
+authenticated `/api/local` route has its own admission and can still compete
+for the same model. The current frontier workbench does not use that route.
+Do not claim system-wide FIFO or run multiple native replicas against one
+model without a shared scheduler or a separate model endpoint.
+
 ### The service contract
 
 A service function takes the database handle first (`db: Db`, exported from

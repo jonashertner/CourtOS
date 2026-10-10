@@ -2,6 +2,8 @@ import type { CourtOSText } from "./courtosLocale";
 
 /** Interface copy, kept separate from quotations, queries and model prompts. */
 export const courtOSMessages = {
+    localModelQueued: { de: "Wartet auf einen freien Gemma-Platz …", fr: "En attente d’une place disponible pour Gemma…", it: "In attesa di un posto libero per Gemma…", en: "Waiting for an available Gemma slot…" },
+    localModelDispatched: { de: "Gemma-Anfrage gestartet. Antwort wird vorbereitet …", fr: "Requête Gemma lancée. Préparation de la réponse…", it: "Richiesta Gemma avviata. Preparazione della risposta…", en: "Gemma request started. Preparing the response…" },
     language: { de: "Sprache", fr: "Langue", it: "Lingua", en: "Language" },
     interfaceLanguage: { de: "Sprache der Oberfläche", fr: "Langue de l’interface", it: "Lingua dell’interfaccia", en: "Interface language" },
     languageScope: { de: "Für dieses Konto in diesem Browser oder Word-Fenster. Quellen, Suchfilter und KI-Antworten bleiben unverändert.", fr: "Pour ce compte dans ce navigateur ou cette fenêtre Word. Les sources, filtres de recherche et réponses de l’IA restent inchangés.", it: "Per questo account in questo browser o questa finestra Word. Fonti, filtri di ricerca e risposte dell’IA restano invariati.", en: "For this account in this browser or Word window. Sources, search filters and AI responses stay unchanged." },
@@ -19,7 +21,7 @@ export const courtOSMessages = {
     signOut: { de: "Abmelden", fr: "Se déconnecter", it: "Esci", en: "Sign out" },
     signingOut: { de: "Wird abgemeldet…", fr: "Déconnexion…", it: "Disconnessione…", en: "Signing out…" },
     helpSource: { de: "Hilfe und Quellcode", fr: "Aide et code source", it: "Aiuto e codice sorgente", en: "Help and source code" },
-    guide: { de: "Arbeitsbuch", fr: "Guide pratique", it: "Guida pratica", en: "Workbook (German)" },
+    guide: { de: "Arbeitsbuch", fr: "Guide pratique", it: "Guida pratica", en: "Guide" },
     github: { de: "GitHub · Quellcode und Lizenz", fr: "GitHub · Code source et licence", it: "GitHub · Codice sorgente e licenza", en: "GitHub · Source code and licence" },
     serverGermany: { de: "CourtOS-Server · Deutschland", fr: "Serveur CourtOS · Allemagne", it: "Server CourtOS · Germania", en: "CourtOS server · Germany" },
     externalApi: { de: "Anthropic · externe API", fr: "Anthropic · API externe", it: "Anthropic · API esterna", en: "Anthropic · external API" },

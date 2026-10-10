@@ -500,6 +500,12 @@ describe("content and reasoning deltas", () => {
 });
 
 describe("tool placeholders and cancellation", () => {
+  it("distinguishes a waiting model from dispatch and replaces both with actual output", async () => {
+    expect(await eventsOf([{type:"provider_queue",state:"queued"}])).toEqual([{type:"thinking",isStreaming:true,providerPhase:"queued"}]);
+    expect(await eventsOf([{type:"provider_queue",state:"queued"},{type:"provider_queue",state:"dispatching"}])).toEqual([{type:"thinking",isStreaming:true,providerPhase:"dispatching"}]);
+    expect(await eventsOf([{type:"provider_queue",state:"queued"},{type:"provider_queue",state:"dispatching"},{type:"content_delta",text:"Response"}])).toEqual([{type:"content",text:"Response",isStreaming:true}]);
+    expect(await eventsOf([{type:"provider_queue",state:"untrusted"}])).toEqual([]);
+  });
   it("replaces a finished knowledge search while the model formulates its answer", async () => {
     expect(await eventsOf([
       { type: "tool_call_start", name: "search_knowledge" },

@@ -1,4 +1,5 @@
 import { courtosQuotaFetchInit } from "../courtosQuota";
+import { notifyCourtosModelDispatch } from "./courtosLocalQueue";
 import { UserFacingError } from "../userFacingError";
 import { courtosPilotEnabled, courtosPilotFetchInit, COURTOS_PILOT_CONTEXT_NOTICE } from "../courtosPilot";
 import { normalizeReasoningLevelForModel } from "./models";
@@ -91,7 +92,9 @@ export async function aiSdkFetch(
   init?: RequestInit,
   baseFetch?: typeof fetch,
 ): Promise<Response> {
-  const response = await (baseFetch ?? fetch)(input, courtosQuotaFetchInit(courtosPilotFetchInit(input, init)));
+  const safeInit = courtosPilotFetchInit(input, init);
+  await notifyCourtosModelDispatch();
+  const response = await (baseFetch ?? fetch)(input, courtosQuotaFetchInit(safeInit));
   if (courtosPilotEnabled() && response.status === 400) {
     const failure = await response.clone().text();
     if (/context.{0,30}(?:exceed|size|length|window)|(?:exceed|too (?:long|large)).{0,50}context/i.test(failure)) {
@@ -509,7 +512,7 @@ export async function streamAiSdk(
     const result = sdk.streamText({
       model: sdk.wrapLanguageModel({
         model: config.model,
-        middleware: providerDeadlines(params.callbacks?.onActivity),
+        middleware: providerDeadlines(params.callbacks?.onActivity, courtosPilotEnabled()),
       }),
       system: params.systemPrompt,
       messages: cacheHints.messages,

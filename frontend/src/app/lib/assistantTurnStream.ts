@@ -544,6 +544,13 @@ export async function consumeAssistantTurnStream(
           continue;
         }
 
+        if (data.type === "provider_queue") {
+          if (data.state === "queued" || data.state === "dispatching") {
+            pushEvent({ type: "thinking", isStreaming: true, providerPhase: data.state });
+          }
+          continue;
+        }
+
         if (data.type === "tool_call_complete") {
           if (data.name === "search_knowledge") {
             // Reuse the transient thinking placeholder; no new persisted event.

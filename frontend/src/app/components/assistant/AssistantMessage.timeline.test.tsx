@@ -25,6 +25,14 @@ const reasoning = (text: string): AssistantEvent => ({
 });
 
 describe("AssistantMessage timeline", () => {
+    it("describes waiting separately from a dispatched local model request", () => {
+        const { rerender } = render(<AssistantMessage events={[{type:"thinking",isStreaming:true,providerPhase:"queued"}]} />);
+        expect(screen.getByText("Wartet auf einen freien Gemma-Platz …")).toBeVisible();
+        expect(screen.queryByText(/Antwort wird vorbereitet/)).toBeNull();
+        rerender(<AssistantMessage events={[{type:"thinking",isStreaming:true,providerPhase:"dispatching"}]} />);
+        expect(screen.getByText("Gemma-Anfrage gestartet. Antwort wird vorbereitet …")).toBeVisible();
+        expect(screen.queryByText(/Wartet auf/)).toBeNull();
+    });
     it("distinguishes retrieved evidence from an empty search during formulation", () => {
         const { rerender } = render(<AssistantMessage events={[{ type: "thinking", isStreaming: true, knowledgePhase: "evidence_returned" }]} />);
         expect(screen.getByText("Quellen geprüft. Antwort wird formuliert …")).toBeVisible();

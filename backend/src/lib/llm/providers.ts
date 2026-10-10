@@ -1,4 +1,5 @@
 import { preflightCourtosReviewRequest } from "./courtosReviewPreflight";
+import { withCourtosLocalQueue } from "./courtosLocalQueue";
 import { assertCourtosPilotModel, courtosPilotEnabled } from "../courtosPilot";
 import {
   aiSdkFetch,
@@ -678,6 +679,10 @@ async function createProviderAdapter(
 export async function streamWithProvider(
   params: StreamChatParams,
 ): Promise<StreamChatResult> {
+  return withCourtosLocalQueue(params.model, params.abortSignal, params.callbacks,
+    abortSignal => streamWithProviderInSlot({ ...params, abortSignal }));
+}
+async function streamWithProviderInSlot(params: StreamChatParams): Promise<StreamChatResult> {
   const normalizedParams = {
     ...params,
     reasoning: normalizeReasoningLevelForModel(
@@ -759,8 +764,6 @@ export function fallbackReasoningLevelFromProviderError(
 export async function completeWithProvider(
   params: CompleteProviderParams,
 ): Promise<string> {
-  return completeAiSdkText(
-    params,
-    await createProviderAdapter(params.model, params.apiKeys),
-  );
+  return withCourtosLocalQueue(params.model, params.abortSignal, undefined, async abortSignal =>
+    completeAiSdkText({ ...params, abortSignal }, await createProviderAdapter(params.model, params.apiKeys)));
 }

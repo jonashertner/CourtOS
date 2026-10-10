@@ -169,10 +169,10 @@ export const reviewMessages = {
         "en": "Gemma on the CourtOS server in Germany. A started model request counts towards the daily allowance."
     },
     "queued": {
-        "de": "Auftrag angenommen",
-        "fr": "Demande acceptée",
-        "it": "Richiesta accettata",
-        "en": "Request accepted"
+        "de": "Auftrag wartet auf Verarbeitung",
+        "fr": "Demande en attente de traitement",
+        "it": "Richiesta in attesa di elaborazione",
+        "en": "Request waiting for processing"
     },
     "reading": {
         "de": "Quellen werden gelesen",

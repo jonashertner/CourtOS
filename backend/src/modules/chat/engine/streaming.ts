@@ -56,7 +56,7 @@ import { spotlight } from "./contextBuilders";
 import { groundingDiagnostics } from "./groundingDiagnostics";
 
 export type { AssistantEvent } from "@mike/contracts";
-import type { AssistantEvent, AssistantErrorCode, SourceGroundingDiagnostics } from "@mike/contracts";
+import type { AssistantEvent, AssistantErrorCode, SourceGroundingDiagnostics, LocalProviderQueueEvent } from "@mike/contracts";
 
 /**
  * Tools the model can call that execute outside this process — in the Word
@@ -581,6 +581,7 @@ export async function runLLMStream(params: {
       conversationId,
       callbacks: {
         onActivity: params.onActivity,
+        onProviderState: state => { write(`data: ${JSON.stringify({ type: "provider_queue", state } satisfies LocalProviderQueueEvent)}\n\n`); },
         onContentDelta: (delta) => {
           iterText += delta;
           streamVisibleContent(delta);

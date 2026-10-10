@@ -1,6 +1,8 @@
 "use client";
 
 import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { courtOSMessages } from "@/app/lib/courtosMessages";
 
 import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
 
@@ -141,6 +143,7 @@ export function AssistantMessage({
     isEditReloading,
     resolvedEditStatuses,
 }: Props) {
+    const { t } = useCourtOSLocale();
     const responseBodyRef = useRef<HTMLDivElement | null>(null);
     const [isCopied, setIsCopied] = useState(false);
     // Per-document override of the download URL, set as Accept/Reject resolves
@@ -421,7 +424,9 @@ export function AssistantMessage({
                     showConnector={showConnector}
                     isStreaming
                 >
-                    <span>{event.knowledgePhase === "evidence_returned"
+                    <span>{event.providerPhase === "queued" ? t(courtOSMessages.localModelQueued)
+                        : event.providerPhase === "dispatching" ? t(courtOSMessages.localModelDispatched)
+                        : event.knowledgePhase === "evidence_returned"
                         ? "Quellen geprüft. Antwort wird formuliert …"
                         : event.knowledgePhase === "search_returned"
                             ? "Suche abgeschlossen. Antwort wird formuliert …"

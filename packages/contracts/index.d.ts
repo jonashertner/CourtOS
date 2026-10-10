@@ -1,4 +1,7 @@
 // Authored wire contracts. No server, browser, UI or storage dependencies.
+/** Server-owned local model status, never a claim about semantic correctness. */
+export type LocalProviderState = "queued" | "dispatching";
+export type LocalProviderQueueEvent = { type: "provider_queue"; state: LocalProviderState };
 export type {
   ResearchHandoffPublicDecision, ResearchHandoffPublicResults,
   ResearchHandoffPassage, ResearchHandoffPublicSource,

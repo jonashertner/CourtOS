@@ -7,6 +7,7 @@ import { courtosPilotModel, courtosPilotEnabled, courtosPilotToolAllowed, COURTO
 import { loadModelRegistry, resetModelRegistryCache } from "../lib/llm/registry";
 import { completeWithProvider } from "../lib/llm/providers";
 import { aiSdkFetch, maxOutputTokensFor } from "../lib/llm/aiSdk";
+import { withCourtosLocalQueue } from "../lib/llm/courtosLocalQueue";
 import { hasApiKeyForModel, resolveEffectiveChatModel, titleModelForChat } from "../lib/modelSelection";
 import { memoryCuratorModelForChat } from "../modules/memory/memory.curator";
 import { serializeProfile } from "../modules/user/user.profile.serialization";
@@ -100,7 +101,9 @@ describe("CourtOS pilot outbound boundary", () => {
       await expect(aiSdkFetch(url, { method: "POST", body: "PRIVATE_CANARY" }, network)).rejects.toThrow("destination");
     }
     expect(network).not.toHaveBeenCalled();
-    await aiSdkFetch("http://127.0.0.1:18181/v1/chat/completions", { method: "POST", body: "synthetic", redirect: "follow" }, network);
+    await expect(aiSdkFetch("http://127.0.0.1:18181/v1/chat/completions", { method: "POST", body: "synthetic" }, network)).rejects.toThrow("Ausführungsplatz");
+    expect(network).not.toHaveBeenCalled();
+    await withCourtosLocalQueue("courtos-local", undefined, undefined, () => aiSdkFetch("http://127.0.0.1:18181/v1/chat/completions", { method: "POST", body: "synthetic", redirect: "follow" }, network));
     expect(network).toHaveBeenCalledWith("http://127.0.0.1:18181/v1/chat/completions", expect.objectContaining({ redirect: "error" }));
     vi.stubEnv("LLM_MAX_OUTPUT_TOKENS", "100000");
     expect(maxOutputTokensFor("openai-compatible")).toBe(768);
@@ -111,7 +114,7 @@ describe("CourtOS pilot outbound boundary", () => {
     const url = "http://127.0.0.1:18181/v1/chat/completions";
     await expect(aiSdkFetch(url, { method: "POST", body: "x".repeat(COURTOS_PILOT_REQUEST_BYTES + 1) }, network)).rejects.toThrow("kein externer");
     expect(network).not.toHaveBeenCalled();
-    await expect(aiSdkFetch(url, { method: "POST", body: "short" }, network)).rejects.toThrow("lokale Pilot");
+    await expect(withCourtosLocalQueue("courtos-local", undefined, undefined, () => aiSdkFetch(url, { method: "POST", body: "short" }, network))).rejects.toThrow("lokale Pilot");
   });
 
   it("has a compact Swiss judicial prompt and local-read-only tool surface", () => {

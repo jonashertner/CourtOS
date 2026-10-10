@@ -13,26 +13,50 @@ export type ReviewPassage = {
   id: string; source: ReviewEvidence; page: number; pageSha256: string;
   start: number; text: string; role: ReviewInput["sources"][number]["role"]; partyLabel: string | null;
 };
+/** Closed operational diagnostics. Never include source text, identifiers, model
+ * output, parser errors or arbitrary caller strings in this field. */
+export const REVIEW_GROUNDING_DIAGNOSTICS = [
+  "unknown", "source_count", "source_identity", "source_hash", "source_empty",
+  "page_sequence", "page_empty", "page_hash", "source_text_budget", "page_count_budget",
+  "finish_length", "finish_other", "output_size", "json", "schema",
+  "missing_passage", "quote_too_short", "quote_absent", "quote_ambiguous",
+  "category_mismatch", "claim_source_role", "posture_mismatch", "pleading_as_finding",
+  "date_containment", "amount_containment", "not_found_with_evidence",
+  "support_without_independent_source", "legal_support_without_authority",
+  "opposing_source_role", "numeric_atoms", "duplicate_claim",
+  "source_changed_before_release", "request_body_budget", "source_admission",
+] as const;
+export type ReviewGroundingDiagnostic = typeof REVIEW_GROUNDING_DIAGNOSTICS[number];
 export class ReviewGroundingError extends Error {
   readonly code = "review_grounding_failed";
-  constructor() { super("Die Teilanalyse wurde zurückgehalten: Mindestens eine Fundstelle oder Quellenzuordnung konnte nicht bestätigt werden. Bitte den Auftrag enger eingrenzen und die Originalstellen prüfen."); }
+  readonly diagnostic: ReviewGroundingDiagnostic;
+  constructor(diagnostic: ReviewGroundingDiagnostic = "unknown") {
+    super("Die Teilanalyse wurde zurückgehalten: Mindestens eine Fundstelle oder Quellenzuordnung konnte nicht bestätigt werden. Bitte den Auftrag enger eingrenzen und die Originalstellen prüfen.");
+    // Runtime validation also protects callers compiled without TypeScript.
+    this.diagnostic = REVIEW_GROUNDING_DIAGNOSTICS.includes(diagnostic) ? diagnostic : "unknown";
+  }
 }
 const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
 /** Disjoint, page-bound source blocks. All supplied characters are retained.
  * Offsets count Unicode code points in the extracted page, not PDF coordinates. */
 export function buildReviewPassages(input: ReviewInput, sources: ReviewEvidence[]): ReviewPassage[] {
-  if (sources.length !== input.sources.length) throw new ReviewGroundingError();
+  if (sources.length !== input.sources.length) throw new ReviewGroundingError("source_count");
   const passages: ReviewPassage[] = [];
   let bytes = 0;
   let pageCount = 0;
   for (const requested of input.sources) {
     const source = sources.find(item => item.document_id === requested.document_id && item.version_id === requested.version_id);
-    if (!source || !/^[a-f0-9]{64}$/.test(source.pdf_sha256) || source.pdf_sha256 !== source.version_sha256 || !source.pages.length) throw new ReviewGroundingError();
+    if (!source) throw new ReviewGroundingError("source_identity");
+    if (!/^[a-f0-9]{64}$/.test(source.pdf_sha256) || source.pdf_sha256 !== source.version_sha256) throw new ReviewGroundingError("source_hash");
+    if (!source.pages.length) throw new ReviewGroundingError("source_empty");
     for (const [index, page] of source.pages.entries()) {
-      if (page.page !== index + 1 || !page.text.trim() || page.sha256 !== sha256(page.text)) throw new ReviewGroundingError();
+      if (page.page !== index + 1) throw new ReviewGroundingError("page_sequence");
+      if (!page.text.trim()) throw new ReviewGroundingError("page_empty");
+      if (page.sha256 !== sha256(page.text)) throw new ReviewGroundingError("page_hash");
       bytes += Buffer.byteLength(page.text, "utf8"); pageCount++;
-      if (bytes > CASE_REVIEW_LIMITS.sourceTextBytes || pageCount > 40) throw new ReviewGroundingError();
+      if (bytes > CASE_REVIEW_LIMITS.sourceTextBytes) throw new ReviewGroundingError("source_text_budget");
+      if (pageCount > 40) throw new ReviewGroundingError("page_count_budget");
       const characters = Array.from(page.text);
       for (let start = 0; start < characters.length;) {
         let end = Math.min(start + 800, characters.length);
@@ -57,10 +81,12 @@ export function buildReviewPassages(input: ReviewInput, sources: ReviewEvidence[
 
 function bindQuotation(value: ProposedQuotation, passages: ReviewPassage[], minLength = 1) {
   const passage = passages.find(item => item.id === value.p);
-  if (!passage || Array.from(value.q.trim()).length < minLength) throw new ReviewGroundingError();
+  if (!passage) throw new ReviewGroundingError("missing_passage");
+  if (Array.from(value.q.trim()).length < minLength) throw new ReviewGroundingError("quote_too_short");
   const index = passage.text.indexOf(value.q);
   // An ambiguous quotation cannot be assigned a made-up offset.
-  if (index < 0 || passage.text.indexOf(value.q, index + 1) !== -1) throw new ReviewGroundingError();
+  if (index < 0) throw new ReviewGroundingError("quote_absent");
+  if (passage.text.indexOf(value.q, index + 1) !== -1) throw new ReviewGroundingError("quote_ambiguous");
   const start = passage.start + Array.from(passage.text.slice(0, index)).length;
   return {
     passage_id: passage.id, document_id: passage.source.document_id,
@@ -79,17 +105,22 @@ function numericAtoms(value: string): string[] {
 }
 
 export function groundReviewOutput(raw: string, finishReason: string | undefined, input: ReviewInput, sources: ReviewEvidence[], model: string): CaseReviewReport {
-  if (finishReason !== "stop" || Buffer.byteLength(raw, "utf8") > CASE_REVIEW_LIMITS.outputBytes) throw new ReviewGroundingError();
-  let parsed: ReturnType<typeof caseReviewOutputSchema.parse>;
-  try { parsed = caseReviewOutputSchema.parse(JSON.parse(raw)); } catch { throw new ReviewGroundingError(); }
+  if (finishReason !== "stop") throw new ReviewGroundingError(finishReason === "length" ? "finish_length" : "finish_other");
+  if (Buffer.byteLength(raw, "utf8") > CASE_REVIEW_LIMITS.outputBytes) throw new ReviewGroundingError("output_size");
+  let json: unknown;
+  try { json = JSON.parse(raw); } catch { throw new ReviewGroundingError("json"); }
+  const validated = caseReviewOutputSchema.safeParse(json);
+  if (!validated.success) throw new ReviewGroundingError("schema");
+  const parsed = validated.data;
   const passages = buildReviewPassages(input, sources);
   const rows = parsed.rows.map((row, index) => {
-    if ((input.kind === "legal" && row.category !== "legal") || (input.kind !== "legal" && row.category !== "fact")) throw new ReviewGroundingError();
+    if ((input.kind === "legal" && row.category !== "legal") || (input.kind !== "legal" && row.category !== "fact")) throw new ReviewGroundingError("category_mismatch");
     const origin = passages.find(passage => passage.id === row.claim.p);
-    if (!origin || origin.role === "authority") throw new ReviewGroundingError();
-    if (row.category === "legal" && row.posture !== "legal_argument") throw new ReviewGroundingError();
+    if (!origin) throw new ReviewGroundingError("missing_passage");
+    if (origin.role === "authority") throw new ReviewGroundingError("claim_source_role");
+    if (row.category === "legal" && row.posture !== "legal_argument") throw new ReviewGroundingError("posture_mismatch");
     // A pleading is an attributed account, never a court's established finding.
-    if (["claim", "response"].includes(origin.role) && row.posture === "document_statement") throw new ReviewGroundingError();
+    if (["claim", "response"].includes(origin.role) && row.posture === "document_statement") throw new ReviewGroundingError("pleading_as_finding");
     const proposition = bindQuotation(row.claim, passages, 20);
     const evidence = row.evidence.map(value => bindQuotation(value, passages, 20));
     const opposing = row.opposing.map(value => bindQuotation(value, passages, 20));
@@ -98,19 +129,19 @@ export function groundReviewOutput(raw: string, finishReason: string | undefined
     const amounts = row.amounts.map(value => bindQuotation(value, passages, 2));
     // Date/amount labels cannot borrow unrelated support elsewhere in the file.
     for (const atom of [date, ...amounts].filter(value => value !== null)) {
-      if (atom.passage_id !== proposition.passage_id || atom.start < proposition.start || atom.end > proposition.end) throw new ReviewGroundingError();
+      if (atom.passage_id !== proposition.passage_id || atom.start < proposition.start || atom.end > proposition.end) throw new ReviewGroundingError(atom === date ? "date_containment" : "amount_containment");
     }
-    if (row.assessment === "not_found" && evidence.length) throw new ReviewGroundingError();
+    if (row.assessment === "not_found" && evidence.length) throw new ReviewGroundingError("not_found_with_evidence");
     if (["supports", "contradicts"].includes(row.assessment)) {
-      if (!evidence.length || evidence.every(item => item.document_id === proposition.document_id)) throw new ReviewGroundingError();
-      if (row.category === "legal" && !row.evidence.some(value => passages.find(passage => passage.id === value.p)?.role === "authority")) throw new ReviewGroundingError();
+      if (!evidence.length || evidence.every(item => item.document_id === proposition.document_id)) throw new ReviewGroundingError("support_without_independent_source");
+      if (row.category === "legal" && !row.evidence.some(value => passages.find(passage => passage.id === value.p)?.role === "authority")) throw new ReviewGroundingError("legal_support_without_authority");
     }
     if (row.opposing.some(value => {
       const other = passages.find(passage => passage.id === value.p);
       return !other || other.source.document_id === origin.source.document_id || !["claim", "response"].includes(other.role);
-    })) throw new ReviewGroundingError();
+    })) throw new ReviewGroundingError("opposing_source_role");
     const supportedAtoms = numericAtoms([proposition, ...evidence, ...opposing, ...references].map(value => value.quote).join("\n"));
-    if (numericAtoms(row.reason).some(atom => !supportedAtoms.includes(atom))) throw new ReviewGroundingError();
+    if (numericAtoms(row.reason).some(atom => !supportedAtoms.includes(atom))) throw new ReviewGroundingError("numeric_atoms");
     return {
       id: `row-${index + 1}`, category: row.category, proposition,
       party_label: origin.partyLabel, source_role: origin.role, posture: row.posture,
@@ -121,7 +152,7 @@ export function groundReviewOutput(raw: string, finishReason: string | undefined
     };
   });
   const unique = new Set(rows.map(row => `${row.proposition.passage_id}:${row.proposition.start}:${row.proposition.end}`));
-  if (unique.size !== rows.length) throw new ReviewGroundingError();
+  if (unique.size !== rows.length) throw new ReviewGroundingError("duplicate_claim");
   // Stable sorting keeps competing accounts separate, even on the same day.
   // Unclear or absent dates retain draft order in a separate final group.
   if (input.kind === "chronology") rows.sort((a,b) => a.date_sort === null ? (b.date_sort === null ? 0 : 1) : b.date_sort === null ? -1 : a.date_sort.localeCompare(b.date_sort));

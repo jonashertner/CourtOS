@@ -21,6 +21,7 @@ const fail={ok:false,kind:"not_found",code:"review_not_found",detail:"Nicht verf
 const settle=async()=>{for(let i=0;i<12;i++) await new Promise(resolve=>setTimeout(resolve,0));};
 beforeEach(()=>{
   vi.clearAllMocks(); vi.stubEnv("COURTOS_PILOT_MODE","true");vi.stubEnv("COURTOS_KNOWLEDGE_ENABLED","true");
+  vi.spyOn(console,"warn").mockImplementation(()=>{});
   records=new Map();
   const controller=new AbortController(); let attached=false;
   reservation={userId:"owner",signal:controller.signal,attachRun(){attached=true;},hasRun:()=>attached,markModelStarted:vi.fn(),release:vi.fn(async()=>{})};
@@ -31,13 +32,18 @@ beforeEach(()=>{
   mocks.load.mockResolvedValue(evidence);
   mocks.stream.mockResolvedValue({fullText:JSON.stringify(output),finishReason:"stop"});
 });
-afterEach(()=>{resetStreamRunsForTests();vi.unstubAllEnvs();});
+afterEach(()=>{resetStreamRunsForTests();vi.unstubAllEnvs();vi.restoreAllMocks();});
 
 describe("server-owned durable case review",()=>{
   it("returns a stable queued record before model completion, holds draft tokens and persists validated result",async()=>{
     let complete!:(value:unknown)=>void;mocks.stream.mockReturnValue(new Promise(resolve=>{complete=resolve;}));
     const started=await startCaseReview(db,"owner",input);expect(started).toMatchObject({ok:true,data:{id,status:"queued",report:null}});
-    await settle();expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"analysing",report:null}});
+    await settle();expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"reading",report:null}});
+    await mocks.stream.mock.calls[0][0].callbacks.onProviderState("queued");
+    expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"queued",report:null}});
+    expect(reservation.markModelStarted).not.toHaveBeenCalled();
+    await mocks.stream.mock.calls[0][0].callbacks.onProviderState("dispatching");
+    expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"analysing",report:null}});
     expect(mocks.stream).toHaveBeenCalledWith(expect.objectContaining({courtosTask:"case-review",maxIterations:1,reasoning:"none"}));
     expect(mocks.stream.mock.calls[0][0]).not.toHaveProperty("tools");
     expect(mocks.stream.mock.calls[0][0].callbacks).not.toHaveProperty("onContentDelta");
@@ -79,6 +85,7 @@ describe("server-owned durable case review",()=>{
     await startCaseReview(db,"owner",input);await settle();
     const record=await getCaseReview(db,"owner",id);expect(record).toMatchObject({ok:true,data:{status:"failed",report:null,error:{code:"review_grounding_failed"}}});
     expect(JSON.stringify(record)).not.toContain("raw private filename");expect(mocks.stream).not.toHaveBeenCalled();expect(reservation.release).toHaveBeenCalledOnce();
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith("[case-review/rejected]",{report_id:id,code:"source_admission"});
   });
   it.each(["length","wrong_quote","changed_version"])("withholds %s output before publication",async mode=>{
     if(mode==="length")mocks.stream.mockResolvedValue({fullText:JSON.stringify(output),finishReason:"length"});
@@ -87,6 +94,8 @@ describe("server-owned durable case review",()=>{
     await startCaseReview(db,"owner",input);await settle();
     expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"failed",report:null}});
     expect(mocks.write.mock.calls.some(call=>call[3].status==="completed")).toBe(false);
+    const code={length:"finish_length",wrong_quote:"quote_absent",changed_version:"source_changed_before_release"}[mode];
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith("[case-review/rejected]",{report_id:id,code});
   });
   it("explicit stop aborts generation; a browser disconnect does not own the server job",async()=>{
     mocks.stream.mockImplementation(({abortSignal})=>new Promise((_resolve,reject)=>abortSignal.addEventListener("abort",()=>reject(new Error("aborted")),{once:true})));
@@ -94,6 +103,7 @@ describe("server-owned durable case review",()=>{
     const run=caseReviewRun(id,"owner")!;const detach=run.subscribe(1,{write:()=>{},end:()=>{}});detach();expect(run.stopped).toBe(false);
     await stopCaseReview(db,"owner",id);await settle();
     expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"cancelled",report:null}});expect(reservation.release).toHaveBeenCalledOnce();
+    expect(console.warn).not.toHaveBeenCalled();
   });
   it("never publishes an otherwise valid result when durable final storage fails",async()=>{
     const write=mocks.write.getMockImplementation()!;

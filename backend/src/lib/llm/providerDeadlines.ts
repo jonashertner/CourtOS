@@ -3,10 +3,12 @@ import type { LanguageModelMiddleware } from "ai" with {
 };
 import { abortable } from "../abortable";
 import { streamChunkTimeouts } from "../runtimeConfig";
+import { LOCAL_QUEUE_HEARTBEAT_MS } from "./courtosLocalQueue";
 
 /** Bound one provider call, including headers, without timing the SDK's tools. */
 export function providerDeadlines(
   onActivity?: () => void,
+  localPrefillHeartbeat = false,
 ): LanguageModelMiddleware {
   return {
     wrapStream: async ({ model, params }) => {
@@ -14,7 +16,12 @@ export function providerDeadlines(
       const controller = new AbortController();
       const forwardAbort = () => controller.abort(params.abortSignal?.reason);
       let timer: ReturnType<typeof setTimeout> | undefined;
+      // A bounded local prefill may legitimately exceed the run's idle clock.
+      // Only until first output; the real first-chunk deadline still governs it.
+      let heartbeat: ReturnType<typeof setInterval> | undefined;
+      const stopHeartbeat = () => { clearInterval(heartbeat); heartbeat = undefined; };
       const cleanup = () => {
+        stopHeartbeat();
         clearTimeout(timer);
         params.abortSignal?.removeEventListener("abort", forwardAbort);
       };
@@ -38,6 +45,10 @@ export function providerDeadlines(
           once: true,
         });
       arm("First chunk", limits.firstChunkMs);
+      if (localPrefillHeartbeat && onActivity) {
+        heartbeat = setInterval(onActivity, LOCAL_QUEUE_HEARTBEAT_MS);
+        heartbeat.unref?.();
+      }
       try {
         controller.signal.throwIfAborted();
         const pending = Promise.resolve(
@@ -71,6 +82,7 @@ export function providerDeadlines(
                   case "tool-input-delta":
                   case "tool-call":
                   case "file":
+                    stopHeartbeat();
                     arm("Chunk", limits.chunkMs);
                     onActivity?.();
                     break;

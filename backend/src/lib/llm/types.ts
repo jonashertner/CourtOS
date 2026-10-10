@@ -1,6 +1,7 @@
 // Shared types for the LLM provider adapter.
 // Callers always speak OpenAI-style tools + { role, content } messages; each
 // provider translates internally.
+import type { LocalProviderState } from "@mike/contracts";
 
 export type Provider =
     | "claude"
@@ -61,8 +62,10 @@ export type NormalizedToolResult = {
 };
 
 export type StreamCallbacks = {
-    /** Meaningful provider output, even when the consumer buffers it. */
+    /** Output or a bounded, server-owned local queue/prefill heartbeat. */
     onActivity?: () => void;
+    /** Native local FIFO only; no estimates or evidence/quality claims. */
+    onProviderState?: (state: LocalProviderState) => void | Promise<void>;
     onReasoningDelta?: (text: string) => void;
     onReasoningBlockEnd?: () => void;
     onContentDelta?: (text: string) => void;

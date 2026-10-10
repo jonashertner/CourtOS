@@ -1,4 +1,4 @@
-import type { AssistantEvent as WireAssistantEvent } from "@mike/contracts";
+import type { AssistantEvent as WireAssistantEvent, LocalProviderState } from "@mike/contracts";
 // Shared TypeScript types for Mike AI legal assistant
 
 import type {
@@ -220,7 +220,7 @@ export type AssistantEvent =
     })
   | AskInputsEvent
   | AskInputsResponseEvent
-  | { type: "thinking"; isStreaming?: boolean; knowledgePhase?: "evidence_returned" | "search_returned" }
+  | { type: "thinking"; isStreaming?: boolean; knowledgePhase?: "evidence_returned" | "search_returned"; providerPhase?: LocalProviderState }
   | (Omit<
       WireActivity<"doc_read">,
       "document_id" | "version_id" | "version_number" | "isStreaming"

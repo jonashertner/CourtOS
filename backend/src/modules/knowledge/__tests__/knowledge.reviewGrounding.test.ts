@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { buildReviewPassages, groundReviewOutput, reviewPrompt, type ReviewEvidence } from "../knowledge.reviewGrounding";
+import { buildReviewPassages, groundReviewOutput, reviewPrompt, REVIEW_GROUNDING_DIAGNOSTICS, ReviewGroundingError, type ReviewEvidence, type ReviewGroundingDiagnostic } from "../knowledge.reviewGrounding";
 import { parseCaseReviewInput, type ReviewInput } from "../knowledge.reviewSchema";
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
@@ -14,6 +14,18 @@ const sources = [source(1, claim), source(2, denial), source(3, exhibit)];
 const input: ReviewInput = { request_id: uuid(100), kind: "facts", language: "de", sources: sources.map((s,i) => ({ document_id:s.document_id,version_id:s.version_id,role: (["claim","response","exhibit"] as const)[i],party_label:i===2?null:`Partei ${i===0?"A":"B"}` })) };
 const proposed = () => ({ rows: [{ category: "fact", claim:{p:"p1",q:claim}, posture:"allegation", date:{p:"p1",q:"5. September 2026"}, amounts:[{p:"p1",q:"CHF 12’500"}], assessment:"inconclusive", reason:"Eine Behauptung und eine Bestreitung stehen sich gegenüber. Der Entwurf bestätigt keine Zahlung.", evidence:[{p:"p3",q:exhibit}], opposing:[{p:"p2",q:denial}], references:[] }], more_claims:false });
 const ground = (value: unknown = proposed(), finish = "stop", i = input, s = sources) => groundReviewOutput(JSON.stringify(value),finish,i,s,"courtos-local");
+function expectDiagnostic(work: () => unknown, reason: ReviewGroundingDiagnostic) {
+  let captured: unknown;
+  try { work(); } catch (error) { captured = error; }
+  expect(captured).toBeInstanceOf(ReviewGroundingError);
+  expect(captured).toMatchObject({code:"review_grounding_failed",diagnostic:reason});
+  // Public wording stays generic; diagnostics never contain corpus/model bytes.
+  expect((captured as Error).message).toBe(new ReviewGroundingError().message);
+  for (const text of [claim, denial, exhibit, uuid(1), "private-secret-payload"]) {
+    expect(JSON.stringify(captured)).not.toContain(text);
+    expect(String(captured)).not.toContain(text);
+  }
+}
 
 describe("bounded review input and exact server passage binding", () => {
   it("requires fixed versions and rejects duplicate sources, unknown instructions or excessive scope", () => {
@@ -104,6 +116,78 @@ describe("bounded review input and exact server passage binding", () => {
       const report=ground(proposed(),"stop",{...input,language});
       expect(report.notices.join(" ")).not.toContain("ausgewählten");
       expect(report.rows[0].proposition.quote).toBe(claim);
+    }
+  });
+});
+
+describe("closed content-free review rejection diagnostics", () => {
+  it("separates provider finish, size, syntax and strict schema rejection without loosening them", () => {
+    expectDiagnostic(()=>ground(proposed(),"length"),"finish_length");
+    for (const finish of [undefined,"tool_calls","private-secret-payload"]) {
+      expectDiagnostic(()=>groundReviewOutput(JSON.stringify(proposed()),finish,input,sources,"courtos-local"),"finish_other");
+    }
+    expectDiagnostic(()=>groundReviewOutput("x".repeat(24_001),"stop",input,sources,"courtos-local"),"output_size");
+    expectDiagnostic(()=>groundReviewOutput('{"private-secret-payload":',"stop",input,sources,"courtos-local"),"json");
+    expectDiagnostic(()=>ground({...proposed(),private_text:"private-secret-payload"}),"schema");
+  });
+  it("separates source admission failures without exporting document identity or hashes", () => {
+    const one={...input,sources:[input.sources[0]]};
+    const admit=(s:ReviewEvidence[])=>buildReviewPassages(one,s);
+    expectDiagnostic(()=>admit([]),"source_count");
+    expectDiagnostic(()=>admit([{...sources[0],version_id:uuid(999)}]),"source_identity");
+    expectDiagnostic(()=>admit([{...sources[0],version_sha256:hash("different")}]),"source_hash");
+    expectDiagnostic(()=>admit([{...sources[0],pages:[]}]),"source_empty");
+    expectDiagnostic(()=>admit([{...sources[0],pages:[{...sources[0].pages[0],page:2}]}]),"page_sequence");
+    expectDiagnostic(()=>admit([source(1,"  ")]),"page_empty");
+    expectDiagnostic(()=>admit([{...sources[0],pages:[{...sources[0].pages[0],sha256:hash("different")}]}]),"page_hash");
+    expectDiagnostic(()=>admit([source(1,"ä".repeat(5001))]),"source_text_budget");
+    expectDiagnostic(()=>admit([{...sources[0],pages:Array.from({length:41},(_,i)=>({page:i+1,text:"A",sha256:hash("A")}))}]),"page_count_budget");
+  });
+  it("distinguishes missing handles, absent wording, short and ambiguous quotations", () => {
+    const missing=proposed();missing.rows[0].claim.p="p99";
+    expectDiagnostic(()=>ground(missing),"missing_passage");
+    const absent=proposed();absent.rows[0].claim.q="private-secret-payload absent from source";
+    expectDiagnostic(()=>ground(absent),"quote_absent");
+    const short=proposed();short.rows[0].claim.q="Partei A";
+    expectDiagnostic(()=>ground(short),"quote_too_short");
+    expectDiagnostic(()=>ground(proposed(),"stop",input,[source(1,claim+" "+claim),...sources.slice(1)]),"quote_ambiguous");
+  });
+  it("preserves different date, amount, actor/posture and numeric reasoning failure classes", () => {
+    const date=proposed();date.rows[0].date={p:"p3",q:"7. September 2026"};
+    expectDiagnostic(()=>ground(date),"date_containment");
+    const amount=proposed();amount.rows[0].amounts=[{p:"p3",q:"CHF 1250"}];
+    expectDiagnostic(()=>ground(amount),"amount_containment");
+    const numeric=proposed();numeric.rows[0].reason="CHF 99999";
+    expectDiagnostic(()=>ground(numeric),"numeric_atoms");
+    const finding=proposed();finding.rows[0].posture="document_statement";
+    expectDiagnostic(()=>ground(finding),"pleading_as_finding");
+    expectDiagnostic(()=>ground(proposed(),"stop",{...input,sources:[{...input.sources[0],role:"authority"},...input.sources.slice(1)]}),"claim_source_role");
+    const category=proposed();category.rows[0].category="legal";
+    expectDiagnostic(()=>ground(category),"category_mismatch");
+    expectDiagnostic(()=>ground(category,"stop",{...input,kind:"legal"}),"posture_mismatch");
+  });
+  it("retains independent-source, authority, opponent and duplication gates", () => {
+    const absent=proposed();absent.rows[0].assessment="not_found";
+    expectDiagnostic(()=>ground(absent),"not_found_with_evidence");
+    const repeated=proposed();repeated.rows[0].assessment="supports";repeated.rows[0].evidence=[{p:"p1",q:claim}];
+    expectDiagnostic(()=>ground(repeated),"support_without_independent_source");
+    const legal=proposed();legal.rows[0].category="legal";legal.rows[0].posture="legal_argument";legal.rows[0].assessment="supports";
+    expectDiagnostic(()=>ground(legal,"stop",{...input,kind:"legal"}),"legal_support_without_authority");
+    const opposing=proposed();opposing.rows[0].opposing=[{p:"p3",q:exhibit}];
+    expectDiagnostic(()=>ground(opposing),"opposing_source_role");
+    const duplicate=proposed();duplicate.rows.push({...duplicate.rows[0]});
+    expectDiagnostic(()=>ground(duplicate),"duplicate_claim");
+  });
+  it("accepts only fixed diagnostics at runtime, including the lifecycle codes", () => {
+    expect(new Set(REVIEW_GROUNDING_DIAGNOSTICS).size).toBe(REVIEW_GROUNDING_DIAGNOSTICS.length);
+    for (const reason of REVIEW_GROUNDING_DIAGNOSTICS) {
+      expectDiagnostic(()=>{throw new ReviewGroundingError(reason);},reason);
+    }
+    for (const invalid of ["private-secret-payload", {reason:claim}, null]) {
+      const error=new ReviewGroundingError(invalid as unknown as ReviewGroundingDiagnostic);
+      expect(error.diagnostic).toBe("unknown");
+      expect(Object.keys(error).sort()).toEqual(["code","diagnostic"]);
+      expect(error).not.toHaveProperty("cause");
     }
   });
 });

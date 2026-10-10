@@ -1,6 +1,7 @@
 import type { CaseReviewRecord, CaseReviewStatus } from "@mike/contracts";
 import type { Db } from "../../lib/supabase";
 import { failure, ok, type ServiceResult } from "../../lib/serviceResult";
+import { safeError } from "../../lib/safeError";
 import { courtosKnowledgeEnabled } from "../../lib/courtosKnowledge";
 import { courtosPilotModel, COURTOS_PILOT_REQUEST_BYTES } from "../../lib/courtosPilot";
 import { reserveCourtosQuota, withCourtosQuota } from "../../lib/courtosQuota";
@@ -53,12 +54,15 @@ async function executeReview(db: Db, userId: string, run: ReviewRun, model: stri
     const prompt = reviewPrompt(record.input,passages);
     // Conservative request budget, not a tokenizer claim. Provider context
     // refusal is a failed admission; pages are never silently removed to fit.
-    if (Buffer.byteLength(JSON.stringify({messages:[{role:"system",content:prompt.system},{role:"user",content:prompt.user}]}),"utf8") > COURTOS_PILOT_REQUEST_BYTES - 1024) throw new ReviewGroundingError();
-    record = {...record,status:"analysing"}; if (!await persist(db,userId,run,record)) throw new Error("review_storage");
+    if (Buffer.byteLength(JSON.stringify({messages:[{role:"system",content:prompt.system},{role:"user",content:prompt.user}]}),"utf8") > COURTOS_PILOT_REQUEST_BYTES - 1024) throw new ReviewGroundingError("request_body_budget");
     const result = await streamWithProvider({
       model, courtosTask:"case-review", systemPrompt:prompt.system,
       messages:[{role:"user",content:prompt.user}], maxIterations:1,
-      reasoning:"none", abortSignal:run.signal, callbacks:{onActivity:()=>run.touch()},
+      reasoning:"none", abortSignal:run.signal, callbacks:{onActivity:()=>run.touch(), onProviderState: async state => {
+        run.signal.throwIfAborted();
+        record = {...record,status:state === "queued" ? "queued" : "analysing"};
+        if (!await persist(db,userId,run,record)) throw new Error("review_storage");
+      }},
     });
     run.signal.throwIfAborted();
     record = {...record,status:"checking"}; if (!await persist(db,userId,run,record)) throw new Error("review_storage");
@@ -69,7 +73,7 @@ async function executeReview(db: Db, userId: string, run: ReviewRun, model: stri
     if (currentSources.length !== sources.length || sources.some(source => !currentSources.some(current =>
       current.document_id === source.document_id && current.version_id === source.version_id &&
       current.pdf_sha256 === source.pdf_sha256 && current.filename === source.filename &&
-      current.version_number === source.version_number && JSON.stringify(current.pages) === JSON.stringify(source.pages)))) throw new ReviewGroundingError();
+      current.version_number === source.version_number && JSON.stringify(current.pages) === JSON.stringify(source.pages)))) throw new ReviewGroundingError("source_changed_before_release");
     run.signal.throwIfAborted();
     record = {...record,status:"completed",report,error:null};
     if (!await persist(db,userId,run,record)) throw new Error("review_storage");
@@ -78,6 +82,12 @@ async function executeReview(db: Db, userId: string, run: ReviewRun, model: stri
   } catch (error) {
     const cancelled = run.stopped && run.stopReason === "user";
     const known = error instanceof ReviewGroundingError || (error instanceof Error && "code" in error && error.code === "source_grounding_failed");
+    // A closed diagnostic code plus the already validated opaque report ID.
+    // Never include sources, model output, exception messages, stack or user ID.
+    if (!cancelled) console.warn("[case-review/rejected]", {
+      report_id: record.id,
+      code: error instanceof ReviewGroundingError ? error.diagnostic : error instanceof ReviewContextError ? "context_unavailable" : known ? "source_admission" : safeError(error).category,
+    });
     record = {...record,report:null,status:cancelled?"cancelled":"failed",error:cancelled?null:error instanceof ReviewContextError?errorResult(error.code,error.message):known?errorResult("review_grounding_failed", "Die Teilanalyse wurde zurückgehalten: Quellenumfang oder Fundstellen konnten nicht vollständig bestätigt werden. Bitte die ausgewählten Originalfassungen prüfen und den Auftrag enger eingrenzen."):genericFailure};
     if (!await persist(db,userId,run,record)) run.meta.record = {...record,error:storageFailure};
     run.write(`data: ${JSON.stringify({type:"review_error",id:record.id,status:record.status,error:run.meta.record.error})}\n\n`);
