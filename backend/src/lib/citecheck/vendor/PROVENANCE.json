@@ -1,0 +1,35 @@
+{
+  "repository": "https://github.com/jonashertner/citecheck",
+  "commit": "ae73c86e706f45c75f1e58561304dbea5ff4cbf9",
+  "license": "MIT",
+  "files": {
+    "keys": {
+      "upstream_path": "addin/js/keys.js",
+      "upstream_sha256": "8a772f21fc475905083d3a46e7b51d5eca9f5340f8da77dbeef1295edb44a85f",
+      "vendored_path": "keys.ts",
+      "vendored_sha256": "6335efc95902ebf0d5b7f2b5fca61c1cb7cecf637306db75dd43cbc0a928b949",
+      "transform": "prepend TypeScript no-check marker; local import extensions removed"
+    },
+    "parser": {
+      "upstream_path": "addin/js/parser.js",
+      "upstream_sha256": "fc1cecde26bd2c126b0f83d54c07b3c4ab47c9b15679befbd6d8045e52412814",
+      "vendored_path": "parser.ts",
+      "vendored_sha256": "699c20776b0578989914de11dbbfd1314e98bef9f4b60f454bc5d95fbff9d711",
+      "transform": "prepend TypeScript no-check marker; local import extensions removed"
+    },
+    "check": {
+      "upstream_path": "addin/js/check.js",
+      "upstream_sha256": "d0c1ad0eaa344c43eb1a79810f966ef434d8eafb6cf148ecfb82665df06b94d0",
+      "vendored_path": "check.ts",
+      "vendored_sha256": "08ad88fa5582d61561d4b15c1a4ebd07a4c0d9f8281e2f91c85c46ea55639ed4",
+      "transform": "prepend TypeScript no-check marker; local import extensions removed"
+    },
+    "index": {
+      "upstream_path": "addin/js/index.js",
+      "upstream_sha256": "d21fd3f5a6f7ec2d414b9204b8e6082bf8a64521c6af841519c920eb1ef1a0b9",
+      "vendored_path": "index.ts",
+      "vendored_sha256": "6e1346eccc0f700574984f9342d524ef3ca7d454f2bc951358b8a51f649bf7bb",
+      "transform": "prepend TypeScript no-check marker; local import extensions removed; retain only pure CiteIndex class and remove unused Vocabulary import; download/cache code excluded; normalise trailing newline"
+    }
+  }
+}

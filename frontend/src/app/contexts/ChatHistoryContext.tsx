@@ -25,6 +25,8 @@ import { sortChatsByActivity, touchChatActivity } from "@/app/lib/chatActivity";
 interface ChatHistoryContextType {
     chats: Chat[] | null;
     hasMoreChats: boolean;
+    historyLoading: boolean;
+    historyError: "initial" | "more" | null;
   loadingMoreChats: boolean;
     currentChatId: string | null;
     setCurrentChatId: (chatId: string | null) => void;
@@ -64,6 +66,12 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const [chats, setChats] = useState<Chat[] | null>(null);
     const [hasMoreChats, setHasMoreChats] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState<"initial" | "more" | null>(null);
+    const historyGeneration = useRef(0);
+    const historyOwner = useRef(user?.id);
+    const previousOwner = useRef(user?.id);
+    historyOwner.current = user?.id;
     const [loadingMoreChats, setLoadingMoreChats] = useState(false);
     const loadingMoreChatsRef = useRef(false);
     const nextChatCursorRef = useRef<ChatCursor | null>(null);
@@ -79,20 +87,40 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
             return;
         }
 
+        const generation = ++historyGeneration.current;
+        const owner = user.id;
+        const current = () => generation === historyGeneration.current && historyOwner.current === owner;
+        setHistoryLoading(true); setHistoryError(null);
+        loadingMoreChatsRef.current = false; setLoadingMoreChats(false);
         try {
             const data = await listChats({ limit: INITIAL_CHAT_LIMIT + 1 });
+            if (!current()) return;
             const page = data.slice(0, INITIAL_CHAT_LIMIT);
             setChats(sortChatsByActivity(page));
             nextChatCursorRef.current = cursorFor(page.at(-1));
             setHasMoreChats(data.length > INITIAL_CHAT_LIMIT);
         } catch {
+            if (!current()) return;
             setChats([]);
             nextChatCursorRef.current = null;
             setHasMoreChats(false);
+            setHistoryError("initial");
+        } finally {
+            if (current()) setHistoryLoading(false);
         }
     }, [user]);
 
     useEffect(() => {
+        if (previousOwner.current !== user?.id) {
+            previousOwner.current = user?.id;
+            setCurrentChatId(null);
+            setNewChatMessages(null);
+        }
+        // Pending lists from a previous account or reload may never replace this list.
+        historyGeneration.current++;
+        setHistoryError(null); setHistoryLoading(false);
+        loadingMoreChatsRef.current = false; setLoadingMoreChats(false);
+        nextChatCursorRef.current = null; setHasMoreChats(false);
         if (!user) {
             setChats([]);
             setHasMoreChats(false);
@@ -103,12 +131,15 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
             return;
         }
 
+        setChats(null);
         void loadChats();
+        return () => { historyGeneration.current++; };
     }, [user, loadChats]);
 
     const loadMoreChats = useCallback(async () => {
         if (
             !user ||
+            historyLoading ||
             !hasMoreChats ||
             loadingMoreChatsRef.current ||
             chats === null
@@ -116,8 +147,11 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
             return;
         }
 
+        const generation = historyGeneration.current;
+        const owner = user.id;
+        const current = () => generation === historyGeneration.current && historyOwner.current === owner;
         loadingMoreChatsRef.current = true;
-        setLoadingMoreChats(true);
+        setLoadingMoreChats(true); setHistoryError(null);
         try {
             const cursor = nextChatCursorRef.current;
             if (!cursor) {
@@ -129,6 +163,7 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
                 beforeUpdatedAt: cursor.updatedAt,
                 beforeId: cursor.id,
             });
+            if (!current()) return;
             const page = data.slice(0, CHAT_PAGE_SIZE);
             nextChatCursorRef.current = cursorFor(page.at(-1));
             setChats((current) => {
@@ -142,12 +177,15 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
             });
             setHasMoreChats(data.length > CHAT_PAGE_SIZE);
         } catch {
-            // Preserve the current page and allow another scroll to retry.
+            // Preserve the current page; the explicit retry keeps the same cursor.
+            if (current()) setHistoryError("more");
         } finally {
-            loadingMoreChatsRef.current = false;
-            setLoadingMoreChats(false);
+            if (current()) {
+                loadingMoreChatsRef.current = false;
+                setLoadingMoreChats(false);
+            }
         }
-    }, [chats, hasMoreChats, user]);
+    }, [chats, hasMoreChats, historyLoading, user]);
 
     useEffect(
         () =>
@@ -297,7 +335,9 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
         () => ({
             chats,
             hasMoreChats,
-      loadingMoreChats,
+            historyLoading,
+            historyError,
+            loadingMoreChats,
             currentChatId,
             setCurrentChatId,
             loadChats,
@@ -313,7 +353,9 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
         [
             chats,
             hasMoreChats,
-      loadingMoreChats,
+            historyLoading,
+            historyError,
+            loadingMoreChats,
             currentChatId,
             loadChats,
             loadMoreChats,

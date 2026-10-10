@@ -18,7 +18,11 @@ it("switches accessible UI and document lang while leaving unrelated model and q
     window.history.replaceState(null, "", "/research?handoff=00000000-0000-4000-8000-000000000001");
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<CourtOSLocaleProvider ownerId="user-a"><Consumer /></CourtOSLocaleProvider>);
-    fireEvent.change(screen.getByRole("combobox", { name: "Sprache der Oberfläche" }), { target: { value: "fr" } });
+    expect(screen.getByRole("group", { name: "Sprache der Oberfläche" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Deutsch" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Français" }));
+    expect(screen.getByRole("button", { name: "Français" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Deutsch" })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByText("Français choisi")).toBeInTheDocument();
     expect(document.documentElement.lang).toBe("fr-CH");
     expect(localStorage.getItem("courtos:research:model:v1:user-a")).toBe("external-model-sentinel");
@@ -35,7 +39,7 @@ it("does not briefly expose the previous account preference after owner changes"
 it("announces a temporary choice when persistent storage is blocked", () => {
     render(<CourtOSLocaleProvider ownerId="provider-storage-failure"><Consumer /></CourtOSLocaleProvider>);
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("Unavailable"); });
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "en" } });
+    fireEvent.click(screen.getByRole("button", { name: "English" }));
     expect(screen.getByRole("status")).toHaveTextContent("could not be saved for later visits");
 });
 it("reacts to another same-owner window's stored language without account crossover", () => {

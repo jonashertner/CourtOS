@@ -78,10 +78,13 @@ import {
     resolvedDocumentUploadProgressEntries,
     MAX_DOCUMENTS_PER_DIRECTORY_UPLOAD,
     resolveDocumentUploadRootFolder,
+    documentUploadTargetPath,
+    type DocumentUploadFolderChoice,
     type DocumentUploadEntry,
     type DocumentUploadFolderPathResolution,
     type DocumentUploadProgressEntry,
 } from "@/app/lib/documentDirectoryUpload";
+import { FolderUploadConflictPopup } from "./FolderUploadConflictPopup";
 import { settleWithConcurrency } from "@/shared/lib/settleWithConcurrency";
 import {
     collectionSelectAllState,
@@ -803,9 +806,10 @@ export function DocTable({
     const [folderUploadConflict, setFolderUploadConflict] = useState<{
         folderName: string;
         suggestedName: string;
+        targetPath: string;
     } | null>(null);
     const folderUploadConflictResolverRef = useRef<
-        ((choice: "rename" | "cancel") => void) | null
+        ((choice: DocumentUploadFolderChoice) => void) | null
     >(null);
     const [deletingDocIds, setDeletingDocIds] = useState<Set<string>>(() => new Set());
     const [documentUploadWarning, setDocumentUploadWarning] = useState<string | null>(null);
@@ -1543,11 +1547,14 @@ export function DocTable({
     function requestFolderUploadConflictChoice(conflict: {
         folder_name: string;
         suggested_name: string;
-    }): Promise<"rename" | "cancel"> {
+    }, baseFolderId: string | null): Promise<DocumentUploadFolderChoice> {
         folderUploadConflictResolverRef.current?.("cancel");
+        const targetPath = documentUploadTargetPath(baseFolderId, conflict.folder_name, folders);
+        if (!targetPath && COURTOS_PILOT_MODE) throw new Error("The upload destination could not be displayed");
         setFolderUploadConflict({
             folderName: conflict.folder_name,
             suggestedName: conflict.suggested_name,
+            targetPath: (targetPath ?? [conflict.folder_name]).join(" / "),
         });
         return new Promise((resolve) => {
             folderUploadConflictResolverRef.current = resolve;
@@ -1555,7 +1562,7 @@ export function DocTable({
     }
 
     function finishFolderUploadConflict(
-        choice: "rename" | "cancel",
+        choice: DocumentUploadFolderChoice,
     ) {
         const resolve = folderUploadConflictResolverRef.current;
         folderUploadConflictResolverRef.current = null;
@@ -1659,7 +1666,7 @@ export function DocTable({
                     rootFolderName,
                     baseFolderId,
                     resolveFolderPath: operations.resolveFolderPath,
-                    chooseConflict: requestFolderUploadConflictChoice,
+                    chooseConflict: conflict => requestFolderUploadConflictChoice(conflict, baseFolderId),
                 });
                 if (!resolution) return;
 
@@ -3055,15 +3062,15 @@ export function DocTable({
                                                 event.stopPropagation()
                                             }
                                             className={TABLE_CHECKBOX_CLASS}
-                                            aria-label={`Select files in ${folder.name}`}
-                                            title={`Select files in ${folder.name}`}
+                                            aria-label={t(L.selectFolderFiles, {name: folder.name})}
+                                            title={t(L.selectFolderFiles, {name: folder.name})}
                                         />
                                         <button
                                             type="button"
                                             aria-label={
                                                 isExpanded
-                                                    ? `Collapse ${folder.name}`
-                                                    : `Expand ${folder.name}`
+                                                    ? t(L.collapseFolder, {name: folder.name})
+                                                    : t(L.expandFolder, {name: folder.name})
                                             }
                                             onClick={(event) => {
                                                 event.stopPropagation();
@@ -4093,7 +4100,10 @@ export function DocTable({
                 onClose={() => setCollectionActionWarning(null)}
                 message={collectionActionWarning}
             />
-            <ConfirmPopup
+            {COURTOS_PILOT_MODE ? <FolderUploadConflictPopup
+                conflict={folderUploadConflict}
+                onChoose={finishFolderUploadConflict}
+            /> : <ConfirmPopup
                 open={!!folderUploadConflict}
                 title={t(L.folderExists)}
                 message={
@@ -4105,7 +4115,7 @@ export function DocTable({
                 cancelLabel={t(L.cancel)}
                 onCancel={() => finishFolderUploadConflict("cancel")}
                 onConfirm={() => finishFolderUploadConflict("rename")}
-            />
+            />}
             <ConfirmPopup
                 open={confirmDeleteAllOpen && !!selectionActions}
                 title={t(L.deleteSelected)}

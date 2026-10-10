@@ -448,10 +448,16 @@
     if (bodyStart < 0) return null;
     const bodyTokens = tokens.slice(bodyStart);
     const bodyFitsFresh = measureFreshFlow(entry, bodyTokens).fits;
-    const tailStart = output > bodyStart ? output - 1 : -1;
+    // The current manuscript ends in ordinary text, note or list blocks.
+    // Keep that final block together when it fits a fresh leaf, just as the
+    // earlier reader kept its final paragraph with a chapter-output block.
+    const finalBlock = body.lastElementChild;
+    const finalBlockStart = finalBlock ? tokens.findIndex(token =>
+      token.node === finalBlock || token.ancestors.includes(finalBlock)) : -1;
+    const tailStart = output > bodyStart ? output - 1 : finalBlockStart;
     const tail = tailStart >= 0 ? tokens.slice(tailStart) : [];
     const tailFitsFresh = tail.length > 1 && measureFreshFlow(entry, tail).fits;
-    if (tail.length > 1 && !tailFitsFresh) {
+    if (output > bodyStart && tail.length > 1 && !tailFitsFresh) {
       // If a long last paragraph needs to split, keep its final two lines
       // beside the output. The complete untouched tokens remain the source.
       const text = tail[0].node.textContent;

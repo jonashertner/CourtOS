@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { ResearchHandoffState } from "@mike/contracts";
 import type { Citation, Message } from "@/app/components/shared/types";
-import { ChatHistoryProvider, useChatHistoryContext } from "@/app/contexts/ChatHistoryContext";
+import { ChatHistoryProvider } from "@/app/contexts/ChatHistoryContext";
 import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
 import { useAssistantChat } from "@/app/hooks/useAssistantChat";
 import { loadAssistantChat } from "@/app/lib/assistantTurns";
@@ -14,6 +14,7 @@ import { courtOSMessages } from "@/app/lib/courtosMessages";
 import { researchConversationMessages as M } from "@/app/lib/researchConversationMessages";
 import { AssistantMessage } from "@/app/components/assistant/AssistantMessage";
 import { ProcessingLocation } from "./ProcessingLocation";
+import { PersonalConversationHistory } from "./PersonalConversationHistory";
 
 type ConversationState = NonNullable<ResearchHandoffState["conversation"]>;
 type Props = {
@@ -23,6 +24,7 @@ type Props = {
     onState(state: ConversationState): void;
     onTransferReady?(ready: boolean): void;
     onBinding?(locked: boolean): void;
+    onRemovePublicSource?(): void;
     onEdit(): void;
     onFindSources(mode: "public" | "private"): void;
     onCitation(citation: Citation): void;
@@ -40,9 +42,8 @@ function SourceAnswer({ message, busy, chatId, onCitation }: { message: Message;
     return <p role="alert" className="courtos-conversation-hint">{t(description ?? M.withheldHistory)}</p>;
 }
 
-function Conversation({ owner, candidate, initialState, onState, onTransferReady, onBinding, onEdit, onFindSources, onCitation }: Props) {
+function Conversation({ owner, candidate, initialState, onState, onTransferReady, onBinding, onRemovePublicSource, onEdit, onFindSources, onCitation }: Props) {
     const { t } = useCourtOSLocale();
-    const { chats } = useChatHistoryContext();
     const [chatId, setChatId] = useState<string | undefined>(initialState?.chat_id ?? undefined);
     const [draft, setDraft] = useState(initialState?.draft ?? "");
     const [binding, setBinding] = useState<ResearchConversationSources | null>(null);
@@ -52,12 +53,31 @@ function Conversation({ owner, candidate, initialState, onState, onTransferReady
     const [submitting, setSubmitting] = useState(false);
     const [sendFailed, setSendFailed] = useState(false);
     const [sendIssue, setSendIssue] = useState<SourceGroundingIssue | null>(null);
-    const draftRef = useRef(draft); draftRef.current = draft;
+    // These drafts belong to this owner-keyed view, not to another conversation.
+    // Only the active draft participates in the existing Word/browser handoff.
+    const draftKey = useRef(chatId ?? "new");
+    const drafts = useRef(new Map([[draftKey.current, draft]]));
+    const draftRef = useRef(draft);
+    const changeDraft = useCallback((value: string) => {
+        draftRef.current = value;
+        drafts.current.set(draftKey.current, value);
+        setDraft(value);
+    }, []);
     const pendingQuestion = useRef("");
     const adopted = useRef<string | null>(null);
     const sending = useRef(false);
-    const created = useCallback((id: string) => { adopted.current = id; onState({ chat_id: id, draft: draftRef.current }); setChatId(id); onTransferReady?.(true); }, [onState, onTransferReady]);
-    const failedTurn = useCallback((issue?: SourceGroundingIssue) => { setSendIssue(issue ?? null); setSendFailed(true); setDraft(current => current || pendingQuestion.current); }, []);
+    const created = useCallback((id: string) => {
+        drafts.current.set(id, draftRef.current);
+        if (draftKey.current === "new") drafts.current.set("new", "");
+        draftKey.current = id;
+        adopted.current = id;
+        onState({ chat_id: id, draft: draftRef.current });
+        setChatId(id); onTransferReady?.(true);
+    }, [onState, onTransferReady]);
+    const failedTurn = useCallback((issue?: SourceGroundingIssue) => {
+        setSendIssue(issue ?? null); setSendFailed(true);
+        if (!draftRef.current) changeDraft(pendingQuestion.current);
+    }, [changeDraft]);
     const chat = useAssistantChat({ chatId, onChatCreated: created, onTurnFailed: failedTurn });
     const setMessages = chat.setMessages;
     const busy = submitting || chat.isResponseLoading;
@@ -85,19 +105,23 @@ function Conversation({ owner, candidate, initialState, onState, onTransferReady
 
     function selectChat(id?: string) {
         if (busy) return;
-        onEdit(); chat.resetChat(); pendingQuestion.current = ""; setBinding(null); setChatId(id); setFailed(false); setLoading(!!id);
-        // The draft is deliberately retained when opening a saved conversation.
+        if (id && id === chatId) return;
+        drafts.current.set(draftKey.current, draftRef.current);
+        draftKey.current = id ?? "new";
+        changeDraft(drafts.current.get(draftKey.current) ?? "");
+        onEdit(); chat.resetChat(); pendingQuestion.current = ""; adopted.current = null;
+        setSendFailed(false); setSendIssue(null); setBinding(null); setChatId(id); setFailed(false); setLoading(!!id);
     }
     async function send(event: FormEvent) {
         event.preventDefault();
         if (sending.current || busy || loading || failed || issue || !draft.trim() || draft.length > 12000) return;
         const selected = snapshotConversationSources(sources);
         sending.current = true; setSubmitting(true); setSendFailed(false); setSendIssue(null); setBinding(selected); onEdit(); if (!chatId) onTransferReady?.(false);
-        const content = draft.trim(); pendingQuestion.current = content; draftRef.current = ""; setDraft("");
+        const content = draft.trim(); pendingQuestion.current = content; changeDraft("");
         try {
             const result = await chat.handleChat({ role: "user", content, files: selected.files, public_sources: selected.public_sources, model: "courtos-local", reasoning: "none" });
-            if (!result) setDraft(current => current || content);
-        } catch { setSendFailed(true); setDraft(current => current || content); }
+            if (!result && !draftRef.current) changeDraft(content);
+        } catch { setSendFailed(true); if (!draftRef.current) changeDraft(content); }
         finally { sending.current = false; setSubmitting(false); }
     }
 
@@ -106,7 +130,7 @@ function Conversation({ owner, candidate, initialState, onState, onTransferReady
             <h2 id="research-conversation-title">{t(M.title)}</h2>
             {!!chat.messages.length && <button type="button" className="courtos-link" disabled={busy} onClick={() => selectChat()}>{t(M.newConversation)}</button>}
         </header>
-        {!!chats?.some(item => item.project_id === null && item.user_id === owner) && <details className="courtos-conversation-history"><summary>{t(M.history)}</summary><select className="courtos-field" aria-label={t(M.history)} value={chatId ?? ""} disabled={busy} onChange={event => selectChat(event.target.value || undefined)}><option value="">{t(M.newOption)}</option>{chats.filter(item => item.project_id === null && item.user_id === owner).map(item => <option key={item.id} value={item.id}>{item.title || item.created_at.slice(0, 10)}</option>)}</select></details>}
+        <PersonalConversationHistory owner={owner} selected={chatId} disabled={busy} onSelect={selectChat} />
         {loading && <p role="status">{t(M.loading)}</p>}
         {failed && <div role="alert"><p>{t(M.loadFailed)}</p><button type="button" className="courtos-link" onClick={() => setReload(value => value + 1)}>{t(M.reload)}</button></div>}
         {!!chat.messages.length && <div className="courtos-conversation-transcript" aria-label={t(M.transcript)}>
@@ -117,12 +141,13 @@ function Conversation({ owner, candidate, initialState, onState, onTransferReady
         {!loading && !failed && <div className="courtos-conversation-sources" aria-label={t(M.sources)}>
             {sources.files.map(file => <span key={`${file.document_id}:${file.version_id}`}>{file.filename}{file.version_number ? ` · V${file.version_number}` : ""}</span>)}
             {sources.public_sources.map(source => <span key={`${source.decision_id}:${source.start}`}><span className="break-words">{source.decision_id}</span> · {t(M.publicExcerpt, { start: source.start, end: source.end })}</span>)}
+            {!!sources.public_sources.length && !binding && onRemovePublicSource && <button type="button" className="courtos-link" onClick={onRemovePublicSource}>{t(M.removePublicSource)}</button>}
             {binding && <p>{t(M.fixedSources)}</p>}
         </div>}
         {sendFailed && <p role="alert">{t(sendIssue ? sourceGroundingText("source_grounding_failed", sendIssue)! : M.requestFailed)}</p>}
         <form onSubmit={send} className="courtos-conversation-composer">
             <label htmlFor="research-question">{t(M.question)}</label>
-            <textarea id="research-question" className="courtos-field" value={draft} rows={3} maxLength={12000} placeholder={t(M.placeholder)} onChange={event => { onEdit(); setDraft(event.target.value); }} disabled={loading} aria-describedby={issue ? "research-conversation-source-required" : undefined} />
+            <textarea id="research-question" className="courtos-field" value={draft} rows={3} maxLength={12000} placeholder={t(M.placeholder)} onChange={event => { onEdit(); changeDraft(event.target.value); }} disabled={loading} aria-describedby={issue ? "research-conversation-source-required" : undefined} />
             {issue && !loading && !failed && <p id="research-conversation-source-required" className="courtos-conversation-hint">{t(issueMessage)}</p>}
             <div className="courtos-conversation-actions">
                 <ProcessingLocation service="gemma" stage={busy ? "pending" : "draft"} />

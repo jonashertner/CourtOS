@@ -11,6 +11,7 @@ import {
     MAX_DOCUMENTS_PER_DIRECTORY_UPLOAD,
     resolvedDocumentUploadProgressEntries,
     resolveDocumentUploadRootFolder,
+    documentUploadTargetPath,
 } from "./documentDirectoryUpload";
 import { settleWithConcurrency } from "@/shared/lib/settleWithConcurrency";
 
@@ -23,6 +24,29 @@ function folderFile(name: string, relativePath: string) {
 }
 
 describe("document directory upload paths", () => {
+    it("shows the complete destination and refuses an unknown or cyclic ancestor", () => {
+        const folders = [{id:"case",name:"HG260001",parent_folder_id:null}, {id:"party",name:"Klägerin",parent_folder_id:"case"}];
+        expect(documentUploadTargetPath("party","Beilagen",folders)).toEqual(["HG260001","Klägerin","Beilagen"]);
+        expect(documentUploadTargetPath(null,"HG260001",folders)).toEqual(["HG260001"]);
+        expect(documentUploadTargetPath("unknown","Beilagen",folders)).toBeNull();
+        expect(documentUploadTargetPath("case","Beilagen",[{...folders[0],parent_folder_id:"case"}])).toBeNull();
+    });
+    it("reuses only the exact existing folder explicitly approved by the user", async () => {
+        const resolveFolderPath = vi.fn()
+            .mockResolvedValueOnce({conflict:true,folder_name:"HG260001",existing_folder_id:"case",suggested_name:"HG260001 (2)"})
+            .mockResolvedValueOnce({conflict:false,folder_id:"case",resolved_name:"HG260001",folders:[]});
+        const chooseConflict = vi.fn(async () => "reuse" as const);
+        const result = await resolveDocumentUploadRootFolder({rootFolderName:"HG260001",baseFolderId:null,resolveFolderPath,chooseConflict});
+        expect(chooseConflict).toHaveBeenCalledOnce();
+        expect(resolveFolderPath).toHaveBeenLastCalledWith(["HG260001"],null,"reuse");
+        expect(result?.folder_id).toBe("case");
+    });
+    it("does not silently reuse a replacement same-named folder after approval", async () => {
+        const resolveFolderPath = vi.fn()
+            .mockResolvedValueOnce({conflict:true,folder_name:"HG260001",existing_folder_id:"case",suggested_name:"HG260001 (2)"})
+            .mockResolvedValueOnce({conflict:false,folder_id:"other-case",resolved_name:"HG260001",folders:[]});
+        await expect(resolveDocumentUploadRootFolder({rootFolderName:"HG260001",baseFolderId:null,resolveFolderPath,chooseConflict:async()=>"reuse"})).rejects.toThrow("approved upload folder changed");
+    });
     it("reports live folder upload counts", () => {
         expect(
             folderUploadProgressLabel([

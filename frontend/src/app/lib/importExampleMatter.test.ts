@@ -1,16 +1,30 @@
 import {readFileSync} from "node:fs";
 import {webcrypto,createHash} from "node:crypto";
 import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
-import type {Document} from "@/app/components/shared/types";
+import type {Document,LibraryFolder} from "@/app/components/shared/types";
 import {EXAMPLE_MATTERS} from "./exampleMatters";
 import {importExampleMatter} from "./importExampleMatter";
-const api=vi.hoisted(()=>({upload:vi.fn(),search:vi.fn(),folder:vi.fn(),get:vi.fn(),move:vi.fn()}));
-vi.mock("./mikeApi",()=>({uploadLibraryDocuments:api.upload,searchLibraryDocuments:api.search,resolveLibraryFolderPath:api.folder,getDocument:api.get,moveLibraryDocument:api.move}));
+const api=vi.hoisted(()=>({upload:vi.fn(),search:vi.fn(),folder:vi.fn(),get:vi.fn(),move:vi.fn(),root:vi.fn(),children:vi.fn(),rename:vi.fn(),renameFolder:vi.fn()}));
+vi.mock("./mikeApi",()=>({uploadLibraryDocuments:api.upload,searchLibraryDocuments:api.search,resolveLibraryFolderPath:api.folder,getDocument:api.get,moveLibraryDocument:api.move,getLibrary:api.root,getLibraryFolderChildren:api.children,renameLibraryDocument:api.rename,renameLibraryFolder:api.renameFolder}));
 const matter=EXAMPLE_MATTERS[0];
 let documents:Document[];
 const fixture=(index:number,previous=false)=>({id:`doc-${index}`,current_version_id:`version-${index}`,status:"ready",filename:matter.documents[index].filename,project_id:null,library_kind:"file",file_type:"pdf",size_bytes:previous?matter.documents[index].previousEditions[0].bytes:matter.documents[index].bytes,content_sha256:previous?matter.documents[index].previousEditions[0].sha256:matter.documents[index].sha256,updated_at:"2026-10-10T14:00:00Z",library_folder_id:null} as Document);
+function legacyTree(){
+    const folder=(id:string,name:string,parent_folder_id:string|null)=>({id,name,parent_folder_id,updated_at:"2026-10-10T14:00:00Z"} as LibraryFolder);
+    const folders=[folder("case-old",matter.legacyFiling.caseNumber,null),...matter.legacyFiling.parties.flatMap((party,index)=>[
+        folder(`party-${index}`,party.label,"case-old"),folder(`submissions-${index}`,party.submissions,`party-${index}`),folder(`exhibits-${index}`,party.exhibits,`party-${index}`)
+    ]),folder("common",matter.legacyFiling.sharedFolder,"case-old")];
+    documents=matter.documents.map((entry,index)=>({...fixture(index,true),filename:entry.previousFilenames[0],library_folder_id:index<2?`submissions-${index}`:"common"}));
+    api.root.mockImplementation(async()=>({folders:folders.filter(f=>f.parent_folder_id===null).map(f=>({...f})),documents:[],documentsHasMore:false}));
+    api.children.mockImplementation(async(_kind,id)=>({folders:folders.filter(f=>f.parent_folder_id===id).map(f=>({...f})),documents:documents.filter(doc=>doc.library_folder_id===id).map(doc=>({...doc})),documentsHasMore:false}));
+    api.renameFolder.mockImplementation(async(_kind,id,name)=>{const item=folders.find(f=>f.id===id)!;item.name=name;item.updated_at="2026-10-10T14:01:00Z";return {...item};});
+    api.folder.mockImplementation(async(_kind,segments:string[])=>{let parent:string|null=null;for(const name of segments){const item=folders.find(f=>f.parent_folder_id===parent&&f.name===name);if(!item)throw Error("Unexpected new/duplicate folder");parent=item.id;}return {folder_id:parent,conflict:false,folders:[]};});
+    return folders;
+}
 beforeEach(()=>{
     vi.clearAllMocks();vi.spyOn(console,"warn").mockImplementation(()=>undefined);documents=[];vi.stubGlobal("crypto",webcrypto);vi.stubGlobal("fetch",vi.fn(async(path:string)=>new Response(readFileSync(`public${new URL(path,"https://sandbox.test").pathname}`))));
+    api.root.mockResolvedValue({folders:[],documents:[],documentsHasMore:false});api.children.mockResolvedValue({folders:[],documents:[],documentsHasMore:false});
+    api.rename.mockImplementation(async(_kind,id,filename)=>{const doc=documents.find(item=>item.id===id)!;doc.filename=filename;doc.updated_at="2026-10-10T14:00:01Z";return {...doc};});
     api.search.mockImplementation(async()=>({documents:documents.map(doc=>({...doc})),documentsHasMore:false}));
     api.folder.mockImplementation(async(_kind,segments)=>({conflict:false,folder_id:segments.join("/"),folders:[]}));
     api.get.mockImplementation(async(id:string)=>({...documents.find(doc=>doc.id===id)}));
@@ -21,11 +35,11 @@ afterEach(()=>vi.restoreAllMocks());
 describe("explicit structured example import",()=>{
     it("ships four distinct numbered matters with hash-bound PDFs and retained prior editions",()=>{
         expect(EXAMPLE_MATTERS.map(m=>m.language)).toEqual(["de","fr","it","en"]);
-        expect(EXAMPLE_MATTERS.map(m=>m.caseNumber)).toEqual(["CourtOS-UE-2026-001","CourtOS-UE-2026-002","CourtOS-UE-2026-003","CourtOS-UE-2026-004"]);
+        expect(EXAMPLE_MATTERS.map(m=>m.caseNumber)).toEqual(["FV.2026.117","C.2026.204","OR.2026.83","HG.2026.42"]);
         expect(new Set(EXAMPLE_MATTERS.map(m=>m.judgment.number)).size).toBe(4);
         for(const item of EXAMPLE_MATTERS){
             expect(item.textBytes).toBeLessThan(10000);expect(item.documents.map(d=>d.role)).toEqual(["claim","response","exhibit","exhibit"]);
-            for(const document of item.documents){const bytes=readFileSync(`public${document.path}`);expect(bytes.length).toBe(document.bytes);expect(createHash("sha256").update(bytes).digest("hex")).toBe(document.sha256);expect(bytes.subarray(0,5).toString()).toBe("%PDF-");expect(document.path).not.toContain("findings");expect(document.previousEditions).toHaveLength(1);}
+            for(const document of item.documents){const bytes=readFileSync(`public${document.path}`);expect(bytes.length).toBe(document.bytes);expect(createHash("sha256").update(bytes).digest("hex")).toBe(document.sha256);expect(bytes.subarray(0,5).toString()).toBe("%PDF-");expect(document.path).not.toContain("findings");expect(document.previousEditions.length).toBeGreaterThanOrEqual(2);expect(document.filename).not.toContain("CourtOS");expect(document.filename).toContain(" ");}
         }
     });
     it("uploads into native case/party folders and uses authoritative returned versions",async()=>{
@@ -35,7 +49,7 @@ describe("explicit structured example import",()=>{
         expect(api.folder.mock.calls.every(call=>call[2]===null&&call[3]==="reuse"&&call[1][0]===matter.caseNumber)).toBe(true);
         expect(api.folder.mock.calls[0][1]).toEqual([matter.caseNumber]);
         for(const party of matter.parties)expect(api.folder).toHaveBeenCalledWith("files",[matter.caseNumber,party.label,party.exhibits],null,"reuse");
-        expect(result.sources[0]).toMatchObject({document:{id:"doc-0",current_version_id:"version-0"},role:"claim",party:"A.________ AG · Vermieterin"});
+        expect(result.sources[0]).toMatchObject({document:{id:"doc-0",current_version_id:"version-0"},role:"claim",party:"Bergtal Immobilien AG · Vermieterin"});
         expect(result.reusedCount).toBe(0);expect(api.move).not.toHaveBeenCalled();expect(fetch).toHaveBeenCalledTimes(4);
     });
     it("binds every download to its catalogue SHA and bypasses the browser cache",async()=>{
@@ -70,6 +84,41 @@ describe("explicit structured example import",()=>{
         expect(api.upload).not.toHaveBeenCalled();expect(result.reusedCount).toBe(4);expect(result.previousEditionCount).toBe(4);expect(api.move).toHaveBeenCalledTimes(4);
         expect(api.move.mock.calls[0][3]).toEqual({version_id:"version-0",content_sha256:matter.documents[0].previousEditions[0].sha256,updated_at:"2026-10-10T14:00:00Z"});
         expect(result.sources.map(s=>s.document.content_sha256)).toEqual(matter.documents.map(d=>d.previousEditions[0].sha256));
+    });
+    it("renames legacy synthetic metadata in place while retaining every folder/document/version and byte hash",async()=>{
+        const folders=legacyTree(),ids=folders.map(folder=>folder.id),versions=documents.map(doc=>[doc.id,doc.current_version_id,doc.content_sha256]);
+        const result=await importExampleMatter(matter,new AbortController().signal);
+        expect(result.folderId).toBe("case-old");expect(result.reusedCount).toBe(4);expect(result.previousEditionCount).toBe(4);
+        expect(folders.map(folder=>folder.id)).toEqual(ids);expect(documents.map(doc=>[doc.id,doc.current_version_id,doc.content_sha256])).toEqual(versions);
+        expect(api.upload).not.toHaveBeenCalled();expect(api.move).not.toHaveBeenCalled();expect(api.rename).toHaveBeenCalledTimes(4);
+        expect(api.rename.mock.calls[0][3]).toEqual({version_id:"version-0",content_sha256:matter.documents[0].previousEditions[0].sha256,updated_at:"2026-10-10T14:00:00Z",filename:matter.documents[0].previousFilenames[0]});
+        expect(api.renameFolder).toHaveBeenCalledWith("files","case-old",matter.caseNumber,{name:matter.legacyFiling.caseNumber,updated_at:"2026-10-10T14:00:00Z",parent_folder_id:null});
+        expect(folders.map(folder=>folder.name).join(" ")).not.toContain("CourtOS");expect(documents.map(doc=>doc.filename)).toEqual(matter.documents.map(doc=>doc.filename));
+        api.rename.mockClear();api.renameFolder.mockClear();await importExampleMatter(matter,new AbortController().signal);
+        expect(api.rename).not.toHaveBeenCalled();expect(api.renameFolder).not.toHaveBeenCalled();expect(api.upload).not.toHaveBeenCalled();
+    });
+    it("does not rename a legacy case that also contains an unrelated original",async()=>{
+        legacyTree();documents.push({...fixture(0),id:"unrelated",filename:"Originalvertrag.pdf",library_folder_id:"common"});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile",code:"existing"});
+        expect(api.renameFolder).not.toHaveBeenCalled();expect(api.rename).not.toHaveBeenCalled();expect(api.upload).not.toHaveBeenCalled();
+    });
+    it("does not merge existing old/new case folders or party folders",async()=>{
+        const folders=legacyTree();folders.push({...folders[0],id:"other-case",name:matter.caseNumber});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+        expect(api.renameFolder).not.toHaveBeenCalled();expect(api.upload).not.toHaveBeenCalled();
+        folders.pop();folders.push({...folders[1],id:"other-party",name:matter.parties[0].label});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+        expect(api.renameFolder).not.toHaveBeenCalled();expect(api.rename).not.toHaveBeenCalled();
+    });
+    it("stops on a folder revision conflict before renaming document metadata",async()=>{
+        legacyTree();api.renameFolder.mockRejectedValue(Object.assign(Error("changed"),{status:409}));
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile",status:409});
+        expect(api.renameFolder).toHaveBeenCalledOnce();expect(api.rename).not.toHaveBeenCalled();expect(api.upload).not.toHaveBeenCalled();
+    });
+    it("stops on a document revision conflict and never retries unconditionally",async()=>{
+        legacyTree();api.rename.mockRejectedValue(Object.assign(Error("changed"),{status:409}));
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"file_rename",status:409});
+        expect(api.rename).toHaveBeenCalledOnce();expect(api.upload).not.toHaveBeenCalled();expect(api.move).not.toHaveBeenCalled();
     });
     it("a repeated completed import reuses the same folder and documents without writes to files",async()=>{
         const first=await importExampleMatter(matter,new AbortController().signal);

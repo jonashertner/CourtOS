@@ -2,6 +2,7 @@
 
 import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
 import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { citationControlMessages as citationControls } from "@/app/lib/citationControlMessages";
 import { courtOSMessages } from "@/app/lib/courtosMessages";
 
 import { openPublicCitationOriginal, publicCitationOriginalUrl } from "@/app/lib/publicCitationLinks";
@@ -1168,7 +1169,7 @@ export function AssistantMessage({
                         <button
                             type="button"
                             aria-label={
-                                isCopied ? "Response copied" : "Copy response"
+                                COURTOS_PILOT_MODE ? t(isCopied ? citationControls.responseCopied : citationControls.copyResponse) : isCopied ? "Response copied" : "Copy response"
                             }
                             className="-ml-1.5 p-1.5 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                             onClick={handleCopy}

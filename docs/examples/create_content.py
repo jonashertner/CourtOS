@@ -96,12 +96,19 @@ case('EN-01','en','Authority to sign a winter lease','4A_421/2015','2016-02-11',
  ('The landlord sought provisional enforcement of CHF 20,000. On 28 February 2014 the court allowed CHF 10,000 plus interest because the remaining CHF 10,000 was not yet due when enforcement began. The two amounts must not be merged into a finding that the full claim was already due.','Facts B')])])
 ]
 
+filing=json.loads((ROOT/'filing.json').read_text())
+for item in cases:
+ arrangement=next(value for value in filing['cases'] if value['id']==item['id'])
+ for index,document in enumerate(item['documents']):
+  if index<2:document['party_label']=arrangement['parties'][index]['label']
+
 labels={
  'de':{'notice':'Rekonstruierte Übungsunterlage. Kein Originalakt.','sub':'Nach einem veröffentlichten Schweizer Urteil','source':'Grundlage','paragraph':'Absatz','footer':'Nur für die freiwillige Fallübung'},
  'fr':{'notice':'Document d’exercice reconstruit. Ce n’est pas une pièce originale.','sub':'D’après un arrêt suisse publié','source':'Source','paragraph':'Paragraphe','footer':'Dossier facultatif d’exercice'},
  'it':{'notice':'Documento didattico ricostruito. Non è un atto originale.','sub':'Da una sentenza svizzera pubblicata','source':'Fonte','paragraph':'Paragrafo','footer':'Fascicolo facoltativo di esercitazione'},
  'en':{'notice':'Reconstructed exercise document. Not an original case record.','sub':'Unofficial English reconstruction of a Swiss judgment in German','source':'Source','paragraph':'Paragraph','footer':'Optional case exercise'}
 }
+for language,notice in {'de':' Personen- und Firmennamen sind erfunden.','fr':' Les noms de personnes et de sociétés sont fictifs.','it':' I nomi di persone e società sono inventati.','en':' Person and company names are fictitious.'}.items():labels[language]['sub']=labels[language]['sub'].rstrip('.')+'.'+notice
 payload={'version':1,'created':'2026-10-10','author':'Jonas Hertner / CourtOS','cases':cases,'labels':labels,'source_policy':'Published judgments only. No original party pleadings or underlying exhibits were obtained. All four input documents per matter are expressly reconstructed exercise documents. Quoted English phrases are separately marked. No signatures, letterheads or fabricated evidence images.'}
 (ROOT/'content.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n')
 print('Prepared',len(cases),'cases and',sum(len(c['documents']) for c in cases),'documents')

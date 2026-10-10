@@ -38,9 +38,9 @@ describe("compact research window", () => {
         expect(button).toHaveTextContent(new RegExp(`^${visible}$`));
         expect(button).toHaveAttribute("title", accessible);
         expect(button).toHaveClass("courtos-word-browser-link--compact");
-        const citecheck=screen.getAllByRole("link").find(link=>link.getAttribute("href")?.startsWith("https://jonashertner.github.io/citecheck/"))!;
-        expect(citecheck).toHaveAttribute("href",`https://jonashertner.github.io/citecheck/taskpane.html?lang=${locale}`);
-        expect(citecheck).toHaveAttribute("rel","noopener noreferrer");
+        const citecheck=screen.getAllByRole("link").find(link=>link.getAttribute("href")?.endsWith("#citation-check"))!;
+        expect(citecheck).toHaveAttribute("href","/review?host=word#citation-check");
+        expect(citecheck).not.toHaveAttribute("target");
         expect(state.create).not.toHaveBeenCalled();
     });
     it("shows research and personal library, complete identity and source offer without workspace navigation", () => {
@@ -50,9 +50,8 @@ describe("compact research window", () => {
         expect(screen.queryByRole("contentinfo")).toBeNull();
         expect(screen.getByRole("link", {name:"Eingaben prüfen"})).toHaveAttribute("href", "/review");
         const citecheck = screen.getByRole("link", { name: "Zitate prüfen" });
-        expect(citecheck).toHaveAttribute("href", "https://jonashertner.github.io/citecheck/taskpane.html?lang=de");
-        expect(citecheck).toHaveAttribute("target", "_blank");
-        expect(citecheck).toHaveAttribute("rel", "noopener noreferrer");
+        expect(citecheck).toHaveAttribute("href", "/review#citation-check");
+        expect(citecheck).not.toHaveAttribute("target");
         expect(screen.getByText(state.email)).not.toBeVisible();
         fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
         expect(screen.getByText(state.email)).toBeVisible();

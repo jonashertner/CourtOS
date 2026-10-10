@@ -11,7 +11,7 @@ import { ResearchHandoffProvider } from "./ResearchHandoffContext";
 import { ResearchContinuation, ResearchContinuationStatus } from "./ResearchHandoffControls";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { COURTOS_CLOUDFLARE_AUTH, courtosCitecheckUrl, isWordResearchContext } from "@/app/lib/courtos";
+import { COURTOS_CLOUDFLARE_AUTH, isWordResearchContext } from "@/app/lib/courtos";
 
 /** A research window beside the user's usual tools, with no workspace catalogue. */
 export function ResearchShell({ children }: { children: ReactNode }) {
@@ -28,7 +28,7 @@ function ResearchShellContent({ children }: { children: ReactNode }) {
 }
 
 function ResearchShellFrame({ children }: { children: ReactNode }) {
-    const { t, locale } = useCourtOSLocale();
+    const { t } = useCourtOSLocale();
     const { user, signOut } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
@@ -63,7 +63,7 @@ function ResearchShellFrame({ children }: { children: ReactNode }) {
                     <Link href={researchPath} aria-current={!inLibrary && !inReview ? "page" : undefined}>{t(M.research)}</Link>
                     <Link href={inWord ? "/review?host=word" : "/review"} aria-current={inReview ? "page" : undefined}>{t(M.review)}</Link>
                     <Link href={inWord ? "/library?host=word" : "/library"} aria-current={inLibrary ? "page" : undefined}>{t(M.library)}</Link>
-                    <a href={courtosCitecheckUrl(locale)} target="_blank" rel="noopener noreferrer" aria-label={t(M.checkCitations)} title={t(M.openCitecheck)}>{t(M.citations)} <span aria-hidden="true">↗</span></a>
+                    <Link href={inWord ? "/review?host=word#citation-check" : "/review#citation-check"} aria-label={t(M.checkCitations)}>{t(M.citations)}</Link>
                 </nav>
                 <ResearchContinuation compact />
                 <button type="button" className="courtos-settings-trigger" onClick={() => setSettingsOpen(true)} aria-label={t(M.settings)} title={t(M.settings)}><Settings2 size={19} aria-hidden="true" /></button>

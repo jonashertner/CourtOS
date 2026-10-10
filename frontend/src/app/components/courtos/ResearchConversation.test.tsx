@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useState, type ReactNode } from "react";
@@ -9,8 +9,8 @@ import { sourceGroundingMessages } from "@/app/lib/sourceGroundingMessages";
 import { ResearchConversation } from "./ResearchConversation";
 import type { ResearchConversationSources } from "@/app/lib/researchConversation";
 
-const api = vi.hoisted(() => ({ send: vi.fn(), stop: vi.fn(), load: vi.fn(), created: null as null | ((id: string) => void), failure: null as null | ((issue?: import("@mike/contracts").SourceGroundingIssue) => void), busy: false, chats: [] as object[] }));
-vi.mock("@/app/contexts/ChatHistoryContext", () => ({ ChatHistoryProvider: ({ children }: { children: ReactNode }) => children, useChatHistoryContext: () => ({ chats: api.chats }) }));
+const api = vi.hoisted(() => ({ send: vi.fn(), stop: vi.fn(), load: vi.fn(), created: null as null | ((id: string) => void), failure: null as null | ((issue?: import("@mike/contracts").SourceGroundingIssue) => void), busy: false, chats: [] as object[], historyLoading: false, historyError: null as null | "initial" | "more", hasMoreChats: false, loadingMoreChats: false, loadChats: vi.fn(), loadMoreChats: vi.fn() }));
+vi.mock("@/app/contexts/ChatHistoryContext", () => ({ ChatHistoryProvider: ({ children }: { children: ReactNode }) => children, useChatHistoryContext: () => ({ ...api }) }));
 vi.mock("@/app/lib/assistantTurns", () => ({ loadAssistantChat: api.load }));
 vi.mock("@/app/hooks/useAssistantChat", () => ({ useAssistantChat: ({ onChatCreated, onTurnFailed }: { onChatCreated: (id: string) => void; onTurnFailed: (issue?: import("@mike/contracts").SourceGroundingIssue) => void }) => {
     const [messages, setMessages] = useState<Message[]>([]); api.created = onChatCreated; api.failure = onTurnFailed;
@@ -18,10 +18,11 @@ vi.mock("@/app/hooks/useAssistantChat", () => ({ useAssistantChat: ({ onChatCrea
 } }));
 vi.mock("@/app/components/assistant/AssistantMessage", () => ({ AssistantMessage: (props: { allowFrontier?: boolean; events?: { type: string; text?: string }[] }) => <div data-testid="answer" data-frontier={String(props.allowFrontier)}>{props.events?.map(e => e.text).join("")}</div> }));
 const owner = "11111111-1111-4111-8111-111111111111", chatId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const otherChat = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const first: ResearchConversationSources = { files: [{ document_id: "22222222-2222-4222-8222-222222222222", version_id: "33333333-3333-4333-8333-333333333333", version_number: 2, filename: "Klage.pdf" }], public_sources: [] };
 const second: ResearchConversationSources = { files: [{ ...first.files[0], version_id: "44444444-4444-4444-8444-444444444444", filename: "Antwort.pdf" }], public_sources: [] };
 const base = () => ({ owner, candidate: first, onState: vi.fn(), onEdit: vi.fn(), onFindSources: vi.fn(), onCitation: vi.fn() });
-beforeEach(() => { localStorage.clear(); vi.clearAllMocks(); api.busy = false; api.chats = []; api.send.mockResolvedValue(chatId); });
+beforeEach(() => { localStorage.clear(); vi.clearAllMocks(); api.busy = false; api.chats = []; api.historyLoading = false; api.historyError = null; api.hasMoreChats = false; api.loadingMoreChats = false; api.send.mockResolvedValue(chatId); });
 describe("source-bound research conversation", () => {
     it("does not send without an explicit source and does not transfer the question to public search", async () => {
         const props = { ...base(), candidate: { files: [], public_sources: [] } }; const user = userEvent.setup(); render(<ResearchConversation {...props} />);
@@ -38,9 +39,23 @@ describe("source-bound research conversation", () => {
         expect(screen.getByRole("button", { name: "Eigene Quellen wählen" })).toBeDisabled();
         await user.type(screen.getByLabelText("Ihre Frage an die Quellen"), "Und zum Betrag?"); await user.click(screen.getByRole("button", { name: "Fragen" }));
         expect(api.send.mock.calls[1][0]).toMatchObject({ content: "Und zum Betrag?", files: first.files, model: "courtos-local", public_sources: [] });
-        await user.click(screen.getByRole("button", { name: "Neues Gespräch" }));
+        await user.click(within(screen.getByRole("heading", {name:"Mit Quellen arbeiten"}).closest("header")!).getByRole("button", { name: "Neues Gespräch" }));
         await user.type(screen.getByLabelText("Ihre Frage an die Quellen"), "Neue Quelle"); await user.click(screen.getByRole("button", { name: "Fragen" }));
         expect(api.send.mock.calls[2][0].files).toEqual(second.files);
+    });
+    it("sends the combined private and public selection on every follow-up, without an external model choice",async()=>{
+        const public_sources=[{decision_id:"BGE_137_I_195",start:30,end:70,content_hash:null}];
+        const props={...base(),candidate:{files:first.files,public_sources},onRemovePublicSource:vi.fn()};
+        const user=userEvent.setup();const {rerender}=render(<ResearchConversation {...props}/>);
+        await user.click(screen.getByRole("button",{name:"Entscheidauszug aus Auswahl entfernen"}));
+        expect(props.onRemovePublicSource).toHaveBeenCalledOnce();expect(api.send).not.toHaveBeenCalled();
+        await user.type(screen.getByLabelText("Ihre Frage an die Quellen"),"Wie passt die Eingabe zur ausgewählten Rechtsprechung?");
+        await user.click(screen.getByRole("button",{name:"Fragen"}));
+        expect(api.send.mock.calls[0][0]).toMatchObject({files:first.files,public_sources,model:"courtos-local"});
+        expect(screen.queryByRole("button",{name:"Entscheidauszug aus Auswahl entfernen"})).toBeNull();
+        rerender(<ResearchConversation {...props} candidate={second}/>);
+        await user.type(screen.getByLabelText("Ihre Frage an die Quellen"),"Und die Gegenposition?");await user.click(screen.getByRole("button",{name:"Fragen"}));
+        expect(api.send.mock.calls[1][0]).toMatchObject({files:first.files,public_sources,model:"courtos-local"});
     });
     it("restores only history and an unsent draft, then resends exact public descriptors", async () => {
         const public_sources = [{ decision_id: "BGE_137_I_195", start: 30, end: 70, content_hash: null }];
@@ -92,5 +107,69 @@ describe("source-bound research conversation", () => {
     it("shows Stop for an active request and never starts a second request", async () => {
         api.busy = true; const user = userEvent.setup(); render(<ResearchConversation {...base()} />);
         await user.click(screen.getByRole("button", { name: "Anhalten" })); expect(api.stop).toHaveBeenCalledOnce(); expect(api.send).not.toHaveBeenCalled();
+    });
+});
+
+
+describe("personal conversation drafts", () => {
+    function history() {
+        api.chats = [chatId, otherChat].map((id, i) => ({ id, user_id: owner, project_id: null, title: i ? "Gespräch B" : "Gespräch A", created_at: "2026-10-10T12:00:00Z" }));
+        api.load.mockImplementation(async (id: string) => ({ chat: { id, user_id: owner, project_id: null, access_role: "owner" }, messages: [{role:"user",content: `Frage ${id}`,files:first.files}] }));
+    }
+    async function openHistory(user: ReturnType<typeof userEvent.setup>) {
+        await user.click(screen.getByText("Persönlicher Verlauf", {selector:"summary"}));
+    }
+    it("keeps separate A, B and new drafts while browsing and searching the personal list", async () => {
+        history(); const props=base(), user=userEvent.setup(); render(<ResearchConversation {...props}/>);
+        const question=screen.getByLabelText("Ihre Frage an die Quellen");
+        await user.type(question,"Neuer Entwurf"); await openHistory(user);
+        await user.click(screen.getByRole("button",{name:/Gespräch A/})); await waitFor(()=>expect(question).toBeEnabled());
+        expect(question).toHaveValue(""); await user.type(question,"Entwurf A");
+        await user.click(screen.getByRole("button",{name:/Gespräch B/})); await waitFor(()=>expect(question).toBeEnabled());
+        expect(question).toHaveValue(""); await user.type(question,"Entwurf B");
+        await user.click(screen.getByRole("button",{name:/Gespräch A/})); await waitFor(()=>expect(question).toBeEnabled());
+        expect(question).toHaveValue("Entwurf A");
+        await user.type(screen.getByRole("searchbox"),"Gespräch B");
+        expect(screen.queryByRole("button",{name:/Gespräch A/})).toBeNull();
+        expect(question).toHaveValue("Entwurf A"); expect(props.onState).toHaveBeenLastCalledWith({chat_id:chatId,draft:"Entwurf A"});
+        await user.click(screen.getAllByRole("button",{name:"Neues Gespräch"})[0]);
+        expect(question).toHaveValue("Neuer Entwurf");
+        await user.click(screen.getByRole("button",{name:/Gespräch B/})); await waitFor(()=>expect(question).toBeEnabled());
+        expect(question).toHaveValue("Entwurf B"); expect(api.send).not.toHaveBeenCalled();
+    });
+    it("retains the correct draft when a saved conversation fails to load", async()=>{
+        history(); api.load.mockRejectedValueOnce(new Error("private server detail"));
+        const user=userEvent.setup(); render(<ResearchConversation {...base()} initialState={{chat_id:chatId,draft:"Entwurf A"}}/>);
+        await screen.findByRole("alert"); await openHistory(user);
+        await user.click(screen.getByRole("button",{name:/Gespräch B/}));
+        const question=screen.getByLabelText("Ihre Frage an die Quellen"); await waitFor(()=>expect(question).toBeEnabled());
+        expect(question).toHaveValue(""); await user.type(question,"Entwurf B");
+        await user.click(screen.getByRole("button",{name:/Gespräch A/})); await waitFor(()=>expect(question).toBeEnabled());
+        expect(question).toHaveValue("Entwurf A"); expect(screen.queryByText("private server detail")).toBeNull();
+        expect(api.send).not.toHaveBeenCalled();
+    });
+    it("moves a next-question draft to the newly created chat without giving it to a new conversation",async()=>{
+        history(); let finish!:(id:string)=>void;
+        api.send.mockReturnValueOnce(new Promise(resolve=>{finish=resolve;}));
+        const props=base(), user=userEvent.setup(); render(<ResearchConversation {...props}/>);
+        const question=screen.getByLabelText("Ihre Frage an die Quellen");
+        await user.type(question,"Erste Frage"); await user.click(screen.getByRole("button",{name:"Fragen"}));
+        await user.type(question,"Folgefrage für A");
+        await act(async()=>{api.created!(chatId);finish(chatId);});
+        expect(props.onState).toHaveBeenLastCalledWith({chat_id:chatId,draft:"Folgefrage für A"});
+        await user.click(within(screen.getByRole("heading", {name:"Mit Quellen arbeiten"}).closest("header")!).getByRole("button",{name:"Neues Gespräch"}));
+        expect(question).toHaveValue(""); await openHistory(user);
+        await user.click(screen.getByRole("button",{name:/Gespräch A/})); await waitFor(()=>expect(question).toBeEnabled());
+        expect(question).toHaveValue("Folgefrage für A"); expect(api.send).toHaveBeenCalledOnce();
+    });
+    it("clears cached drafts and history filters on account change",async()=>{
+        history(); const props=base(), user=userEvent.setup(); const {rerender}=render(<ResearchConversation {...props}/>);
+        await user.type(screen.getByLabelText("Ihre Frage an die Quellen"),"Kontointern"); await openHistory(user);
+        await user.type(screen.getByRole("searchbox"),"Gespräch A");
+        rerender(<ResearchConversation {...props} owner="99999999-9999-4999-8999-999999999999"/>);
+        expect(screen.getByLabelText("Ihre Frage an die Quellen")).toHaveValue("");
+        await openHistory(user); expect(screen.getByRole("searchbox")).toHaveValue("");
+        expect(screen.queryByRole("button",{name:/Gespräch A/})).toBeNull();
+        expect(api.send).not.toHaveBeenCalled();
     });
 });

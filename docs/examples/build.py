@@ -36,16 +36,17 @@ sourcekey={'version':1,'policy':data['source_policy'],'cases':[]}
 for case in data['cases']:
  arrangement=next(value for value in filing['cases'] if value['id']==case['id'])
  loc=data['labels'][case['language']];target=ROOT/'output/pdf'/case['id'];target.mkdir(parents=True,exist_ok=True)
- case_report={'id':case['id'],'case_number':arrangement['caseNumber'],'documents':[]}; source={'id':case['id'],'fictitious_case_number':arrangement['caseNumber'],'parties':arrangement['parties'],'party_note':arrangement['partyNote'],'judgment':case['judgment'],'documents':[]}
+ for old in target.glob('*.pdf'):old.unlink() # Generated output only; source and uploaded originals stay unchanged.
+ case_report={'id':case['id'],'case_number':arrangement['caseNumber'],'documents':[]}; source={'id':case['id'],'fictitious_case_number':arrangement['caseNumber'],'parties':arrangement['parties'],'party_note':arrangement['partyNote'],'party_mapping':arrangement['partyMapping'],'judgment':case['judgment'],'documents':[]}
  # Current primary full texts were read before authoring. Rendering never requires
  # network access. A later archive request encountered the court's anti-bot page;
  # do not hash that as if it were the judgment or claim an immutable HTML capture.
  source.update({'checked_date':'2026-10-10','verification':'Official full text read through primary-source browser results and HTTP before authoring. A subsequent HTML archival attempt was blocked; no full-source archive hash is claimed.'})
  for n,doc in enumerate(case['documents'],1):
-  filename=f"{doc['id']}_{case['language']}.pdf";raw=ROOT/'qa'/f"{case['id']}-{doc['id']}-raw.pdf";out=target/filename
+  filename=arrangement['filenames'][doc['id']];raw=ROOT/'qa'/f"{case['id']}-{doc['id']}-raw.pdf";out=target/filename
   c=canvas.Canvas(str(raw),pagesize=(W,H),pageCompression=1,invariant=1)
   c.setTitle('');c.setAuthor('');c.setSubject('');c.setKeywords('')
-  c.setFillColor(INK);c.setFont('Serif',16);c.drawString(M,H-43,'CourtOS')
+  c.setFillColor(INK);c.setFont('Serif',16);c.drawString(M,H-43,arrangement['caseNumber'])
   c.setFillColor(MUTED);c.setFont('Mono',8);c.drawRightString(W-M,H-41,f"{case['id']} / {n:02d} / 04")
   c.setStrokeColor(RULE);c.setLineWidth(.55);c.line(M,H-58,W-M,H-58)
   y=H-80;y=para(c,arrangement['caseNumberLabel']+': '+arrangement['caseNumber'],y,'small')-10
@@ -83,8 +84,8 @@ for case in data['cases']:
  report['cases'].append(case_report);sourcekey['cases'].append(source)
 sourcekey['editorial_changes']=[
  'New concise party-position texts, document titles, paragraph IDs and ordering are didactic reconstructions, not original pleadings.',
- 'Fictitious CourtOS filing numbers and anonymised party names from the official judgments appear in headers and the filing manifest. The historical factual paragraphs are unchanged. No addresses, signatures, logos, personal birth dates or medical details were added.',
- 'Party subfolders organise submissions; common reconstructed exhibits are not assigned to a party. FR distinguishes the original recipient Z.________ from her procedural successor A.Z.________.',
+ 'Case numbers, person and company names are invented for these exercises and do not identify actual parties or assert an official docket-number format. The separate filing manifest maps them to the anonymised source roles. Historical factual paragraphs and marked original quotations are unchanged. No addresses, signatures, logos, personal birth dates or medical details were added.',
+ 'Party subfolders organise submissions; common reconstructed exhibits are not assigned to a party. FR distinguishes the fictional original recipient Madeleine Aubert from her procedural successor Claire Aubert; their source roles are Z.________ and A.Z.________.',
  'Exhibits are narrative extracts of the judgment account, not fabricated bank records, signed contracts or email screenshots.',
  'The EN case is an unofficial English reconstruction of a German judgment. Only the two marked short phrases in D03-P02 reproduce original English wording quoted by the judgment.',
  'Scope is deliberately narrower than the full cases: DE rent reduction; FR villa funding; IT first repayment instalment; EN authority. Procedural side disputes are omitted and the omission is not a claim that they did not occur.',

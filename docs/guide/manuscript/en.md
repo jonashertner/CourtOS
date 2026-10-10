@@ -58,7 +58,7 @@ Open the decision and check the original. Select a short passage, confirm the se
 Open the browser from Word and continue under the same account. Then return the research state to Word. If the two states differ, choose which to keep. A handoff lasts two hours; it starts no new search and makes no automatic change to your document.
 
 ### Check citation details
-“Citations” opens Citecheck separately. CourtOS sends it no text. Read the original decision to assess whether it supports your statement.
+Under “Citations”, select PDF versions and choose “Check references”. Citecheck compares recognised decision numbers, dates and numbered sections with the stored OpenCaseLaw list. A finding opens the passage in your submission; matching index entries link to the whole decision. “Not found” means only: absent from this list. Check wording and legal support in the original.
 
 ## 6. Add your own sources
 Choose original sources. Ask questions. Check the cited passages.
@@ -67,7 +67,7 @@ Choose original sources. Ask questions. Check the cited passages.
 Create a library folder bearing the case number. Below it, organise the parties, their submissions and exhibits; keep shared records separate. Upload PDFs to the right folder. CourtOS stores copies on the server.
 
 ### Choose sources
-Use “Choose your sources” to select PDFs for the conversation. For case law, open an OpenCaseLaw decision, select a short excerpt and add it to the conversation. Searching your own documents uses no AI.
+Use “Choose your sources” to select PDFs from the case and your own literature for the conversation. You can add short, explicitly selected OpenCaseLaw excerpts. Both source groups are then available together. Searching your own documents uses no AI.
 
 ### Ask and follow up
 Ask which amounts a submission mentions or how two accounts of the facts differ. Gemma works with the selected sources. Follow-up questions use the same versions; start a new conversation for other sources. No request can start without sources.
@@ -85,7 +85,7 @@ Bring allegations and evidence together in a list you can check.
 Open “Review submissions”. Add short fictional claims, responses and exhibits through the library. Choose versions, document roles, parties and the report language. “Example matters” offers four exercises in German, French, Italian and English. “Import four PDFs” files the chosen matter under a fictitious case number, in folders for each party and shared exhibit summaries. The documents are reconstructed from published judgments, not original submissions. Then check the roles and parties.
 
 ### Three tasks
-- Facts and evidence: allegation, evidence and opposing position appear together. AI proposes “Supports the statement”, “Contradicts the statement”, “Inconclusive” or “Not found in selected sources”.
+- Facts and evidence: the party’s allegation, selected exhibit and opposing position appear side by side. “Supports” or “Contradicts” requires a source selected as an exhibit. Another party’s allegation is no substitute for an exhibit; the substantive assessment remains an AI proposal.
 - Legal arguments: comparison is limited to the selected sources. Missing decisions and literature are not retrieved automatically. Research public references separately.
 - Chronology: unambiguous day dates are sorted. Approximate or missing dates remain separate. Conflicting accounts keep separate entries.
 
@@ -107,7 +107,39 @@ In the browser: send a short passage that is permitted to leave CourtOS to the f
 ### Use the response
 An external response can return as an editable draft. It is not sent again automatically. Check each decisive assertion against the original. A convincing answer from a second model is not an independent source check.
 
-## 9. Test first. Then decide.
+## 9. Retrace your work
+Conversations are available. A complete working history is planned.
+
+### Why history matters
+CourtOS saves personal conversations and source references so you can reopen them. A useful history should also show what you accepted, rejected or changed, and why an issue remains open. This additional working record has not yet been implemented.
+
+### Keep three layers separate
+- Conversation: question, answer, exact source versions, model and processing location.
+- Saved working finding: results deliberately retained, with attribution, review status, references, counterarguments and open questions. Your working assumption is not a judicial finding; disputed allegations remain identifiable.
+- Your reasons: the reasons you have checked and their changes, with the previous version, date and author. An AI suggestion enters this working record only through your deliberate revision.
+
+### Protect personal deliberation
+Personal reflections and deliberation notes should not be shared by default. The history records steps and reasoned choices; it does not promise access to a model’s hidden thoughts. An AI answer is not evidence.
+
+### Further development
+Plans also include court-directed decision drafts, examination of fundamental questions, and hypothetical variations and their consequences. Assumptions would have to remain distinct from findings in the case record. These functions are not yet available.
+
+## 10. A memory for the matter
+The proposal is a private working record tied to sources, not a second case file of unchecked assertions.
+
+### Connect people and terms
+A private register would connect real names, documented aliases, roles and approved replacement terms. It would cover people, organisations, places and properties. Identity and role remain separate: one person may hold several roles. Each association needs its source; uncertain identities are not merged automatically.
+
+### Two readable versions
+Internal Markdown files would preserve the working record with real names and precise references. Only explicitly selected entries would produce a reviewed pseudonymised version for external AI. Documents and notes would use the same terms from the private register. They would not be two independently maintained truths. The mapping to real names stays private.
+
+### Make changes visible
+A changed source or mapping would flag affected entries for review and revoke approval of affected exports. Earlier conclusions would not be silently replaced. Each derivative would retain a private link to the original version and passage. Altered wording must remain identifiable as derivative text.
+
+### Approve each external use
+A folder name does not authorise sending. The question, selected notes and history must appear in the exact preview. Moving to external AI starts a new conversation, without automatically copying private names or earlier local history. Replacement names alone do not guarantee anonymity. This memory and export workflow have not yet been implemented.
+
+## 11. Test first. Then decide.
 A useful pilot produces observations, not promises.
 
 ### Assess the benefit
@@ -122,7 +154,7 @@ Direct work in a local case folder and consistent pseudonymisation across docume
 ### Open software
 - [CourtOS · Source code and GNU AGPL v3.0](https://github.com/jonashertner/CourtOS)
 
-## 10. Sources and scope
+## 12. Sources and scope
 Basis for the attributed positions and legal statements; checked on 9 October 2026.
 
 - [1. Richard Susskind · Online Courts and the Future of Justice](https://academic.oup.com/oxford-law-pro/book/41081)

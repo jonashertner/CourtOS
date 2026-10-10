@@ -58,7 +58,7 @@ Wählen Sie «Rechtsprechung finden» und OpenCaseLaw. Geben Sie eine Entscheidk
 Öffnen Sie aus Word den Browser und arbeiten Sie mit demselben Konto weiter. Übergeben Sie den Recherchestand anschliessend zurück. Bei verschiedenen Ständen wählen Sie bewusst. Die Übergabe gilt zwei Stunden; sie startet keine neue Suche und schreibt nichts selbständig in Ihr Dokument.
 
 ### Zitierangaben prüfen
-«Zitate» öffnet Citecheck separat. CourtOS übergibt dabei keinen Text. Ob ein angeführter Entscheid Ihre Aussage trägt, prüfen Sie im Original.
+Unter «Zitate» wählen Sie PDF-Fassungen und starten «Zitierangaben prüfen». Citecheck gleicht erkannte Entscheidnummern, Daten und Gliederungsstellen mit der gespeicherten OpenCaseLaw-Liste ab. Ein Befund führt zur Stelle in Ihrer Eingabe; passende Indexeinträge verlinken den ganzen Entscheid. «Nicht gefunden» bedeutet nur: nicht in dieser Liste. Wortlaut und rechtliche Tragfähigkeit prüfen Sie im Original.
 
 ## 6. Eigene Quellen hinzunehmen
 Wählen Sie Originalquellen. Stellen Sie Fragen. Prüfen Sie die Fundstellen.
@@ -67,7 +67,7 @@ Wählen Sie Originalquellen. Stellen Sie Fragen. Prüfen Sie die Fundstellen.
 Legen Sie in der Bibliothek einen Ordner mit der Geschäftsnummer an. Darunter folgen Parteien, Eingaben und Beilagen; gemeinsame Akten liegen separat. Laden Sie PDFs im passenden Ordner hoch. CourtOS speichert Kopien auf dem Server.
 
 ### Die Quellen wählen
-Über «Eigene Quellen wählen» bestimmen Sie die PDFs für das Gespräch. Für Rechtsprechung öffnen Sie einen OpenCaseLaw-Entscheid, wählen einen kurzen Auszug und übernehmen ihn ins Gespräch. Die reine Suche im eigenen Bestand verwendet keine KI.
+Über «Eigene Quellen wählen» bestimmen Sie PDFs aus Akte und eigener Literatur für das Gespräch. Sie können kurze, ausdrücklich ausgewählte OpenCaseLaw-Auszüge hinzufügen. So stehen beide Quellengruppen gemeinsam bereit. Die reine Suche im eigenen Bestand verwendet keine KI.
 
 ### Fragen und nachfragen
 Fragen Sie etwa, welche Beträge eine Eingabe nennt oder worin sich zwei Darstellungen widersprechen. Gemma arbeitet mit den gewählten Quellen. Folgefragen nutzen dieselben Fassungen; für andere Quellen beginnen Sie ein neues Gespräch. Ohne Quellen ist keine Anfrage möglich.
@@ -85,7 +85,7 @@ Aus Behauptungen und Belegen wird eine überschaubare Prüfliste.
 Öffnen Sie «Eingaben prüfen». Fügen Sie über die Bibliothek kurze Testklagen, Antworten und Beilagen hinzu. Wählen Sie Fassungen, Dokumentrollen, Parteien und Berichtssprache. Unter «Beispieldossiers» finden Sie vier Übungsfälle auf Deutsch, Französisch, Italienisch und Englisch. «Vier PDFs übernehmen» legt das gewählte Dossier unter einem fiktiven Aktenzeichen ab, geordnet nach Parteien und gemeinsamen Belegauszügen. Die Unterlagen sind aus veröffentlichten Urteilen rekonstruiert, keine Originaleingaben. Prüfen Sie danach Rollen und Parteien.
 
 ### Drei Aufträge
-- Tatsachen und Belege: Behauptung, Beleg und Gegenposition stehen nebeneinander. Die KI schlägt «Stützt die Aussage», «Widerspricht der Aussage», «Bleibt offen» oder «Im ausgewählten Bestand nicht gefunden» vor.
+- Tatsachen und Belege: Parteibehauptung, ausgewählte Beilage und Gegenposition stehen nebeneinander. «Stützt» oder «Widerspricht» setzt eine als Beilage ausgewählte Quelle voraus. Eine andere Parteibehauptung ersetzt keinen Beleg; die inhaltliche Beurteilung bleibt ein KI-Vorschlag.
 - Rechtliche Aussagen: Verglichen wird nur mit den ausgewählten Quellen. Nicht beigefügte Entscheide und Literatur werden nicht automatisch beschafft. Recherchieren Sie öffentliche Fundstellen gesondert.
 - Chronologie: Eindeutige Tagesdaten werden geordnet. Ungefähre oder fehlende Daten bleiben getrennt. Gegensätzliche Darstellungen bleiben eigene Einträge.
 
@@ -107,7 +107,39 @@ Im Browser: Übergeben Sie einen kurzen, extern zulässigen Ausschnitt an die Fr
 ### Mit dem Ergebnis umgehen
 Eine externe Antwort kann als bearbeitbarer Entwurf zurückkehren. Sie wird nicht automatisch erneut gesendet. Prüfen Sie auch hier jede tragende Aussage am Original. Eine gut klingende Antwort eines zweiten Modells ist keine unabhängige Quellenprüfung.
 
-## 9. Erst erproben, dann einführen
+## 9. Arbeitsschritte wiederfinden
+Gespräche sind vorhanden. Ein vollständiger Arbeitsverlauf ist geplant.
+
+### Warum der Verlauf zählt
+CourtOS speichert persönliche Gespräche und Quellenverweise; Sie können sie erneut laden. Ein nützlicher Verlauf soll später auch zeigen, was Sie daraus übernommen, verworfen oder geändert haben und weshalb ein Punkt offen blieb. Dieser zusätzliche Arbeitsnachweis ist noch nicht umgesetzt.
+
+### Drei Ebenen auseinanderhalten
+- Gespräch: Frage, Antwort, genaue Quellenfassungen sowie Modell und Verarbeitungsort.
+- Gespeicherter Arbeitsbefund: bewusst übernommene Ergebnisse mit Zuschreibung, Prüfstand, Fundstellen, Gegenargumenten und offenen Fragen. Ihre Arbeitsannahme ist keine gerichtliche Feststellung; bestrittene Behauptungen bleiben erkennbar.
+- Eigene Begründung: Ihre geprüften Gründe und Änderungen, jeweils mit früherem Stand, Datum und Urheber. Ein KI-Vorschlag wird erst durch Ihre bewusste Bearbeitung Teil dieses Arbeitsstands.
+
+### Private Überlegungen schützen
+Persönliche Überlegungen und Beratungsnotizen sollen nicht standardmässig geteilt werden. Der Verlauf dokumentiert Arbeitsschritte und begründete Entscheidungen; er verspricht keinen Einblick in verborgene Modellgedanken. Eine KI-Antwort ist kein Beweismittel.
+
+### Weiterer Ausbau
+Geplant sind auch gerichtlich gesteuerte Entscheidungsentwürfe, die Klärung grundlegender Fragen und die Prüfung hypothetischer Varianten und ihrer Folgen. Annahmen müssten dabei von Aktenbefunden getrennt bleiben. Diese Funktionen sind noch nicht verfügbar.
+
+## 10. Ein Gedächtnis für die Sache
+Geplant ist ein privater Arbeitsstand mit Quellen, nicht eine zweite Akte voller ungeprüfter Aussagen.
+
+### Personen und Begriffe zuordnen
+Ein privates Verzeichnis soll echte Namen, belegte Namensvarianten, Rollen und genehmigte Ersatzbegriffe verbinden. Es umfasst etwa Personen, Unternehmen, Orte und Grundstücke. Identität und Rolle bleiben getrennt: dieselbe Person kann mehrere Rollen haben. Jede Zuordnung braucht ihre Quelle; unklare Identitäten werden nicht automatisch zusammengeführt.
+
+### Zwei lesbare Fassungen
+Interne Markdown-Dateien sollen den Arbeitsstand mit Originalnamen und Fundstellen festhalten. Für externe KI entsteht nur aus ausdrücklich ausgewählten Einträgen eine geprüfte pseudonymisierte Ableitung. Dokumente und Notizen verwenden dieselben Ersatzbegriffe aus dem privaten Verzeichnis. Die beiden Fassungen sind keine unabhängig gepflegten Wahrheiten. Die Zuordnung zu echten Namen bleibt intern.
+
+### Änderungen sichtbar halten
+Ändert sich eine Quelle oder Zuordnung, müssen betroffene Einträge erneut geprüft werden. Betroffene Exporte verlieren ihre Freigabe. Frühere Schlussfolgerungen werden nicht automatisch überschrieben. Jede Ableitung behält einen privaten Rückweg zur ursprünglichen Fassung und Stelle. Veränderte Wortlaute müssen als Ableitung erkennbar bleiben.
+
+### Freigabe vor jeder externen Verwendung
+Ein Ordnername erlaubt noch keine Übermittlung. Frage, ausgewählte Notizen und Verlauf gehören in die genaue Vorschau. Beim Wechsel zu externer KI beginnt ein neues Gespräch; private Namen und früherer lokaler Verlauf werden nicht automatisch übernommen. Ersatznamen allein garantieren keine Anonymität. Fallgedächtnis und dieser Exportweg sind noch nicht umgesetzt.
+
+## 11. Erst erproben, dann einführen
 Ein brauchbarer Pilot liefert Beobachtungen statt Versprechen.
 
 ### Den Nutzen prüfen
@@ -122,7 +154,7 @@ Die direkte Arbeit im lokalen Aktenordner und eine über mehrere Dokumente konsi
 ### Offene Software
 - [CourtOS · Quellcode und GNU AGPL v3.0](https://github.com/jonashertner/CourtOS)
 
-## 10. Quellen und Reichweite
+## 12. Quellen und Reichweite
 Grundlagen der gekennzeichneten Positionen und Rechtsaussagen; geprüft am 9. Oktober 2026.
 
 - [1. Richard Susskind · Online Courts and the Future of Justice](https://academic.oup.com/oxford-law-pro/book/41081)

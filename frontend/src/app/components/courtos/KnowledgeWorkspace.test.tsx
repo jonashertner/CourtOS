@@ -4,18 +4,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { conversationSourceIssue } from "@/app/lib/researchConversation";
 import { CourtOSLocaleProvider } from "@/app/contexts/CourtOSLocaleContext";
 import { setCourtOSLocale } from "@/app/lib/courtosLocale";
-import { KnowledgeWorkspace } from "./KnowledgeWorkspace";
+import { hasCheckedCitationLocation } from "@/app/lib/citationEvidence";
+import { KnowledgeWorkspace, LocalSource } from "./KnowledgeWorkspace";
 
-const api = vi.hoisted(() => ({ list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn(), handoff: vi.fn(), research: vi.fn(), conversation: null as null | { onCitation: (citation: import("@/app/components/shared/types").Citation) => void }, model: "gemma" as "gemma" | "claude-opus-5-5" }));
+const api = vi.hoisted(() => ({ list: vi.fn(), path: vi.fn(), document: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn(), handoff: vi.fn(), research: vi.fn(), conversation: null as null | { onCitation: (citation: import("@/app/components/shared/types").Citation) => void }, model: "gemma" as "gemma" | "claude-opus-5-5" }));
 vi.mock("@/app/lib/researchModelPreference", () => ({ useResearchModelPreference: () => ({ model: api.model }) }));
 vi.mock("@/app/lib/researchDraft", () => ({ prepareResearchDraft: api.research }));
 vi.mock("@/app/lib/frontierDraft", () => ({ prepareFrontierDraft: api.handoff }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: api.push }) }));
 vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "test-owner" } }) }));
-vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list, getLibrary: (...args: unknown[]) => api.list(...args), getLibraryFolderChildren: (...args: unknown[]) => api.list(...args) }));
+vi.mock("@/app/lib/mikeApi", () => ({ getLibraryFolderPath: api.path, getDocument: api.document, searchLibraryDocuments: api.list, getLibrary: (...args: unknown[]) => api.list(...args), getLibraryFolderChildren: (...args: unknown[]) => api.list(...args) }));
 vi.mock("@/app/lib/knowledgeApi", async (original) => ({ ...(await original<typeof import("@/app/lib/knowledgeApi")>()), searchKnowledge: api.local, searchPublicKnowledge: api.public, getPublicDecision: api.detail }));
 vi.mock("./ResearchConversation", () => ({ ResearchConversation: (props: { candidate: unknown; onCitation: (citation: import("@/app/components/shared/types").Citation) => void }) => { api.conversation = props; return <div data-testid="research-conversation" data-sources={JSON.stringify(props.candidate)}><textarea id="research-question" aria-label="Ihre Frage an die Quellen" /></div>; } }));
-vi.mock("next/dynamic", () => ({ default: () => (props: { document: { document_id: string; version_id: string; quotes: { quote: string; target: { page: number }; verification?: { verified: boolean } }[] }; canEdit: boolean }) => <div data-testid="source-viewer" data-document={props.document.document_id} data-version={props.document.version_id} data-editable={String(props.canEdit)} data-page={props.document.quotes[0]?.target.page} data-verified={String(props.document.quotes[0]?.verification?.verified)}>{props.document.quotes[0]?.quote}</div> }));
+vi.mock("next/dynamic", () => ({ default: () => (props: { document: { document_id: string; version_id: string; quotes: { quote: string; target: { page: number }; verification?: { verified: boolean } }[] }; canEdit: boolean; mode?: {citation?:import("@/app/components/shared/types").Citation} }) => <div data-citation={JSON.stringify(props.mode?.citation)} data-testid="source-viewer" data-document={props.document.document_id} data-version={props.document.version_id} data-editable={String(props.canEdit)} data-page={props.document.quotes[0]?.target.page} data-verified={String(props.document.quotes[0]?.verification?.verified)}>{props.document.quotes[0]?.quote}</div> }));
 
 const document = { id: "11111111-1111-4111-8111-111111111111", filename: "Muster, Gehör, 2026.pdf", active_version_number: 2, status: "ready", current_version_id: "22222222-2222-4222-8222-222222222222" };
 const hit = { document_id: document.id, version_id: "22222222-2222-4222-8222-222222222222", version_number: 2, filename: document.filename, page: 7, quote: "Die Stellungnahme ist zu prüfen. <script>kein HTML</script>", score: 1 };
@@ -29,7 +30,7 @@ async function selectPublicExcerpt(user: ReturnType<typeof userEvent.setup>, dia
     await user.click(within(dialog).getByRole("button", { name: "Markierte Stelle übernehmen" }));
 }
 beforeEach(() => {
-    vi.clearAllMocks();
+    vi.clearAllMocks(); api.document.mockRejectedValue(new Error("unavailable")); api.path.mockRejectedValue(new Error("unavailable"));
     api.detail.mockReset(); api.public.mockReset();
     window.getSelection()?.removeAllRanges();
     api.model = "gemma";
@@ -42,6 +43,39 @@ beforeEach(() => {
 });
 
 describe("personal knowledge workspace", () => {
+    it("preserves only supplied exact PDF/page hash evidence for review and citation-check originals", () => {
+        const checked={...hit,source_match:"exact" as const,pdf_sha256:"a".repeat(64),page_sha256:"b".repeat(64),start:0,end:Array.from(hit.quote).length};
+        const view=render(<LocalSource result={checked} onClose={()=>{}}/>);
+        const citation=()=>JSON.parse(screen.getByTestId("source-viewer").getAttribute("data-citation")!);
+        expect(hasCheckedCitationLocation(citation())).toBe(true);
+        expect(citation().quotes[0].verification).toEqual({verified:true,version_id:hit.version_id,pdf_sha256:checked.pdf_sha256,page_hashes:[{page:hit.page,sha256:checked.page_sha256}]});
+        view.rerender(<LocalSource result={hit} onClose={()=>{}}/>);
+        expect(hasCheckedCitationLocation(citation())).toBe(false);expect(citation().quotes[0].verification.pdf_sha256).toBeUndefined();
+        view.rerender(<LocalSource result={{...checked,end:1}} onClose={()=>{}}/>);expect(hasCheckedCitationLocation(citation())).toBe(false);
+        view.rerender(<LocalSource result={{...checked,page_sha256:"unknown"}} onClose={()=>{}}/>);expect(hasCheckedCitationLocation(citation())).toBe(false);
+    });
+    it("keeps the known folder path on a selected source and displays authoritative paths for filename results", async () => {
+        const folder = { id: "case-folder", name: "2026-001", parent_folder_id: null };
+        const second = { ...document, id: "33333333-3333-4333-8333-333333333333", library_folder_id: "second-case" };
+        api.document.mockImplementation(async(id:string)=>id===document.id?{...document,library_folder_id:folder.id}:second);
+        api.path.mockImplementation(async(_kind:string,id:string)=>({folders:[id===folder.id?folder:{id:"second-case",name:"2026-002",parent_folder_id:null}]}));
+        api.list.mockImplementation(async (_kind: string, parent: unknown) => typeof parent === "string"
+            ? { documents: [document], folders: [], documentsHasMore: false }
+            : (parent as {search?:string}).search ? { documents: [second], documentsHasMore: false } : { documents: [], folders: [folder], documentsHasMore: false });
+        const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
+        await user.click(await screen.findByRole("button", { name: folder.name }));
+        await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
+        await user.type(screen.getByLabelText("Dateiname"), "Muster");
+        await user.click(screen.getByRole("button", { name: "Dateinamen filtern" }));
+        await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
+        const selected = screen.getByLabelText("Ausgewählte Dokumente");
+        expect(await within(selected).findByText("2026-001")).toBeVisible();
+        await within(selected).findByText("2026-002");
+        expect(screen.getByText("Auswahl aus mehreren Hauptordnern: 2026-001; 2026-002.")).toBeVisible();
+        expect(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!).files).toHaveLength(2);
+        expect(api.local).not.toHaveBeenCalled(); expect(api.public).not.toHaveBeenCalled();
+    });
     it("navigates case and party folders at offset zero and returns to the root", async () => {
         const folder = { id: "case-folder", name: "CourtOS-UE-2026-001" };
         const party = { id: "party-folder", name: "A.________ AG · Klägerin" };
@@ -311,6 +345,33 @@ describe("personal knowledge workspace", () => {
         expect(boxes[20]).toBeDisabled();
         await user.click(boxes[0]);
         expect(boxes[20]).not.toBeDisabled();
+    });
+    it("keeps selected private PDFs when an explicit public excerpt is added and tabs change", async () => {
+        const quote="Der Anspruch auf rechtliches Gehör ist zu beachten.";
+        const decision={decision_id:"BGE_137_I_195",title:"BGE 137 I 195",snippet:quote,content_hash:null};
+        api.public.mockResolvedValue({results:[decision],query_mode:"opencaselaw_ai",database_generation:null});
+        api.detail.mockResolvedValue({...decision,passage:{start:0,end:Array.from(quote).length,total_chars:Array.from(quote).length,has_more:false,text:quote}});
+        const user=userEvent.setup();render(<KnowledgeWorkspace/>);
+        await user.click(screen.getByRole("button",{name:"Eigene Quellen"}));
+        await user.click(await screen.findByRole("checkbox",{name:/Muster, Gehör/}));
+        await user.type(screen.getByLabelText("Suchbegriffe"),"Vertrauliche Partei A");
+        await user.type(screen.getByLabelText("Ihre Frage an die Quellen"),"Private Frage zum Dossier");
+        await user.click(screen.getByRole("button",{name:"OpenCaseLaw"}));
+        expect(screen.getByLabelText("Suchbegriffe oder Entscheidnummer")).toHaveValue("");
+        await user.type(screen.getByLabelText("Suchbegriffe oder Entscheidnummer"),"BGE 137 I 195");
+        await user.click(screen.getByRole("button",{name:"Suchen"}));
+        await user.click(await screen.findByRole("button",{name:/Entscheidtext öffnen/}));
+        const dialog=screen.getByRole("dialog");await within(dialog).findByText(quote);
+        await selectPublicExcerpt(user,dialog);
+        await user.click(within(dialog).getByRole("button",{name:"Mit dieser Quelle sprechen"}));
+        const expected={files:[{filename:document.filename,document_id:document.id,version_id:document.current_version_id,version_number:2}],public_sources:[{decision_id:decision.decision_id,start:0,end:Array.from(quote).length,content_hash:null}]};
+        expect(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!)).toEqual(expected);
+        await user.click(screen.getByRole("button",{name:"Eigene Quellen"}));
+        expect(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!)).toEqual(expected);
+        await user.click(screen.getByRole("button",{name:"OpenCaseLaw"}));
+        expect(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!)).toEqual(expected);
+        expect(api.public).toHaveBeenCalledExactlyOnceWith("BGE 137 I 195","",expect.any(AbortSignal));
+        expect(api.local).not.toHaveBeenCalled();expect(api.handoff).not.toHaveBeenCalled();
     });
     it("renders public snippets as text and loads only the selected decision", async () => {
         const decision = { decision_id: "CH_CASE", title: "Öffentlicher Entscheid", snippet: "<img src=x onerror=alert(1)>", court: "Bundesgericht", source_url: "https://example.org/case", pdf_url: "javascript:alert(1)", decision_date: "2025-01-02" };

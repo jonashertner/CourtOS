@@ -39,6 +39,29 @@ export type DocumentUploadFolderPathResolution<TFolder> =
           folders: TFolder[];
       };
 
+export type DocumentUploadFolderChoice = "reuse" | "rename" | "cancel";
+
+/** Resolve the displayed destination from known folder identities, never from
+ * filenames. Missing ancestors/cycles must not produce a misleading path. */
+export function documentUploadTargetPath(
+    baseFolderId: string | null,
+    rootFolderName: string,
+    folders: readonly { id: string; name: string; parent_folder_id: string | null }[],
+): string[] | null {
+    const byId = new Map(folders.map(folder => [folder.id, folder]));
+    const visited = new Set<string>();
+    const path = [rootFolderName];
+    let id = baseFolderId;
+    while (id !== null) {
+        const folder = byId.get(id);
+        if (!folder || visited.has(id)) return null;
+        visited.add(id);
+        path.unshift(folder.name);
+        id = folder.parent_folder_id;
+    }
+    return path;
+}
+
 export async function resolveDocumentUploadRootFolder<TFolder>({
     rootFolderName,
     baseFolderId,
@@ -57,7 +80,7 @@ export async function resolveDocumentUploadRootFolder<TFolder>({
             DocumentUploadFolderPathResolution<TFolder>,
             { conflict: true }
         >,
-    ) => Promise<"rename" | "cancel">;
+    ) => Promise<DocumentUploadFolderChoice>;
 }): Promise<
     | Extract<
           DocumentUploadFolderPathResolution<TFolder>,
@@ -72,11 +95,17 @@ export async function resolveDocumentUploadRootFolder<TFolder>({
     while (resolution.conflict) {
         const choice = await chooseConflict(resolution);
         if (choice === "cancel") return null;
+        const approvedFolderId = resolution.existing_folder_id;
         resolution = await resolveFolderPath(
             [rootFolderName],
             baseFolderId,
-            "rename",
+            choice,
         );
+        // A deletion/replacement during the dialog must not silently redirect
+        // the user's approved upload into a different same-named folder.
+        if (choice === "reuse" && !resolution.conflict && resolution.folder_id !== approvedFolderId) {
+            throw new Error("The approved upload folder changed");
+        }
     }
     return resolution;
 }

@@ -1,7 +1,7 @@
 # Building the CourtOS guide
 
 `manuscript/content.json` is the source for four concise editions: German,
-French, Italian and English. Each edition has ten PDF pages (180 × 270 mm)
+French, Italian and English. Each edition has twelve PDF pages (180 × 270 mm)
 and a complete digital reader. `build_web_reader.py` uses `folio-reader.js`
 and `folio-reader.css`; `build_booklet.py` builds the PDFs and calls the same
 web renderer. The retained legacy `reader.js` and `reader.css` are unused.
@@ -16,6 +16,10 @@ still require a separate search or manual check. Real confidential case files
 remain outside this pilot. Direct filesystem access and consistent
 pseudonymisation are future work. The guide does not certify model quality,
 all Office hosts, institutional suitability or a productivity gain.
+
+Two clearly marked design chapters distinguish saved conversations from the planned
+source-bound matter memory, private identity register and reviewed external
+projections. They do not present these future functions as available.
 
 The first two chapters explain the judicial task and responsibility. Primary
 references have individual source anchors, exact reviewed locators and limits

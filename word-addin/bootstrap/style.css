@@ -10,5 +10,10 @@ a { display: inline-block; min-height: 44px; padding: 12px 0; margin-top: 12px; 
 :focus-visible { outline: 2px solid #181818; outline-offset: 4px; }
 .note { color: #626262; font-size: 12px; line-height: 18px; margin-top: 32px; }
 [hidden] { display: none !important; }
-.language { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 24px; font-size: 13px; }
-.language select { min-height: 40px; padding: 6px 8px; border: 1px solid #d4d4d4; border-radius: 0; background: #fff; color: inherit; font: inherit; }
+.language { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; margin: 0 0 28px; font-size: 14px; line-height: 22px; }
+.language-choices { display: inline-flex; align-items: stretch; gap: 4px; }
+.language-choices button { position: relative; width: auto; min-width: 44px; min-height: 44px; padding: 10px 9px; border: 0; background: transparent; color: #5e5e5e; font-size: 13px; font-weight: 400; line-height: 20px; }
+.language-choices button::after { position: absolute; content: ""; height: 2px; bottom: 4px; left: 12px; right: 12px; background: currentColor; opacity: 0; }
+.language-choices button[aria-pressed="true"] { color: #191919; font-weight: 600; }
+.language-choices button[aria-pressed="true"]::after { opacity: 1; }
+.language-choices button:hover { background: #f6f6f6; color: #191919; }

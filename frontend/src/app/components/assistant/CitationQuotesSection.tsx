@@ -1,12 +1,16 @@
 "use client";
 
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { citationControlMessages as C } from "@/app/lib/citationControlMessages";
+import { citationQuoteCopy } from "@/app/lib/citationQuoteCopy";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import { QuoteIcon } from "@radix-ui/react-icons";
 import { PillButtonUI } from "@/shared/ui/PillButtonUI";
 import { TextButtonUI } from "@/shared/ui/TextButtonUI";
 import { TextSlabUI } from "@/shared/ui/TextSlabUI";
-import type { PanelDocument, PanelDocumentQuote } from "../shared/types";
+import type { Citation, PanelDocument, PanelDocumentQuote } from "../shared/types";
 import {
     CitationVerificationBadge,
     quoteVerificationState,
@@ -23,6 +27,7 @@ export type CitationQuoteSectionItem = {
 };
 
 interface CommonProps {
+    citation?: Citation;
     error?: string | null;
     isLoading?: boolean;
     activeQuoteId?: string | null;
@@ -61,18 +66,19 @@ function formatCellTarget(quote: PanelDocumentQuote): string | null {
     return sheet ? `${sheet}, ${cellPart}` : cellPart;
 }
 
-function formatQuoteTarget(quote: PanelDocumentQuote): string | null {
+function formatQuoteTarget(quote: PanelDocumentQuote, pageLabel: string): string | null {
     if (quote.target.sheet || quote.target.cell) {
         return formatCellTarget(quote);
     }
-    return quote.target.page !== undefined ? `Page ${quote.target.page}` : null;
+    return quote.target.page !== undefined ? `${pageLabel} ${quote.target.page}` : null;
 }
 
 function documentQuoteItems(
     document: PanelDocument,
+    pageLabel: string,
 ): CitationQuoteSectionItem[] {
     return document.quotes.map((quote, index) => {
-        const locator = formatQuoteTarget(quote);
+        const locator = formatQuoteTarget(quote, pageLabel);
         return {
             id: documentQuoteId(document.document_id, index),
             quote: quote.quote.replaceAll(PAGE_BREAK_SENTINEL, "..."),
@@ -83,6 +89,7 @@ function documentQuoteItems(
 }
 
 export function CitationQuotesSection({
+    citation,
     document,
     quotes: suppliedQuotes,
     error = null,
@@ -94,10 +101,12 @@ export function CitationQuotesSection({
     onIndexChange,
     onClose,
 }: Props) {
+    const {t,locale}=useCourtOSLocale();
+    const label=(key:keyof typeof C)=>COURTOS_PILOT_MODE?t(C[key]):C[key].en;
     const quotes = useMemo(
         () =>
-            document ? documentQuoteItems(document) : (suppliedQuotes ?? []),
-        [document, suppliedQuotes],
+            document ? documentQuoteItems(document, label("page")) : (suppliedQuotes ?? []),
+        [document, suppliedQuotes, locale],
     );
     const requestedIndex =
         suppliedCurrentIndex ??
@@ -116,12 +125,12 @@ export function CitationQuotesSection({
         <div className="px-2 pb-2">
             <div className={`${RESPONSE_GLASS_SURFACE} p-2`}>
                 <div className="mb-2 flex items-center justify-between">
-                    <ContextNumberBadge number={citationRef} label="Citation" />
+                    <ContextNumberBadge number={citationRef} label={label("citation")} />
                     <div className="ml-auto flex items-center gap-2">
                         {hasMultipleQuotes && (
                             <div className="flex items-center gap-1">
                                 <span className="mr-0.5 text-xs font-medium text-gray-500">
-                                    Quotes
+                                    {label("quotes")}
                                 </span>
                                 {quotes.map((quote, index) => {
                                     const isUnverified =
@@ -163,6 +172,7 @@ export function CitationQuotesSection({
                     ) : currentQuote ? (
                         <QuoteItem
                             quote={currentQuote}
+                            copy={COURTOS_PILOT_MODE ? citationQuoteCopy(citation, document, currentIndex, currentQuote.quote, currentQuote.quoteLabel ?? "", typeof window !== "undefined" ? window.location.origin : "", locale) : undefined}
                             isActive={activeQuoteId === currentQuote.id}
                             quoteLabel={currentQuote.quoteLabel ?? ""}
                             onView={() =>
@@ -172,12 +182,12 @@ export function CitationQuotesSection({
                         />
                     ) : (
                         <RelevantQuoteMessage>
-                            No relevant quotes.
+                            {label("empty")}
                         </RelevantQuoteMessage>
                     )}
                     {onClose && (isLoading || error || !currentQuote) && (
                         <div className="mt-2 flex justify-end">
-                            <TextButtonUI size="xs" title="Close citation" onClick={onClose}>Close</TextButtonUI>
+                            <TextButtonUI size="xs" title={label("closeTitle")} onClick={onClose}>{label("close")}</TextButtonUI>
                         </div>
                     )}
                 </div>
@@ -218,18 +228,22 @@ function RelevantQuoteMessage({
 }
 
 function QuoteItem({
+    copy,
     quote,
     isActive,
     quoteLabel,
     onView,
     onClose,
 }: {
+    copy?: {text:string;complete:boolean};
     quote: CitationQuoteSectionItem;
     isActive: boolean;
     quoteLabel: string;
     onView: () => void;
     onClose?: () => void;
 }) {
+    const {t}=useCourtOSLocale();
+    const label=(key:keyof typeof C)=>COURTOS_PILOT_MODE?t(C[key]):C[key].en;
     const isUnverified = quote.verificationState === "unverified";
     const isSelected = isActive && !isUnverified;
 
@@ -250,7 +264,7 @@ function QuoteItem({
                                 : "text-gray-700"
                         }`}
                     >
-                        &ldquo;{quote.quote.replace(/"/g, "'")}&rdquo;
+                        &ldquo;{COURTOS_PILOT_MODE ? quote.quote : quote.quote.replace(/"/g, "'")}&rdquo;
                         {quoteLabel && (
                             <span
                                 className={`text-sm ${
@@ -271,12 +285,13 @@ function QuoteItem({
                 ) : (
                     <CiteQuoteButton
                         quoteText={quote.quote}
+                        copy={copy}
                         quoteLabel={quoteLabel}
                     />
                 )}
                 {onClose && (
-                    <TextButtonUI size="xs" title="Close citation" onClick={onClose} className="ml-auto">
-                        Close
+                    <TextButtonUI size="xs" title={label("closeTitle")} onClick={onClose} className="ml-auto">
+                        {label("close")}
                     </TextButtonUI>
                 )}
                 <PillButtonUI
@@ -285,9 +300,10 @@ function QuoteItem({
                     disabled={isUnverified}
                     onClick={onView}
                 >
-                    View
+                    {label("view")}
                 </PillButtonUI>
             </div>
+            {copy && !copy.complete && !isUnverified && <small className="mt-2 block text-xs text-muted-foreground">{label("limited")}</small>}
         </div>
     );
 }
@@ -298,12 +314,16 @@ function QuoteItem({
  * than in a primitive.
  */
 function CiteQuoteButton({
+    copy,
     quoteText,
     quoteLabel,
 }: {
+    copy?: {text:string;complete:boolean};
     quoteText: string;
     quoteLabel: string;
 }) {
+    const {t}=useCourtOSLocale();
+    const label=(key:keyof typeof C)=>COURTOS_PILOT_MODE?t(C[key]):C[key].en;
     const [isCopied, setIsCopied] = useState(false);
     const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -318,7 +338,7 @@ function CiteQuoteButton({
         try {
             const label = quoteLabel ? ` (${quoteLabel})` : "";
             await navigator.clipboard.writeText(
-                `"${quoteText.replace(/"/g, "'")}"${label}`,
+                copy?.text ?? `"${quoteText.replace(/"/g, "'")}"${label}`,
             );
             setIsCopied(true);
             if (resetTimer.current) clearTimeout(resetTimer.current);
@@ -333,7 +353,7 @@ function CiteQuoteButton({
             tone="white"
             size="xs"
             onClick={handleClick}
-            title="Copy Quote and Citation"
+            title={label(copy && !copy.complete ? "copyText" : "citeTitle")}
         >
             {isCopied ? (
                 <Check aria-hidden="true" className="h-3 w-3 text-green-600" />
@@ -341,7 +361,7 @@ function CiteQuoteButton({
                 <QuoteIcon aria-hidden="true" className="h-3 w-3" />
             )}
             {/* The visible label is the accessible name; do not override it. */}
-            <span role="status">{isCopied ? "Copied" : "Cite"}</span>
+            <span role="status">{label(isCopied ? "copied" : copy && !copy.complete ? "copyText" : "cite")}</span>
         </PillButtonUI>
     );
 }

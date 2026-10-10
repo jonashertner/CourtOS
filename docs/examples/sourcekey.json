@@ -4,20 +4,30 @@
   "cases": [
     {
       "id": "DE-01",
-      "fictitious_case_number": "CourtOS-UE-2026-001",
+      "fictitious_case_number": "FV.2026.117",
       "parties": [
         {
-          "label": "A.________ AG · Vermieterin",
+          "label": "Bergtal Immobilien AG · Vermieterin",
           "submissions": "Eingaben",
           "exhibits": "Beilagen"
         },
         {
-          "label": "B.B.________ und C.B.________ · Mieter",
+          "label": "Mara und Lukas Meier · Mieter",
           "submissions": "Eingaben",
           "exhibits": "Beilagen"
         }
       ],
-      "party_note": "",
+      "party_note": "Alle Personen- und Firmennamen sind für diese Übung erfunden; die Rollen folgen dem veröffentlichten Urteil.",
+      "party_mapping": [
+        {
+          "fictional": "Bergtal Immobilien AG · Vermieterin",
+          "official_anonymised": "A.________ AG · Vermieterin"
+        },
+        {
+          "fictional": "Mara und Lukas Meier · Mieter",
+          "official_anonymised": "B.B.________ und C.B.________ · Mieter"
+        }
+      ],
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "4A_252/2023",
@@ -35,7 +45,7 @@
         {
           "id": "D01",
           "role": "claim",
-          "party_label": "Vermieterin",
+          "party_label": "Bergtal Immobilien AG · Vermieterin",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -55,7 +65,7 @@
         {
           "id": "D02",
           "role": "response",
-          "party_label": "Mieter",
+          "party_label": "Mara und Lukas Meier · Mieter",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -122,20 +132,30 @@
     },
     {
       "id": "FR-01",
-      "fictitious_case_number": "CourtOS-UE-2026-002",
+      "fictitious_case_number": "C.2026.204",
       "parties": [
         {
-          "label": "X.________ · Demandeur",
+          "label": "Julien Morel · Demandeur",
           "submissions": "Écritures",
           "exhibits": "Pièces"
         },
         {
-          "label": "A.Z.________ · Successeure de Z.________",
+          "label": "Claire Aubert · Successeure de Madeleine Aubert",
           "submissions": "Écritures",
           "exhibits": "Pièces"
         }
       ],
-      "party_note": "Z.________: destinataire initiale, décédée le 16.06.2009. A.Z.________: fille et successeure dans la procédure.",
+      "party_note": "Noms fictifs: Madeleine Aubert désigne la destinataire initiale, décédée le 16.06.2009; Claire Aubert, sa fille et successeure dans la procédure.",
+      "party_mapping": [
+        {
+          "fictional": "Julien Morel · Demandeur",
+          "official_anonymised": "X.________ · Demandeur"
+        },
+        {
+          "fictional": "Claire Aubert · Successeure de Madeleine Aubert",
+          "official_anonymised": "A.Z.________ · Successeure de Z.________"
+        }
+      ],
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "4A_635/2016",
@@ -153,7 +173,7 @@
         {
           "id": "D01",
           "role": "claim",
-          "party_label": "Demandeur",
+          "party_label": "Julien Morel · Demandeur",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -177,7 +197,7 @@
         {
           "id": "D02",
           "role": "response",
-          "party_label": "Défenderesse",
+          "party_label": "Claire Aubert · Successeure de Madeleine Aubert",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -252,20 +272,30 @@
     },
     {
       "id": "IT-01",
-      "fictitious_case_number": "CourtOS-UE-2026-003",
+      "fictitious_case_number": "OR.2026.83",
       "parties": [
         {
-          "label": "B.________ · Creditore",
+          "label": "Luca Bernasconi · Creditore",
           "submissions": "Atti",
           "exhibits": "Allegati"
         },
         {
-          "label": "A.________ SA · Debitrice",
+          "label": "Officine Riva SA · Debitrice",
           "submissions": "Atti",
           "exhibits": "Allegati"
         }
       ],
-      "party_note": "",
+      "party_note": "Tutti i nomi di persone e società sono inventati per questo esercizio; i ruoli seguono la sentenza pubblicata.",
+      "party_mapping": [
+        {
+          "fictional": "Luca Bernasconi · Creditore",
+          "official_anonymised": "B.________ · Creditore"
+        },
+        {
+          "fictional": "Officine Riva SA · Debitrice",
+          "official_anonymised": "A.________ SA · Debitrice"
+        }
+      ],
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "5A_121/2021",
@@ -283,7 +313,7 @@
         {
           "id": "D01",
           "role": "claim",
-          "party_label": "Creditore",
+          "party_label": "Luca Bernasconi · Creditore",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -303,7 +333,7 @@
         {
           "id": "D02",
           "role": "response",
-          "party_label": "Debitrice",
+          "party_label": "Officine Riva SA · Debitrice",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -378,20 +408,30 @@
     },
     {
       "id": "EN-01",
-      "fictitious_case_number": "CourtOS-UE-2026-004",
+      "fictitious_case_number": "HG.2026.42",
       "parties": [
         {
-          "label": "A.________GmbH · Tenant",
+          "label": "Alpine Lodge GmbH · Tenant",
           "submissions": "Submissions",
           "exhibits": "Exhibits"
         },
         {
-          "label": "B.________AG · Landlord",
+          "label": "Seeblick Immobilien AG · Landlord",
           "submissions": "Submissions",
           "exhibits": "Exhibits"
         }
       ],
-      "party_note": "",
+      "party_note": "All person and company names are invented for this exercise; their roles follow the published judgment.",
+      "party_mapping": [
+        {
+          "fictional": "Alpine Lodge GmbH · Tenant",
+          "official_anonymised": "A.________GmbH · Tenant"
+        },
+        {
+          "fictional": "Seeblick Immobilien AG · Landlord",
+          "official_anonymised": "B.________AG · Landlord"
+        }
+      ],
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "4A_421/2015",
@@ -408,7 +448,7 @@
         {
           "id": "D01",
           "role": "claim",
-          "party_label": "Tenant company",
+          "party_label": "Alpine Lodge GmbH · Tenant",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -428,7 +468,7 @@
         {
           "id": "D02",
           "role": "response",
-          "party_label": "Landlord company",
+          "party_label": "Seeblick Immobilien AG · Landlord",
           "classification": "reconstructed_exercise_document",
           "paragraphs": [
             {
@@ -500,8 +540,8 @@
   ],
   "editorial_changes": [
     "New concise party-position texts, document titles, paragraph IDs and ordering are didactic reconstructions, not original pleadings.",
-    "Fictitious CourtOS filing numbers and anonymised party names from the official judgments appear in headers and the filing manifest. The historical factual paragraphs are unchanged. No addresses, signatures, logos, personal birth dates or medical details were added.",
-    "Party subfolders organise submissions; common reconstructed exhibits are not assigned to a party. FR distinguishes the original recipient Z.________ from her procedural successor A.Z.________.",
+    "Case numbers, person and company names are invented for these exercises and do not identify actual parties or assert an official docket-number format. The separate filing manifest maps them to the anonymised source roles. Historical factual paragraphs and marked original quotations are unchanged. No addresses, signatures, logos, personal birth dates or medical details were added.",
+    "Party subfolders organise submissions; common reconstructed exhibits are not assigned to a party. FR distinguishes the fictional original recipient Madeleine Aubert from her procedural successor Claire Aubert; their source roles are Z.________ and A.Z.________.",
     "Exhibits are narrative extracts of the judgment account, not fabricated bank records, signed contracts or email screenshots.",
     "The EN case is an unofficial English reconstruction of a German judgment. Only the two marked short phrases in D03-P02 reproduce original English wording quoted by the judgment.",
     "Scope is deliberately narrower than the full cases: DE rent reduction; FR villa funding; IT first repayment instalment; EN authority. Procedural side disputes are omitted and the omission is not a claim that they did not occur.",

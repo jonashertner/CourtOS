@@ -53,7 +53,8 @@ for (const lang of ['de','fr','it','en']) {
     }
     assert.equal(d.querySelectorAll('.source-entry[id]').length, 5);
     assert.equal(new Set([...d.querySelectorAll('[id]')].map(x=>x.id)).size, d.querySelectorAll('[id]').length);
-    assert.equal(d.querySelectorAll('details.chapter[open]').length,9);
+    const expectedChapters = JSON.parse(fs.readFileSync(path.join(base, 'manuscript/content.json'), 'utf8'))[lang].pages.filter(page => page.kind !== 'cover').map(page => page.id);
+    assert.deepEqual([...d.querySelectorAll('details.chapter[open]')].map(chapter => chapter.id), expectedChapters);
     dom.window.close();
   });
 }
@@ -340,3 +341,59 @@ for(const lang of ['de','fr','it','en']) {
     dom.window.close();
   });
 }
+
+function chapterTailGeometry(w,d,finalText) {
+  const chapter=d.querySelector('#first-steps');
+  chapter.querySelector('.chapter-body').innerHTML=
+    '<div class="text-block"><h3>Earlier heading</h3><p>'+('earlier '.repeat(31))+'</p></div>'+
+    '<div class="text-block" id="final-fixture"><h3>Final heading</h3><p>'+finalText+'</p></div>';
+  const canvas=d.querySelector('.reader-canvas');
+  canvas.style.padding='0px';
+  Object.defineProperty(canvas,'clientWidth',{get:()=>375});
+  Object.defineProperty(canvas,'clientHeight',{get:()=>560});
+  d.head.insertAdjacentHTML('beforeend','<style>.folio-body,p{font-size:16px;line-height:20px}</style>');
+  const blockHeight=node=>node.matches('p')?Math.ceil(node.textContent.length/25)*20:20;
+  const bodyHeight=node=>[...node.querySelectorAll('#first-steps .chapter-number,#first-steps .chapter-title,#first-steps .chapter-question,#first-steps h3,#first-steps p')].reduce((sum,item)=>sum+blockHeight(item),0);
+  Object.defineProperty(w.HTMLElement.prototype,'clientHeight',{get(){return this.matches('.folio-body')?360:0;},configurable:true});
+  Object.defineProperty(w.HTMLElement.prototype,'clientWidth',{get(){return this.matches('.folio-body')?300:0;},configurable:true});
+  Object.defineProperty(w.HTMLElement.prototype,'scrollHeight',{get(){return this.matches('.folio-body')?bodyHeight(this):0;},configurable:true});
+  w.HTMLElement.prototype.getBoundingClientRect=function(){
+    const height=this.matches('.folio-body')?360:this.matches('#first-steps')?bodyHeight(this.parentElement):blockHeight(this);
+    return{top:0,bottom:height,left:0,right:300,width:300,height};
+  };
+  w.HTMLElement.prototype.getClientRects=function(){return[this.getBoundingClientRect()];};
+  w.Range.prototype.getClientRects=function(){return Array.from({length:Math.ceil(this.toString().length/25)},(_,i)=>({top:i*20,bottom:(i+1)*20,left:0,right:200,width:200,height:20}));};
+  return chapter;
+}
+test('a final ordinary block moves intact instead of leaving only its final lines on a chapter leaf',()=>{
+  const {dom,w,d}=reader('de','#first-steps');
+  const text='final words '.repeat(10);
+  const chapter=chapterTailGeometry(w,d,text);
+  const final=chapter.querySelector('#final-fixture'),heading=final.querySelector('h3'),paragraph=final.querySelector('p');
+  d.querySelector('#reader-book-mode').click();
+  assert.equal(d.querySelectorAll('.folio #final-fixture p').length,1);
+  assert.equal(paragraph.textContent,text);
+  assert.equal(heading.closest('.folio'),paragraph.closest('.folio'));
+  assert.notEqual(paragraph.closest('.folio'),d.querySelector('.folio #first-steps .chapter-title').closest('.folio'));
+  assert.ok(paragraph.closest('.folio-body').scrollHeight<=360);
+  d.querySelector('#reader-text-mode').click();
+  assert.equal(d.querySelector('#final-fixture'),final);
+  assert.equal(final.querySelector('p'),paragraph);
+  assert.equal(paragraph.textContent,text);
+  dom.window.close();
+});
+test('a final block larger than a leaf still flows without dropping text or overflowing',()=>{
+  const {dom,w,d}=reader('de','#first-steps');
+  const text='a longer final passage '.repeat(40);
+  const chapter=chapterTailGeometry(w,d,text);
+  const paragraph=chapter.querySelector('#final-fixture p');
+  d.querySelector('#reader-book-mode').click();
+  const parts=[...d.querySelectorAll('.folio .text-block p')].filter(part=>part.textContent.includes('longer final'));
+  assert.ok(parts.length>1);
+  assert.equal(parts.map(part=>part.textContent).join(''),text);
+  for(const part of parts)assert.ok(part.closest('.folio-body').scrollHeight<=360);
+  d.querySelector('#reader-text-mode').click();
+  assert.equal(d.querySelector('#final-fixture p'),paragraph);
+  assert.equal(paragraph.textContent,text);
+  dom.window.close();
+});

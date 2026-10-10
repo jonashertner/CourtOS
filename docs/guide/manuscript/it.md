@@ -58,7 +58,7 @@ Aprite la decisione e verificate l’originale. Selezionate un breve passaggio, 
 Da Word aprite il browser e proseguite con lo stesso account. Poi ritrasferite la ricerca in Word. Se i due stati divergono, scegliete quale riprendere. Il trasferimento vale due ore; non avvia una nuova ricerca e non modifica da solo il documento.
 
 ### Controllare i riferimenti
-«Citazioni» apre Citecheck separatamente. CourtOS non trasmette alcun testo. Verificate nella decisione originale se sostiene la vostra affermazione.
+In «Citazioni», scegliete le versioni PDF e avviate «Verifica i riferimenti». Citecheck confronta numeri delle decisioni, date e suddivisioni riconosciute con l’elenco OpenCaseLaw salvato. Un risultato porta al passo del vostro atto; le voci corrispondenti rimandano alla decisione intera. «Non trovato» significa soltanto: assente dall’elenco. Verificate testo e portata nell’originale.
 
 ## 6. Aggiungere le proprie fonti
 Scegliete le fonti originali. Ponete domande. Verificate i passaggi citati.
@@ -67,7 +67,7 @@ Scegliete le fonti originali. Ponete domande. Verificate i passaggi citati.
 Create nella biblioteca una cartella con il numero di causa. Al suo interno ordinate le parti, i loro scritti e gli allegati; tenete separati gli atti comuni. Caricate i PDF nella cartella corretta. CourtOS salva copie sul server.
 
 ### Scegliere le fonti
-Con «Scegli le tue fonti» selezionate i PDF della conversazione. Per la giurisprudenza aprite una decisione OpenCaseLaw, scegliete un breve estratto e aggiungetelo alla conversazione. La semplice ricerca nei vostri documenti non usa l’IA.
+Con «Scegli le tue fonti» selezionate i PDF degli atti e della vostra letteratura per la conversazione. Potete aggiungere brevi estratti OpenCaseLaw scelti espressamente. I due gruppi di fonti sono così riuniti. La semplice ricerca nei vostri documenti non usa l’IA.
 
 ### Porre domande e precisarle
 Chiedete quali importi menziona uno scritto o in cosa divergono due ricostruzioni dei fatti. Gemma lavora sulle fonti scelte. Le domande successive usano le stesse versioni; iniziate una nuova conversazione per altre fonti. Senza fonti non parte alcuna richiesta.
@@ -85,7 +85,7 @@ Accostare affermazioni e documenti in un elenco da verificare.
 Aprite «Esaminare gli atti». Aggiungete alla biblioteca brevi petizioni, risposte e allegati fittizi. Scegliete versioni, ruoli, parti e lingua del rapporto. «Fascicoli di esempio» offre quattro esercizi in tedesco, francese, italiano e inglese. «Importare i quattro PDF» archivia il fascicolo scelto sotto un numero fittizio, in cartelle per parte e per estratti comuni. I documenti sono ricostruiti da decisioni pubblicate; non sono gli atti originali. Verificate poi ruoli e parti.
 
 ### Tre compiti
-- Fatti e prove: affermazione, documento e posizione avversa sono affiancati. L’IA propone «Sostiene l’affermazione», «Contraddice l’affermazione», «Resta incerto» o «Non trovato nella selezione».
+- Fatti e prove: allegazione, documento selezionato e posizione avversa sono affiancati. «Sostiene» o «Contraddice» richiede una fonte selezionata come allegato probatorio. Un’altra allegazione non sostituisce una prova; la valutazione sostanziale resta una proposta dell’IA.
 - Argomentazioni giuridiche: il confronto riguarda soltanto le fonti scelte. Decisioni e opere mancanti non vengono reperite automaticamente. Cercate separatamente i riferimenti pubblici.
 - Cronologia: le date precise vengono ordinate. Le date approssimative o mancanti restano separate. Le versioni contrastanti mantengono voci distinte.
 
@@ -107,7 +107,39 @@ Nel browser: trasferite alla verifica esterna un breve passaggio che può essere
 ### Usare la risposta
 La risposta esterna può tornare come bozza modificabile. Non viene inviata di nuovo automaticamente. Verificate ogni affermazione decisiva sull’originale. La risposta convincente di un secondo modello non è una verifica indipendente delle fonti.
 
-## 9. Provare, poi decidere l’adozione
+## 9. Ritrovare il lavoro svolto
+Le conversazioni esistono. Una storia completa del lavoro è prevista.
+
+### A cosa serve lo storico
+CourtOS conserva le conversazioni personali e i riferimenti alle fonti; potete riaprirle. Uno storico utile dovrebbe mostrare anche ciò che avete accolto, scartato o modificato e perché un punto resta aperto. Questa ulteriore traccia del lavoro non è ancora realizzata.
+
+### Distinguere tre livelli
+- Conversazione: domanda, risposta, versioni esatte delle fonti, modello e luogo di elaborazione.
+- Risultato di lavoro salvato: quanto ripreso consapevolmente, con attribuzione, stato della verifica, riferimenti, controargomenti e questioni aperte. La vostra ipotesi di lavoro non è un accertamento giudiziario; le allegazioni contestate restano riconoscibili.
+- Vostra motivazione: ragioni verificate e modifiche, con versione precedente, data e autore. Una proposta dell’IA entra nel lavoro solo attraverso un vostro intervento consapevole.
+
+### Proteggere la riflessione personale
+Riflessioni personali e appunti di deliberazione non dovrebbero essere condivisi per impostazione predefinita. Lo storico documenta passaggi e scelte motivate; non promette l’accesso ai pensieri nascosti di un modello. Una risposta dell’IA non è un mezzo di prova.
+
+### Sviluppi previsti
+Sono previsti anche progetti di decisione guidati dal tribunale, l’esame di questioni fondamentali e di varianti ipotetiche con le loro conseguenze. Le ipotesi dovrebbero rimanere distinte dai riscontri negli atti. Queste funzioni non sono ancora disponibili.
+
+## 10. Una memoria per la causa
+Il progetto è uno stato di lavoro privato collegato alle fonti, non un secondo fascicolo di affermazioni non verificate.
+
+### Collegare persone e termini
+Un registro privato dovrebbe collegare nomi reali, varianti documentate, ruoli e termini sostitutivi approvati. Comprenderebbe persone, imprese, luoghi e immobili. Identità e ruolo resterebbero distinti: una persona può avere più ruoli. Ogni collegamento richiede una fonte; identità incerte non vengono unite automaticamente.
+
+### Due versioni leggibili
+File Markdown interni conserverebbero il lavoro con nomi reali e riferimenti puntuali. Solo dalle voci espressamente scelte nascerebbe una versione pseudonimizzata, verificata per l’IA esterna. Documenti e appunti userebbero gli stessi termini del registro privato. Non sarebbero due verità mantenute separatamente. La corrispondenza con i nomi reali resterebbe interna.
+
+### Rendere visibili i cambiamenti
+Se cambia una fonte o una corrispondenza, le voci interessate sarebbero da riesaminare. Le esportazioni interessate perderebbero l’approvazione. Le conclusioni precedenti non verrebbero sostituite in silenzio. Ogni versione derivata manterrebbe un collegamento privato alla versione e al passaggio originali. Il testo modificato dovrebbe restare riconoscibile come derivato.
+
+### Approvare ogni uso esterno
+Il nome di una cartella non autorizza un invio. Domanda, appunti selezionati e storico devono figurare nell’anteprima esatta. Il passaggio all’IA esterna apre una nuova conversazione, senza riprendere automaticamente nomi privati o precedenti conversazioni locali. I nomi sostitutivi non garantiscono l’anonimato. Questa memoria e questo percorso di esportazione non sono ancora realizzati.
+
+## 11. Provare, poi decidere l’adozione
 Un progetto pilota utile produce osservazioni, non promesse.
 
 ### Valutare l’utilità
@@ -122,7 +154,7 @@ Il lavoro diretto in una cartella locale e una pseudonimizzazione coerente tra p
 ### Software aperto
 - [CourtOS · Codice sorgente e GNU AGPL v3.0](https://github.com/jonashertner/CourtOS)
 
-## 10. Fonti e portata
+## 12. Fonti e portata
 Basi delle posizioni e regole espressamente attribuite; verificate il 9 ottobre 2026.
 
 - [1. Richard Susskind · Online Courts and the Future of Justice](https://academic.oup.com/oxford-law-pro/book/41081)

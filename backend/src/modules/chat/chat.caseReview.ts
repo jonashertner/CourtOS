@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { Db } from "../../lib/supabase";
 import { failure, ok, type ServiceResult } from "../../lib/serviceResult";
-import { prefetchSourceEvidence, SourceGroundingError } from "./engine/sourceEvidence";
+import { prefetchSourceEvidence, SourceGroundingError, type SourceEvidenceProfile } from "./engine/sourceEvidence";
 import type { DocIndex, DocStore } from "./engine/types";
 
 /** Personal, exact-version sources only. Request filenames/paths are ignored. */
-export async function loadCaseReviewEvidence(db: Db, userId: string, selected: Array<{ document_id: string; version_id: string }>) {
+export async function loadCaseReviewEvidence(db: Db, userId: string, selected: Array<{ document_id: string; version_id: string }>, profile: SourceEvidenceProfile = "model") {
   const { data, error } = await db.from("documents").select("id,current_version_id")
     .eq("user_id", userId).eq("status", "ready").eq("library_kind", "file")
     .is("project_id", null).is("org_id", null).is("workflow_id", null)
@@ -20,7 +20,7 @@ export async function loadCaseReviewEvidence(db: Db, userId: string, selected: A
     store.set(label, { storage_path: "", file_type: "pdf", filename: "" });
     index[label] = { document_id: source.document_id, version_id: source.version_id, filename: "" };
   });
-  const result = await prefetchSourceEvidence(store, index, db, userId);
+  const result = await prefetchSourceEvidence(store, index, db, userId, undefined, profile);
   // Repeat owner scope after the awaited PDF work. A moved/deleted source cannot
   // be released to inference merely because it was owned at the initial query.
   const { data: current, error: currentError } = await db.from("documents").select("id")

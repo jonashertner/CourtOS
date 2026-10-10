@@ -259,6 +259,7 @@ export function DocumentContent({
                         <>
                             {mode.kind === "citation" && (
                                 <CitationQuotesSection
+                                    citation={mode.citation}
                                     document={resolvedDocument}
                                     activeQuoteId={activeCitationQuoteId}
                                     citationRef={mode.citation.ref}

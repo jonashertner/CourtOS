@@ -1,0 +1,9 @@
+.row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; }
+.label { font-size: 14px; line-height: 22px; }
+.choices { display: inline-flex; align-items: stretch; gap: 4px; }
+.choices button { position: relative; min-width: 44px; min-height: 44px; padding: 10px 9px; border: 0; background: transparent; color: var(--muted-foreground, #5e5e5e); font: inherit; font-size: 13px; font-weight: 400; line-height: 20px; cursor: pointer; }
+.choices button::after { position: absolute; content: ""; height: 2px; bottom: 4px; left: 12px; right: 12px; background: currentColor; opacity: 0; }
+.choices button[aria-pressed="true"] { color: var(--foreground, #191919); font-weight: 600; }
+.choices button[aria-pressed="true"]::after { opacity: 1; }
+.choices button:hover { color: var(--foreground, #191919); background: var(--muted, #f6f6f6); }
+.choices button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

@@ -6,13 +6,18 @@ import { asyncRoute, routerErrorHandler } from "../../middleware/asyncRoute";
 import { createServerSupabase } from "../../lib/supabase";
 import { sendServiceFailure } from "../../lib/serviceResult";
 import { requireTrustedOrigin } from "../../middleware/trustedOrigin";
-import { parseKnowledgeInput, searchKnowledge, publicKnowledgeRequest, researchHandoff, startCaseReview, getCaseReview, stopCaseReview, caseReviewRun } from "./knowledge.service";
+import { parseKnowledgeInput, searchKnowledge, publicKnowledgeRequest, researchHandoff, startCaseReview, getCaseReview, stopCaseReview, caseReviewRun, checkSelectedCitations } from "./knowledge.service";
 
 export const knowledgeRouter = Router();
-knowledgeRouter.use(["/handoffs", "/reviews"], (_req,res,next) => { res.setHeader("Cache-Control","no-store"); next(); });
+knowledgeRouter.use(["/handoffs", "/reviews", "/citations"], (_req,res,next) => { res.setHeader("Cache-Control","no-store"); next(); });
 knowledgeRouter.use(requireAuth);
 knowledgeRouter.use(rateLimit({ windowMs: 60_000, limit: 30, keyGenerator: (_req, res) => String(res.locals.userId), standardHeaders: true, legacyHeaders: false, message: { detail: "Zu viele Suchanfragen. Bitte eine Minute warten." } }));
-knowledgeRouter.use(["/handoffs", "/reviews"], requireTrustedOrigin);
+knowledgeRouter.use(["/handoffs", "/reviews", "/citations"], requireTrustedOrigin);
+knowledgeRouter.post("/citations/check", asyncRoute(async (req,res) => {
+  const result = await checkSelectedCitations(createServerSupabase(), String(res.locals.userId), req.body);
+  if (!result.ok) return void sendServiceFailure(res,result);
+  res.json(result.data);
+}));
 function exactBody(body: unknown, keys: string[]): body is Record<string, unknown> {
   return !!body && typeof body === "object" && !Array.isArray(body) && Object.keys(body).length === keys.length && Object.keys(body).every(key => keys.includes(key));
 }

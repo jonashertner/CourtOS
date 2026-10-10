@@ -6,17 +6,17 @@ import {ExampleImportError,type ExampleSelection,type ExampleImportResult} from 
 import {ExampleMatters} from "./ExampleMatters";
 const imports=vi.hoisted(()=>vi.fn());
 vi.mock("@/app/lib/importExampleMatter",async original=>({...await original<typeof import("@/app/lib/importExampleMatter")>(),importExampleMatter:imports}));
-const selected=[{document:{id:"doc",current_version_id:"version",filename:"CourtOS_DE-01_D01.pdf",status:"ready"},role:"claim",party:"A.________ AG · Vermieterin"}] as ExampleSelection[];
+const selected=[{document:{id:"doc",current_version_id:"version",filename:"01 Standpunkt Bergtal Immobilien AG.pdf",status:"ready"},role:"claim",party:"Bergtal Immobilien AG · Vermieterin"}] as ExampleSelection[];
 const result:ExampleImportResult={sources:selected,folderId:"case-folder",reusedCount:0,previousEditionCount:0};
 const show=(props:Partial<Parameters<typeof ExampleMatters>[0]>={})=>render(<CourtOSLocaleProvider ownerId="owner"><ExampleMatters disabled={false} inWord={false} onImported={vi.fn()} onImportingChange={vi.fn()} {...props}/></CourtOSLocaleProvider>);
 const open=()=>fireEvent.click(screen.getByText("Beispieldossiers"));
-const button=()=>screen.getByRole("button",{name:"Vier PDFs übernehmen · CourtOS-UE-2026-001"});
+const button=()=>screen.getByRole("button",{name:"Vier PDFs übernehmen · FV.2026.117"});
 beforeEach(()=>{vi.clearAllMocks();sessionStorage.clear();localStorage.clear();setCourtOSLocale("owner","de");});
 describe("optional sample matters",()=>{
     it("shows all four numbered matters and source/party provenance without an import or language filter",()=>{
         show();expect(screen.getByText("Beispieldossiers").closest("details")).not.toHaveAttribute("open");open();
         expect(screen.getByText(/keine Originalakten/)).toBeVisible();expect(screen.getAllByRole("link",{name:/Originalurteil/})).toHaveLength(4);
-        for(const number of ["001","002","003","004"])expect(screen.getByText(new RegExp(`Fiktives Aktenzeichen · CourtOS-UE-2026-${number}`))).toBeVisible();
+        for(const number of ["FV.2026.117","C.2026.204","OR.2026.83","HG.2026.42"])expect(screen.getByText(`Fiktives Aktenzeichen · ${number}`)).toBeVisible();
         expect(screen.getByRole("heading",{name:"Un versement pour acquérir une villa"})).toBeVisible();expect(screen.queryByRole("combobox")).not.toBeInTheDocument();expect(imports).not.toHaveBeenCalled();
     });
     it("imports only the explicitly chosen matter and locks other actions until completion",async()=>{
@@ -28,7 +28,7 @@ describe("optional sample matters",()=>{
     it("does not overwrite selected work",()=>{show({disabled:true});open();expect(button()).toBeDisabled();expect(imports).not.toHaveBeenCalled();});
     it("preserves Word navigation and explains reused old editions",async()=>{
         imports.mockResolvedValue({...result,reusedCount:4,previousEditionCount:4});show({inWord:true});open();fireEvent.click(button());
-        expect(await screen.findByRole("status")).toHaveTextContent("4 vorhandene Übungsdateien");expect(screen.getByRole("status")).toHaveTextContent("ohne fiktives Aktenzeichen");expect(screen.getByRole("link",{name:"Aktenordner öffnen"})).toHaveAttribute("href","/library/folders/case-folder?host=word");
+        expect(await screen.findByRole("status")).toHaveTextContent("4 vorhandene Übungsdateien");expect(screen.getByRole("status")).toHaveTextContent("Frühere Kopf- und Parteibezeichnungen");expect(screen.getByRole("link",{name:"Aktenordner öffnen"})).toHaveAttribute("href","/library/folders/case-folder?host=word");
     });
     it("does not silently retry an ambiguous upload",async()=>{
         imports.mockRejectedValue(new ExampleImportError("upload",true));show({inWord:true});open();fireEvent.click(button());

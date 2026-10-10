@@ -111,3 +111,44 @@ describe("complete source admission and fixed-page verification", () => {
     expect(mocks.download).not.toHaveBeenCalled();
   });
 });
+
+
+describe("separate deterministic source admission", () => {
+  const deterministic = () => prefetchSourceEvidence(store, index, db, "user-a", undefined, "citation_check");
+  const page = (text: string, number = 1, totalPages = 1) => ({ page: number, totalPages, truncated: false, empty: false, text: `[Page ${number}]\n${text}` });
+  it("accepts a normal long submission only under the explicit deterministic profile", async () => {
+    mocks.pages.mockResolvedValue(Array.from({ length: 200 }, (_, i) => page("x".repeat(100), i + 1, 200)));
+    const result = await deterministic();
+    expect(result.get("doc-0")!.pages).toHaveLength(200);
+    expect(mocks.pages).toHaveBeenCalledWith(expect.any(ArrayBuffer), 200, 1024 * 1024 + 200 * 16);
+    await expect(load()).rejects.toMatchObject({ issue: "scope" });
+    expect(mocks.pages).toHaveBeenLastCalledWith(expect.any(ArrayBuffer), 40, 10_000 + 40 * 16);
+  });
+  it("allows exactly 1 MiB but rejects one UTF-8 byte more without truncation", async () => {
+    mocks.pages.mockResolvedValue([page("ä".repeat(524288))]);
+    expect((await deterministic()).get("doc-0")!.pages[0].text.length).toBe(524288);
+    mocks.pages.mockResolvedValue([page("ä".repeat(524288) + "x")]);
+    await expect(deterministic()).rejects.toMatchObject({ issue: "scope" });
+  });
+  it("enforces the larger limit on the aggregate selected sources, not each alone", async () => {
+    mocks.pages.mockResolvedValue([page("x".repeat(600_000))]);
+    const many = new Map([["doc-0",store.get("doc-0")!],["doc-1",store.get("doc-0")!]]);
+    await expect(prefetchSourceEvidence(many, {...index,"doc-1":index["doc-0"]}, db, "user-a", undefined, "citation_check")).rejects.toMatchObject({ issue: "scope" });
+  });
+  it.each([201, 40])("does not accept omitted pages under either profile (%s)", async count => {
+    mocks.pages.mockResolvedValue([page("text", 1, count)]);
+    await expect(deterministic()).rejects.toMatchObject({ issue: "scope" });
+    await expect(load()).rejects.toMatchObject({ issue: "scope" });
+  });
+  it("preserves PDF byte/hash/readability gates and refuses unknown server profiles", async () => {
+    mocks.load.mockResolvedValueOnce({ id: "version-a", storage_path: "a.pdf", filename: "a.pdf", size_bytes: 5 * 1024 * 1024 + 1 });
+    await expect(deterministic()).rejects.toMatchObject({ issue: "unavailable" });
+    expect(mocks.download).not.toHaveBeenCalled();
+    await expect(prefetchSourceEvidence(store,index,db,"user-a",undefined,"unbounded" as never)).rejects.toMatchObject({ issue: "scope" });
+    expect(mocks.download).not.toHaveBeenCalled();
+    mocks.download.mockResolvedValueOnce(Uint8Array.from([99]).buffer);
+    await expect(deterministic()).rejects.toMatchObject({ issue: "changed" });
+    mocks.pages.mockResolvedValueOnce([{...page(""),empty:true}]);
+    await expect(deterministic()).rejects.toMatchObject({ issue: "unavailable" });
+  });
+});

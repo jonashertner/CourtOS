@@ -25,7 +25,7 @@
           "id": "D01",
           "title": "Standpunkt der Vermieterin",
           "role": "claim",
-          "party_label": "Vermieterin",
+          "party_label": "Bergtal Immobilien AG · Vermieterin",
           "paragraphs": [
             {
               "id": "D01-P01",
@@ -48,7 +48,7 @@
           "id": "D02",
           "title": "Standpunkt der Mieter",
           "role": "response",
-          "party_label": "Mieter",
+          "party_label": "Mara und Lukas Meier · Mieter",
           "paragraphs": [
             {
               "id": "D02-P01",
@@ -142,7 +142,7 @@
           "id": "D01",
           "title": "Position du demandeur",
           "role": "claim",
-          "party_label": "Demandeur",
+          "party_label": "Julien Morel · Demandeur",
           "paragraphs": [
             {
               "id": "D01-P01",
@@ -170,7 +170,7 @@
           "id": "D02",
           "title": "Position de la défenderesse",
           "role": "response",
-          "party_label": "Défenderesse",
+          "party_label": "Claire Aubert · Successeure de Madeleine Aubert",
           "paragraphs": [
             {
               "id": "D02-P01",
@@ -274,7 +274,7 @@
           "id": "D01",
           "title": "Posizione del creditore",
           "role": "claim",
-          "party_label": "Creditore",
+          "party_label": "Luca Bernasconi · Creditore",
           "paragraphs": [
             {
               "id": "D01-P01",
@@ -297,7 +297,7 @@
           "id": "D02",
           "title": "Posizione della debitrice",
           "role": "response",
-          "party_label": "Debitrice",
+          "party_label": "Officine Riva SA · Debitrice",
           "paragraphs": [
             {
               "id": "D02-P01",
@@ -400,7 +400,7 @@
           "id": "D01",
           "title": "Tenant company’s position",
           "role": "claim",
-          "party_label": "Tenant company",
+          "party_label": "Alpine Lodge GmbH · Tenant",
           "paragraphs": [
             {
               "id": "D01-P01",
@@ -423,7 +423,7 @@
           "id": "D02",
           "title": "Landlord company’s position",
           "role": "response",
-          "party_label": "Landlord company",
+          "party_label": "Seeblick Immobilien AG · Landlord",
           "paragraphs": [
             {
               "id": "D02-P01",
@@ -504,28 +504,28 @@
   "labels": {
     "de": {
       "notice": "Rekonstruierte Übungsunterlage. Kein Originalakt.",
-      "sub": "Nach einem veröffentlichten Schweizer Urteil",
+      "sub": "Nach einem veröffentlichten Schweizer Urteil. Personen- und Firmennamen sind erfunden.",
       "source": "Grundlage",
       "paragraph": "Absatz",
       "footer": "Nur für die freiwillige Fallübung"
     },
     "fr": {
       "notice": "Document d’exercice reconstruit. Ce n’est pas une pièce originale.",
-      "sub": "D’après un arrêt suisse publié",
+      "sub": "D’après un arrêt suisse publié. Les noms de personnes et de sociétés sont fictifs.",
       "source": "Source",
       "paragraph": "Paragraphe",
       "footer": "Dossier facultatif d’exercice"
     },
     "it": {
       "notice": "Documento didattico ricostruito. Non è un atto originale.",
-      "sub": "Da una sentenza svizzera pubblicata",
+      "sub": "Da una sentenza svizzera pubblicata. I nomi di persone e società sono inventati.",
       "source": "Fonte",
       "paragraph": "Paragrafo",
       "footer": "Fascicolo facoltativo di esercitazione"
     },
     "en": {
       "notice": "Reconstructed exercise document. Not an original case record.",
-      "sub": "Unofficial English reconstruction of a Swiss judgment in German",
+      "sub": "Unofficial English reconstruction of a Swiss judgment in German. Person and company names are fictitious.",
       "source": "Source",
       "paragraph": "Paragraph",
       "footer": "Optional case exercise"

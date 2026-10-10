@@ -85,8 +85,46 @@ describe("bounded review input and exact server passage binding", () => {
     expect(ground(value,"stop",i,legalSources).rows[0].cited_references[0].quote).toBe("Art. 29 Abs. 2 BV");
     expect(()=>ground(value,"stop",{...i,sources:[i.sources[0],{...i.sources[1],role:"response"}]},legalSources)).toThrow();
   });
+  it.each(["supports", "contradicts"])("requires selected exhibits for a facts assessment of %s, not another party's pleading", (assessment) => {
+    const data=proposed(); data.rows[0].assessment=assessment;
+    data.rows[0].evidence=[{p:"p2",q:denial}];
+    // A real, exact quotation in a different document is still not an exhibit.
+    expectDiagnostic(()=>ground(data),"fact_support_without_exhibit");
+    // Neither an unrelated selected exhibit nor mixing it into evidence may
+    // launder the competing party account into proof.
+    data.rows[0].evidence.push({p:"p3",q:exhibit});
+    expectDiagnostic(()=>ground(data),"fact_support_without_exhibit");
+    data.rows[0].evidence=[{p:"p3",q:exhibit}];
+    const report=ground(data);
+    expect(report.rows[0].assessment).toBe(assessment);
+    expect(report.rows[0].evidence[0].document_id).toBe(uuid(3));
+    expect(report.rows[0].opposing_position[0].document_id).toBe(uuid(2));
+    expect(report.rows[0].semantic_status).toBe("ai_draft_requires_review");
+  });
+  it("uses the selected source role, never a filename or a model interpretation, to qualify an exhibit", () => {
+    const data=proposed(); data.rows[0].assessment="supports";
+    for (const role of ["claim","response","authority","other"] as const) {
+      const selection={...input,sources:input.sources.map((selected,index)=>index===2?{...selected,role}:selected)};
+      const namedExhibit=sources.map((value,index)=>index===2?{...value,filename:"Exhibit - proof.pdf"}:value);
+      expectDiagnostic(()=>ground(data,"stop",selection,namedExhibit),"fact_support_without_exhibit");
+    }
+  });
+  it("keeps competing accounts without exhibits neutral and preserves their attribution", () => {
+    const selection={...input,sources:input.sources.slice(0,2)};
+    for (const assessment of ["inconclusive","not_found"]) {
+      const data=proposed(); data.rows[0].assessment=assessment; data.rows[0].evidence=[];
+      const report=ground(data,"stop",selection,sources.slice(0,2));
+      expect(report.rows[0]).toMatchObject({assessment,party_label:"Partei A",posture:"allegation",semantic_status:"ai_draft_requires_review"});
+      expect(report.rows[0].opposing_position[0].quote).toBe(denial);
+      expect(report.coverage.selection.map(item=>item.role)).toEqual(["claim","response"]);
+    }
+    const prompt=reviewPrompt(selection,buildReviewPassages(selection,sources.slice(0,2)));
+    expect(JSON.parse(prompt.user).facts).toContain("Other party statements belong in opposing");
+    expect(JSON.parse(prompt.user).facts).toContain("Without an adequate selected exhibit use inconclusive/not_found");
+    expect(JSON.parse(reviewPrompt({...selection,kind:"chronology"},buildReviewPassages(selection,sources.slice(0,2))).user)).not.toHaveProperty("facts");
+  });
   it("does not misrepresent a mechanical gate as semantic entailment verification", () => {
-    const data=proposed(); data.rows[0].assessment="supports"; data.rows[0].evidence=[{p:"p2",q:denial}];
+    const data=proposed(); data.rows[0].assessment="supports"; data.rows[0].evidence=[{p:"p3",q:exhibit}];
     const result=ground(data); // Incorrect assessment remains a reviewable AI draft; matching cannot detect every negation error.
     expect(result.rows[0].semantic_status).toBe("ai_draft_requires_review");
     expect(result.notices.join(" ")).toContain("KI-Einschätzungen");

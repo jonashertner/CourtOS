@@ -1,5 +1,8 @@
 "use client";
 
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { citationControlMessages as C } from "@/app/lib/citationControlMessages";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Download, ExternalLink } from "lucide-react";
@@ -225,14 +228,16 @@ function UrlDownloadButton({
 }: {
     href: string;
 }) {
+    const {t}=useCourtOSLocale();
+    const label=COURTOS_PILOT_MODE?t(C.download):"Download";
     return (
         <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"
             download
-            aria-label="Download"
-            title="Download"
+            aria-label={label}
+            title={label}
             className={textButtonUIClassName({
                 size: "icon-xs",
             })}
@@ -281,6 +286,8 @@ function DownloadButton({
     isReloading?: boolean;
     onDownload?: () => Promise<void> | undefined;
 }) {
+    const {t}=useCourtOSLocale();
+    const label=(key:keyof typeof C)=>COURTOS_PILOT_MODE?t(C[key]):C[key].en;
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -299,7 +306,7 @@ function DownloadButton({
             setError(
                 userFacingApiError(
                     cause,
-                    "This file could not be downloaded. Please try again.",
+                    label("downloadRetry"),
                 ),
             );
         } finally {
@@ -312,14 +319,14 @@ function DownloadButton({
         <>
             <WarningPopup
                 open={!!error}
-                title="Download failed"
+                title={label("downloadFailed")}
                 message={error}
                 onClose={() => setError(null)}
             />
             <TextButtonUI
                 size="icon-xs"
-                aria-label="Download"
-                title="Download"
+                aria-label={label("download")}
+                title={label("download")}
                 onClick={handleClick}
                 loading={!!spinning}
             >

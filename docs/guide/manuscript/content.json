@@ -9,7 +9,7 @@
     "next": "Weiter",
     "previous": "Zurück",
     "page_label": "Seite",
-    "pilot": "Arbeitsausgabe 02 · Testbetrieb",
+    "pilot": "Arbeitsausgabe 03 · Testbetrieb",
     "title": "Das Gericht im Zeitalter der KI",
     "pages": [
       {
@@ -19,7 +19,7 @@
         "title": "Das Gericht\nim Zeitalter\nder KI",
         "lead": "Ein kurzer Leitfaden für Richterinnen, Richter und Gerichtsschreibende. Mit CourtOS recherchieren, Eingaben prüfen und Belege weiterverwenden.",
         "statement": "Die Technik soll helfen, den Fall zu verstehen. Die Verantwortung für den Entscheid bleibt beim Gericht.",
-        "edition": "Arbeitsausgabe 02 · Testbetrieb",
+        "edition": "Arbeitsausgabe 03 · Testbetrieb",
         "part": "Aufgabe · Urteil · Beleg"
       },
       {
@@ -140,7 +140,7 @@
           {
             "type": "text",
             "heading": "Zitierangaben prüfen",
-            "body": "«Zitate» öffnet Citecheck separat. CourtOS übergibt dabei keinen Text. Ob ein angeführter Entscheid Ihre Aussage trägt, prüfen Sie im Original."
+            "body": "Unter «Zitate» wählen Sie PDF-Fassungen und starten «Zitierangaben prüfen». Citecheck gleicht erkannte Entscheidnummern, Daten und Gliederungsstellen mit der gespeicherten OpenCaseLaw-Liste ab. Ein Befund führt zur Stelle in Ihrer Eingabe; passende Indexeinträge verlinken den ganzen Entscheid. «Nicht gefunden» bedeutet nur: nicht in dieser Liste. Wortlaut und rechtliche Tragfähigkeit prüfen Sie im Original."
           }
         ]
       },
@@ -157,7 +157,7 @@
           {
             "type": "text",
             "heading": "Die Quellen wählen",
-            "body": "Über «Eigene Quellen wählen» bestimmen Sie die PDFs für das Gespräch. Für Rechtsprechung öffnen Sie einen OpenCaseLaw-Entscheid, wählen einen kurzen Auszug und übernehmen ihn ins Gespräch. Die reine Suche im eigenen Bestand verwendet keine KI."
+            "body": "Über «Eigene Quellen wählen» bestimmen Sie PDFs aus Akte und eigener Literatur für das Gespräch. Sie können kurze, ausdrücklich ausgewählte OpenCaseLaw-Auszüge hinzufügen. So stehen beide Quellengruppen gemeinsam bereit. Die reine Suche im eigenen Bestand verwendet keine KI."
           },
           {
             "type": "text",
@@ -190,7 +190,7 @@
             "type": "items",
             "heading": "Drei Aufträge",
             "items": [
-              "Tatsachen und Belege: Behauptung, Beleg und Gegenposition stehen nebeneinander. Die KI schlägt «Stützt die Aussage», «Widerspricht der Aussage», «Bleibt offen» oder «Im ausgewählten Bestand nicht gefunden» vor.",
+              "Tatsachen und Belege: Parteibehauptung, ausgewählte Beilage und Gegenposition stehen nebeneinander. «Stützt» oder «Widerspricht» setzt eine als Beilage ausgewählte Quelle voraus. Eine andere Parteibehauptung ersetzt keinen Beleg; die inhaltliche Beurteilung bleibt ein KI-Vorschlag.",
               "Rechtliche Aussagen: Verglichen wird nur mit den ausgewählten Quellen. Nicht beigefügte Entscheide und Literatur werden nicht automatisch beschafft. Recherchieren Sie öffentliche Fundstellen gesondert.",
               "Chronologie: Eindeutige Tagesdaten werden geordnet. Ungefähre oder fehlende Daten bleiben getrennt. Gegensätzliche Darstellungen bleiben eigene Einträge."
             ]
@@ -226,6 +226,64 @@
             "type": "note",
             "heading": "Mit dem Ergebnis umgehen",
             "body": "Eine externe Antwort kann als bearbeitbarer Entwurf zurückkehren. Sie wird nicht automatisch erneut gesendet. Prüfen Sie auch hier jede tragende Aussage am Original. Eine gut klingende Antwort eines zweiten Modells ist keine unabhängige Quellenprüfung."
+          }
+        ]
+      },
+      {
+        "id": "history",
+        "title": "Arbeitsschritte\nwiederfinden",
+        "lead": "Gespräche sind vorhanden. Ein vollständiger Arbeitsverlauf ist geplant.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Warum der Verlauf zählt",
+            "body": "CourtOS speichert persönliche Gespräche und Quellenverweise; Sie können sie erneut laden. Ein nützlicher Verlauf soll später auch zeigen, was Sie daraus übernommen, verworfen oder geändert haben und weshalb ein Punkt offen blieb. Dieser zusätzliche Arbeitsnachweis ist noch nicht umgesetzt."
+          },
+          {
+            "type": "items",
+            "heading": "Drei Ebenen auseinanderhalten",
+            "items": [
+              "Gespräch: Frage, Antwort, genaue Quellenfassungen sowie Modell und Verarbeitungsort.",
+              "Gespeicherter Arbeitsbefund: bewusst übernommene Ergebnisse mit Zuschreibung, Prüfstand, Fundstellen, Gegenargumenten und offenen Fragen. Ihre Arbeitsannahme ist keine gerichtliche Feststellung; bestrittene Behauptungen bleiben erkennbar.",
+              "Eigene Begründung: Ihre geprüften Gründe und Änderungen, jeweils mit früherem Stand, Datum und Urheber. Ein KI-Vorschlag wird erst durch Ihre bewusste Bearbeitung Teil dieses Arbeitsstands."
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Private Überlegungen schützen",
+            "body": "Persönliche Überlegungen und Beratungsnotizen sollen nicht standardmässig geteilt werden. Der Verlauf dokumentiert Arbeitsschritte und begründete Entscheidungen; er verspricht keinen Einblick in verborgene Modellgedanken. Eine KI-Antwort ist kein Beweismittel."
+          },
+          {
+            "type": "note",
+            "heading": "Weiterer Ausbau",
+            "body": "Geplant sind auch gerichtlich gesteuerte Entscheidungsentwürfe, die Klärung grundlegender Fragen und die Prüfung hypothetischer Varianten und ihrer Folgen. Annahmen müssten dabei von Aktenbefunden getrennt bleiben. Diese Funktionen sind noch nicht verfügbar."
+          }
+        ]
+      },
+      {
+        "id": "memory",
+        "title": "Ein Gedächtnis\nfür die Sache",
+        "lead": "Geplant ist ein privater Arbeitsstand mit Quellen, nicht eine zweite Akte voller ungeprüfter Aussagen.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Personen und Begriffe zuordnen",
+            "body": "Ein privates Verzeichnis soll echte Namen, belegte Namensvarianten, Rollen und genehmigte Ersatzbegriffe verbinden. Es umfasst etwa Personen, Unternehmen, Orte und Grundstücke. Identität und Rolle bleiben getrennt: dieselbe Person kann mehrere Rollen haben. Jede Zuordnung braucht ihre Quelle; unklare Identitäten werden nicht automatisch zusammengeführt."
+          },
+          {
+            "type": "text",
+            "heading": "Zwei lesbare Fassungen",
+            "body": "Interne Markdown-Dateien sollen den Arbeitsstand mit Originalnamen und Fundstellen festhalten. Für externe KI entsteht nur aus ausdrücklich ausgewählten Einträgen eine geprüfte pseudonymisierte Ableitung. Dokumente und Notizen verwenden dieselben Ersatzbegriffe aus dem privaten Verzeichnis. Die beiden Fassungen sind keine unabhängig gepflegten Wahrheiten. Die Zuordnung zu echten Namen bleibt intern."
+          },
+          {
+            "type": "text",
+            "heading": "Änderungen sichtbar halten",
+            "body": "Ändert sich eine Quelle oder Zuordnung, müssen betroffene Einträge erneut geprüft werden. Betroffene Exporte verlieren ihre Freigabe. Frühere Schlussfolgerungen werden nicht automatisch überschrieben. Jede Ableitung behält einen privaten Rückweg zur ursprünglichen Fassung und Stelle. Veränderte Wortlaute müssen als Ableitung erkennbar bleiben."
+          },
+          {
+            "type": "note",
+            "heading": "Freigabe vor jeder externen Verwendung",
+            "body": "Ein Ordnername erlaubt noch keine Übermittlung. Frage, ausgewählte Notizen und Verlauf gehören in die genaue Vorschau. Beim Wechsel zu externer KI beginnt ein neues Gespräch; private Namen und früherer lokaler Verlauf werden nicht automatisch übernommen. Ersatznamen allein garantieren keine Anonymität. Fallgedächtnis und dieser Exportweg sind noch nicht umgesetzt."
           }
         ]
       },
@@ -350,7 +408,7 @@
     "next": "Suivant",
     "previous": "Précédent",
     "page_label": "Page",
-    "pilot": "Édition de travail 02 · Phase d’essai",
+    "pilot": "Édition de travail 03 · Phase d’essai",
     "title": "Le tribunal à l’ère de l’IA",
     "pages": [
       {
@@ -360,7 +418,7 @@
         "title": "Le tribunal\nà l’ère de l’IA",
         "lead": "Un guide bref pour les juges et les greffières et greffiers. Rechercher, examiner des écritures et reprendre des références avec CourtOS.",
         "statement": "La technique doit aider à comprendre la cause. Le tribunal reste responsable de sa décision.",
-        "edition": "Édition de travail 02 · Phase d’essai",
+        "edition": "Édition de travail 03 · Phase d’essai",
         "part": "Tâche · Jugement · Source"
       },
       {
@@ -481,7 +539,7 @@
           {
             "type": "text",
             "heading": "Vérifier les références",
-            "body": "«Citations» ouvre Citecheck séparément. CourtOS ne lui transmet aucun texte. Vérifiez dans l’arrêt original s’il étaye votre affirmation."
+            "body": "Sous «Citations», choisissez les versions PDF, puis «Vérifier les références». Citecheck compare les numéros d’arrêts, dates et subdivisions reconnus à la liste OpenCaseLaw enregistrée. Un résultat mène au passage de votre écriture; les entrées correspondantes renvoient à la décision entière. «Non trouvé» signifie seulement: absent de cette liste. Vérifiez le texte et sa portée dans l’original."
           }
         ]
       },
@@ -498,7 +556,7 @@
           {
             "type": "text",
             "heading": "Choisir les sources",
-            "body": "Avec «Choisir vos sources», sélectionnez les PDF de la conversation. Pour la jurisprudence, ouvrez une décision OpenCaseLaw, choisissez un court extrait et ajoutez-le à la conversation. La simple recherche dans vos documents n’utilise pas d’IA."
+            "body": "Avec «Choisir vos sources», sélectionnez les PDF du dossier et de votre documentation pour la conversation. Vous pouvez y ajouter de courts extraits OpenCaseLaw expressément choisis. Les deux groupes de sources sont alors réunis. La simple recherche dans vos documents n’utilise pas d’IA."
           },
           {
             "type": "text",
@@ -508,7 +566,7 @@
           {
             "type": "text",
             "heading": "Vérifier la réponse",
-            "body": "Chaque paragraphe de réponse doit comporter une référence vérifiée. Ouvrez le passage et lisez le contexte. Sans référence valable, la réponse est retenue. Les liens vers vos PDF restent réservés aux comptes autorisés."
+            "body": "Chaque paragraphe de réponse doit comporter une référence vérifiée. Ouvrez le passage et lisez le contexte. Sans référence valable, la réponse n’est pas affichée. Les liens vers vos PDF restent réservés aux comptes autorisés."
           },
           {
             "type": "note",
@@ -531,7 +589,7 @@
             "type": "items",
             "heading": "Trois tâches",
             "items": [
-              "Faits et preuves: allégation, pièce et position adverse apparaissent côte à côte. L’IA propose «Soutient l’énoncé», «Contredit l’énoncé», «Reste indéterminé» ou «Non trouvé dans la sélection».",
+              "Faits et preuves: allégation, pièce sélectionnée et position adverse apparaissent côte à côte. «Soutient» ou «Contredit» exige une source sélectionnée comme pièce. Une autre allégation ne remplace pas une preuve; l’appréciation de fond reste une proposition de l’IA.",
               "Arguments juridiques: la comparaison porte uniquement sur les sources choisies. Les décisions et ouvrages absents ne sont pas obtenus automatiquement. Recherchez séparément les références publiques.",
               "Chronologie: les dates précises sont ordonnées. Les dates approximatives ou absentes restent à part. Les versions contradictoires gardent des entrées distinctes."
             ]
@@ -567,6 +625,64 @@
             "type": "note",
             "heading": "Utiliser la réponse",
             "body": "La réponse externe peut revenir comme projet modifiable. Elle n’est pas renvoyée automatiquement. Vérifiez chaque affirmation décisive dans l’original. L’avis convaincant d’un second modèle ne constitue pas un contrôle indépendant des sources."
+          }
+        ]
+      },
+      {
+        "id": "history",
+        "title": "Retrouver\nle travail accompli",
+        "lead": "Les conversations existent. Un historique complet du travail est prévu.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "À quoi sert l’historique",
+            "body": "CourtOS conserve les conversations personnelles et leurs références; vous pouvez les rouvrir. Un historique utile devrait aussi montrer ce que vous avez retenu, écarté ou modifié et pourquoi un point reste ouvert. Cette trace supplémentaire du travail n’est pas encore mise en œuvre."
+          },
+          {
+            "type": "items",
+            "heading": "Distinguer trois niveaux",
+            "items": [
+              "Conversation: question, réponse, versions exactes des sources, modèle et lieu de traitement.",
+              "Constat de travail enregistré: résultats repris volontairement, avec attribution, état de vérification, références, contre-arguments et questions ouvertes. Votre hypothèse de travail n’est pas une constatation judiciaire; les allégations contestées restent identifiables.",
+              "Votre raisonnement: les motifs que vous avez vérifiés et leurs modifications, avec état antérieur, date et auteur. Une suggestion de l’IA n’entre dans ce travail que par votre intervention délibérée."
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Protéger la réflexion personnelle",
+            "body": "Les réflexions personnelles et notes de délibération ne devraient pas être partagées par défaut. L’historique retrace les étapes et les choix motivés; il ne promet aucun accès aux pensées cachées d’un modèle. Une réponse de l’IA n’est pas un moyen de preuve."
+          },
+          {
+            "type": "note",
+            "heading": "Développements envisagés",
+            "body": "Sont aussi envisagés des projets de décision dirigés par le tribunal, l’examen de questions fondamentales et de variantes hypothétiques ainsi que de leurs conséquences. Les hypothèses devraient rester distinctes des constats tirés du dossier. Ces fonctions ne sont pas encore disponibles."
+          }
+        ]
+      },
+      {
+        "id": "memory",
+        "title": "Une mémoire\npour la cause",
+        "lead": "Le projet: un état de travail privé relié aux sources, pas un second dossier rempli d’affirmations non vérifiées.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Relier les personnes et les termes",
+            "body": "Un registre privé devrait relier noms réels, variantes attestées, rôles et termes de remplacement approuvés. Il couvrirait notamment personnes, entreprises, lieux et immeubles. Identité et rôle resteraient distincts: une personne peut avoir plusieurs rôles. Chaque rapprochement exige sa source; les identités incertaines ne sont pas fusionnées automatiquement."
+          },
+          {
+            "type": "text",
+            "heading": "Deux versions lisibles",
+            "body": "Des fichiers Markdown internes conserveraient le travail avec les noms réels et les références précises. Seules les entrées expressément choisies produiraient une version pseudonymisée, vérifiée pour l’IA externe. Documents et notes utiliseraient les mêmes termes du registre privé. Ce ne seraient pas deux vérités entretenues séparément. La correspondance avec les noms réels resterait interne."
+          },
+          {
+            "type": "text",
+            "heading": "Rendre les changements visibles",
+            "body": "Si une source ou une correspondance change, les entrées concernées seraient à revoir. L’autorisation des exports concernés deviendrait caduque. Les conclusions antérieures ne seraient pas remplacées en silence. Chaque version dérivée conserverait un lien privé vers la version et le passage originaux. Un texte modifié devrait rester identifiable comme dérivé."
+          },
+          {
+            "type": "note",
+            "heading": "Approuver chaque utilisation externe",
+            "body": "Le nom d’un dossier n’autorise aucun envoi. Question, notes sélectionnées et historique doivent figurer dans l’aperçu exact. Le passage à l’IA externe ouvre une nouvelle conversation, sans reprise automatique des noms privés ni de l’ancien historique local. Des noms de remplacement ne garantissent pas l’anonymat. Cette mémoire et cet export ne sont pas encore mis en œuvre."
           }
         ]
       },
@@ -691,7 +807,7 @@
     "next": "Avanti",
     "previous": "Indietro",
     "page_label": "Pagina",
-    "pilot": "Edizione di lavoro 02 · Fase di prova",
+    "pilot": "Edizione di lavoro 03 · Fase di prova",
     "title": "Il tribunale nell’era dell’IA",
     "pages": [
       {
@@ -701,7 +817,7 @@
         "title": "Il tribunale\nnell’era dell’IA",
         "lead": "Una guida breve per giudici e cancellieri. Cercare fonti, esaminare gli atti e riprendere i riferimenti con CourtOS.",
         "statement": "La tecnologia deve aiutare a comprendere la causa. La responsabilità della decisione resta al tribunale.",
-        "edition": "Edizione di lavoro 02 · Fase di prova",
+        "edition": "Edizione di lavoro 03 · Fase di prova",
         "part": "Compito · Giudizio · Fonte"
       },
       {
@@ -822,7 +938,7 @@
           {
             "type": "text",
             "heading": "Controllare i riferimenti",
-            "body": "«Citazioni» apre Citecheck separatamente. CourtOS non trasmette alcun testo. Verificate nella decisione originale se sostiene la vostra affermazione."
+            "body": "In «Citazioni», scegliete le versioni PDF e avviate «Verifica i riferimenti». Citecheck confronta numeri delle decisioni, date e suddivisioni riconosciute con l’elenco OpenCaseLaw salvato. Un risultato porta al passo del vostro atto; le voci corrispondenti rimandano alla decisione intera. «Non trovato» significa soltanto: assente dall’elenco. Verificate testo e portata nell’originale."
           }
         ]
       },
@@ -839,7 +955,7 @@
           {
             "type": "text",
             "heading": "Scegliere le fonti",
-            "body": "Con «Scegli le tue fonti» selezionate i PDF della conversazione. Per la giurisprudenza aprite una decisione OpenCaseLaw, scegliete un breve estratto e aggiungetelo alla conversazione. La semplice ricerca nei vostri documenti non usa l’IA."
+            "body": "Con «Scegli le tue fonti» selezionate i PDF degli atti e della vostra letteratura per la conversazione. Potete aggiungere brevi estratti OpenCaseLaw scelti espressamente. I due gruppi di fonti sono così riuniti. La semplice ricerca nei vostri documenti non usa l’IA."
           },
           {
             "type": "text",
@@ -872,7 +988,7 @@
             "type": "items",
             "heading": "Tre compiti",
             "items": [
-              "Fatti e prove: affermazione, documento e posizione avversa sono affiancati. L’IA propone «Sostiene l’affermazione», «Contraddice l’affermazione», «Resta incerto» o «Non trovato nella selezione».",
+              "Fatti e prove: allegazione, documento selezionato e posizione avversa sono affiancati. «Sostiene» o «Contraddice» richiede una fonte selezionata come allegato probatorio. Un’altra allegazione non sostituisce una prova; la valutazione sostanziale resta una proposta dell’IA.",
               "Argomentazioni giuridiche: il confronto riguarda soltanto le fonti scelte. Decisioni e opere mancanti non vengono reperite automaticamente. Cercate separatamente i riferimenti pubblici.",
               "Cronologia: le date precise vengono ordinate. Le date approssimative o mancanti restano separate. Le versioni contrastanti mantengono voci distinte."
             ]
@@ -908,6 +1024,64 @@
             "type": "note",
             "heading": "Usare la risposta",
             "body": "La risposta esterna può tornare come bozza modificabile. Non viene inviata di nuovo automaticamente. Verificate ogni affermazione decisiva sull’originale. La risposta convincente di un secondo modello non è una verifica indipendente delle fonti."
+          }
+        ]
+      },
+      {
+        "id": "history",
+        "title": "Ritrovare\nil lavoro svolto",
+        "lead": "Le conversazioni esistono. Una storia completa del lavoro è prevista.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "A cosa serve lo storico",
+            "body": "CourtOS conserva le conversazioni personali e i riferimenti alle fonti; potete riaprirle. Uno storico utile dovrebbe mostrare anche ciò che avete accolto, scartato o modificato e perché un punto resta aperto. Questa ulteriore traccia del lavoro non è ancora realizzata."
+          },
+          {
+            "type": "items",
+            "heading": "Distinguere tre livelli",
+            "items": [
+              "Conversazione: domanda, risposta, versioni esatte delle fonti, modello e luogo di elaborazione.",
+              "Risultato di lavoro salvato: quanto ripreso consapevolmente, con attribuzione, stato della verifica, riferimenti, controargomenti e questioni aperte. La vostra ipotesi di lavoro non è un accertamento giudiziario; le allegazioni contestate restano riconoscibili.",
+              "Vostra motivazione: ragioni verificate e modifiche, con versione precedente, data e autore. Una proposta dell’IA entra nel lavoro solo attraverso un vostro intervento consapevole."
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Proteggere la riflessione personale",
+            "body": "Riflessioni personali e appunti di deliberazione non dovrebbero essere condivisi per impostazione predefinita. Lo storico documenta passaggi e scelte motivate; non promette l’accesso ai pensieri nascosti di un modello. Una risposta dell’IA non è un mezzo di prova."
+          },
+          {
+            "type": "note",
+            "heading": "Sviluppi previsti",
+            "body": "Sono previsti anche progetti di decisione guidati dal tribunale, l’esame di questioni fondamentali e di varianti ipotetiche con le loro conseguenze. Le ipotesi dovrebbero rimanere distinte dai riscontri negli atti. Queste funzioni non sono ancora disponibili."
+          }
+        ]
+      },
+      {
+        "id": "memory",
+        "title": "Una memoria\nper la causa",
+        "lead": "Il progetto è uno stato di lavoro privato collegato alle fonti, non un secondo fascicolo di affermazioni non verificate.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Collegare persone e termini",
+            "body": "Un registro privato dovrebbe collegare nomi reali, varianti documentate, ruoli e termini sostitutivi approvati. Comprenderebbe persone, imprese, luoghi e immobili. Identità e ruolo resterebbero distinti: una persona può avere più ruoli. Ogni collegamento richiede una fonte; identità incerte non vengono unite automaticamente."
+          },
+          {
+            "type": "text",
+            "heading": "Due versioni leggibili",
+            "body": "File Markdown interni conserverebbero il lavoro con nomi reali e riferimenti puntuali. Solo dalle voci espressamente scelte nascerebbe una versione pseudonimizzata, verificata per l’IA esterna. Documenti e appunti userebbero gli stessi termini del registro privato. Non sarebbero due verità mantenute separatamente. La corrispondenza con i nomi reali resterebbe interna."
+          },
+          {
+            "type": "text",
+            "heading": "Rendere visibili i cambiamenti",
+            "body": "Se cambia una fonte o una corrispondenza, le voci interessate sarebbero da riesaminare. Le esportazioni interessate perderebbero l’approvazione. Le conclusioni precedenti non verrebbero sostituite in silenzio. Ogni versione derivata manterrebbe un collegamento privato alla versione e al passaggio originali. Il testo modificato dovrebbe restare riconoscibile come derivato."
+          },
+          {
+            "type": "note",
+            "heading": "Approvare ogni uso esterno",
+            "body": "Il nome di una cartella non autorizza un invio. Domanda, appunti selezionati e storico devono figurare nell’anteprima esatta. Il passaggio all’IA esterna apre una nuova conversazione, senza riprendere automaticamente nomi privati o precedenti conversazioni locali. I nomi sostitutivi non garantiscono l’anonimato. Questa memoria e questo percorso di esportazione non sono ancora realizzati."
           }
         ]
       },
@@ -1033,7 +1207,7 @@
     "previous": "Previous",
     "page_label": "Page",
     "title": "The court in the age of AI",
-    "pilot": "Working edition 02 · Pilot",
+    "pilot": "Working edition 03 · Pilot",
     "pages": [
       {
         "id": "start",
@@ -1042,7 +1216,7 @@
         "title": "The court\nin the age\nof AI",
         "lead": "A short guide for judges and court clerks. Research, review submissions and carry sources into your work with CourtOS.",
         "statement": "Technology should help you understand the case. Responsibility for the decision stays with the court.",
-        "edition": "Working edition 02 · Pilot",
+        "edition": "Working edition 03 · Pilot",
         "part": "Task · Judgment · Source"
       },
       {
@@ -1163,7 +1337,7 @@
           {
             "type": "text",
             "heading": "Check citation details",
-            "body": "“Citations” opens Citecheck separately. CourtOS sends it no text. Read the original decision to assess whether it supports your statement."
+            "body": "Under “Citations”, select PDF versions and choose “Check references”. Citecheck compares recognised decision numbers, dates and numbered sections with the stored OpenCaseLaw list. A finding opens the passage in your submission; matching index entries link to the whole decision. “Not found” means only: absent from this list. Check wording and legal support in the original."
           }
         ]
       },
@@ -1180,7 +1354,7 @@
           {
             "type": "text",
             "heading": "Choose sources",
-            "body": "Use “Choose your sources” to select PDFs for the conversation. For case law, open an OpenCaseLaw decision, select a short excerpt and add it to the conversation. Searching your own documents uses no AI."
+            "body": "Use “Choose your sources” to select PDFs from the case and your own literature for the conversation. You can add short, explicitly selected OpenCaseLaw excerpts. Both source groups are then available together. Searching your own documents uses no AI."
           },
           {
             "type": "text",
@@ -1213,7 +1387,7 @@
             "type": "items",
             "heading": "Three tasks",
             "items": [
-              "Facts and evidence: allegation, evidence and opposing position appear together. AI proposes “Supports the statement”, “Contradicts the statement”, “Inconclusive” or “Not found in selected sources”.",
+              "Facts and evidence: the party’s allegation, selected exhibit and opposing position appear side by side. “Supports” or “Contradicts” requires a source selected as an exhibit. Another party’s allegation is no substitute for an exhibit; the substantive assessment remains an AI proposal.",
               "Legal arguments: comparison is limited to the selected sources. Missing decisions and literature are not retrieved automatically. Research public references separately.",
               "Chronology: unambiguous day dates are sorted. Approximate or missing dates remain separate. Conflicting accounts keep separate entries."
             ]
@@ -1249,6 +1423,64 @@
             "type": "note",
             "heading": "Use the response",
             "body": "An external response can return as an editable draft. It is not sent again automatically. Check each decisive assertion against the original. A convincing answer from a second model is not an independent source check."
+          }
+        ]
+      },
+      {
+        "id": "history",
+        "title": "Retrace\nyour work",
+        "lead": "Conversations are available. A complete working history is planned.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Why history matters",
+            "body": "CourtOS saves personal conversations and source references so you can reopen them. A useful history should also show what you accepted, rejected or changed, and why an issue remains open. This additional working record has not yet been implemented."
+          },
+          {
+            "type": "items",
+            "heading": "Keep three layers separate",
+            "items": [
+              "Conversation: question, answer, exact source versions, model and processing location.",
+              "Saved working finding: results deliberately retained, with attribution, review status, references, counterarguments and open questions. Your working assumption is not a judicial finding; disputed allegations remain identifiable.",
+              "Your reasons: the reasons you have checked and their changes, with the previous version, date and author. An AI suggestion enters this working record only through your deliberate revision."
+            ]
+          },
+          {
+            "type": "text",
+            "heading": "Protect personal deliberation",
+            "body": "Personal reflections and deliberation notes should not be shared by default. The history records steps and reasoned choices; it does not promise access to a model’s hidden thoughts. An AI answer is not evidence."
+          },
+          {
+            "type": "note",
+            "heading": "Further development",
+            "body": "Plans also include court-directed decision drafts, examination of fundamental questions, and hypothetical variations and their consequences. Assumptions would have to remain distinct from findings in the case record. These functions are not yet available."
+          }
+        ]
+      },
+      {
+        "id": "memory",
+        "title": "A memory\nfor the matter",
+        "lead": "The proposal is a private working record tied to sources, not a second case file of unchecked assertions.",
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Connect people and terms",
+            "body": "A private register would connect real names, documented aliases, roles and approved replacement terms. It would cover people, organisations, places and properties. Identity and role remain separate: one person may hold several roles. Each association needs its source; uncertain identities are not merged automatically."
+          },
+          {
+            "type": "text",
+            "heading": "Two readable versions",
+            "body": "Internal Markdown files would preserve the working record with real names and precise references. Only explicitly selected entries would produce a reviewed pseudonymised version for external AI. Documents and notes would use the same terms from the private register. They would not be two independently maintained truths. The mapping to real names stays private."
+          },
+          {
+            "type": "text",
+            "heading": "Make changes visible",
+            "body": "A changed source or mapping would flag affected entries for review and revoke approval of affected exports. Earlier conclusions would not be silently replaced. Each derivative would retain a private link to the original version and passage. Altered wording must remain identifiable as derivative text."
+          },
+          {
+            "type": "note",
+            "heading": "Approve each external use",
+            "body": "A folder name does not authorise sending. The question, selected notes and history must appear in the exact preview. Moving to external AI starts a new conversation, without automatically copying private names or earlier local history. Replacement names alone do not guarantee anonymity. This memory and export workflow have not yet been implemented."
           }
         ]
       },

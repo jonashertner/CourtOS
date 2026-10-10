@@ -2,78 +2,86 @@
   "format": "180 x 270 mm",
   "languages": {
     "de": {
-      "pages": 10,
+      "pages": 12,
       "lowest_content_y": [
         85,
         311.35,
         308.85,
         256.35,
-        184.35,
+        126.35,
         157.85,
-        99.85,
+        85.35,
         311.35,
+        128.85,
+        125.35,
         281.35,
         158.85
       ],
-      "sha256": "79843344546b3f5ce6b243fcfd7dddedd12b7e2e3163326779e116ad070c042c",
-      "bytes": 56740,
+      "sha256": "4790356de25b766309d8359ef9e89aa93ce07831c9bbc1bf0337ac4f25098766",
+      "bytes": 61668,
       "metadata": null,
       "xmp_present": false
     },
     "fr": {
-      "pages": 10,
+      "pages": 12,
       "lowest_content_y": [
         85,
         311.35,
         337.85,
         256.35,
-        213.35,
+        169.85,
         170.35,
-        114.35,
+        99.85,
         311.35,
+        128.85,
+        139.85,
         281.35,
         173.35
       ],
-      "sha256": "72f085c757d7366f7717e4cebd8ce736dca23da157bc6268e92403af6733da33",
-      "bytes": 57349,
+      "sha256": "fa9de855cbc78901d6f2573f9eead8f6a93ccd78e10841db388b7dd428e77dad",
+      "bytes": 62358,
       "metadata": null,
       "xmp_present": false
     },
     "it": {
-      "pages": 10,
+      "pages": 12,
       "lowest_content_y": [
         85,
         311.35,
         337.85,
         270.35,
-        227.85,
-        200.85,
-        142.85,
+        184.35,
+        186.35,
+        128.35,
         311.35,
+        142.85,
+        139.85,
         281.35,
         173.35
       ],
-      "sha256": "70adfe7ff66a6db95832847d6307e4db39a0b899e00783c96c00bbc435b3a197",
-      "bytes": 56196,
+      "sha256": "580c310a3b1d3660f558e2933cbbfabbe859a66ffef288cd1d42b8421cc1ca1a",
+      "bytes": 60872,
       "metadata": null,
       "xmp_present": false
     },
     "en": {
-      "pages": 10,
+      "pages": 12,
       "lowest_content_y": [
         85,
         325.85,
         337.85,
         270.35,
-        227.85,
+        184.35,
         215.35,
-        142.85,
+        128.35,
         311.35,
+        186.35,
+        168.85,
         310.35,
         172.85
       ],
-      "sha256": "aea18bab2dba285b5cd8adec6386931ebb8133fb3d03e00917bae6d662d692a0",
-      "bytes": 55421,
+      "sha256": "11baf9fc71170c685fc2aeeeb3c583d4ed19e9c9ce69edd3d4bf301c40ed3e4a",
+      "bytes": 59892,
       "metadata": null,
       "xmp_present": false
     }
@@ -87,7 +95,7 @@
       "it",
       "en"
     ],
-    "reader_asset_tag": "0481ebd10f80",
+    "reader_asset_tag": "1b41a71acb4c",
     "reference": "Rule & Reason measured page reader, adapted for CourtOS"
   },
   "html_checks": {

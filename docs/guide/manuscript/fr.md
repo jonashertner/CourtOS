@@ -58,7 +58,7 @@ Ouvrez la décision et vérifiez l’original. Sélectionnez un court passage, c
 Depuis Word, ouvrez le navigateur et poursuivez avec le même compte. Renvoyez ensuite votre recherche vers Word. Si les deux états diffèrent, choisissez celui à reprendre. Le transfert reste valable deux heures; il ne relance aucune recherche et ne modifie pas spontanément votre document.
 
 ### Vérifier les références
-«Citations» ouvre Citecheck séparément. CourtOS ne lui transmet aucun texte. Vérifiez dans l’arrêt original s’il étaye votre affirmation.
+Sous «Citations», choisissez les versions PDF, puis «Vérifier les références». Citecheck compare les numéros d’arrêts, dates et subdivisions reconnus à la liste OpenCaseLaw enregistrée. Un résultat mène au passage de votre écriture; les entrées correspondantes renvoient à la décision entière. «Non trouvé» signifie seulement: absent de cette liste. Vérifiez le texte et sa portée dans l’original.
 
 ## 6. Ajouter vos propres sources
 Choisissez les sources originales. Posez vos questions. Vérifiez les passages cités.
@@ -67,13 +67,13 @@ Choisissez les sources originales. Posez vos questions. Vérifiez les passages c
 Créez dans la bibliothèque un dossier portant le numéro de cause. Rangez dessous les parties, leurs écritures et leurs pièces; gardez les actes communs à part. Importez les PDF dans le bon dossier. CourtOS stocke des copies sur le serveur.
 
 ### Choisir les sources
-Avec «Choisir vos sources», sélectionnez les PDF de la conversation. Pour la jurisprudence, ouvrez une décision OpenCaseLaw, choisissez un court extrait et ajoutez-le à la conversation. La simple recherche dans vos documents n’utilise pas d’IA.
+Avec «Choisir vos sources», sélectionnez les PDF du dossier et de votre documentation pour la conversation. Vous pouvez y ajouter de courts extraits OpenCaseLaw expressément choisis. Les deux groupes de sources sont alors réunis. La simple recherche dans vos documents n’utilise pas d’IA.
 
 ### Poser une question, puis préciser
 Demandez quels montants une écriture mentionne ou en quoi deux versions des faits divergent. Gemma travaille sur les sources choisies. Les questions suivantes utilisent les mêmes versions; commencez une nouvelle conversation pour d’autres sources. Aucune demande ne part sans source.
 
 ### Vérifier la réponse
-Chaque paragraphe de réponse doit comporter une référence vérifiée. Ouvrez le passage et lisez le contexte. Sans référence valable, la réponse est retenue. Les liens vers vos PDF restent réservés aux comptes autorisés.
+Chaque paragraphe de réponse doit comporter une référence vérifiée. Ouvrez le passage et lisez le contexte. Sans référence valable, la réponse n’est pas affichée. Les liens vers vos PDF restent réservés aux comptes autorisés.
 
 ### Un texte retrouvé ne prouve pas sa portée
 Le contrôle confirme le passage et la citation, pas la conclusion. Une allégation reste une allégation. La page PDF peut différer de la page imprimée.
@@ -85,7 +85,7 @@ Rapprocher les allégations et les pièces dans une liste à vérifier.
 Ouvrez «Examiner les écritures». Ajoutez à la bibliothèque de brèves demandes, réponses et pièces fictives. Choisissez les versions, les rôles, les parties et la langue du rapport. «Dossiers d’exemple» propose quatre exercices en allemand, français, italien et anglais. «Importer les quatre PDF» classe le dossier choisi sous un numéro fictif, avec des dossiers par partie et des extraits communs. Les documents sont reconstitués à partir d’arrêts publiés; ce ne sont pas les actes originaux. Vérifiez ensuite les rôles et les parties.
 
 ### Trois tâches
-- Faits et preuves: allégation, pièce et position adverse apparaissent côte à côte. L’IA propose «Soutient l’énoncé», «Contredit l’énoncé», «Reste indéterminé» ou «Non trouvé dans la sélection».
+- Faits et preuves: allégation, pièce sélectionnée et position adverse apparaissent côte à côte. «Soutient» ou «Contredit» exige une source sélectionnée comme pièce. Une autre allégation ne remplace pas une preuve; l’appréciation de fond reste une proposition de l’IA.
 - Arguments juridiques: la comparaison porte uniquement sur les sources choisies. Les décisions et ouvrages absents ne sont pas obtenus automatiquement. Recherchez séparément les références publiques.
 - Chronologie: les dates précises sont ordonnées. Les dates approximatives ou absentes restent à part. Les versions contradictoires gardent des entrées distinctes.
 
@@ -107,7 +107,39 @@ Dans le navigateur: transférez vers l’analyse externe un court passage dont l
 ### Utiliser la réponse
 La réponse externe peut revenir comme projet modifiable. Elle n’est pas renvoyée automatiquement. Vérifiez chaque affirmation décisive dans l’original. L’avis convaincant d’un second modèle ne constitue pas un contrôle indépendant des sources.
 
-## 9. Essayer, puis décider de l’adoption
+## 9. Retrouver le travail accompli
+Les conversations existent. Un historique complet du travail est prévu.
+
+### À quoi sert l’historique
+CourtOS conserve les conversations personnelles et leurs références; vous pouvez les rouvrir. Un historique utile devrait aussi montrer ce que vous avez retenu, écarté ou modifié et pourquoi un point reste ouvert. Cette trace supplémentaire du travail n’est pas encore mise en œuvre.
+
+### Distinguer trois niveaux
+- Conversation: question, réponse, versions exactes des sources, modèle et lieu de traitement.
+- Constat de travail enregistré: résultats repris volontairement, avec attribution, état de vérification, références, contre-arguments et questions ouvertes. Votre hypothèse de travail n’est pas une constatation judiciaire; les allégations contestées restent identifiables.
+- Votre raisonnement: les motifs que vous avez vérifiés et leurs modifications, avec état antérieur, date et auteur. Une suggestion de l’IA n’entre dans ce travail que par votre intervention délibérée.
+
+### Protéger la réflexion personnelle
+Les réflexions personnelles et notes de délibération ne devraient pas être partagées par défaut. L’historique retrace les étapes et les choix motivés; il ne promet aucun accès aux pensées cachées d’un modèle. Une réponse de l’IA n’est pas un moyen de preuve.
+
+### Développements envisagés
+Sont aussi envisagés des projets de décision dirigés par le tribunal, l’examen de questions fondamentales et de variantes hypothétiques ainsi que de leurs conséquences. Les hypothèses devraient rester distinctes des constats tirés du dossier. Ces fonctions ne sont pas encore disponibles.
+
+## 10. Une mémoire pour la cause
+Le projet: un état de travail privé relié aux sources, pas un second dossier rempli d’affirmations non vérifiées.
+
+### Relier les personnes et les termes
+Un registre privé devrait relier noms réels, variantes attestées, rôles et termes de remplacement approuvés. Il couvrirait notamment personnes, entreprises, lieux et immeubles. Identité et rôle resteraient distincts: une personne peut avoir plusieurs rôles. Chaque rapprochement exige sa source; les identités incertaines ne sont pas fusionnées automatiquement.
+
+### Deux versions lisibles
+Des fichiers Markdown internes conserveraient le travail avec les noms réels et les références précises. Seules les entrées expressément choisies produiraient une version pseudonymisée, vérifiée pour l’IA externe. Documents et notes utiliseraient les mêmes termes du registre privé. Ce ne seraient pas deux vérités entretenues séparément. La correspondance avec les noms réels resterait interne.
+
+### Rendre les changements visibles
+Si une source ou une correspondance change, les entrées concernées seraient à revoir. L’autorisation des exports concernés deviendrait caduque. Les conclusions antérieures ne seraient pas remplacées en silence. Chaque version dérivée conserverait un lien privé vers la version et le passage originaux. Un texte modifié devrait rester identifiable comme dérivé.
+
+### Approuver chaque utilisation externe
+Le nom d’un dossier n’autorise aucun envoi. Question, notes sélectionnées et historique doivent figurer dans l’aperçu exact. Le passage à l’IA externe ouvre une nouvelle conversation, sans reprise automatique des noms privés ni de l’ancien historique local. Des noms de remplacement ne garantissent pas l’anonymat. Cette mémoire et cet export ne sont pas encore mis en œuvre.
+
+## 11. Essayer, puis décider de l’adoption
 Un pilote utile apporte des observations, pas des promesses.
 
 ### Évaluer le bénéfice
@@ -122,7 +154,7 @@ Le travail direct dans un dossier local et une pseudonymisation cohérente entre
 ### Logiciel ouvert
 - [CourtOS · Code source et GNU AGPL v3.0](https://github.com/jonashertner/CourtOS)
 
-## 10. Sources et portée
+## 12. Sources et portée
 Fondements des positions et règles expressément attribuées; vérifiés le 9 octobre 2026.
 
 - [1. Richard Susskind · Online Courts and the Future of Justice](https://academic.oup.com/oxford-law-pro/book/41081)

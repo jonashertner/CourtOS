@@ -19,10 +19,10 @@ export const reviewMessages = {
         "en": "Documents and roles"
     },
     "limits": {
-        "de": "Bis zu fünf ursprüngliche PDFs, insgesamt 40 Seiten und 10 kB auslesbarer Text. Eine zu grosse oder nicht lesbare Auswahl wird zurückgewiesen.",
-        "fr": "Jusqu’à cinq PDF originaux, 40 pages et 10 ko de texte extractible au total. Une sélection trop grande ou illisible est refusée.",
-        "it": "Fino a cinque PDF originali, 40 pagine e 10 kB di testo estraibile complessivi. Una selezione eccessiva o illeggibile viene rifiutata.",
-        "en": "Up to five original PDFs, 40 pages and 10 kB of extractable text in total. Oversized or unreadable selections are rejected."
+        "de": "Für die KI-Teilanalyse: bis zu fünf ursprüngliche PDFs, insgesamt 40 Seiten und 10 kB auslesbarer Text. Eine zu grosse oder nicht lesbare Auswahl wird zurückgewiesen.",
+        "fr": "Pour l’analyse partielle par IA : jusqu’à cinq PDF originaux, 40 pages et 10 ko de texte extractible au total. Une sélection trop grande ou illisible est refusée.",
+        "it": "Per l’analisi parziale con IA: fino a cinque PDF originali, 40 pagine e 10 kB di testo estraibile complessivi. Una selezione eccessiva o illeggibile viene rifiutata.",
+        "en": "For the partial AI analysis: up to five original PDFs, 40 pages and 10 kB of extractable text in total. Oversized or unreadable selections are rejected."
     },
     "role": {
         "de": "Dokumentrolle",

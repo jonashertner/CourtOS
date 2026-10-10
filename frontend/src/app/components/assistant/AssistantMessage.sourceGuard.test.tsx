@@ -14,37 +14,37 @@ describe("CourtOS answer source guard", () => {
         render(<AssistantMessage events={[{ type: "content", text: "Die Zahlung wurde ausgeführt." }]} citations={[citation(verified)]} citationStatus="final" />);
         expect(screen.getByRole("alert")).toHaveTextContent("Antwort nicht belegt");
         expect(screen.getByText("Die Zahlung wurde ausgeführt.")).not.toBeVisible();
-        expect(screen.queryByRole("button", { name: "Copy response" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Antwort kopieren" })).toBeNull();
         expect(screen.queryByRole("button", { name: "Mit Frontier prüfen" })).toBeNull();
         expect(screen.getByText("Unbestätigten Antworttext ansehen")).toBeVisible();
     });
     it("rejects historical whole-document verification without page evidence", () => {
         render(<AssistantMessage events={[{ type: "content", text: "Früher ungeprüfte Seitenangabe." }]} citations={[{...citation(true), quotes: undefined}]} citationStatus="final" />);
         expect(screen.getByRole("alert")).toBeVisible();
-        expect(screen.queryByRole("button", { name: "Copy response" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Antwort kopieren" })).toBeNull();
     });
     it("does not export while verification is still pending, even if one quote matched", () => {
         render(<AssistantMessage events={[{ type: "content", text: "Vorläufig." }]} citations={[citation(true)]} citationStatus="partial" />);
-        expect(screen.queryByRole("button", { name: "Copy response" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Antwort kopieren" })).toBeNull();
         expect(screen.queryByRole("button", { name: "Mit Frontier prüfen" })).toBeNull();
     });
     it.each(["final", undefined] as const)("blocks uncited completed text, including legacy history (%s)", (status) => {
         render(<AssistantMessage events={[{ type: "content", text: "Unbelegte Behauptung." }]} citationStatus={status} />);
         expect(screen.getByRole("alert")).toBeVisible();
-        expect(screen.queryByRole("button", { name: "Copy response" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Antwort kopieren" })).toBeNull();
         expect(screen.queryByRole("button", { name: "Mit Frontier prüfen" })).toBeNull();
         expect(screen.getByText("Unbelegte Behauptung.")).not.toBeVisible();
     });
     it("allows copying explicitly matched quotations without declaring the proposition verified", () => {
         render(<AssistantMessage events={[{ type: "content", text: "Ein Zahlungsauftrag liegt vor." }]} citations={[citation(true)]} citationStatus="final" />);
         expect(screen.queryByRole("alert")).toBeNull();
-        expect(screen.getByRole("button", { name: "Copy response" })).toBeVisible();
+        expect(screen.getByRole("button", { name: "Antwort kopieren" })).toBeVisible();
         expect(screen.queryByText(/Aussage bestätigt/)).toBeNull();
     });
 
     it("disables frontier forwarding when embedded while retaining normal source-checked copy", () => {
         render(<AssistantMessage events={[{ type: "content", text: "Ein Zahlungsauftrag liegt vor." }]} citations={[citation(true)]} citationStatus="final" allowFrontier={false}/>);
-        expect(screen.getByRole("button", { name: "Copy response" })).toBeVisible();
+        expect(screen.getByRole("button", { name: "Antwort kopieren" })).toBeVisible();
         expect(screen.queryByRole("button", { name: "Mit Frontier prüfen" })).toBeNull();
     });
     it("opens public evidence through the public callback without resolving a private document", () => {
@@ -54,13 +54,13 @@ describe("CourtOS answer source guard", () => {
         fireEvent.click(screen.getByRole("button",{name:"BGE 1"}));
         expect(onOpenSource).toHaveBeenCalledWith(source);
         expect(onOpenDocument).not.toHaveBeenCalled();
-        expect(screen.getByRole("button", {name:"Copy response"})).toBeVisible();
+        expect(screen.getByRole("button", {name:"Antwort kopieren"})).toBeVisible();
     });
     it("blocks a public answer whose claimed Unicode position cannot contain the quote", () => {
         const source: PublicDecisionCitation = {type:"citation_data",kind:"public_decision",ref:1,decision_id:"bge_1",title:"BGE 1",source_url:null,pdf_url:null,content_hash:null,start:0,end:2,quote:"Longer quote",verified:true};
         render(<AssistantMessage events={[{type:"content",text:"Nicht freigeben."}]} citations={[source]} citationStatus="final"/>);
         expect(screen.getByRole("alert")).toBeVisible();
-        expect(screen.queryByRole("button", {name:"Copy response"})).toBeNull();
+        expect(screen.queryByRole("button", {name:"Antwort kopieren"})).toBeNull();
         expect(screen.queryByRole("button", {name:"Mit Frontier prüfen"})).toBeNull();
     });
 
@@ -75,7 +75,7 @@ describe("CourtOS answer source guard", () => {
             { type: "doc_read", filename: "Beilage.pdf" },
             { type: "content", text: "Die Beklagte bestreitet den Zahlungseingang [1]." },
         ]} citations={[citation(true)]} citationStatus="final" />);
-        fireEvent.click(screen.getByRole("button", { name: "Copy response" }));
+        fireEvent.click(screen.getByRole("button", { name: "Antwort kopieren" }));
         await waitFor(() => expect(write).toHaveBeenCalledTimes(1));
         const plain = await copied!["text/plain"].text();
         const html = await copied!["text/html"].text();

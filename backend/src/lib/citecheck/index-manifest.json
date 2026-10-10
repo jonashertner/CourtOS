@@ -1,0 +1,889 @@
+{
+ "schema": 1,
+ "file": "cite-index-2026-10-09-b91c20ad.tsv.gz",
+ "bytes": 16389394,
+ "sha256": "b91c20ad02813fa989d88ab469a59a2c8c29b2c264e150c31060ddf50a554620",
+ "unpacked_bytes": 110702553,
+ "generated": "2026-10-09T19:10:26Z",
+ "pack_generation": "1791573026",
+ "decisions": 1078666,
+ "labels": 1102131,
+ "with_numbering": 848593,
+ "source": "OpenCaseLaw nightly corpus export",
+ "licence": "CC0-1.0",
+ "courts": {
+  "ag_anwaltskommission": {
+   "canton": "AG",
+   "decisions": 32,
+   "with_numbering": 32,
+   "first": "1999-04-28",
+   "last": "2020-06-30"
+  },
+  "ag_aufsichtskommission": {
+   "canton": "AG",
+   "decisions": 5,
+   "with_numbering": 5,
+   "first": "2001-09-21",
+   "last": "2008-07-08"
+  },
+  "ag_baugesetzgebung": {
+   "canton": "AG",
+   "decisions": 198,
+   "with_numbering": 33,
+   "first": "1968-07-09",
+   "last": "2021-08-20"
+  },
+  "ag_departement_bks": {
+   "canton": "AG",
+   "decisions": 12,
+   "with_numbering": 11,
+   "first": "2000-11-16",
+   "last": "2023-06-21"
+  },
+  "ag_departement_bvu": {
+   "canton": "AG",
+   "decisions": 97,
+   "with_numbering": 96,
+   "first": "2007-01-10",
+   "last": "2026-01-28"
+  },
+  "ag_departement_gs": {
+   "canton": "AG",
+   "decisions": 19,
+   "with_numbering": 19,
+   "first": "2023-01-12",
+   "last": "2025-01-08"
+  },
+  "ag_departement_vi": {
+   "canton": "AG",
+   "decisions": 42,
+   "with_numbering": 42,
+   "first": "1999-06-11",
+   "last": "2026-07-10"
+  },
+  "ag_gerichte": {
+   "canton": "AG",
+   "decisions": 2833,
+   "with_numbering": 1582,
+   "first": "1931-03-26",
+   "last": "2025-12-12"
+  },
+  "ag_handelsgericht": {
+   "canton": "AG",
+   "decisions": 338,
+   "with_numbering": 338,
+   "first": "2003-12-31",
+   "last": "2026-09-21"
+  },
+  "ag_justizgericht": {
+   "canton": "AG",
+   "decisions": 6,
+   "with_numbering": 6,
+   "first": "2017-07-15",
+   "last": "2025-11-06"
+  },
+  "ag_regierungsrat": {
+   "canton": "AG",
+   "decisions": 248,
+   "with_numbering": 248,
+   "first": "2000-09-06",
+   "last": "2026-05-27"
+  },
+  "ag_spezialverwaltungsgericht": {
+   "canton": "AG",
+   "decisions": 1219,
+   "with_numbering": 1214,
+   "first": "1940-12-09",
+   "last": "2026-08-14"
+  },
+  "ag_strafgericht": {
+   "canton": "AG",
+   "decisions": 2176,
+   "with_numbering": 2174,
+   "first": "1999-08-24",
+   "last": "2026-09-23"
+  },
+  "ag_versicherungsgericht": {
+   "canton": "AG",
+   "decisions": 2102,
+   "with_numbering": 2101,
+   "first": "1995-12-11",
+   "last": "2026-08-26"
+  },
+  "ag_verwaltungsgericht": {
+   "canton": "AG",
+   "decisions": 1919,
+   "with_numbering": 1872,
+   "first": "1923-09-07",
+   "last": "2026-09-25"
+  },
+  "ag_weitere": {
+   "canton": "AG",
+   "decisions": 24,
+   "with_numbering": 0,
+   "first": "2001-12-05",
+   "last": "2020-09-16"
+  },
+  "ag_zivilgericht": {
+   "canton": "AG",
+   "decisions": 1962,
+   "with_numbering": 1961,
+   "first": "1992-11-18",
+   "last": "2026-09-17"
+  },
+  "ai_gerichte": {
+   "canton": "AI",
+   "decisions": 182,
+   "with_numbering": 152,
+   "first": "1995-01-01",
+   "last": "2026-08-17"
+  },
+  "ar_gerichte": {
+   "canton": "AR",
+   "decisions": 4614,
+   "with_numbering": 1909,
+   "first": "1901-07-29",
+   "last": "2026-03-17"
+  },
+  "bazg": {
+   "canton": "CH",
+   "decisions": 120,
+   "with_numbering": 86,
+   "first": "2008-11-17",
+   "last": "2026-08-01"
+  },
+  "be_anwaltsaufsicht": {
+   "canton": "BE",
+   "decisions": 78,
+   "with_numbering": 61,
+   "first": "2014-02-19",
+   "last": "2026-08-11"
+  },
+  "be_bvd": {
+   "canton": "BE",
+   "decisions": 2094,
+   "with_numbering": 916,
+   "first": "1998-09-18",
+   "last": "2025-12-11"
+  },
+  "be_direktionen": {
+   "canton": "BE",
+   "decisions": 218,
+   "with_numbering": 217,
+   "first": "2018-06-01",
+   "last": "2026-08-11"
+  },
+  "be_steuerrekurs": {
+   "canton": "BE",
+   "decisions": 343,
+   "with_numbering": 49,
+   "first": "2013-03-09",
+   "last": "2025-12-16"
+  },
+  "be_verwaltungsgericht": {
+   "canton": "BE",
+   "decisions": 12174,
+   "with_numbering": 11486,
+   "first": "1962-01-12",
+   "last": "2026-09-23"
+  },
+  "be_weitere": {
+   "canton": "BE",
+   "decisions": 840,
+   "with_numbering": 163,
+   "first": "2002-05-31",
+   "last": "2025-12-18"
+  },
+  "be_zivilstraf": {
+   "canton": "BE",
+   "decisions": 6087,
+   "with_numbering": 5384,
+   "first": "1979-07-04",
+   "last": "2026-08-31"
+  },
+  "bge": {
+   "canton": "CH",
+   "decisions": 49259,
+   "with_numbering": 44498,
+   "first": "1875-01-01",
+   "last": "2026-05-11"
+  },
+  "bge_egmr": {
+   "canton": "CH",
+   "decisions": 488,
+   "with_numbering": 358,
+   "first": "1969-11-10",
+   "last": "2026-02-19"
+  },
+  "bger": {
+   "canton": "CH",
+   "decisions": 193765,
+   "with_numbering": 171169,
+   "first": "1986-10-06",
+   "last": "2026-09-28"
+  },
+  "bl_gerichte": {
+   "canton": "BL",
+   "decisions": 19454,
+   "with_numbering": 10647,
+   "first": "1962-06-08",
+   "last": "2026-09-18"
+  },
+  "bpatger": {
+   "canton": "CH",
+   "decisions": 197,
+   "with_numbering": 195,
+   "first": "2008-05-13",
+   "last": "2026-07-20"
+  },
+  "bs_appellationsgericht": {
+   "canton": "BS",
+   "decisions": 8815,
+   "with_numbering": 8410,
+   "first": "1996-07-17",
+   "last": "2026-10-06"
+  },
+  "bs_gerichte": {
+   "canton": "BS",
+   "decisions": 1,
+   "with_numbering": 1,
+   "first": "2017-12-04",
+   "last": "2017-12-04"
+  },
+  "bs_personalrekurskommission": {
+   "canton": "BS",
+   "decisions": 15,
+   "with_numbering": 15,
+   "first": "2001-03-21",
+   "last": "2014-09-22"
+  },
+  "bs_sozialversicherungsgericht": {
+   "canton": "BS",
+   "decisions": 2233,
+   "with_numbering": 2221,
+   "first": "2013-06-03",
+   "last": "2026-06-18"
+  },
+  "bs_steuerrekurskommission": {
+   "canton": "BS",
+   "decisions": 37,
+   "with_numbering": 37,
+   "first": "2022-01-20",
+   "last": "2024-03-21"
+  },
+  "bs_zivilgericht": {
+   "canton": "BS",
+   "decisions": 4,
+   "with_numbering": 4,
+   "first": "2025-08-20",
+   "last": "2026-08-18"
+  },
+  "bstger": {
+   "canton": "CH",
+   "decisions": 11710,
+   "with_numbering": 9613,
+   "first": "1969-09-10",
+   "last": "2026-09-23"
+  },
+  "bvger": {
+   "canton": "CH",
+   "decisions": 109273,
+   "with_numbering": 87326,
+   "first": "1951-07-28",
+   "last": "2026-09-29"
+  },
+  "ch_bundesrat": {
+   "canton": "CH",
+   "decisions": 39,
+   "with_numbering": 36,
+   "first": "2007-12-07",
+   "last": "2025-10-08"
+  },
+  "ch_vb": {
+   "canton": "CH",
+   "decisions": 23046,
+   "with_numbering": 15752,
+   "first": "1900-09-17",
+   "last": "2016-12-29"
+  },
+  "comcom": {
+   "canton": "CH",
+   "decisions": 64,
+   "with_numbering": 63,
+   "first": "1999-04-29",
+   "last": "2024-12-19"
+  },
+  "ecthr_chamber": {
+   "canton": "CE",
+   "decisions": 7789,
+   "with_numbering": 0,
+   "first": "1960-11-14",
+   "last": "2026-10-08"
+  },
+  "ecthr_grand_chamber": {
+   "canton": "CE",
+   "decisions": 514,
+   "with_numbering": 0,
+   "first": "1994-09-23",
+   "last": "2026-08-25"
+  },
+  "edoeb": {
+   "canton": "CH",
+   "decisions": 1818,
+   "with_numbering": 660,
+   "first": "1992-06-19",
+   "last": "2026-08-17"
+  },
+  "elcom": {
+   "canton": "CH",
+   "decisions": 435,
+   "with_numbering": 423,
+   "first": "2008-04-16",
+   "last": "2026-10-02"
+  },
+  "emark": {
+   "canton": "CH",
+   "decisions": 433,
+   "with_numbering": 402,
+   "first": "1949-08-12",
+   "last": "2006-11-03"
+  },
+  "esbk": {
+   "canton": "CH",
+   "decisions": 60,
+   "with_numbering": 60,
+   "first": "2006-11-23",
+   "last": "2026-06-10"
+  },
+  "eschk": {
+   "canton": "CH",
+   "decisions": 419,
+   "with_numbering": 417,
+   "first": "1991-07-01",
+   "last": "2026-08-11"
+  },
+  "estv": {
+   "canton": "CH",
+   "decisions": 3,
+   "with_numbering": 3,
+   "first": "2020-07-13",
+   "last": "2023-12-05"
+  },
+  "finma": {
+   "canton": "CH",
+   "decisions": 455,
+   "with_numbering": 0,
+   "first": "2013-10-03",
+   "last": "2025-12-19"
+  },
+  "finma_versicherungsrecht": {
+   "canton": "CH",
+   "decisions": 2585,
+   "with_numbering": 2333,
+   "first": "1994-01-04",
+   "last": "2024-10-21"
+  },
+  "fr_anwaltsaufsicht": {
+   "canton": "FR",
+   "decisions": 3,
+   "with_numbering": 0,
+   "first": null,
+   "last": null
+  },
+  "fr_gerichte": {
+   "canton": "FR",
+   "decisions": 14827,
+   "with_numbering": 13813,
+   "first": "2002-07-31",
+   "last": "2027-07-27"
+  },
+  "ge_gerichte": {
+   "canton": "GE",
+   "decisions": 171005,
+   "with_numbering": 111929,
+   "first": "1908-11-08",
+   "last": "2026-10-01"
+  },
+  "gl_gerichte": {
+   "canton": "GL",
+   "decisions": 1420,
+   "with_numbering": 1394,
+   "first": "2001-05-01",
+   "last": "2026-08-13"
+  },
+  "gr_gerichte": {
+   "canton": "GR",
+   "decisions": 15862,
+   "with_numbering": 14873,
+   "first": "1992-09-02",
+   "last": "2026-09-25"
+  },
+  "hudoc_ch": {
+   "canton": "CH",
+   "decisions": 855,
+   "with_numbering": 642,
+   "first": "1979-12-04",
+   "last": "2026-09-03"
+  },
+  "ju_gerichte": {
+   "canton": "JU",
+   "decisions": 1227,
+   "with_numbering": 1202,
+   "first": "2011-01-17",
+   "last": "2026-09-22"
+  },
+  "lu_gerichte": {
+   "canton": "LU",
+   "decisions": 5185,
+   "with_numbering": 3874,
+   "first": "1930-10-24",
+   "last": "2026-03-10"
+  },
+  "mkg": {
+   "canton": "CH",
+   "decisions": 1244,
+   "with_numbering": 358,
+   "first": "1915-11-11",
+   "last": "2025-11-28"
+  },
+  "ne_gerichte": {
+   "canton": "NE",
+   "decisions": 10853,
+   "with_numbering": 6642,
+   "first": "1913-04-02",
+   "last": "2026-09-25"
+  },
+  "ne_jurisprudence_adm": {
+   "canton": "NE",
+   "decisions": 1648,
+   "with_numbering": 1496,
+   "first": "2003-10-27",
+   "last": "2026-02-05"
+  },
+  "nw_gerichte": {
+   "canton": "NW",
+   "decisions": 1067,
+   "with_numbering": 1040,
+   "first": "2016-10-24",
+   "last": "2026-10-07"
+  },
+  "ow_gerichte": {
+   "canton": "OW",
+   "decisions": 3470,
+   "with_numbering": 1822,
+   "first": "1911-01-25",
+   "last": "2022-12-19"
+  },
+  "postcom": {
+   "canton": "CH",
+   "decisions": 334,
+   "with_numbering": 296,
+   "first": "2009-12-04",
+   "last": "2026-08-26"
+  },
+  "preisueberwacher": {
+   "canton": "CH",
+   "decisions": 29,
+   "with_numbering": 19,
+   "first": "2025-05-20",
+   "last": "2026-08-03"
+  },
+  "rab": {
+   "canton": "CH",
+   "decisions": 5,
+   "with_numbering": 4,
+   "first": "2017-10-27",
+   "last": "2020-09-28"
+  },
+  "sav_international": {
+   "canton": "CH",
+   "decisions": 4,
+   "with_numbering": 4,
+   "first": null,
+   "last": null
+  },
+  "sav_kantone": {
+   "canton": "CH",
+   "decisions": 33,
+   "with_numbering": 33,
+   "first": "2004-05-27",
+   "last": "2004-05-27"
+  },
+  "sg_gerichte": {
+   "canton": "SG",
+   "decisions": 3141,
+   "with_numbering": 108,
+   "first": "1969-07-04",
+   "last": "2026-01-14"
+  },
+  "sg_handelsgericht": {
+   "canton": "SG",
+   "decisions": 49,
+   "with_numbering": 29,
+   "first": "1992-11-06",
+   "last": "2024-07-02"
+  },
+  "sg_kantonsgericht": {
+   "canton": "SG",
+   "decisions": 1083,
+   "with_numbering": 503,
+   "first": "1970-03-20",
+   "last": "2026-07-27"
+  },
+  "sg_publikationen": {
+   "canton": "SG",
+   "decisions": 630,
+   "with_numbering": 603,
+   "first": "1996-04-01",
+   "last": "2024-04-29"
+  },
+  "sg_versicherungsgericht": {
+   "canton": "SG",
+   "decisions": 7642,
+   "with_numbering": 5803,
+   "first": "1979-02-16",
+   "last": "2026-09-03"
+  },
+  "sg_verwaltungsgericht": {
+   "canton": "SG",
+   "decisions": 2793,
+   "with_numbering": 2063,
+   "first": "1968-07-27",
+   "last": "2026-06-29"
+  },
+  "sg_verwaltungsrekurskommission": {
+   "canton": "SG",
+   "decisions": 1183,
+   "with_numbering": 1182,
+   "first": "1931-04-02",
+   "last": "2026-07-02"
+  },
+  "sh_gerichte": {
+   "canton": "SH",
+   "decisions": 716,
+   "with_numbering": 0,
+   "first": "2000-02-24",
+   "last": "2026-09-01"
+  },
+  "sh_obergericht": {
+   "canton": "SH",
+   "decisions": 718,
+   "with_numbering": 83,
+   "first": "2000-02-24",
+   "last": "2025-12-16"
+  },
+  "so_gerichte": {
+   "canton": "SO",
+   "decisions": 13618,
+   "with_numbering": 12019,
+   "first": "1956-11-07",
+   "last": "2026-09-29"
+  },
+  "sz_gerichte": {
+   "canton": "SZ",
+   "decisions": 3443,
+   "with_numbering": 1005,
+   "first": "2008-02-19",
+   "last": "2026-09-02"
+  },
+  "sz_verwaltungsgericht": {
+   "canton": "SZ",
+   "decisions": 2242,
+   "with_numbering": 729,
+   "first": "2010-09-21",
+   "last": "2026-08-20"
+  },
+  "ta_sst": {
+   "canton": "CH",
+   "decisions": 87,
+   "with_numbering": 85,
+   "first": "2016-10-11",
+   "last": "2026-07-12"
+  },
+  "tg_anwaltskommission": {
+   "canton": "TG",
+   "decisions": 5,
+   "with_numbering": 5,
+   "first": null,
+   "last": null
+  },
+  "tg_gerichte": {
+   "canton": "TG",
+   "decisions": 1162,
+   "with_numbering": 623,
+   "first": "1907-12-10",
+   "last": "2025-12-17"
+  },
+  "tg_obergericht": {
+   "canton": "TG",
+   "decisions": 2443,
+   "with_numbering": 1327,
+   "first": "1957-01-01",
+   "last": "2025-01-29"
+  },
+  "ti_gerichte": {
+   "canton": "TI",
+   "decisions": 66987,
+   "with_numbering": 45964,
+   "first": "1922-05-07",
+   "last": "2026-08-24"
+  },
+  "ubi": {
+   "canton": "CH",
+   "decisions": 679,
+   "with_numbering": 678,
+   "first": "1998-04-03",
+   "last": "2026-09-18"
+  },
+  "ur_gerichte": {
+   "canton": "UR",
+   "decisions": 1240,
+   "with_numbering": 776,
+   "first": "1901-01-01",
+   "last": "2026-08-30"
+  },
+  "vd_findinfo": {
+   "canton": "VD",
+   "decisions": 74798,
+   "with_numbering": 59256,
+   "first": "1969-02-16",
+   "last": "2025-12-20"
+  },
+  "vd_gerichte": {
+   "canton": "VD",
+   "decisions": 65948,
+   "with_numbering": 53068,
+   "first": "1969-02-16",
+   "last": "2026-09-22"
+  },
+  "vd_omni": {
+   "canton": "VD",
+   "decisions": 28033,
+   "with_numbering": 23286,
+   "first": "1958-10-27",
+   "last": "2026-02-09"
+  },
+  "vs_gerichte": {
+   "canton": "VS",
+   "decisions": 7011,
+   "with_numbering": 4346,
+   "first": "1959-11-20",
+   "last": "2026-09-06"
+  },
+  "weko": {
+   "canton": "CH",
+   "decisions": 299,
+   "with_numbering": 294,
+   "first": "1998-05-18",
+   "last": "2025-10-21"
+  },
+  "zg_anwaltsaufsicht": {
+   "canton": "ZG",
+   "decisions": 27,
+   "with_numbering": 27,
+   "first": "1998-11-12",
+   "last": "2026-08-07"
+  },
+  "zg_datenschutzstelle": {
+   "canton": "ZG",
+   "decisions": 101,
+   "with_numbering": 61,
+   "first": "2000-12-31",
+   "last": "2016-12-31"
+  },
+  "zg_kantonsgericht": {
+   "canton": "ZG",
+   "decisions": 134,
+   "with_numbering": 119,
+   "first": "1995-03-15",
+   "last": "2024-12-18"
+  },
+  "zg_obergericht": {
+   "canton": "ZG",
+   "decisions": 1722,
+   "with_numbering": 1700,
+   "first": "1995-01-20",
+   "last": "2026-08-25"
+  },
+  "zg_regierungsrat": {
+   "canton": "ZG",
+   "decisions": 308,
+   "with_numbering": 257,
+   "first": "1995-01-17",
+   "last": "2026-08-18"
+  },
+  "zg_strafgericht": {
+   "canton": "ZG",
+   "decisions": 23,
+   "with_numbering": 14,
+   "first": "1997-03-07",
+   "last": "2005-11-23"
+  },
+  "zg_verwaltungsgericht": {
+   "canton": "ZG",
+   "decisions": 1930,
+   "with_numbering": 1831,
+   "first": "1996-02-01",
+   "last": "2026-09-21"
+  },
+  "zh_arbeitsgericht": {
+   "canton": "ZH",
+   "decisions": 623,
+   "with_numbering": 248,
+   "first": "2002-02-27",
+   "last": "2026-06-23"
+  },
+  "zh_baurekursgericht": {
+   "canton": "ZH",
+   "decisions": 1162,
+   "with_numbering": 868,
+   "first": "1935-09-17",
+   "last": "2026-06-26"
+  },
+  "zh_bezirksgericht_affoltern": {
+   "canton": "ZH",
+   "decisions": 12,
+   "with_numbering": 12,
+   "first": "2020-06-22",
+   "last": "2026-01-21"
+  },
+  "zh_bezirksgericht_andelfingen": {
+   "canton": "ZH",
+   "decisions": 11,
+   "with_numbering": 10,
+   "first": "2024-07-22",
+   "last": "2026-06-09"
+  },
+  "zh_bezirksgericht_buelach": {
+   "canton": "ZH",
+   "decisions": 72,
+   "with_numbering": 71,
+   "first": "2007-06-04",
+   "last": "2026-07-14"
+  },
+  "zh_bezirksgericht_dielsdorf": {
+   "canton": "ZH",
+   "decisions": 75,
+   "with_numbering": 74,
+   "first": "2009-08-10",
+   "last": "2026-08-20"
+  },
+  "zh_bezirksgericht_dietikon": {
+   "canton": "ZH",
+   "decisions": 78,
+   "with_numbering": 70,
+   "first": "2012-06-18",
+   "last": "2026-05-12"
+  },
+  "zh_bezirksgericht_hinwil": {
+   "canton": "ZH",
+   "decisions": 59,
+   "with_numbering": 58,
+   "first": "2019-05-06",
+   "last": "2026-07-07"
+  },
+  "zh_bezirksgericht_horgen": {
+   "canton": "ZH",
+   "decisions": 109,
+   "with_numbering": 108,
+   "first": "2011-10-27",
+   "last": "2026-04-02"
+  },
+  "zh_bezirksgericht_meilen": {
+   "canton": "ZH",
+   "decisions": 84,
+   "with_numbering": 82,
+   "first": "2010-12-21",
+   "last": "2026-08-21"
+  },
+  "zh_bezirksgericht_pfaeffikon": {
+   "canton": "ZH",
+   "decisions": 34,
+   "with_numbering": 33,
+   "first": "2020-08-19",
+   "last": "2026-03-16"
+  },
+  "zh_bezirksgericht_uster": {
+   "canton": "ZH",
+   "decisions": 43,
+   "with_numbering": 43,
+   "first": "2006-12-12",
+   "last": "2026-02-13"
+  },
+  "zh_bezirksgericht_winterthur": {
+   "canton": "ZH",
+   "decisions": 91,
+   "with_numbering": 87,
+   "first": "2014-06-26",
+   "last": "2026-06-23"
+  },
+  "zh_bezirksgericht_zuerich": {
+   "canton": "ZH",
+   "decisions": 433,
+   "with_numbering": 409,
+   "first": "2000-02-08",
+   "last": "2026-07-29"
+  },
+  "zh_gerichte": {
+   "canton": "ZH",
+   "decisions": 32,
+   "with_numbering": 6,
+   "first": "1998-08-10",
+   "last": "2025-05-05"
+  },
+  "zh_handelsgericht": {
+   "canton": "ZH",
+   "decisions": 4712,
+   "with_numbering": 4693,
+   "first": "2001-05-21",
+   "last": "2026-09-16"
+  },
+  "zh_kassationsgericht": {
+   "canton": "ZH",
+   "decisions": 1461,
+   "with_numbering": 1452,
+   "first": "1995-12-13",
+   "last": "2012-06-25"
+  },
+  "zh_mietgericht": {
+   "canton": "ZH",
+   "decisions": 179,
+   "with_numbering": 145,
+   "first": "2006-02-23",
+   "last": "2026-09-22"
+  },
+  "zh_obergericht": {
+   "canton": "ZH",
+   "decisions": 28793,
+   "with_numbering": 27950,
+   "first": "1980-04-15",
+   "last": "2026-08-25"
+  },
+  "zh_sozialversicherungsgericht": {
+   "canton": "ZH",
+   "decisions": 34854,
+   "with_numbering": 34584,
+   "first": "1981-01-21",
+   "last": "2026-07-01"
+  },
+  "zh_steuerrekursgericht": {
+   "canton": "ZH",
+   "decisions": 904,
+   "with_numbering": 890,
+   "first": "1982-04-06",
+   "last": "2026-06-30"
+  },
+  "zh_verwaltungsgericht": {
+   "canton": "ZH",
+   "decisions": 12686,
+   "with_numbering": 12615,
+   "first": "1960-06-21",
+   "last": "2026-09-15"
+  }
+ },
+ "bge_volumes": {
+  "first": 1,
+  "last": 152,
+  "absent": []
+ }
+}

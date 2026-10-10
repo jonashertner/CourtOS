@@ -501,3 +501,4 @@ export interface NativeConnectorTool {
 }
 
 export type { CaseReviewKind, CaseReviewRole, CaseReviewAssessment, CaseReviewInput, CaseReviewSource, CaseReviewRow, CaseReviewReport, CaseReviewStatus, CaseReviewRecord } from "./caseReview";
+export type { CitationCheckInput, FormalCitationStatus, CitationIndexDecision, CitationCheckFinding, CitationCheckReport } from "./citationCheck";

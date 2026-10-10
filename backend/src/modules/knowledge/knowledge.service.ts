@@ -4,3 +4,4 @@ export { publicKnowledgeRequest } from "./knowledge.public";
 export { researchHandoff, parseResearchHandoffState } from "./knowledge.handoff";
 
 export { startCaseReview, getCaseReview, stopCaseReview, caseReviewRun } from "./knowledge.review";
+export { checkSelectedCitations } from "./knowledge.citationCheck";

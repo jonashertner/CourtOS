@@ -54,7 +54,8 @@ describe("CourtOS Word bootstrap authentication boundary", () => {
             expect(document.getElementById("pilot-note")?.textContent).not.toMatch(/Deutschland|Germany|Allemagne|Germania/i);
             h.start(); await flush();
             for (const value of ["de", "fr", "it", "en"]) {
-                fireEvent.change(screen.getByRole("combobox"), { target: { value } });
+                fireEvent.click(document.querySelector(`[data-ui-locale="${value}"]`)!);
+                expect(document.querySelector(`[data-ui-locale="${value}"]`)).toHaveAttribute("aria-pressed", "true");
                 expect(document.getElementById("pilot-note")?.textContent).toContain("CourtOS");
                 expect(document.getElementById("pilot-note")?.textContent).not.toMatch(/Deutschland|Germany|Allemagne|Germania/i);
             }
@@ -67,7 +68,7 @@ describe("CourtOS Word bootstrap authentication boundary", () => {
         Object.assign(h.office.context, { displayLanguage: "fr-CH" });
         h.start(); await flush();
         expect(screen.getByRole("button", { name: "Se connecter" })).toBeEnabled();
-        fireEvent.change(screen.getByRole("combobox"), { target: { value: "en" } });
+        fireEvent.click(screen.getByRole("button", { name: "English" }));
         expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
         expect(document.documentElement.lang).toBe("en");
         expect(h.fetch).not.toHaveBeenCalled(); expect(h.office.context.ui.displayDialogAsync).not.toHaveBeenCalled();
@@ -76,12 +77,12 @@ describe("CourtOS Word bootstrap authentication boundary", () => {
     it("translates diagnostics while preserving their code and fixed authentication request", async () => {
         const h = harness("complete", `?state=${state}`); h.start(); await flush();
         h.fetch.mockResolvedValue(new Response("", { status: 403 }));
-        fireEvent.change(screen.getByRole("combobox"), { target: { value: "it" } });
+        fireEvent.click(screen.getByRole("button", { name: "Italiano" }));
         fireEvent.click(screen.getByRole("button", { name: "Conferma l’accesso in Word" })); await flush();
         expect(screen.getByRole("status")).toHaveTextContent("Codice di verifica D1-HTTP403");
         expect(h.fetch).toHaveBeenCalledExactlyOnceWith(origin + "/api/auth/cloudflare", expect.objectContaining({ method: "POST", mode: "cors", redirect: "error" }));
         expect(h.office.context.ui.messageParent).not.toHaveBeenCalled();
-        fireEvent.change(screen.getByRole("combobox"), { target: { value: "en" } });
+        fireEvent.click(screen.getByRole("button", { name: "English" }));
         expect(screen.getByRole("status")).toHaveTextContent("Diagnostic code D1-HTTP403");
         expect(h.fetch).toHaveBeenCalledOnce();
     });

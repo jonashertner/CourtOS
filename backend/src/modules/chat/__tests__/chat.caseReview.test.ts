@@ -60,7 +60,9 @@ describe("personal chat-backed review persistence and source scope",()=>{
   it("passes exact selected versions to byte-hash admission and repeats owner scope after asynchronous loading",async()=>{
     const {db,tables}=database({documents:[{id:"doc",user_id:"owner",current_version_id:"newer",status:"ready",library_kind:"file",project_id:null,org_id:null,workflow_id:null}]});
     await loadCaseReviewEvidence(db,"owner",[{document_id:"doc",version_id:"version"}]);
-    expect(prefetch).toHaveBeenCalledWith(expect.any(Map),{"doc-0":{document_id:"doc",version_id:"version",filename:""}},db,"owner");
+    expect(prefetch).toHaveBeenCalledWith(expect.any(Map),{"doc-0":{document_id:"doc",version_id:"version",filename:""}},db,"owner",undefined,"model");
+    await loadCaseReviewEvidence(db,"owner",[{document_id:"doc",version_id:"version"}],"citation_check");
+    expect(prefetch).toHaveBeenLastCalledWith(expect.any(Map),expect.any(Object),db,"owner",undefined,"citation_check");
     prefetch.mockImplementationOnce(async()=>{tables.documents[0].project_id="moved";return new Map([["doc-0",{}]]);});
     await expect(loadCaseReviewEvidence(db,"owner",[{document_id:"doc",version_id:"version"}])).rejects.toThrow(/geändert/);
   });

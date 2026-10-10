@@ -451,6 +451,11 @@
 .courtos-web .courtos-review-source button { text-align: left; overflow-wrap: anywhere; }
 .courtos-web .courtos-review-table details { margin-top: 16px; }
 .courtos-web .courtos-review-table summary { cursor: pointer; font-weight: 550; }
+.courtos-web .courtos-review-comparison { margin-top: 24px; }
+.courtos-web .courtos-review-comparison h3 { font-size: 18px; line-height: 26px; font-weight: 550; }
+.courtos-web .courtos-review-comparison-table th:first-child { width: 25%; }
+.courtos-web .courtos-review-comparison-table .courtos-review-source { margin-top: 12px; }
+.courtos-web .courtos-review-counterpart + .courtos-review-counterpart { margin-top: 24px; }
 .courtos-web .courtos-review-coverage { margin-top: 32px; font-size: 12px; line-height: 18px; }
 .courtos-web .courtos-review-coverage summary { min-height: 44px; cursor: pointer; }
 .courtos-web .courtos-review-coverage li { margin-top: 8px; overflow-wrap: anywhere; }

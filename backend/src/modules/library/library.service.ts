@@ -442,8 +442,16 @@ export async function updateLibraryFolder(
   userId: string,
   kind: LibraryKind,
   folderId: string,
-  body: { name?: string; parent_folder_id?: string | null },
+  body: { name?: string; parent_folder_id?: string | null; expected?: unknown },
 ): Promise<ServiceResult<unknown>> {
+  let guard: {name:string;updated_at:string;parent_folder_id:string|null}|null=null;
+  if (body.expected !== undefined) {
+    const value=body.expected as Record<string,unknown>|null;
+    if (!value || typeof value!=="object" || Array.isArray(value) || Object.keys(value).some(key=>!["name","updated_at","parent_folder_id"].includes(key)) ||
+        typeof value.name!=="string" || !value.name || typeof value.updated_at!=="string" || !Number.isFinite(Date.parse(value.updated_at)) ||
+        !(value.parent_folder_id===null || typeof value.parent_folder_id==="string")) return err(400,"Invalid folder precondition");
+    guard={name:value.name,updated_at:value.updated_at,parent_folder_id:value.parent_folder_id};
+  }
   const folder = await loadLibraryFolder(db, userId, kind, folderId);
   if (!folder) return err(404, "Folder not found");
 
@@ -468,15 +476,29 @@ export async function updateLibraryFolder(
     updates.parent_folder_id = body.parent_folder_id ?? null;
   }
 
-  const { data, error } = await db
+  if (guard && typeof updates.name === "string") {
+    const parent = "parent_folder_id" in body ? body.parent_folder_id ?? null : guard.parent_folder_id;
+    let siblings = db.from("library_folders").select("id").eq("user_id",userId).eq("library_kind",kind).eq("name",updates.name);
+    siblings=parent===null?siblings.is("parent_folder_id",null):siblings.eq("parent_folder_id",parent);
+    const {data:matches,error:collisionError}=await siblings;
+    if(collisionError)return internalErr(collisionError);
+    if((matches??[]).some((match:{id:string})=>match.id!==folderId))return err(409,"Folder name already exists");
+  }
+
+  let update = db
     .from("library_folders")
     .update(updates)
     .eq("id", folderId)
     .eq("user_id", userId)
-    .eq("library_kind", kind)
+    .eq("library_kind", kind);
+  if (guard) {
+    update=update.eq("name",guard.name).eq("updated_at",guard.updated_at);
+    update=guard.parent_folder_id===null?update.is("parent_folder_id",null):update.eq("parent_folder_id",guard.parent_folder_id);
+  }
+  const { data, error } = await update
     .select("*")
     .single();
-  if (error || !data) return err(404, "Folder not found");
+  if (error || !data) return err(guard?409:404, guard?"Folder changed; reload before renaming":"Folder not found");
   return ok(data);
 }
 
@@ -600,14 +622,16 @@ export async function renameLibraryDocument(
   kind: LibraryKind,
   documentId: string,
   rawFilename: unknown,
+  expected?: unknown,
 ): Promise<ServiceResult<unknown>> {
   const result = await renameDocument(db, {
     userId,
     documentId,
     filename: rawFilename,
+    expected,
     scope: { kind: "library", libraryKind: kind },
   });
   if (result.ok) return ok(mapLibraryDocument(result.data));
   if (result.kind === "error") return internalErr(result.error);
-  return err(result.kind === "validation" ? 400 : 404, result.detail);
+  return err(result.kind === "validation" ? 400 : result.kind === "conflict" ? 409 : 404, result.detail);
 }

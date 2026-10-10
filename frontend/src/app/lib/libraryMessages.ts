@@ -379,6 +379,14 @@ export const libraryMessages = {
         "it": "Conferma l’azione",
         "en": "Confirm action"
     },
+    selectFolderFiles: { de: "Dateien in {name} auswählen", fr: "Sélectionner les fichiers de {name}", it: "Seleziona i file in {name}", en: "Select files in {name}" },
+    expandFolder: { de: "{name} aufklappen", fr: "Développer {name}", it: "Espandi {name}", en: "Expand {name}" },
+    collapseFolder: { de: "{name} zuklappen", fr: "Réduire {name}", it: "Comprimi {name}", en: "Collapse {name}" },
+    folderUploadTarget: { de: "Zielordner", fr: "Dossier de destination", it: "Cartella di destinazione", en: "Destination folder" },
+    folderUploadChoice: { de: "Ordner besteht bereits", fr: "Ce dossier existe déjà", it: "La cartella esiste già", en: "This folder already exists" },
+    folderUploadReuse: { de: "Vorhandenen Ordner ergänzen", fr: "Ajouter au dossier existant", it: "Aggiungi alla cartella esistente", en: "Add to the existing folder" },
+    folderUploadSeparate: { de: "Neuen Ordner «{name}» anlegen", fr: "Créer un nouveau dossier « {name} »", it: "Crea una nuova cartella «{name}»", en: "Create a new folder “{name}”" },
+    folderUploadPreserve: { de: "Vorhandene Dateien und Fassungen bleiben unverändert. Gleichnamige Dateien werden als zusätzliche Dokumente abgelegt.", fr: "Les fichiers et versions existants restent inchangés. Les fichiers de même nom sont ajoutés comme documents distincts.", it: "I file e le versioni esistenti restano invariati. I file omonimi vengono aggiunti come documenti distinti.", en: "Existing files and versions stay unchanged. Files with matching names are added as separate documents." },
     "folderConflict": {
         "de": "Ein Ordner namens «{name}» besteht bereits. Der neue Ordner wird als «{suggested}» hochgeladen.",
         "fr": "Un dossier « {name} » existe déjà. Le nouveau dossier sera téléversé sous « {suggested} ».",

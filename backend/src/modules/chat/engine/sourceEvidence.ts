@@ -10,6 +10,16 @@ import type { SourceGroundingDiagnostics, SourceGroundingIssue } from "@mike/con
 // These are admission limits, not truncation targets. The provider's separate
 // request-body budget remains enforced after schemas and history are added.
 export const SOURCE_EVIDENCE_LIMITS = { documents: 5, pages: 40, textBytes: 10_000, fileBytes: 5 * 1024 * 1024 } as const;
+// A server-selected profile: never take this value or individual budgets from
+// request data. Deterministic checks do not consume the model context window.
+export type SourceEvidenceProfile = "model" | "citation_check";
+const CITATION_EVIDENCE_LIMITS = { documents: 5, pages: 200, textBytes: 1024 * 1024, fileBytes: 5 * 1024 * 1024 } as const;
+const evidenceLimits = (profile: SourceEvidenceProfile) => {
+  if (profile === "model") return SOURCE_EVIDENCE_LIMITS;
+  if (profile === "citation_check") return CITATION_EVIDENCE_LIMITS;
+  throw new SourceGroundingError("Die Quellengrenzen konnten nicht bestimmt werden.", undefined, "scope");
+};
+const scopeMessage = (limits: ReturnType<typeof evidenceLimits>) => `Die vollständige Auswahl überschreitet insgesamt ${limits.pages} Seiten oder ${String(limits.textBytes).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} UTF-8-Bytes Text. Bitte einen kleineren Teilbestand auswählen. Es wurde nichts stillschweigend gekürzt.`;
 
 export class SourceGroundingError extends UserFacingError {
   readonly code = "source_grounding_failed" as const;
@@ -30,7 +40,8 @@ export type DocumentEvidence = {
 };
 
 /** Only an already-authorised document/version from the request's index. */
-export async function loadDocumentEvidence(label: string, docStore: DocStore, docIndex: DocIndex, db: Db, userId: string, userEmail?: string | null): Promise<DocumentEvidence> {
+export async function loadDocumentEvidence(label: string, docStore: DocStore, docIndex: DocIndex, db: Db, userId: string, userEmail?: string | null, profile: SourceEvidenceProfile = "model"): Promise<DocumentEvidence> {
+  const limits = evidenceLimits(profile);
   const index = docIndex[label];
   const item = docStore.get(label);
   if (!index?.document_id || !index.version_id || !item || item.inline_text !== undefined) {
@@ -49,11 +60,11 @@ export async function loadDocumentEvidence(label: string, docStore: DocStore, do
     throw new SourceGroundingError("Für diesen belegten Auftrag bitte eine ursprüngliche PDF-Datei auswählen. Die Seiten einer nachträglich erzeugten Word-PDF-Fassung werden hier nicht als Originalfundstelle behandelt.", undefined, "unavailable");
   }
   const pdfPath = version.storage_path;
-  if (!pdfPath || (version.size_bytes ?? 0) > SOURCE_EVIDENCE_LIMITS.fileBytes) {
+  if (!pdfPath || (version.size_bytes ?? 0) > limits.fileBytes) {
     throw new SourceGroundingError("Für diese Quelle fehlt eine lesbare PDF-Fassung innerhalb der Dateigrenze. Es wurde keine Antwort erzeugt.", undefined, "unavailable");
   }
   const bytes = await downloadFile(pdfPath);
-  if (!bytes || bytes.byteLength > SOURCE_EVIDENCE_LIMITS.fileBytes) {
+  if (!bytes || bytes.byteLength > limits.fileBytes) {
     throw new SourceGroundingError("Die ausgewählte PDF-Fassung konnte nicht vollständig geladen werden. Bitte die Originalquelle prüfen.", undefined, "unavailable");
   }
   const pdfHash = contentSha256(bytes);
@@ -62,12 +73,12 @@ export async function loadDocumentEvidence(label: string, docStore: DocStore, do
     throw new SourceGroundingError("Die Dateifassung konnte nicht anhand ihres gespeicherten Fingerabdrucks bestätigt werden. Bitte die Quelle erneut prüfen; es wurde keine Antwort erzeugt.", undefined, "changed");
   }
   // PDF.js transfers its input. Preserve the digest of precisely these bytes.
-  const pages = await readPdfPages(bytes, SOURCE_EVIDENCE_LIMITS.pages, SOURCE_EVIDENCE_LIMITS.textBytes + SOURCE_EVIDENCE_LIMITS.pages * 16);
+  const pages = await readPdfPages(bytes, limits.pages, limits.textBytes + limits.pages * 16);
   if (!pages?.length || pages.some((p) => p.empty)) {
     throw new SourceGroundingError("Mindestens eine PDF-Seite enthält keinen auslesbaren Text. Die vollständige Textgrundlage ist nicht gesichert; bitte OCR oder eine lesbare Fassung bereitstellen.", undefined, "unavailable");
   }
   if (pages.length !== pages[0].totalPages || pages.some((p, i) => p.truncated || p.page !== i + 1 || p.totalPages !== pages.length)) {
-    throw new SourceGroundingError("Die vollständige Auswahl überschreitet die Grenze von 40 Seiten oder 10 000 UTF-8-Bytes Text. Bitte kleinere Dokumente oder ausdrücklich abgegrenzte Teilbestände auswählen. Es wurde nichts stillschweigend gekürzt.", undefined, "scope");
+    throw new SourceGroundingError(scopeMessage(limits), undefined, "scope");
   }
   const extracted = pages.map((p) => {
     // Remove only the extractor's leading marker, never split on document text
@@ -78,19 +89,20 @@ export async function loadDocumentEvidence(label: string, docStore: DocStore, do
   return { document_id: index.document_id, version_id: version.id, version_number: version.version_number, filename: version.filename ?? index.filename, pdf_sha256: pdfHash, version_sha256: originalHash, pages: extracted };
 }
 
-export async function prefetchSourceEvidence(docStore: DocStore, docIndex: DocIndex, db: Db, userId: string, userEmail?: string | null): Promise<Map<string, DocumentEvidence>> {
-  if (docStore.size > SOURCE_EVIDENCE_LIMITS.documents) {
+export async function prefetchSourceEvidence(docStore: DocStore, docIndex: DocIndex, db: Db, userId: string, userEmail?: string | null, profile: SourceEvidenceProfile = "model"): Promise<Map<string, DocumentEvidence>> {
+  const limits = evidenceLimits(profile);
+  if (docStore.size > limits.documents) {
     throw new SourceGroundingError("Für einen vollständig belegten Auftrag sind höchstens fünf ausgewählte Dokumente möglich. Bitte den Bestand ausdrücklich aufteilen.", undefined, "scope");
   }
   const evidence = new Map<string, DocumentEvidence>();
   let pageCount = 0;
   let textBytes = 0;
   for (const label of docStore.keys()) {
-    const source = await loadDocumentEvidence(label, docStore, docIndex, db, userId, userEmail);
+    const source = await loadDocumentEvidence(label, docStore, docIndex, db, userId, userEmail, profile);
     pageCount += source.pages.length;
     textBytes += source.pages.reduce((sum, p) => sum + Buffer.byteLength(p.text, "utf8"), 0);
-    if (pageCount > SOURCE_EVIDENCE_LIMITS.pages || textBytes > SOURCE_EVIDENCE_LIMITS.textBytes) {
-      throw new SourceGroundingError("Die vollständige Auswahl überschreitet insgesamt 40 Seiten oder 10 000 UTF-8-Bytes Text. Bitte einen kleineren Teilbestand auswählen. Eine Gesamtchronologie wurde nicht erzeugt.", undefined, "scope");
+    if (pageCount > limits.pages || textBytes > limits.textBytes) {
+      throw new SourceGroundingError(scopeMessage(limits), undefined, "scope");
     }
     evidence.set(label, source);
   }

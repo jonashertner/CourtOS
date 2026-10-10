@@ -48,22 +48,21 @@
         const hints = [officeHint, ...(w.navigator?.languages || []), w.navigator?.language];
         locale = explicitLocale || stored || hints.map(languageHint).find(Boolean) || "de";
         w.document.documentElement.lang = locale === "en" ? "en" : locale + "-CH";
-        const selector = w.document.getElementById("ui-language"); if (selector) selector.value = locale;
+        w.document.querySelectorAll("[data-ui-locale]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.uiLocale === locale)));
         labels.forEach((binding, element) => text(element, binding.key, binding.values));
     }
     function setupLanguage() {
         if (languageReady) return; languageReady = true;
         for (const [id, key] of [["language-label", "language"], ["status", "connecting"], ["signin", "signin"], ["confirm", "confirm"], ["browser", "browser"], ["pilot-note", "pilot"]]) text(w.document.getElementById(id), key);
-        const selector = w.document.getElementById("ui-language");
-        selector?.addEventListener("change", () => {
-            if (!LANGUAGES.includes(selector.value)) return;
-            explicitLocale = selector.value;
+        w.document.querySelectorAll("[data-ui-locale]").forEach(button => button.addEventListener("click", () => {
+            if (!LANGUAGES.includes(button.dataset.uiLocale)) return;
+            explicitLocale = button.dataset.uiLocale;
             try {
                 w.localStorage.setItem(LOCALE_KEY, JSON.stringify({ version: 1, ownerId: null, locale: explicitLocale }));
                 w.localStorage.setItem("courtos:ui-language:signin:v1", JSON.stringify({ locale: explicitLocale, createdAt: Date.now() }));
             } catch { /* Current window choice still applies. */ }
             refreshLanguage();
-        });
+        }));
         refreshLanguage();
     }
     let readiness;

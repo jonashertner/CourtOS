@@ -329,6 +329,7 @@ libraryRouter.patch(
       kind,
       documentId,
       req.body?.filename,
+      req.body?.expected,
     );
     if (!result.ok)
       return void sendServiceError(res, result);

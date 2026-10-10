@@ -6,13 +6,13 @@ import { KnowledgeWorkspace } from "./KnowledgeWorkspace";
 import { emptyResearchState, ResearchHandoffProvider } from "./ResearchHandoffContext";
 import { ResearchContinuation } from "./ResearchHandoffControls";
 import { storeResearchHandoffReference } from "@/app/lib/researchHandoff";
-const api = vi.hoisted(() => ({ get: vi.fn(), update: vi.fn(), ack: vi.fn(), list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), read: vi.fn(), insert: vi.fn() }));
+const api = vi.hoisted(() => ({ get: vi.fn(), update: vi.fn(), ack: vi.fn(), list: vi.fn(), path: vi.fn(), document: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), read: vi.fn(), insert: vi.fn() }));
 vi.mock("@/app/lib/researchHandoff", async original => ({ ...(await original<typeof import("@/app/lib/researchHandoff")>()), getResearchHandoff: api.get, updateResearchHandoff: api.update, acknowledgeResearchHandoff: api.ack }));
 vi.mock("@/app/lib/wordResearchHost", async original => ({ ...(await original<typeof import("@/app/lib/wordResearchHost")>()), getWordResearchDocumentScope: async () => "a".repeat(64) }));
 vi.mock("@/app/lib/researchModelPreference", () => ({ useResearchModelPreference: () => ({ model: "gemma" }) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "owner" } }) }));
-vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list, getLibrary: (...args: unknown[]) => api.list(...args), getLibraryFolderChildren: (...args: unknown[]) => api.list(...args) }));
+vi.mock("@/app/lib/mikeApi", () => ({ getLibraryFolderPath: api.path, getDocument: api.document, searchLibraryDocuments: api.list, getLibrary: (...args: unknown[]) => api.list(...args), getLibraryFolderChildren: (...args: unknown[]) => api.list(...args) }));
 vi.mock("@/app/lib/knowledgeApi", async original => ({ ...(await original<typeof import("@/app/lib/knowledgeApi")>()), searchKnowledge: api.local, searchPublicKnowledge: api.public, getPublicDecision: api.detail }));
 vi.mock("./ResearchConversation", () => ({ ResearchConversation: (props: { candidate: unknown }) => <div data-testid="research-conversation" data-sources={JSON.stringify(props.candidate)}><textarea id="research-question" aria-label="Ihre Frage an die Quellen" /></div> }));
 vi.mock("next/dynamic", () => ({ default: () => (props: { document: { document_id: string; version_id: string; quotes: { target: { page: number } }[] } }) => <div data-testid="source-viewer" data-version={props.document.version_id} data-page={props.document.quotes[0]?.target.page} /> }));
@@ -24,7 +24,7 @@ const detail = { ...decision, passage: { start: 0, end: Array.from(quote).length
 const publicState = () => { const s = emptyResearchState(); s.public = { query: "rechtliches Gehör", submitted: "rechtliches Gehör", language: "de", result: { results: [decision], query_mode: "opencaselaw_ai", database_generation: null }, source: { decision, start: 0, history: [], excerpt: { start: 0, end: Array.from(quote).length, total_chars: Array.from(quote).length, text: quote } } }; return s; };
 const metadata = { id, revision: 1, expires_at: new Date(Date.now() + 7200000).toISOString(), direction: "to_browser" as const, acknowledged_revision: 0 };
 beforeEach(() => {
-    vi.clearAllMocks(); sessionStorage.clear(); history.replaceState(null, "", `/research?handoff=${id}`);
+    vi.clearAllMocks(); api.document.mockRejectedValue(new Error("unavailable")); api.path.mockRejectedValue(new Error("unavailable")); sessionStorage.clear(); history.replaceState(null, "", `/research?handoff=${id}`);
     api.get.mockResolvedValue({ ...metadata, state: publicState() }); api.detail.mockResolvedValue(detail);
     api.update.mockResolvedValue({ ...metadata, revision: 2, direction: "to_word" }); api.ack.mockResolvedValue(metadata);
     api.list.mockResolvedValue({ documents: [], documentsHasMore: false });
@@ -63,6 +63,14 @@ describe("restored source research", () => {
         expect(snapshot.mode).toBe("private"); expect(snapshot.public.source.excerpt.text).toBe(quote);
         expect(snapshot.public.result.results[0]).not.toHaveProperty("passage");
         expect(api.public).not.toHaveBeenCalled();
+    });
+    it.each(["private","public"] as const)("restores both explicit source types in %s view without search, insertion or model calls",async(mode)=>{
+        const s=publicState();s.mode=mode;
+        s.private.selected=[{id:ownerDocument,filename:"Eingabe.pdf",file_type:"pdf",active_version_id:version,active_version_number:2,size_bytes:1000}];
+        api.get.mockResolvedValue({...metadata,state:s});render(browser());
+        const expected={files:[{document_id:ownerDocument,version_id:version,version_number:2,filename:"Eingabe.pdf"}],public_sources:[{decision_id:decision.decision_id,start:0,end:Array.from(quote).length,content_hash:decision.content_hash}]};
+        await waitFor(()=>expect(JSON.parse(screen.getByTestId("research-conversation").getAttribute("data-sources")!)).toEqual(expected));
+        expect(api.public).not.toHaveBeenCalled();expect(api.local).not.toHaveBeenCalled();expect(api.insert).not.toHaveBeenCalled();expect(api.read).not.toHaveBeenCalled();
     });
     it("restores server-revalidated private hits with exact version/page and no automatic search or insertion", async () => {
         history.replaceState(null, "", "/word/research");

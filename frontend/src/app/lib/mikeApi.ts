@@ -1983,11 +1983,12 @@ export async function renameLibraryFolder(
     kind: LibraryKind,
     folderId: string,
     name: string,
+    expected?: {name:string; updated_at:string; parent_folder_id:string|null},
 ): Promise<LibraryFolder> {
     return apiRequest<LibraryFolder>(`/library/${kind}/folders/${folderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, ...(expected ? {expected} : {}) }),
     });
 }
 
@@ -2032,11 +2033,12 @@ export async function renameLibraryDocument(
     kind: LibraryKind,
     documentId: string,
     filename: string,
+    expected?: {version_id:string;content_sha256:string;updated_at:string;filename:string},
 ): Promise<Document> {
     return apiRequest<Document>(`/library/${kind}/documents/${documentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename }),
+        body: JSON.stringify({ filename, ...(expected ? {expected} : {}) }),
     });
 }
 
@@ -3435,4 +3437,17 @@ export async function setGoogleWorkspaceToolEnabled(
             body: JSON.stringify({ enabled }),
         },
     );
+}
+
+/** Explicit, server-local formal check of the selected owned PDF versions. */
+export function checkKnowledgeCitations(
+    input: import("@mike/contracts").CitationCheckInput,
+    signal?: AbortSignal,
+): Promise<unknown> {
+    return apiRequest("/knowledge/citations/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal,
+    });
 }

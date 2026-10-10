@@ -111,7 +111,7 @@ for lang,book in BOOKS.items():
   c.bookmarkPage(p['id']);c.addOutlineEntry(p['title'].replace('\n',' '),p['id'],0)
   c.setFillColor(PALE);c.rect(0,0,W,H,stroke=0,fill=1)
   c.setFillColor(INK);c.setFont('Serif',13);c.drawString(M,H-32,'CourtOS')
-  c.setFillColor(MUTED);c.setFont('Mono',7);c.drawRightString(W-M,H-31,book['language'].upper()+'  /  01')
+  c.setFillColor(MUTED);c.setFont('Mono',7);c.drawRightString(W-M,H-31,book['language'].upper())
   c.setStrokeColor(RULE);c.setLineWidth(.5);c.line(M,H-44,W-M,H-44)
   if p.get('kind')=='cover':
    y=H-85
