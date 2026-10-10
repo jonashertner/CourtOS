@@ -38,6 +38,9 @@ describe("compact research window", () => {
         expect(button).toHaveTextContent(new RegExp(`^${visible}$`));
         expect(button).toHaveAttribute("title", accessible);
         expect(button).toHaveClass("courtos-word-browser-link--compact");
+        const citecheck=screen.getAllByRole("link").find(link=>link.getAttribute("href")?.startsWith("https://jonashertner.github.io/citecheck/"))!;
+        expect(citecheck).toHaveAttribute("href",`https://jonashertner.github.io/citecheck/taskpane.html?lang=${locale}`);
+        expect(citecheck).toHaveAttribute("rel","noopener noreferrer");
         expect(state.create).not.toHaveBeenCalled();
     });
     it("shows research and personal library, complete identity and source offer without workspace navigation", () => {
@@ -69,10 +72,11 @@ describe("compact research window", () => {
         render(<ResearchShell>Word research</ResearchShell>);
         expect(screen.getByRole("link", { name: "Recherche" })).toHaveAttribute("href", "/word/research");
         expect(screen.getByRole("link", { name: "Bibliothek" })).toHaveAttribute("href", "/library?host=word");
+        expect(screen.getByRole("link", { name: "Eingaben prüfen" })).toHaveAttribute("href", "/review?host=word");
         fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
         expect(screen.getByRole("radio", { name: /Gemma/ })).toBeDisabled();
         expect(screen.getByRole("radio", { name: /Claude Opus/ })).toBeDisabled();
-        expect(screen.getByText(/KI-Aufträge sind in dieser Word-Testfassung noch nicht verfügbar/)).toBeVisible();
+        expect(screen.getByText(/KI-Aufträge aus der Recherche sind in dieser Word-Testfassung noch nicht verfügbar/)).toBeVisible();
     });
     it("ends the application session before returning to password login", async () => {
         render(<ResearchShell>Results</ResearchShell>);

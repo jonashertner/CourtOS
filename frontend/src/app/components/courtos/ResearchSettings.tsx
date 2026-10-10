@@ -69,7 +69,7 @@ export function ResearchSettings({
                 <button type="button" className="courtos-settings-signout" onClick={() => void onSignOut()} disabled={signingOut}>{t(signingOut ? m.signingOut : m.signOut)}</button>
                 {signOutError && <p role="alert" className="courtos-settings-error">{signOutError}</p>}
             </section>
-            <details className="courtos-settings-help"><summary>{t(m.helpSource)}</summary><div><a href={`${COURTOS_GUIDE_PATH}${locale === "en" ? "de" : locale}.html`} target="_blank" rel="noopener noreferrer">{t(m.guide)}</a><a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer">{t(m.github)}</a></div></details>
+            <details className="courtos-settings-help"><summary>{t(m.helpSource)}</summary><div><a href={`${COURTOS_GUIDE_PATH}${locale}.html`} target="_blank" rel="noopener noreferrer">{t(m.guide)}</a><a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer">{t(m.github)}</a></div></details>
         </div>
     </dialog>;
 }

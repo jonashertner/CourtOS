@@ -54,8 +54,10 @@
   let queuedTurn = null;
   let suppressClick = false;
 
+  const legacyAnchors = { quality: 'later', test: 'later', local: 'first-steps', public: 'first-steps' };
+  const canonicalAnchor = anchor => Object.hasOwn(legacyAnchors, anchor) ? legacyAnchors[anchor] : anchor;
   function fragment() {
-    try { return decodeURIComponent(window.location.hash.slice(1)); }
+    try { return canonicalAnchor(decodeURIComponent(window.location.hash.slice(1))); }
     catch { return ''; }
   }
   function hash(anchor, method = 'replaceState') {
@@ -843,15 +845,92 @@
     return position;
   }
   let textLocationFrame;
+  let textPosition = null;
+  let textGeometryKey = '';
+  let textRestoreFrame;
+  let restoringText = false;
+  let textAnchorStyle = null;
+  function textGeometry() {
+    return [window.innerWidth, window.innerHeight, source.getBoundingClientRect().width,
+      controls.getBoundingClientRect().height, getComputedStyle(document.documentElement).fontSize].join(':');
+  }
+  function cancelTextRestore() {
+    cancelAnimationFrame(textRestoreFrame);
+    restoringText = false;
+    if (textAnchorStyle !== null) {
+      document.documentElement.style.overflowAnchor = textAnchorStyle;
+      textAnchorStyle = null;
+    }
+  }
+  function positionRect(position, target) {
+    if (!position.offset) return target.getBoundingClientRect();
+    const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
+    let remaining = position.offset;
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (remaining >= node.data.length) { remaining -= node.data.length; continue; }
+      const range = document.createRange();
+      range.setStart(node, remaining);
+      range.setEnd(node, remaining + 1);
+      if (typeof range.getClientRects === 'function') {
+        const rect = Array.from(range.getClientRects()).find(item => item.height > 0);
+        if (rect) return rect;
+      }
+      break;
+    }
+    return target.getBoundingClientRect();
+  }
+  function restoreTextPosition(position) {
+    cancelTextRestore();
+    const target = position.node && source.contains(position.node) ? position.node : document.getElementById(position.anchor);
+    if (!target) return;
+    const chapter = target.closest('details.chapter');
+    if (chapter) chapter.open = true;
+    textLocation(position.anchor);
+    // Retain manuscript identity, never a pre-reflow scrollY. Disable the
+    // browser's competing scroll anchor while the restored layout settles.
+    if (target.getBoundingClientRect().height <= 0) return;
+    textPosition = { ...position, node: target };
+    restoringText = true;
+    textAnchorStyle = document.documentElement.style.overflowAnchor;
+    document.documentElement.style.overflowAnchor = 'none';
+    function align() {
+      measureToolbar();
+      const rect = positionRect(textPosition, target);
+      const edge = controls.getBoundingClientRect().height + 16;
+      window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - edge), behavior: 'instant' });
+      textGeometryKey = textGeometry();
+    }
+    align();
+    // Moving source nodes out of measured leaves and opening details can
+    // trigger a subsequent layout/anchoring pass. Reassert the same text once.
+    textRestoreFrame = requestAnimationFrame(() => {
+      if (mode !== 'text' || printState) { cancelTextRestore(); return; }
+      align();
+      textRestoreFrame = requestAnimationFrame(() => { cancelTextRestore(); });
+    });
+  }
+  function bookTextPosition(anchor) {
+    const index = anchors.get(readingPosition()) ?? current;
+    const token = pages[index]?.tokens[0];
+    return token ? { anchor, node: token.sourceNode, offset: token.textStart || 0 } : { anchor };
+  }
   function syncTextLocation() {
-    if (!ready || mode !== 'text' || printState || document.querySelector('dialog[open]')) return;
-    const position = visibleTextPosition();
+    if (!ready || mode !== 'text' || printState || restoringText || document.querySelector('dialog[open]')) return;
+    // Resize events arrive after layout has changed. Do not overwrite the
+    // last old-geometry paragraph with whatever happens to occupy that scrollY.
+    if (textPosition && textGeometryKey !== textGeometry()) { scheduleResize(); return; }
+    const position = visibleTextPosition(true);
     // Reaching the non-sticky header (including keyboard/browser scroll-to-view)
     // must not replace a chapter's language destination with the opening.
     // Explicit opening/directory navigation still calls textLocation directly.
     if (position && ['book-title', 'chapter-directory'].includes(position.anchor) &&
         chapters.some(chapter => chapter.id === location.value)) return;
-    if (position) textLocation(position.anchor);
+    if (position) {
+      textPosition = position;
+      textGeometryKey = textGeometry();
+      textLocation(position.anchor);
+    }
   }
   window.addEventListener('scroll', () => {
     if (textLocationFrame || mode !== 'text') return;
@@ -861,13 +940,7 @@
   // not run. Only the chapter identifier enters a language URL.
   document.querySelectorAll('.language a').forEach(link => link.addEventListener('click', syncTextLocation));
   function scrollSource(anchor) {
-    textLocation(anchor);
-    const target = document.getElementById(anchor);
-    if (!target) return;
-    const chapter = target.closest('details.chapter');
-    if (chapter) chapter.open = true;
-    target.scrollIntoView({ block: 'start', behavior: 'instant' });
-
+    restoreTextPosition({ anchor, node: document.getElementById(anchor), offset: 0 });
   }
   function rebuild(anchor = readingPosition(), focusedId = '', transferredPosition = null) {
     if (rebuilding || mode !== 'book') return;
@@ -893,6 +966,7 @@
     reader.dataset.ready = 'true';
   }
   function navigate(anchor, push = false) {
+    anchor = canonicalAnchor(anchor);
     if (mode === 'text') {
       const target = document.getElementById(anchor);
       if (!target) return false;
@@ -916,9 +990,12 @@
   }
   function chooseMode(value, save = true) {
     if (value === mode && ready) return;
-    const transferredPosition = ready && mode === 'text' ? visibleTextPosition(true) : null;
+    const transferredPosition = ready && mode === 'text'
+      ? (restoringText || (textPosition && textGeometryKey !== textGeometry()) ? textPosition : visibleTextPosition(true)) : null;
     const anchor = pendingExample ? pendingExampleAnchor
       : mode === 'book' ? sourceAnchor(readingPosition()) : transferredPosition?.anchor || fragment() || 'book-title';
+    const bookPosition = mode === 'book' ? bookTextPosition(anchor) : null;
+    cancelTextRestore();
     clearExampleUpdate();
     finishCurl(false);
     if (value === 'text') {
@@ -926,7 +1003,7 @@
       chapters.forEach(chapter => { chapter.open = true; });
       modeUI('text');
       if (fragment().startsWith('reader-page-')) hash(anchor);
-      scrollSource(anchor);
+      restoreTextPosition(bookPosition || { anchor });
       ready = true;
     } else {
       modeUI('book');
@@ -1386,7 +1463,11 @@
   function scheduleResize() {
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(() => {
-      if (!ready || mode !== 'book' || rebuilding || pendingExample || printState) return;
+      if (!ready || rebuilding || pendingExample || printState) return;
+      if (mode === 'text') {
+        if (!restoringText && textPosition && textGeometryKey !== textGeometry()) restoreTextPosition(textPosition);
+        return;
+      }
       const anchor = readingPosition();
       const previousKey = geometryKey;
       const key = geometry();

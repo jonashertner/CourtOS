@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the reviewed content.json as three print booklets and an offline web guide."""
+"""Build the reviewed content.json as four print booklets and an offline web guide."""
 from pathlib import Path
 import json, re, html, hashlib, os
 from reportlab.pdfgen import canvas
@@ -61,7 +61,7 @@ def autolink(value, *, pdf):
 
 def rich(s):
  escaped=html.escape(s).replace('\n','<br/>')
- escaped=re.sub(r'\[(\d+(?:, \d+)*)\]',lambda m:'<super>'+', '.join(f'<link href="#source-{n}">{n}</link>' for n in m.group(1).split(', '))+'</super>',escaped)
+ escaped=re.sub(r'( ?)\[(\d+(?:, \d+)*)\]',lambda m:('\u00a0' if m.group(1) else '')+'<super><nobr>'+',\u00a0'.join(f'<link href="#source-{n}">{n}</link>' for n in m.group(2).split(', '))+'</nobr></super>',escaped)
  return re.sub(r'(https://[^\s<]+)',lambda m:autolink(m.group(1), pdf=True),escaped)
 def para(s,kind='body',width=CW):
  p=Paragraph(rich(s),STYLES[kind]); _,h=p.wrap(width,1000);return p,h
@@ -142,7 +142,7 @@ for lang,book in BOOKS.items():
  verified=PdfReader(final);assert len(verified.pages)==len(book['pages']);assert not verified.metadata;assert '/Metadata' not in verified.trailer['/Root']
  extracted='\n'.join(p.extract_text() for p in verified.pages)
  assert '\ufffd' not in extracted and '\u00df' not in extracted
- assert 'CourtOS' in extracted and 'Cloudflare' in extracted and 'Unsloth' in extracted and 'Gemma' in extracted and '124' not in extracted
+ assert all(term in extracted for term in ('CourtOS', 'Cloudflare', 'Unsloth', 'Gemma'))
  report['languages'][lang]={'pages':len(book['pages']),'lowest_content_y':lower,'sha256':hashlib.sha256(final.read_bytes()).hexdigest(),'bytes':final.stat().st_size,'metadata':None,'xmp_present':False}
  raw.unlink()
 
@@ -165,6 +165,6 @@ for file in OUT.glob('*.html'):
   assert path.exists(),(file,link)
   if anchor:
    other=Links();other.feed(path.read_text());assert anchor in other.ids,(file,link)
-report['html_checks']={'languages':3,'links':'all internal targets and anchors verified','remote_assets':False,'scripts':'local adapted Rule & Reason reader; no network requests; optional reading-mode localStorage only'}
+report['html_checks']={'languages':len(BOOKS),'links':'all internal targets and anchors verified','remote_assets':False,'scripts':'local adapted Rule & Reason reader; no network requests; optional reading-mode localStorage only'}
 (QA/'build-report.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
 print(json.dumps(report,indent=2,ensure_ascii=False))

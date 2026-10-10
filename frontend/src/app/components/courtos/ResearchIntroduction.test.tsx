@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CourtOSLocaleProvider } from "@/app/contexts/CourtOSLocaleContext";
+import { setCourtOSLocale } from "@/app/lib/courtosLocale";
 import { ResearchIntroduction } from "./ResearchIntroduction";
 import { hasContinuedToResearch } from "@/app/lib/researchIntroduction";
 
@@ -10,6 +12,11 @@ beforeEach(() => { localStorage.clear(); auth.user.id = "introduction-reader"; }
 afterEach(() => { vi.restoreAllMocks(); localStorage.clear(); });
 
 describe("optional book-first research entry", () => {
+    it("opens the English edition for an English-speaking reader", () => {
+        setCourtOSLocale(auth.user.id, "en");
+        render(<CourtOSLocaleProvider ownerId={auth.user.id}><ResearchIntroduction><h1>Research controls</h1></ResearchIntroduction></CourtOSLocaleProvider>);
+        expect(screen.getByRole("link", {name: "Read the guide"})).toHaveAttribute("href", "/guide/en.html");
+    });
     it("offers the book first without mounting research or treating a book click as consent or completion", () => {
         const fetch = vi.spyOn(globalThis, "fetch");
         render(<ResearchIntroduction><h1>Research controls</h1></ResearchIntroduction>);

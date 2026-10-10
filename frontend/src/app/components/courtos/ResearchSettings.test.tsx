@@ -55,7 +55,7 @@ describe("compact research settings", () => {
         const view = render(<ResearchSettings {...props} modelsAvailable={false} />);
         expect(screen.getByRole("radio", { name: /Gemma/ })).toBeDisabled();
         expect(screen.getByRole("radio", { name: /Claude Opus/ })).toBeDisabled();
-        expect(screen.getByText("KI-Aufträge sind in dieser Word-Testfassung noch nicht verfügbar.")).toBeVisible();
+        expect(screen.getByText("KI-Aufträge aus der Recherche sind in dieser Word-Testfassung noch nicht verfügbar.")).toBeVisible();
         expect(screen.queryByText("Externe Aufträge: Vorschau vor dem Senden")).toBeNull();
         fireEvent.click(screen.getByRole("radio", { name: /Gemma/ }));
         expect(getResearchModelPreference("settings-word")).toBe("claude-opus-5-5");

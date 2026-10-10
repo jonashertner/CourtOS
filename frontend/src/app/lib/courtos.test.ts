@@ -8,6 +8,18 @@ async function settings(pilot: boolean, knowledge: boolean) {
     return import("./courtos");
 }
 describe("research entry scope", () => {
+    it("passes only a supported interface language to the separate Citecheck app", async () => {
+        const { courtosCitecheckUrl } = await settings(true, true);
+        for (const locale of ["de", "fr", "it", "en"]) {
+            const url = new URL(courtosCitecheckUrl(locale));
+            expect(url.origin + url.pathname).toBe("https://jonashertner.github.io/citecheck/taskpane.html");
+            expect([...url.searchParams.entries()]).toEqual([["lang", locale]]);
+            expect(url.hash).toBe("");
+        }
+        for (const locale of [undefined, null, "es", "fr&text=private", { locale: "en" }]) {
+            expect(courtosCitecheckUrl(locale)).toBe("https://jonashertner.github.io/citecheck/taskpane.html?lang=de");
+        }
+    });
     it("uses the research shell for research and nested personal-library routes only", async () => {
         const { COURTOS_HOME, isResearchShellPath } = await settings(true, true);
         expect(COURTOS_HOME).toBe("/research");

@@ -2,271 +2,146 @@
 Arbeitsbuch | 10. Oktober 2026
 
 ## 1. Das Gericht im Zeitalter der KI
-Ein Arbeitsbuch für Richterinnen, Richter und Gerichtsschreibende. Mit einem praktischen Einstieg in die Recherche mit CourtOS.
+Ein kurzer Leitfaden für Richterinnen, Richter und Gerichtsschreibende. Mit CourtOS recherchieren, Eingaben prüfen und Belege weiterverwenden.
 
-## 2. Vom Zweck her denken
-Was soll für die Menschen besser werden, deren Sache vor Gericht liegt?
+## 2. Bei der Aufgabe beginnen
+Was soll bei der gerichtlichen Arbeit besser werden?
 
-### Mit einer Schwierigkeit beginnen
-Gerichte schützen Rechte, klären Konflikte verbindlich und kontrollieren staatliches Handeln. Menschen müssen ihre Sache vorbringen und die Gründe eines Entscheids verstehen können. Wo erschwert der heutige Ablauf diese Aufgabe: beim Verstehen eines Begehrens, beim Auffinden eines Belegs oder beim Prüfen eines Einwands? Davon soll der technische Auftrag ausgehen.
+### Eine konkrete Frage
+Nicht jede Arbeit braucht KI. Beginnen Sie mit einer Schwierigkeit: Wo steht die entscheidende Behauptung? Welche Beilage trägt sie? Was bringt die Gegenpartei vor? Welche Rechtsfrage ist offen? Ein gutes Werkzeug spart Sucharbeit und macht diese Fragen leichter prüfbar.
 
-### Zwei hilfreiche Perspektiven
-Richard Susskind richtet den Blick vom Gerichtsgebäude auf den Zugang zum Recht. Er unterscheidet die Beschleunigung bestehender Abläufe von einer anderen Organisation der Arbeit. Das fordert uns auf, den Zweck eines Arbeitsschritts zu prüfen, bevor wir ihn automatisieren. [1, 2]
+### Den Ablauf überdenken
+Richard Susskind fragt nach dem Zugang zum Recht und unterscheidet schnellere bestehende Abläufe von einer anderen Organisation der Arbeit. James Allsop erinnert an die richterliche Gewalt, ihre menschliche Aufgabe und die Grenzen reiner Leistungsmessung. [1, 2, 3]
 
-### Den öffentlichen Auftrag mitdenken
-James Allsop hält dagegen: Gerichte verkörpern richterliche Gewalt und schützen die Rechtsstaatlichkeit. Ihre menschliche Aufgabe geht über die Gegenüberstellung von Ort und Dienstleistung hinaus. Messbare Leistung erfasst sie nur teilweise. [3]
+### Der Massstab
+Für CourtOS folgt daraus ein Arbeitsprinzip: Jede erhebliche Aussage soll zu einer überprüfbaren Fundstelle führen. Unsicherheit und Widerspruch müssen sichtbar bleiben. Das ist unser Gestaltungsvorschlag, kein Nachweis besserer Rechtsprechung.
 
-### Unser Ausgangspunkt für CourtOS
-Eine richterliche Arbeitsumgebung soll Aufmerksamkeit für entscheidende Fragen schaffen. Welche Information fehlt? Welcher Einwand wurde übergangen? Wer kann eine fehlerhafte Annahme erkennen und korrigieren? Schnelligkeit ist wertvoll, wenn die Antwort darauf besser wird.
+## 3. Das Urteil bleibt menschlich
+Die KI liefert einen Vorschlag. Das Gericht verantwortet seine Gründe.
 
-### Ein Ergebnis für Ihr Team
-Formulieren Sie einen Satz: Wir wollen bei dieser wiederkehrenden Aufgabe dieses Hindernis beseitigen, damit diese Person ihre Aufgabe oder ihr Recht besser wahrnehmen kann. Wählen Sie einen überschaubaren Testfall.
+### Der rechtliche Rahmen
+Art. 29 BV schützt faire Verfahren, rechtliches Gehör und eine angemessene Verfahrensdauer. Art. 29a gewährleistet den Zugang zu einem Gericht, vorbehaltlich gesetzlicher Ausnahmen. Art. 30 verlangt ein gesetzliches, zuständiges, unabhängiges und unparteiisches Gericht; Art. 191c bindet richterliche Behörden in ihrer Rechtsprechung allein an das Recht. [4]
 
-## 3. Die richterliche Rolle bewahren
-Welche Verantwortung muss auch bei guter technischer Unterstützung erkennbar bleiben?
+### Gründe statt bloss guter Formulierungen
+Die Begründung muss die tragenden Überlegungen erkennen lassen und eine sachgerechte Anfechtung ermöglichen. Eine flüssige KI-Antwort erfüllt diese Aufgabe noch nicht. [5]
 
-### Ein verfassungsrechtlicher Rahmen
-Die Bundesverfassung gibt unterschiedliche, zusammenwirkende Garantien vor. Art. 29 schützt das faire Verfahren vor Gerichts- und Verwaltungsinstanzen, das rechtliche Gehör und eine angemessene Verfahrensdauer. Art. 29a gewährleistet grundsätzlich Zugang zu einer richterlichen Behörde; gesetzliche Ausschlüsse bleiben in Ausnahmefällen möglich. [4]
+### Allein oder im Spruchkörper
+Für Einzelrichter und Kollegialgerichte gilt derselbe Vorschlag: Quellen prüfen, Gegenargumente festhalten und Verantwortung zuordnen. Im Dreier- oder Fünfergremium braucht jede Person Raum für eine eigene Einschätzung. Eine frühe gemeinsame Besprechung bleibt möglich. Besondere Beratungs- und Abstimmungsfunktionen sind im Pilot nicht umgesetzt.
 
-### Unabhängig prüfen und entscheiden
-Art. 30 verlangt für gerichtliche Verfahren ein gesetzlich geschaffenes, zuständiges, unabhängiges und unparteiisches Gericht. Verhandlung und Urteilsverkündung sind grundsätzlich öffentlich. Art. 191c verpflichtet die richterlichen Behörden in ihrer Rechtsprechung allein auf das Recht. Diese Garantien beantworten noch nicht jede Frage eines bestimmten KI-Einsatzes. [4]
+## 4. Wohin die Daten gehen
+«Lokal» bedeutet hier: auf dem CourtOS-Server in Deutschland.
 
-### Gründe müssen eine Prüfung ermöglichen
-Zur Gewährung des rechtlichen Gehörs gehört die ernsthafte Auseinandersetzung mit erheblichen Vorbringen. Die Begründung muss die tragenden Überlegungen erkennen lassen und eine sachgerechte Anfechtung ermöglichen. Ein überzeugend formulierter Text allein erfüllt diese Aufgabe nicht. [5]
+### Drei getrennte Wege
+- Eigene PDFs und Gemma 4: Speicherung und Modellverarbeitung auf dem Switchboard-Server bei Hetzner in Deutschland. Nicht auf Ihrem Computer.
+- OpenCaseLaw: Ihre ausdrücklich gesendeten Suchbegriffe gehen an den öffentlichen Suchdienst. Er verwendet externe KI. Ihre Bibliothek und Ihr Word-Dokument werden nicht mitgeschickt.
+- Claude Opus 5.5: Die Frontier-Prüfung sendet den von Ihnen freigegebenen Text an Anthropic. Erst nach der vollständigen Vorschau und Ihrer Freigabe.
 
-### Daraus folgt unser Gestaltungsvorschlag
-Die Aufgabenverteilung im Gericht bleibt sichtbar: Wer erschliesst die Akten, wer prüft die Gegenargumente, wer entscheidet? Gerichtsschreibende und Richterinnen oder Richter müssen Quellen einsehen, Entwürfe ändern und Vorschläge verwerfen können. Ein Bestätigungsklick belegt noch keine eigene Prüfung.
+### Die Verbindung
+Cloudflare vermittelt Anmeldung und Webverkehr und verarbeitet dabei auch angezeigte Inhalte. Grün kennzeichnet Gemma, Violett die externe Prüfung; Anbieter und Ort stehen zusätzlich im Text.
 
-### Eine konkrete Vereinbarung
-Halten Sie für den Test fest, wer fachlich prüft und welche Feststellungen offen bleiben müssen. CourtOS erhält dadurch keine Entscheidbefugnis. Eine spätere institutionelle Nutzung braucht eine gesonderte rechtliche und organisatorische Beurteilung.
+### Der heutige Testbetrieb
+Verwenden Sie öffentliche Entscheide, rechtmässig nutzbare nicht vertrauliche Literatur oder erfundene Testunterlagen. Keine echten Fallakten oder vertraulichen Dokumente. Eine Anmeldung ist keine institutionelle Freigabe. Automatische Anonymisierung ist nicht vorhanden.
 
-## 4. Den Gedankengang prüfbar halten
-Kann eine andere Person verstehen, wie aus einer Quelle eine Schlussfolgerung wurde?
+## 5. Suchen und weiterarbeiten
+Ein Beleg soll dort ankommen, wo Sie schreiben.
 
-### Ein Zielbild für die Zusammenarbeit
-Eine gute Arbeitsumgebung verbindet Aktenstelle, Behauptung, Prüfung und Begründung. Die folgenden Schritte sind unser Vorschlag für die gerichtliche Zusammenarbeit. Sie beschreiben einen institutionellen Arbeitsablauf, den der heutige Pilot nur teilweise umsetzt.
+### Öffnen
+Im Browser: https://sandbox.swisslaw.io/research. Melden Sie sich mit Ihrer E-Mail-Adresse und dem zugesandten Code an. In Word öffnen Sie das eingerichtete CourtOS-Add-in. Ein Projekt oder Chat ist für die Recherche nicht nötig.
 
-### Vom Eingang bis zur Kontrolle
-- Erschliessen: Gerichtsschreibende ordnen Unterlagen nach der gerichtlichen Aufgabenverteilung. Datum, Herkunft und Fassung bleiben sichtbar; eine Zusammenfassung ist als Ableitung erkennbar.
-- Streitpunkte bilden: Stellen Sie je entscheidender Frage Behauptung, Beleg, Bestreitung und fehlende Abklärung nebeneinander. Ein Widerspruch darf bestehen bleiben.
-- Gegenlesen: Fragen Sie gezielt nach der stärksten anderen Erklärung. Prüfen Sie Original und Zusammenhang, auch wenn das Zitat wörtlich stimmt.
-- Begründen: Die verantwortlichen Personen wählen und prüfen die tragenden Gründe. KI kann einen Entwurf anbieten; Beweiswürdigung und Entscheidung werden dadurch nicht erledigt.
-- Änderungen nachführen: Kommt eine neue Fassung hinzu, muss erkennbar sein, welche Feststellung erneut geprüft werden soll. Bewahren Sie den früheren Arbeitsstand nachvollziehbar auf.
+### Öffentlich recherchieren
+Wählen Sie OpenCaseLaw. Geben Sie eine Entscheidkennung oder wenige öffentliche Suchbegriffe ein und wählen Sie bei Bedarf die Sprache. Die Suche zeigt eine begrenzte Auswahl; fehlende Treffer belegen keine fehlende Rechtsprechung. Vertrauliche Namen und Sachverhalte gehören nicht in diese Eingabe.
 
-### Was eine Übergabe brauchbar macht
-Übergeben Sie einen Prüfvermerk mit Quellenfassung, offenen Punkten und Prüfschritt. So kann eine Kollegin widersprechen, ohne die ganze Arbeit rekonstruieren zu müssen. Nachfragen und Lernen gehören zum Ablauf.
+### Eine Stelle mitnehmen
+Öffnen Sie den Entscheid und prüfen Sie das Original. Markieren Sie eine kurze Passage, übernehmen Sie die Auswahl und kopieren Sie Text samt Quelle oder fügen Sie ihn in Word ein. Der Link zur Textsuche im Original versucht, die Stelle zu finden. Er bestätigt keine amtliche Randnummer; ein Link zum ganzen Original ist keine genaue Fundstelle.
 
-### Den Umfang ehrlich halten
-Der Pilot bietet Aktenhilfen und begrenzte Recherche. Eine vollständige Gerichtsakte, automatische Folgenprüfung jeder Dokumentänderung oder amtliche Entscheideröffnung sind damit nicht bereitgestellt.
+### Mehr Platz im Browser
+Öffnen Sie aus Word den Browser und arbeiten Sie mit demselben Konto weiter. Übergeben Sie den Recherchestand anschliessend zurück. Bei verschiedenen Ständen wählen Sie bewusst. Die Übergabe gilt zwei Stunden; sie startet keine neue Suche und schreibt nichts selbständig in Ihr Dokument.
 
-## 5. Den Nutzen am Fall prüfen
-Woran erkennen Sie, dass die Arbeit besser geworden ist?
+### Zitierangaben prüfen
+«Zitate» öffnet Citecheck separat. CourtOS übergibt dabei keinen Text. Ob ein angeführter Entscheid Ihre Aussage trägt, prüfen Sie im Original.
 
-### Eine kleine gemeinsame Prüfung
-Vereinbaren Sie Ergebnis und bekannte Schwierigkeiten anhand eines eigenen zulässigen Quellenbestands. Vergleichen Sie denselben Ausschnitt mit und ohne Unterstützung. Erfassen Sie Lesen, Warten, Prüfen und Korrigieren. Die Matrix ist ein Testvorschlag, keine bereits erzielte Wirkung.
+## 6. Eigene Quellen hinzunehmen
+Die Bibliothek ergänzt die Rechtsprechung um Ihren ausgewählten Bestand.
 
-### Aufgabe · Unterstützung · menschliche Prüfung · Beobachtung
-- Akten erschliessen: Chronologie vorschlagen lassen; Belege und Datumsarten prüfen. Zählen Sie übersehene sowie erfundene Ereignisse.
-- Widersprüche klären: abweichende Angaben sammeln lassen; echte Unvereinbarkeit von verschiedenen Ereignissen unterscheiden. Bleibt der bekannte Testwiderspruch sichtbar?
-- Literatur prüfen: Fundstellen suchen; Fassung, Zusammenhang und Gegenauffassung im Original lesen. Wie viele tragende Aussagen haben einen zutreffenden Beleg?
-- Rechtsfrage eingrenzen: öffentliche Quellen hinzuziehen; Zuständigkeit und Verfahrenskontext prüfen. Wird eine unpassende Regel rechtzeitig erkannt?
-- Entwurf übergeben: einen kurzen Vermerk erstellen lassen; tragende Gründe selbst verantworten. Kann eine Kollegin eine Schlussfolgerung nachvollziehen und korrigieren?
-- Grenzen erkennen: einen fehlenden Beleg oder unlesbaren Scan einbauen. Macht das Ergebnis die Lücke kenntlich, oder verdeckt es sie mit Gewissheit?
+### Hochladen
+Unter «Bibliothek» laden Sie PDFs hoch. Ein klarer Dateiname mit Autor, Titel und Auflage hilft später. CourtOS speichert eine Kopie auf dem Server; es liest keinen lokalen Aktenordner direkt. Die Oberfläche nennt die Uploadgrenzen.
 
-### Zahlen brauchen Urteil
-Besprechen Sie auch den schwersten Fehler und die Sicht der betroffenen Person. Weniger Wörter oder Minuten allein zeigen keine bessere Rechtsprechung. Ein Ergebnis, das systematisch zum blossen Bestätigen verleitet, verlangt eine Änderung des Ablaufs.
+### Suchen
+Wählen Sie in der Recherche «Eigene Quellen» und die gewünschten Dokumente. Diese Suche verwendet keine KI. Ein Treffer zeigt Passage, Fassung und PDF-Seite. Bei unlesbaren Scans oder unvollständiger Erschliessung bleibt die Suche lückenhaft.
 
-### Ein belastbarer nächster Schritt
-Notieren Sie Nutzen, Fehler und Prüfaufwand. Entscheiden Sie gemeinsam, was weiter erprobt, verändert oder vorerst nicht verwendet wird.
+### Nachweisen
+Öffnen Sie die angegebene Seite und lesen Sie den Zusammenhang. Kopieren oder übernehmen Sie die Passage mit Dateiname, Fassung, Seite und geschütztem Quellenlink. Der Link öffnet die gespeicherte Fassung für das berechtigte Konto; er gewährt anderen Personen keinen Zugriff.
 
-## 6. Recherchieren. Prüfen. Weiterarbeiten.
-Der erste Nutzen: eine passende Fundstelle für Ihre Arbeit.
+### Wortlaut und Bedeutung trennen
+Ein wörtlich gefundenes Zitat kann unvollständig oder für die Rechtsfrage unpassend sein. Prüfen Sie, was die Quelle tatsächlich trägt. Eine PDF-Seite ist nicht zwingend die gedruckte Buchseite.
 
-### Direkt zur Recherche
-Öffnen Sie https://sandbox.swisslaw.io/research. Nach der Anmeldung mit persönlicher E-Mail-Adresse und Cloudflare-Einmalcode gelangen Sie zur Recherche. Eine Einladung ist nicht nötig. Sie brauchen weder ein Projekt anzulegen noch einen Chat zu beginnen.
+## 7. Eingaben prüfen
+Aus Behauptungen und Belegen wird eine überschaubare Prüfliste.
 
-- Suchen
-- Quelle prüfen
-- Fundstelle mitnehmen
+### Vorbereiten
+Öffnen Sie «Eingaben prüfen». Fügen Sie über die Bibliothek kurze Testklagen, Antworten und Beilagen hinzu. Wählen Sie die Dokumentfassungen, ordnen Sie Dokumentrolle und Partei zu und bestimmen Sie die Berichtssprache. Zum Kennenlernen öffnen Sie «Beispieldossiers» und wählen «Vier PDFs übernehmen». Die Unterlagen sind aus einem veröffentlichten Urteil rekonstruiert, keine Originaleingaben. Prüfen Sie danach Rollen und Parteien.
 
-### Ein klarer Ausgangspunkt
-Die öffentliche Suche erschliesst veröffentlichte Entscheide aus OpenCaseLaw. Daneben können Sie eigene Bibliotheksdokumente durchsuchen. Die beiden Bereiche haben getrennte Eingaben; persönliche Texte werden nicht automatisch in die öffentliche Suche übernommen.
+### Drei Aufträge
+- Tatsachen und Belege: Behauptung, Beleg und Gegenposition stehen nebeneinander. Die KI schlägt «Stützt die Aussage», «Widerspricht der Aussage», «Bleibt offen» oder «Im ausgewählten Bestand nicht gefunden» vor.
+- Rechtliche Aussagen: Verglichen wird nur mit den ausgewählten Quellen. Nicht beigefügte Entscheide und Literatur werden nicht automatisch beschafft. Recherchieren Sie öffentliche Fundstellen gesondert.
+- Chronologie: Eindeutige Tagesdaten werden geordnet. Ungefähre oder fehlende Daten bleiben getrennt. Gegensätzliche Darstellungen bleiben eigene Einträge.
 
-### In den gewohnten Werkzeugen bleiben
-Öffnen Sie eine relevante Passage, prüfen Sie die Originalquelle und kopieren Sie Text und Herkunftsangaben in Ihren Vermerk, Ihre Textverarbeitung oder Ihr bestehendes Dossier. CourtOS setzt keinen Wechsel Ihrer Fallführung voraus.
+### Das Ergebnis lesen
+Wählen Sie «Teilanalyse starten». Ein Bericht enthält höchstens zwölf Zeilen und nennt die gelesenen Quellen, Fassungen und Seiten. Öffnen Sie die Belege. Die Wortlautprüfung bestätigt eine Textstelle, nicht die KI-Beurteilung oder die Wahrheit einer Parteibehauptung.
 
-### Für diesen Pilot
-Öffentliche Entscheide, rechtmässig nutzbare nicht vertrauliche Literatur und synthetische Unterlagen sind geeignet. Echte Fallakten und vertrauliche Dokumente gehören nicht auf diesen virtuellen Server (VPS) in Deutschland.
+### Teilanalyse im Test
+Die KI kann trotz vollständiger Textübernahme Aussagen übersehen. Zu grosse Auswahlen oder Entwürfe mit unbestätigten Fundstellen werden nicht freigegeben. Prüfen Sie Vollständigkeit und Begründung selbst; die Zuverlässigkeit dieses Ablaufs wird noch erprobt.
 
-## 7. Entscheide finden und einordnen
-Öffentliche Rechtsprechung über den KI-gestützten Suchdienst OpenCaseLaw finden.
+## 8. KI gezielt beiziehen
+Wählen Sie einen Auftrag und die dafür nötigen Quellen.
 
-### Mit wenigen Begriffen beginnen
-Geben Sie bis zu acht aussagekräftige Rechtsbegriffe ein. CourtOS übermittelt diese erst nach «Suchen» an den öffentlichen OpenCaseLaw-Dienst. Ein Sprachfilter grenzt die Auswahl ein. Verwenden Sie keine vertraulichen Angaben.
+### Gemma auf dem CourtOS-Server
+Im Browser: Der Assistent kann mit einer ausgewählten PDF-Gruppe einen Entwurf vorbereiten. Senden startet die Analyse. Das Modell verwendet eine Unsloth-Fassung und läuft auf Serverprozessoren; Wartezeiten sind möglich. Gemma ist keine Garantie für richtige Antworten. Die Nutzungsgrenzen stehen in der Anwendung.
 
-### Den Treffer öffnen
-Die Ergebnisliste zeigt bis zu fünf Texttreffer. Öffnen Sie den Entscheidtext und lesen Sie den passenden Ausschnitt. Datum, Aktenzeichen und Gericht helfen bei der Einordnung; massgeblich bleibt die Originalquelle.
+### Eine externe Prüfung
+Im Browser: Übergeben Sie einen kurzen, extern zulässigen Ausschnitt an die Frontier-Prüfung. Bearbeiten Sie Auftrag und Text. Kontrollieren Sie die gesamte Vorschau, den Anbieter und das Modell. Anhänge und übriger Chatverlauf gehören nicht automatisch dazu. Links werden nicht als Quelleninhalt nachgeladen.
 
-### Den Zusammenhang prüfen
-- Betrifft der Entscheid dieselbe Rechtsfrage und denselben Verfahrenskontext?
-- Welche tatsächlichen und rechtlichen Voraussetzungen tragen die Aussage?
-- Handelt es sich um eine tragende Erwägung, eine Parteiposition oder einen wiedergegebenen früheren Entscheid?
+### Mit dem Ergebnis umgehen
+Eine externe Antwort kann als bearbeitbarer Entwurf zurückkehren. Sie wird nicht automatisch erneut gesendet. Prüfen Sie auch hier jede tragende Aussage am Original. Eine gut klingende Antwort eines zweiten Modells ist keine unabhängige Quellenprüfung.
 
-### Ausschnitt und amtliche Fundstelle
-Die Positionsangabe im angezeigten Text bezeichnet Zeichen im erfassten Entscheid. Sie ist keine amtliche Randnummer oder Erwägungsnummer. Ermitteln Sie die zitierfähige Fundstelle in der Originalquelle.
+## 9. Erst erproben, dann einführen
+Ein brauchbarer Pilot liefert Beobachtungen statt Versprechen.
 
-### Was die Suche leistet
-OpenCaseLaw kann die Anfrage mit KI auswerten und Treffer gewichten. Die Suche läuft ausserhalb von CourtOS. Fünf Treffer sind eine Auswahl, keine Zusicherung einer vollständigen Recherche.
+### Den Nutzen prüfen
+Nehmen Sie einen kleinen Testfall mit bekannten Behauptungen, Belegen und Widersprüchen. Zählen Sie übersehene und erfundene Aussagen. Prüfen Sie Parteien, Beträge, Daten und Fundstellen. Messen Sie auch Warte- und Korrekturzeit. Vergleichen Sie mit Ihrem bisherigen Vorgehen.
 
-## 8. Eine Fundstelle mitnehmen
-Text und Herkunft gemeinsam in Ihre weitere Arbeit übernehmen.
+### Vor echten Akten
+Die Institution muss erlaubte Aufgaben, Anbieterzugriffe, Berechtigungen, Aufbewahrung, Löschung, Betrieb und fachliche Verantwortung klären. Word für macOS wurde mit einem synthetischen Dokument erprobt; andere Versionen und institutionelle Umgebungen brauchen eigene Tests.
 
-### Die Passage auswählen
-Markieren Sie im Entscheid 20–800 zusammenhängende Zeichen und wählen Sie «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» übernimmt nur diese markierte Passage mit ihrer Herkunft, ohne neue Zusammenfassung.
+### Was noch fehlt
+Die direkte Arbeit im lokalen Aktenordner und eine über mehrere Dokumente konsistente Pseudonymisierung sind Zukunftsaufgaben. Ersatznamen allein machen Unterlagen nicht anonym. Ein erfolgreicher Pilot ersetzt weder diese Entwicklung noch die rechtliche und technische Freigabe.
 
-- Passage markieren
-- Stelle übernehmen
-- Mit Herkunft kopieren
+### Offene Software
+- [CourtOS · Quellcode und GNU AGPL v3.0](https://github.com/jonashertner/CourtOS)
 
-### Bei öffentlichen Entscheiden
-Zum Auszug gehören die angezeigten Entscheidangaben, die OpenCaseLaw-Kennung und eine vorhandene öffentliche Quellenadresse. Kontrollieren Sie die amtliche Fundstelle und die Metadaten vor einer Übernahme in Ihre Begründung.
-
-### Bei eigenen Dokumenten
-Bei eigenen Dokumenten enthält die Kopie Dateiname, feste Fassung, PDF-Seite und einen Link zu genau dieser Fassung und Seite. Die gedruckte Seitenzahl kann abweichen. Der Link verlangt Anmeldung und bestehende Zugriffsrechte; er erteilt keine öffentliche Freigabe.
-
-### Ein verwendbarer Nachweis
-Ergänzen Sie die für Ihren Text erforderliche Zitierweise und den rechtlichen Zusammenhang. Die Kopierfunktion bewahrt einen Ausgangsbeleg; sie bestätigt weder die Richtigkeit der Quelle noch die Tragweite ihrer Aussage.
-
-### Falls Kopieren nicht verfügbar ist
-Falls der Browser den Zugriff auf die Zwischenablage verweigert, erscheint ein Textfeld mit der vollständigen Kopiervorlage. Markieren und kopieren Sie diese von Hand. Ihr bestehender Arbeitsstand ausserhalb von CourtOS bleibt erhalten.
-
-## 9. Mit eigenen Quellen arbeiten
-Eine persönliche Bibliothek als Ergänzung zur Rechtsprechung.
-
-### Literatur aufnehmen
-Öffnen Sie die Bibliothek und laden Sie geeignete PDF-Auszüge hoch. Autor, Kurztitel, Auflage oder Jahr und Seiten im Dateinamen erleichtern die spätere Zuordnung. Ordner strukturieren den Bestand. Ein Projekt ist dafür nicht erforderlich.
-
-### Die Auswahl bestimmen
-Wechseln Sie in der Recherche zur persönlichen Bibliothek und wählen Sie die Dokumente ausdrücklich aus. Die Suche bleibt auf diese Auswahl begrenzt. Öffnen Sie einen Treffer, um Passage, Dokumentfassung und PDF-Seite im Zusammenhang zu lesen.
-
-### Den Beleg weiterverwenden
-Kopieren Sie eine relevante Passage mit ihrer Herkunft in den eigenen Vermerk. Wer den Vermerk später liest, benötigt gegebenenfalls selbst Zugang zum betreffenden Werk. Das Kopieren einer Fundstelle erteilt keine Nutzungsrechte.
-
-### Grenzen des Materials
-Scans ohne auswählbaren Text, fehlende PDF-Fassungen und teilweise indexierte Dokumente begrenzen die Treffer. Ein fehlender Treffer belegt nicht das Fehlen einer Aussage im Werk.
-
-### Umfang des Testbestands
-Pro Datei gelten 5 MiB; insgesamt stehen pro Konto 20 MiB Uploadbudget zur Verfügung. Fehlgeschlagene Uploads und gelöschte Dateien stellen dieses Budget nicht wieder her. Beginnen Sie mit einem überschaubaren Literaturbestand.
-
-### Ausblick: der lokale Aktenordner
-Ein künftiger, freigegebener lokaler Aktenordner soll Originale nur lesen und verständliche Notizen daneben ablegen. Feststellungen, Parteibehauptungen und bestrittene Punkte wären mit Quelle und Dokumentfassung zu unterscheiden. Quellenänderungen müssten abhängige Notizen als prüfbedürftig markieren. Die lokale Anbindung über Word oder Browser fehlt noch. Heute lädt die Bibliothek Kopien auf den VPS; sie arbeitet nicht direkt im Aktenordner.
-
-## 10. Den Nutzen im Alltag prüfen
-Ein brauchbares Ergebnis in Ihrem bestehenden Arbeitsablauf.
-
-### Eine echte Arbeitsfrage wählen
-Verwenden Sie einen zulässigen Quellenbestand und eine Frage, deren Schwierigkeiten Sie kennen. Vereinbaren Sie das benötigte Ergebnis: beispielsweise einen belegten Absatz, eine Gegenposition oder eine kurze Rechtsprechungsübersicht.
-
-### Den ganzen Weg beobachten
-Messen Sie nicht nur die Zeit bis zum ersten Treffer. Erfassen Sie Suche, Lesen, Prüfung, Kopieren und Einordnung in den eigenen Text. Vergleichen Sie denselben Ausschnitt mit Ihrem bisherigen Vorgehen.
-
-### Drei Fragen an das Ergebnis
-- Ist die entscheidende Passage auffindbar und in ihrem Zusammenhang verständlich?
-- Kann eine andere Person die übernommene Aussage anhand der Herkunftsangaben prüfen?
-- Entsteht ein brauchbarer Arbeitsstand im gewohnten Werkzeug, ohne zusätzliche Ablagearbeit?
-
-### KI gesondert bewerten
-Wenn Sie den Assistenten oder die Frontier-Prüfung einsetzen, betrachten Sie deren Zusatznutzen getrennt. Eine längere Antwort ist kein besserer Beleg. Notieren Sie auch Korrekturaufwand und übersehene Gegenargumente.
-
-### Rückmeldung
-Suchbegriffe, erwartete Quelle, beobachtete Abweichung und ungefährer Aufwand genügen meist. Verwenden Sie keine echten Akten oder vertraulichen Ausschnitte als Fehlerbeispiel.
-
-## 11. KI bei Bedarf hinzunehmen
-Eigene Quellen durchsuchen und Belege kopieren geht ohne KI. Für weitergehende Arbeit wählen Sie das Modell.
-
-### Lokal weiterdenken
-«Mit dieser Auswahl fragen» oder «Chronologie erstellen» bereitet einen Entwurf mit den gewählten PDFs vor. Erst Ihr Senden startet Gemma 4. Verwenden Sie eine kleine, vollständig lesbare Auswahl; bei überschrittenem Umfang wird abgebrochen. Trennen Sie Parteibehauptungen, bestrittene und belegte Tatsachen und prüfen Sie die genaue Quellenseite.
-
-### Prüfmassstab
-CourtOS muss die ausgewählten Quellen vor einer Aktenantwort tatsächlich lesen. Ein passendes Zitat bestätigt zunächst nur den Wortlaut an einer bestimmten Stelle; ob dieser die Aussage trägt, prüfen Sie am Original.
-
-### Eine externe Perspektive
-Öffentliche Fundstellen oder eine lokale Antwort können Sie als bearbeitbaren Entwurf zur Frontier-Prüfung übergeben. Anhänge und übriger Chatverlauf bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung.
-
-- Text und Auftrag
-- Vorschau und Freigabe
-- Claude Opus 5.5
-
-### Der freigegebene Inhalt zählt
-Die Vorschau zeigt den vollständigen Anfrageinhalt, Anbieter und Modell. Erst Ihre Freigabe löst den Anthropic-Aufruf aus. Nur extern zulässiges, nicht vertrauliches Material verwenden. Links sind Quellenangaben; das Modell ruft ihren Inhalt nicht ab.
-
-### Zum eigenen Arbeitsstand zurück
-Die externe Antwort kehrt auf Wunsch als bearbeitbarer Entwurf in den lokalen Assistenten zurück; sie wird nicht automatisch gesendet. Vorhandene Eingaben und Anhänge bleiben erhalten. Zu lange Übergaben werden abgewiesen. Alternativ kopieren Sie einen passenden Ausschnitt.
-
-## 12. Datenwege und Betrieb
-Eigene Bibliothek, öffentliche Suche und Modellanfragen haben getrennte Datenwege.
-
-- Ihr Browser
-- Cloudflare
-- VPS in Deutschland
-
-### Lokale und externe Verarbeitung
-Bibliothek und Gemma 4 laufen auf Switchboard bei Hetzner in Deutschland. Cloudflare verarbeitet den Webverkehr einschliesslich angezeigter Texte. Öffentliche Suchbegriffe gehen an OpenCaseLaw, dessen Suchdienst externe KI nutzt. Eigene Dateien werden dabei nicht mitgesendet. Die gesonderte Frontier-Prüfung sendet nur den von Ihnen freigegebenen Inhalt an Claude Opus 5.5 bei Anthropic.
-
-### Noch kein Behördenbetrieb
-Zugangskontrolle und getrennte Konten ersetzen keine institutionelle Freigabe. Echte Fallakten und vertrauliche Unterlagen bleiben ausgeschlossen. Es gibt keine automatische Anonymisierung.
-
-### Zeit und Kontingent
-Das lokale Modell verwendet eine Unsloth-Fassung und läuft auf Serverprozessoren (CPU). Eine frühere gezielte PDF-Frage benötigte im beobachteten Versuch mehrere Minuten; daraus folgt keine Laufzeitzusage. Der native Assistent erlaubt drei gestartete Aufträge je Person und UTC-Tag, die Frontier-Prüfung eine externe Analyse. Gemeinsame Tagesgrenzen können früher greifen. Lesen und Vorschau lösen keine Modellanfrage aus.
-
-### Aufbewahrung
-Angenommene Anfragen zählen auch bei Modellfehlern. Antworten bleiben bis zur veranlassten Bereinigung gespeichert; Abmelden löscht sie nicht. Ein Browser-Übergabetext ist davon getrennt und zeitlich begrenzt. Heruntergeladene Dateien bleiben auf Ihrem Gerät.
-
-## 13. Der nächste Schritt in der Institution
-Erst nach dem VPS-Test: ein eigener Auftrag für den institutionellen Betrieb.
-
-### Später: mit Fallakten arbeiten
-Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Die Pseudonymisierung ist noch nicht umgesetzt. Anmeldung, Recherche, Einfügen und der Wechsel zwischen Word und Browser wurden in Word für macOS mit einem synthetischen Dokument geprüft. Bei parallelen Änderungen wählen Sie den Stand. Andere Word-Versionen und institutionelle Umgebungen benötigen eigene Tests. Citecheck ist separat verlinkt.
-
-### Vor echten Akten klären
-- Erlaubte Aufgaben und fachliche sowie betriebliche Verantwortung bestimmen.
-- Verarbeitungsorte und Zugriffsmöglichkeiten aller Anbieter offenlegen.
-- Identitäten, Aktenberechtigungen, Aufbewahrung und Löschung regeln.
-- Quellenaktualität, Qualitätsprüfung und nachvollziehbare Belege sichern.
-- Pflege, Störungsbehebung, Kosten und späteren Wechsel vereinbaren.
-
-### Noch kein Eignungsnachweis
-Eine bestandene Demonstration ist keine Datenschutzfreigabe, Sicherheitszertifizierung oder Bestätigung digitaler Souveränität. Der heutige Pilot liefert Beobachtungen; er ersetzt diese Entscheidungen nicht.
-
-### Offene Softwarebasis
-Quellcode, Lizenz und Angaben zu den Mitwirkenden sind im öffentlichen Repository dokumentiert. Die Software steht unter GNU AGPL v3.0.
-
-### Weiterlesen
-- [CourtOS: Quellcode und Lizenz](https://github.com/jonashertner/CourtOS)
-
-## 14. Quellen und Arbeitsweise
-Die ersten vier Kapitel entwickeln einen Gestaltungsvorschlag. Die folgenden Quellen stützen die ausdrücklich zugeordneten Positionen und Rechtsaussagen.
+## 10. Quellen und Reichweite
+Grundlagen der gekennzeichneten Positionen und Rechtsaussagen; geprüft am 9. Oktober 2026.
 
 - [1. Richard Susskind · Online Courts and the Future of Justice](https://academic.oup.com/oxford-law-pro/book/41081)
 
-Susskind: Verlagszusammenfassung und Inhaltsverzeichnis, besonders Teil II. Das vollständige Buch wurde für diese Ausgabe nicht ausgewertet.
+Verlagszusammenfassung und Inhaltsverzeichnis, Teil II. Das vollständige Buch wurde nicht ausgewertet.
 
-- [2. Richard Susskind (testimony) · Corrected oral evidence: Constitutional implications of Covid-19](https://committees.parliament.uk/oralevidence/462/html/)
+- [2. Richard Susskind · Corrected oral evidence: Constitutional implications of Covid-19](https://committees.parliament.uk/oralevidence/462/html/)
 
-Susskind: amtliches Wortprotokoll, 3. Juni 2020, Frage 30.
+Amtliches Wortprotokoll des House of Lords, 3. Juni 2020, Frage 30; Kontext: Fragen 23–24 und 29.
 
 - [3. James Allsop · Technology and the Future of the Courts](https://www.fedcourt.gov.au/__data/assets/pdf_file/0017/55520/Allsop-CJ-20190326.pdf)
 
-Allsop: Vortrag vom 26. März 2019, S. 2–4 und 11–12.
+Vortrag vom 26. März 2019, S. 2–4 und 11–12, veröffentlicht vom Federal Court of Australia.
 
 - [4. Bundesverfassung · SR 101](https://www.fedlex.admin.ch/eli/cc/1999/404/de)
 
-Bundesverfassung: Art. 29, 29a, 30 und 191c. Geltende Fassung vom 3. März 2024; geprüft am 9. Oktober 2026.
+Art. 29 Abs. 1–2, 29a, 30 Abs. 1 und 3 sowie 191c. Geprüfte Fassung: 3. März 2024.
 
 - [5. Bundesgericht · BGE 129 I 232](https://www.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?lang=de&type=show_document&highlight_docid=atf://129-I-232:de)
 
-Bundesgericht: BGE 129 I 232, E. 3.2, S. 236–237. Allgemeiner Begründungsgrundsatz aus einem Einbürgerungsfall.
+E. 3.2, S. 236–237. Verwendet wird der allgemeine Begründungsgrundsatz; der Entscheid betraf eine Einbürgerungsfrage.
 
-### Was diese Ausgabe beansprucht
-Die Arbeitsabläufe und Qualitätsfragen sind eigene Vorschläge. Sie geben weder einen empirisch nachgewiesenen Produktivitätsgewinn noch eine vollständige rechtliche Freigabe wieder. Die Praxisabschnitte beschreiben den begrenzten CourtOS-Pilot. Beobachtungen sind von allgemeinen Zusagen getrennt.
+### Zu dieser Ausgabe
+Arbeitsabläufe und Gestaltungsregeln sind eigene Vorschläge. Sie belegen weder einen Produktivitätsgewinn noch die Zulässigkeit eines bestimmten KI-Einsatzes. Funktionsstand: 10. Oktober 2026. Quellenprüfung, Modellqualität und institutionelle Freigabe bleiben verschiedene Aufgaben.
 

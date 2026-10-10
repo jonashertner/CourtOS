@@ -32,7 +32,7 @@ export function ResearchIntroduction({ children }: { children: ReactNode }) {
         <h1 id="research-introduction-title">{t(m.introduction)}</h1>
         <p className="courtos-introduction-lede">{t(m.introductionText)}</p>
         <div className="courtos-introduction-actions">
-            <a href={`${COURTOS_GUIDE_PATH}${locale === "en" ? "de" : locale}.html`} className={pillButtonUIClassName({ tone: "black", size: "normal", className: "courtos-button" })}>{t(m.readWorkbook)} <ArrowRight size={16} aria-hidden="true" /></a>
+            <a href={`${COURTOS_GUIDE_PATH}${locale}.html`} className={pillButtonUIClassName({ tone: "black", size: "normal", className: "courtos-button" })}>{t(m.readWorkbook)} <ArrowRight size={16} aria-hidden="true" /></a>
             <PillButtonUI type="button" tone="white" size="normal" className="courtos-button courtos-button--secondary" disabled={!user?.id} onClick={() => {
                 focusAfterContinue.current = true;
                 continueToResearch();

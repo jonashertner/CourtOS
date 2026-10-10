@@ -2,71 +2,78 @@
   "format": "180 x 270 mm",
   "languages": {
     "de": {
-      "pages": 14,
+      "pages": 10,
       "lowest_content_y": [
         85,
-        143.85,
-        84.35,
-        58.85,
-        69.85,
-        191.15,
-        158.85,
-        136.15,
-        73.85,
-        145.85,
-        64.65,
-        117.15,
-        90.85,
-        142.35
+        311.35,
+        308.85,
+        256.35,
+        184.35,
+        256.35,
+        114.35,
+        311.35,
+        281.35,
+        158.85
       ],
-      "sha256": "a7247907a7a470e92d6759fe000eee3469f5c30898b698ac0d48ba6c1ceddb6a",
-      "bytes": 70428,
+      "sha256": "d1a3b8f14a473cf34cd758868075a2480795c7d247db9d3546e2a0c94bdf1dc3",
+      "bytes": 56499,
       "metadata": null,
       "xmp_present": false
     },
     "fr": {
-      "pages": 14,
+      "pages": 10,
       "lowest_content_y": [
         85,
-        156.85,
-        156.35,
-        102.35,
-        98.85,
-        191.15,
-        144.35,
-        150.65,
-        88.35,
-        160.35,
-        79.65,
-        117.15,
-        76.35,
-        142.35
+        311.35,
+        337.85,
+        256.35,
+        198.85,
+        254.85,
+        128.85,
+        311.35,
+        281.35,
+        173.35
       ],
-      "sha256": "060e4ae2692e732a7cd67780f5ea8710e734b87826b4d77d36e9b6ad9a5b687e",
-      "bytes": 71005,
+      "sha256": "a16a466ded79fe984b66e98b4ddadb007637d3a8ad52b7098d3f967a26522bb9",
+      "bytes": 57177,
       "metadata": null,
       "xmp_present": false
     },
     "it": {
-      "pages": 14,
+      "pages": 10,
       "lowest_content_y": [
         85,
-        172.35,
-        156.35,
-        132.85,
-        127.85,
-        220.15,
-        158.35,
-        136.15,
-        102.35,
-        188.85,
-        93.65,
-        131.65,
-        105.35,
-        156.35
+        311.35,
+        337.85,
+        270.35,
+        227.85,
+        270.85,
+        157.35,
+        311.35,
+        281.35,
+        173.35
       ],
-      "sha256": "2ddbb962bfde844de085cdb9bb674c33c3f47a008bb1cd303b53aeb969ff1aaa",
-      "bytes": 69236,
+      "sha256": "982ffe1ebb42f643e4bccd1ac5a60c61a689eff2148ebc7a0c45d502692bb185",
+      "bytes": 55961,
+      "metadata": null,
+      "xmp_present": false
+    },
+    "en": {
+      "pages": 10,
+      "lowest_content_y": [
+        85,
+        325.85,
+        337.85,
+        270.35,
+        227.85,
+        284.85,
+        157.35,
+        311.35,
+        310.35,
+        172.85
+      ],
+      "sha256": "a3ea3ba0cc28f7c3c190ee9ecf158c44219eb93e0b00aeccc61b47d62b10862e",
+      "bytes": 55220,
       "metadata": null,
       "xmp_present": false
     }
@@ -77,13 +84,14 @@
     "languages": [
       "de",
       "fr",
-      "it"
+      "it",
+      "en"
     ],
-    "reader_asset_tag": "ebcb9909c075",
+    "reader_asset_tag": "73976907ac0d",
     "reference": "Rule & Reason measured page reader, adapted for CourtOS"
   },
   "html_checks": {
-    "languages": 3,
+    "languages": 4,
     "links": "all internal targets and anchors verified",
     "remote_assets": false,
     "scripts": "local adapted Rule & Reason reader; no network requests; optional reading-mode localStorage only"

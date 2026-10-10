@@ -2,271 +2,146 @@
 Guida pratica | 10 ottobre 2026
 
 ## 1. Il tribunale nell’era dell’IA
-Una guida per giudici, cancelliere e cancellieri. Con un’introduzione pratica alla ricerca in CourtOS.
+Una guida breve per giudici e cancellieri. Cercare fonti, esaminare gli atti e riprendere i riferimenti con CourtOS.
 
-## 2. Partire dallo scopo
-Che cosa deve migliorare per le persone la cui causa è davanti al tribunale?
+## 2. Partire dal compito
+Che cosa deve migliorare nel lavoro giudiziario?
 
-### Cominciare da una difficoltà
-I tribunali tutelano i diritti, risolvono controversie con decisioni vincolanti e controllano l’azione dello Stato. Le persone devono poter esporre la causa e comprendere i motivi della decisione. Dove si blocca il lavoro: nel capire la domanda, trovare una prova o esaminare un’obiezione? Su questo valutiamo l’aiuto tecnico.
+### Una domanda concreta
+Non ogni attività richiede l’IA. Partite da una difficoltà: dove si trova l’affermazione decisiva? Quale documento la sostiene? Che cosa afferma la controparte? Quale questione giuridica resta aperta? Un buon strumento riduce il lavoro di ricerca e facilita queste verifiche.
 
-### Due prospettive utili
-Richard Susskind sposta l’attenzione dall’edificio giudiziario all’accesso al diritto. Distingue l’accelerazione delle prassi esistenti da una diversa organizzazione del lavoro. Questa distinzione invita a verificare lo scopo di un passaggio prima di automatizzarlo. [1, 2]
+### Ripensare il lavoro
+Richard Susskind pone al centro l’accesso alla giustizia e distingue l’accelerazione dei processi esistenti da una diversa organizzazione del lavoro. James Allsop richiama il potere giudiziario, il suo carattere umano e i limiti dei soli indicatori di rendimento. [1, 2, 3]
 
-### Considerare la funzione pubblica
-James Allsop ricorda che i tribunali esercitano il potere giudiziario e tutelano lo Stato di diritto. La loro dimensione umana supera l’alternativa tra luogo e servizio. I risultati misurabili ne colgono soltanto una parte. [3]
+### Il criterio
+Ne ricaviamo un principio per CourtOS: ogni affermazione rilevante deve rimandare a un passaggio verificabile. Incertezze e contraddizioni devono restare visibili. È una proposta progettuale, non una prova di migliore giustizia.
 
-### Il nostro punto di partenza per CourtOS
-Un ambiente di lavoro giudiziario deve liberare attenzione per le questioni decisive. Quale informazione manca? Quale obiezione è stata trascurata? Chi può riconoscere un’ipotesi errata e correggerla? La rapidità conta quando migliora queste risposte.
+## 3. Il giudizio resta umano
+L’IA propone. Il tribunale risponde dei motivi della decisione.
 
-### Un risultato per il gruppo
-Formulate una frase: per questo compito ricorrente vogliamo rimuovere questo ostacolo, affinché questa persona possa svolgere meglio il proprio lavoro o esercitare il proprio diritto. Scegliete un caso di prova circoscritto.
+### Il quadro giuridico
+L’art. 29 Cost. tutela l’equità del procedimento, il diritto di essere sentiti e un termine ragionevole. L’art. 29a garantisce in linea di principio l’accesso al giudice. L’art. 30 esige un tribunale fondato sulla legge, competente, indipendente e imparziale; l’art. 191c assoggetta le autorità giudiziarie soltanto al diritto nella loro attività giurisdizionale. [4]
 
-## 3. Preservare la funzione giudiziaria
-Quale responsabilità deve restare visibile anche con un valido sostegno tecnico?
+### Motivi, non solo una buona formulazione
+La motivazione deve rendere riconoscibili le considerazioni decisive e consentire un’impugnazione adeguata. Una risposta scorrevole dell’IA non basta. [5]
 
-### Un quadro costituzionale
-La Costituzione federale prevede garanzie distinte e complementari. L’art. 29 tutela parità ed equità del procedimento giudiziario e amministrativo, diritto di essere sentiti e termine ragionevole. L’art. 29a garantisce di principio la via giudiziaria, salvo esclusioni legali eccezionali. [4]
+### Giudice unico o collegio
+Proponiamo lo stesso metodo: verificare le fonti, conservare le obiezioni e assegnare le responsabilità. In un collegio di tre o cinque giudici ciascuno deve poter formare una propria valutazione. Resta possibile una discussione comune iniziale. Il progetto pilota non offre funzioni specifiche di deliberazione o voto.
 
-### Esaminare e decidere in modo indipendente
-L’art. 30 richiede un tribunale fondato sulla legge, competente, indipendente e imparziale. Udienza e pronuncia della sentenza sono di principio pubbliche. L’art. 191c vincola le autorità giudiziarie al solo diritto nella loro attività giurisdizionale. Queste garanzie non risolvono, da sole, ogni questione relativa a un determinato uso dell’IA. [4]
+## 4. Dove vanno i dati
+«Locale» significa qui: sul server CourtOS in Germania.
 
-### Rendere controllabili i motivi
-Il diritto di essere sentiti richiede un esame serio degli argomenti rilevanti. La motivazione deve rendere riconoscibili le ragioni decisive e consentire di impugnare adeguatamente la decisione. Una formulazione convincente non basta. [5]
+### Tre percorsi distinti
+- I vostri PDF e Gemma 4: conservazione e trattamento tramite il modello sul server Switchboard presso Hetzner, in Germania. Non sul vostro computer.
+- OpenCaseLaw: i termini che inviate espressamente vanno al servizio pubblico di ricerca, che usa IA esterna. La biblioteca e il documento Word non vengono trasmessi.
+- Claude Opus 5.5: la verifica esterna invia ad Anthropic il testo approvato, soltanto dopo l’anteprima completa e la vostra conferma.
 
-### La nostra proposta organizzativa
-Rendete visibile la ripartizione dei compiti: chi esamina gli atti, chi verifica le obiezioni, chi decide? Cancellieri e giudici devono poter consultare le fonti, modificare le bozze e respingere le proposte. Un clic di conferma non dimostra un esame personale.
+### La connessione
+Cloudflare gestisce l’accesso e il traffico web, trattando anche i contenuti visualizzati. Il verde indica Gemma, il viola la verifica esterna; fornitore e luogo sono indicati anche per iscritto.
 
-### Un accordo concreto
-Indicate chi svolge il controllo e quali accertamenti restano aperti. CourtOS non acquisisce alcun potere decisionale. Un futuro impiego istituzionale richiede una valutazione giuridica e organizzativa distinta.
+### La prova attuale
+Usate decisioni pubbliche, dottrina non riservata che avete diritto di utilizzare o documenti fittizi. Nessun fascicolo reale o documento riservato. L’accesso non equivale a un’autorizzazione istituzionale. Non è disponibile un’anonimizzazione automatica.
 
-## 4. Rendere verificabile il ragionamento
-Un’altra persona può comprendere il passaggio dalla fonte alla conclusione?
+## 5. Cercare e continuare a scrivere
+Il riferimento deve accompagnarvi nel vostro strumento di lavoro.
 
-### Un’organizzazione da costruire
-Un buon ambiente collega documento, affermazione, esame e motivazione. Questa proposta di organizzazione giudiziaria va oltre il pilota, che la realizza soltanto in parte.
+### Aprire
+Nel browser: https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail e il codice ricevuto. In Word aprite il componente aggiuntivo CourtOS installato. Per la ricerca non servono un progetto o una conversazione.
 
-### Dalla ricezione al controllo
-- Esaminare: la cancelleria ordina gli atti secondo la ripartizione giudiziaria dei compiti. Data, provenienza e versione restano visibili; il riassunto si distingue dall’originale.
-- Definire i punti controversi: affiancare affermazione, prova, contestazione e accertamento mancante. Una contraddizione può restare aperta.
-- Verificare in senso contrario: cercare la spiegazione alternativa più solida. Leggere originale e contesto anche quando la citazione è esatta.
-- Motivare: le persone responsabili scelgono e verificano le ragioni decisive. L’IA può proporre una bozza; ciò non compie la valutazione delle prove o la decisione.
-- Seguire i cambiamenti: una nuova versione deve permettere di individuare gli accertamenti da riesaminare. Conservare uno stato precedente comprensibile.
+### Cercare fonti pubbliche
+Scegliete OpenCaseLaw. Inserite il riferimento di una decisione o pochi termini pubblici e, se necessario, scegliete la lingua. I risultati sono limitati. L’assenza di risultati non prova l’assenza di giurisprudenza. Non inserite nomi o fatti riservati.
 
-### Un passaggio di lavoro utile
-Consegnate una nota con fonti, versioni, questioni aperte e prossima verifica. Una collega potrà discutere una conclusione senza ricostruire tutto il lavoro. Prevedete tempo per domande e apprendimento.
+### Riprendere un passaggio
+Aprite la decisione e verificate l’originale. Selezionate un breve passaggio, confermate la selezione e copiate testo e fonte oppure inseriteli in Word. Il collegamento di ricerca nell’originale tenta di ritrovare il passaggio. Non certifica un numero ufficiale di paragrafo; il collegamento all’intero documento non è un riferimento puntuale.
 
-### Descrivere con chiarezza la portata
-Il progetto pilota offre aiuti all’esame degli atti e una ricerca limitata. Non fornisce un fascicolo giudiziario completo, un controllo automatico di tutte le conseguenze delle modifiche o la notificazione ufficiale delle decisioni.
+### Più spazio nel browser
+Da Word aprite il browser e proseguite con lo stesso account. Poi ritrasferite la ricerca in Word. Se i due stati divergono, scegliete quale riprendere. Il trasferimento vale due ore; non avvia una nuova ricerca e non modifica da solo il documento.
 
-## 5. Valutare l’utilità su un caso
-Come riconoscere un miglioramento del lavoro?
+### Controllare i riferimenti
+«Citazioni» apre Citecheck separatamente. CourtOS non trasmette alcun testo. Verificate nella decisione originale se sostiene la vostra affermazione.
 
-### Una valutazione comune e circoscritta
-Definite risultato e difficoltà note sulla base delle vostre fonti ammesse. Confrontate lo stesso ambito con e senza assistenza. Considerate lettura, attesa, verifica e correzione. La matrice propone una valutazione; non descrive un effetto già accertato.
+## 6. Aggiungere le proprie fonti
+La biblioteca integra la giurisprudenza con i documenti che scegliete.
 
-### Compito · aiuto · esame umano · osservazione
-- Esaminare gli atti: chiedere una cronologia; controllare prove e tipi di date. Contare gli eventi omessi o inventati.
-- Chiarire le contraddizioni: raccogliere indicazioni divergenti; distinguere incompatibilità ed eventi diversi. Il contrasto noto resta visibile?
-- Esaminare la dottrina: cercare passaggi; leggere versione, contesto e posizione contraria. Quante affermazioni decisive hanno un riscontro esatto?
-- Delimitare la questione giuridica: consultare fonti pubbliche; verificare competenza e contesto procedurale. Una regola inadeguata viene individuata?
-- Trasmettere una bozza: chiedere una nota breve; assumere la responsabilità delle ragioni decisive. Una collega può comprendere e correggere la conclusione?
-- Riconoscere i limiti: inserire una prova mancante o una scansione illeggibile. Il risultato segnala o nasconde la lacuna?
+### Caricare
+Aggiungete PDF in «Biblioteca». Un nome chiaro con autore, titolo ed edizione ne facilita l’identificazione. CourtOS salva una copia sul server; non legge direttamente una cartella locale. L’interfaccia indica i limiti di caricamento.
 
-### I numeri richiedono una valutazione
-Discutete anche l’errore più grave e il punto di vista della persona interessata. Meno parole o minuti non dimostrano una giustizia migliore. Una tendenza a confermare senza esaminare richiede di rivedere il procedimento di lavoro.
+### Cercare
+Nella ricerca scegliete «Fonti proprie» e i documenti desiderati. Questa ricerca non usa l’IA. Ogni risultato indica passaggio, versione e pagina PDF. Scansioni illeggibili o un’indicizzazione parziale possono lasciare lacune.
 
-### Scegliere il seguito
-Annotate utilità, errori e impegno di controllo. Decidete che cosa continuare, modificare o escludere.
+### Conservare il riferimento
+Aprite la pagina e leggete il contesto. Copiate o inserite il passaggio con nome del file, versione, pagina e collegamento protetto. Il collegamento apre la versione salvata per l’account autorizzato; non concede accesso a terzi.
 
-## 6. Cercare. Verificare. Proseguire il lavoro.
-Il primo vantaggio: un riferimento pertinente per il vostro lavoro.
+### Distinguere testo e significato
+Una citazione ritrovata alla lettera può essere incompleta o non pertinente alla questione giuridica. Verificate ciò che consente di affermare. La pagina PDF non coincide necessariamente con la pagina stampata.
 
-### Accedere direttamente alla ricerca
-Aprite https://sandbox.swisslaw.io/research. Accedete con il vostro indirizzo e-mail personale e il codice monouso di Cloudflare. Non occorre un invito. Potete cercare senza creare un progetto né avviare una conversazione.
+## 7. Esaminare gli atti
+Accostare affermazioni e documenti in un elenco da verificare.
 
-- Cercare
-- Verificare la fonte
-- Riprendere il riferimento
+### Preparare
+Aprite «Esaminare gli atti». Aggiungete alla biblioteca brevi petizioni, risposte e allegati fittizi. Scegliete le versioni, assegnate il ruolo del documento e la parte, quindi la lingua del rapporto. Per provare, aprite «Fascicoli di esempio» e scegliete «Importare i quattro PDF». I documenti sono ricostruiti da una decisione pubblicata; non sono gli atti originali. Verificate poi ruoli e parti.
 
-### Un punto di partenza chiaro
-La ricerca pubblica permette di consultare le decisioni pubblicate raccolte in OpenCaseLaw. Potete inoltre cercare nei vostri documenti. Le due aree hanno campi distinti; i testi personali non vengono ripresi automaticamente nella ricerca pubblica.
+### Tre compiti
+- Fatti e prove: affermazione, documento e posizione avversa sono affiancati. L’IA propone «Sostiene l’affermazione», «Contraddice l’affermazione», «Resta incerto» o «Non trovato nella selezione».
+- Argomentazioni giuridiche: il confronto riguarda soltanto le fonti scelte. Decisioni e opere mancanti non vengono reperite automaticamente. Cercate separatamente i riferimenti pubblici.
+- Cronologia: le date precise vengono ordinate. Le date approssimative o mancanti restano separate. Le versioni contrastanti mantengono voci distinte.
 
-### Mantenere gli strumenti abituali
-Aprite un passaggio pertinente, verificate la fonte originale e copiate testo e riferimenti nella vostra nota, nel programma di scrittura o nel fascicolo esistente. CourtOS non richiede di cambiare la gestione dei fascicoli.
+### Leggere il risultato
+Scegliete «Avvia l’analisi parziale». Il rapporto contiene al massimo dodici righe e indica fonti, versioni e pagine lette. Aprite i riferimenti. Il controllo letterale conferma un passaggio, non la valutazione dell’IA né la verità di un’affermazione di parte.
 
-### Per questo progetto pilota
-Sono adatti decisioni pubbliche, letteratura non riservata lecitamente utilizzabile e documenti sintetici. Fascicoli giudiziari reali e documenti riservati restano esclusi da questo server virtuale (VPS) in Germania.
+### Un’analisi parziale in prova
+L’IA può omettere affermazioni anche se riceve tutto il testo. Le selezioni troppo ampie sono rifiutate; le bozze con passaggi non confermati non vengono mostrate. Verificate voi stessi omissioni e motivi: l’affidabilità di questo percorso è ancora in fase di prova.
 
-## 7. Trovare e inquadrare le decisioni
-Trovare la giurisprudenza pubblica con il servizio di ricerca OpenCaseLaw, assistito dall’IA.
+## 8. Usare l’IA per un compito preciso
+Scegliete il compito e le sole fonti necessarie.
 
-### Iniziare con pochi termini
-Inserite fino a otto termini giuridici precisi. CourtOS li trasmette al servizio pubblico OpenCaseLaw soltanto dopo «Suchen». Un filtro linguistico restringe la selezione. Non inserite informazioni riservate.
+### Gemma sul server CourtOS
+Nel browser: l’assistente può preparare una bozza sulla base dei PDF scelti. L’invio avvia l’analisi. Il modello usa una versione Unsloth e funziona sui processori del server; sono possibili attese. Gemma non garantisce risposte corrette. L’applicazione indica i limiti d’uso.
 
-### Aprire il risultato
-L’elenco presenta fino a cinque risultati testuali. Aprite la decisione e leggete il passaggio pertinente. Data, numero di causa e tribunale aiutano a inquadrarla; la fonte originale rimane determinante.
+### Una verifica esterna
+Nel browser: trasferite alla verifica esterna un breve passaggio che può essere trasmesso. Modificate istruzione e testo. Controllate l’anteprima completa, il fornitore e il modello. Gli allegati e il resto della conversazione non vengono aggiunti automaticamente. Il contenuto dei collegamenti non viene consultato.
 
-### Verificare il contesto
-- La decisione riguarda la stessa questione giuridica e lo stesso contesto procedurale?
-- Quali presupposti di fatto e di diritto sostengono l’affermazione?
-- Si tratta di un motivo determinante, della posizione di una parte o del richiamo a una decisione precedente?
+### Usare la risposta
+La risposta esterna può tornare come bozza modificabile. Non viene inviata di nuovo automaticamente. Verificate ogni affermazione decisiva sull’originale. La risposta convincente di un secondo modello non è una verifica indipendente delle fonti.
 
-### Estratto e riferimento ufficiale
-La posizione visualizzata indica caratteri nel testo registrato. Non è un numero di paragrafo ufficiale né di considerando. Individuate nella fonte originale il riferimento da citare.
+## 9. Provare, poi decidere l’adozione
+Un progetto pilota utile produce osservazioni, non promesse.
 
-### La portata della ricerca
-OpenCaseLaw può analizzare la richiesta e ordinare i risultati con l’IA. La ricerca avviene fuori da CourtOS. Cinque risultati costituiscono una selezione, non una garanzia di completezza.
-
-## 8. Riprendere un riferimento
-Trasferire insieme il passaggio e la sua provenienza nel proprio lavoro.
-
-### Scegliere il passaggio
-Nella decisione, selezionate 20–800 caratteri consecutivi e scegliete «Markierte Stelle übernehmen». «Auszug und Quelle kopieren» riprende soltanto il passaggio selezionato con la sua provenienza, senza creare un nuovo riassunto.
-
-- Selezionare il passaggio
-- Confermare la selezione
-- Copiare con la provenienza
-
-### Per le decisioni pubbliche
-L’estratto è accompagnato dai dati visualizzati sulla decisione, dall’identificativo OpenCaseLaw e dall’indirizzo pubblico della fonte, se disponibile. Verificate riferimento ufficiale e metadati prima di inserirli nella motivazione.
-
-### Per i propri documenti
-Per i vostri documenti, la copia contiene nome del file, versione fissa, pagina PDF e un collegamento a quella precisa versione e pagina. La numerazione stampata può differire. Il collegamento richiede accesso autenticato e diritti esistenti; non concede accesso pubblico.
-
-### Un riferimento utilizzabile
-Completate la citazione secondo le esigenze del vostro testo e il contesto giuridico. La copia conserva un riscontro di partenza; non conferma né l’esattezza della fonte né la portata della sua affermazione.
-
-### Se la copia non è disponibile
-Se il browser nega l’accesso agli appunti, un campo mostra il testo completo da copiare. Selezionatelo e copiatelo a mano. Il lavoro esistente al di fuori di CourtOS rimane invariato.
-
-## 9. Lavorare con le proprie fonti
-Una biblioteca personale a complemento della giurisprudenza.
-
-### Aggiungere letteratura
-Aprite la biblioteca e caricate estratti PDF idonei. Autore, titolo breve, edizione o anno e pagine nel nome del file facilitano l’identificazione. Le cartelle organizzano la raccolta. Non occorre un progetto.
-
-### Definire la selezione
-Nella ricerca passate alla biblioteca personale e scegliete esplicitamente i documenti. La ricerca resta limitata a questa selezione. Aprite un risultato per leggere il passaggio nel contesto, con versione e pagina PDF.
-
-### Riutilizzare il riferimento
-Copiate un passaggio pertinente con i suoi riferimenti nella vostra nota. Chi la leggerà potrebbe aver bisogno di un proprio accesso all’opera. Copiare un riferimento non conferisce diritti di utilizzazione.
-
-### I limiti del materiale
-Scansioni senza testo selezionabile, versioni PDF mancanti e indicizzazione parziale limitano i risultati. L’assenza di risultati non prova che nell’opera manchi un’affermazione.
-
-### La dimensione della raccolta di prova
-Ogni file è limitato a 5 MiB; il budget complessivo di caricamento è di 20 MiB per conto. Caricamenti falliti e file eliminati non ripristinano il budget. Iniziate con una raccolta di letteratura circoscritta.
-
-### In prospettiva: il fascicolo locale
-Un futuro fascicolo locale autorizzato permetterebbe di leggere gli originali senza modificarli e di conservare note leggibili accanto ad essi. Accertamenti, allegazioni e punti contestati andrebbero distinti, con fonte e versione. Le note basate su fonti modificate sarebbero segnalate per una nuova verifica. Il collegamento locale tramite Word o browser resta da sviluppare. Oggi la biblioteca riceve copie sul VPS; non lavora nel fascicolo locale.
-
-## 10. Valutare l’utilità nel lavoro quotidiano
-Un risultato utilizzabile nel vostro modo abituale di lavorare.
-
-### Scegliere una domanda di lavoro
-Utilizzate fonti ammesse e una domanda di cui conoscete le difficoltà. Definite il risultato atteso: ad esempio un paragrafo documentato, una posizione contraria o una breve rassegna di giurisprudenza.
-
-### Osservare l’intero percorso
-Non misurate soltanto l’attesa fino al primo risultato. Considerate ricerca, lettura, verifica, copia e inserimento nel vostro testo. Confrontate lo stesso ambito con il metodo attuale.
-
-### Tre domande sul risultato
-- Il passaggio determinante è reperibile e comprensibile nel suo contesto?
-- Un’altra persona può verificare l’affermazione ripresa attraverso i riferimenti?
-- Si ottiene un risultato utilizzabile nello strumento abituale, senza ulteriore lavoro di archiviazione?
-
-### Valutare l’IA separatamente
-Se utilizzate l’assistente o l’esame esterno, valutatene separatamente l’apporto. Una risposta più lunga non è un riscontro migliore. Annotate anche l’impegno di correzione e le obiezioni trascurate.
-
-### Riscontro
-Termini cercati, fonte attesa, scostamento osservato e impegno approssimativo bastano spesso. Non utilizzate fascicoli reali o passaggi riservati per illustrare un difetto.
-
-## 11. Ricorrere all’IA quando serve
-La ricerca nelle proprie fonti e la copia dei riferimenti funzionano senza IA. Per approfondire, scegliete il modello.
-
-### Proseguire in locale
-«Mit dieser Auswahl fragen» o «Chronologie erstellen» prepara una bozza con i PDF scelti. Solo il vostro invio avvia Gemma 4. Usate una piccola selezione interamente leggibile; il superamento dei limiti interrompe il trattamento. Distinguete allegazioni, fatti contestati e fatti documentati; verificate la pagina precisa della fonte.
-
-### Requisito di verifica
-Prima di rispondere su un fascicolo, CourtOS deve aver effettivamente letto le fonti selezionate. Una citazione riscontrata conferma anzitutto il testo in un punto preciso; verificate nell’originale se il passaggio sostiene davvero l’affermazione.
-
-### Una prospettiva esterna
-Una fonte pubblica o una risposta locale può passare come bozza modificabile a «Frontier-Prüfung». Gli allegati e il resto della conversazione rimangono esclusi. Non vi è alcuna anonimizzazione automatica.
-
-- Testo e incarico
-- Anteprima e autorizzazione
-- Claude Opus 5.5
-
-### Conta il contenuto autorizzato
-L’anteprima mostra l’intera richiesta, il fornitore e il modello. Solo la vostra autorizzazione avvia la chiamata ad Anthropic. Usate soltanto materiale non riservato il cui trattamento esterno è consentito. I link sono riferimenti; il modello non ne recupera il contenuto.
-
-### Tornare al proprio lavoro
-La risposta esterna può tornare come bozza modificabile nell’assistente locale, senza invio automatico. Testo e allegati esistenti restano preservati. Le trasmissioni troppo lunghe sono rifiutate. In alternativa copiate un passaggio appropriato.
-
-## 12. Dati e gestione
-Biblioteca personale, ricerca pubblica e richieste ai modelli seguono percorsi distinti.
-
-- Il vostro browser
-- Cloudflare
-- VPS in Germania
-
-### Trattamento locale ed esterno
-Biblioteca e Gemma 4 funzionano su Switchboard, presso Hetzner in Germania. Cloudflare tratta il traffico web, compresi i testi visualizzati. I termini pubblici sono trasmessi a OpenCaseLaw, la cui ricerca utilizza un’IA esterna. I vostri file non vengono allegati. L’esame Frontier separato invia soltanto il contenuto da voi autorizzato a Claude Opus 5.5 presso Anthropic.
-
-### Non ancora un uso istituzionale
-Controllo degli accessi e conti separati non sostituiscono un’autorizzazione istituzionale. Fascicoli giudiziari reali e documenti riservati restano esclusi. Non è prevista un’anonimizzazione automatica.
-
-### Durata e contingente
-Il modello locale utilizza una versione Unsloth su processori del server (CPU). Una domanda PDF mirata ha richiesto diversi minuti in una prova precedente; non ne deriva alcuna garanzia di durata. L’assistente nativo permette tre richieste avviate per persona e giorno UTC; l’esame esterno, un’analisi. Limiti comuni possono intervenire prima. Lettura e anteprima non avviano una richiesta al modello.
-
-### Conservazione
-Le richieste ammesse contano anche in caso di errore del modello. Le risposte restano salvate fino alla pulizia richiesta; uscire dal conto non le elimina. Il testo di passaggio nel browser è distinto e limitato nel tempo. I file scaricati restano sul vostro dispositivo.
-
-## 13. Il passo successivo nell’istituzione
-Dopo il test sul VPS: un progetto distinto per l’impiego istituzionale.
-
-### In seguito: lavorare con i fascicoli
-Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. La pseudonimizzazione resta da sviluppare. L’accesso, la ricerca, l’inserimento e il passaggio tra Word e il browser sono stati verificati in Word per macOS con un documento fittizio. In caso di modifiche parallele, scegliete la versione. Altre versioni di Word e ambienti istituzionali richiedono prove specifiche. Citecheck resta accessibile tramite un link separato.
+### Valutare l’utilità
+Usate un piccolo caso di prova con affermazioni, documenti e contraddizioni noti. Contate le affermazioni omesse e inventate. Verificate parti, importi, date e riferimenti. Misurate anche attese e correzioni. Confrontate il risultato con il metodo abituale.
 
 ### Prima dei fascicoli reali
-- Definire compiti autorizzati e responsabilità professionali e operative.
-- Precisare luoghi di trattamento e possibilità di accesso dei fornitori.
-- Regolare identità, diritti sui fascicoli, conservazione e cancellazione.
-- Garantire fonti aggiornate, controlli di qualità e riferimenti verificabili.
-- Concordare manutenzione, gestione dei guasti, costi e cambio di soluzione.
+L’istituzione deve disciplinare compiti ammessi, accessi dei fornitori, autorizzazioni, conservazione, cancellazione, gestione e responsabilità professionali. Word per macOS è stato provato con un documento fittizio; altre versioni e ambienti istituzionali richiedono prove proprie.
 
-### Non ancora una prova d’idoneità
-Una dimostrazione riuscita non vale come autorizzazione in materia di protezione dei dati, certificazione di sicurezza o prova di sovranità digitale. Il progetto pilota fornisce osservazioni; non sostituisce queste decisioni.
+### Che cosa manca
+Il lavoro diretto in una cartella locale e una pseudonimizzazione coerente tra più documenti restano sviluppi futuri. Nomi sostitutivi non bastano a rendere anonimi i documenti. Un progetto pilota riuscito non sostituisce questi sviluppi né l’approvazione giuridica e tecnica.
 
-### Una base software aperta
-Il codice sorgente, la licenza e i contributi sono documentati nel repository pubblico. Il software è distribuito con licenza GNU AGPL v3.0.
+### Software aperto
+- [CourtOS · Codice sorgente e GNU AGPL v3.0](https://github.com/jonashertner/CourtOS)
 
-### Per approfondire
-- [CourtOS: codice sorgente e licenza](https://github.com/jonashertner/CourtOS)
-
-## 14. Fonti e metodo
-I primi quattro capitoli propongono un modo di progettare il lavoro giudiziario. Le fonti seguenti sostengono le posizioni e le affermazioni giuridiche espressamente attribuite loro.
+## 10. Fonti e portata
+Basi delle posizioni e regole espressamente attribuite; verificate il 9 ottobre 2026.
 
 - [1. Richard Susskind · Online Courts and the Future of Justice](https://academic.oup.com/oxford-law-pro/book/41081)
 
-Susskind: sintesi e indice dell’editore, in particolare la parte II. Per questa edizione non è stato analizzato il libro integrale.
+Sintesi dell’editore e indice, parte II. Il libro completo non è stato esaminato.
 
-- [2. Richard Susskind (testimony) · Corrected oral evidence: Constitutional implications of Covid-19](https://committees.parliament.uk/oralevidence/462/html/)
+- [2. Richard Susskind · Corrected oral evidence: Constitutional implications of Covid-19](https://committees.parliament.uk/oralevidence/462/html/)
 
-Susskind: verbale ufficiale del 3 giugno 2020, domanda 30.
+Verbale ufficiale della Camera dei lord, 3 giugno 2020, domanda 30; contesto: domande 23–24 e 29.
 
 - [3. James Allsop · Technology and the Future of the Courts](https://www.fedcourt.gov.au/__data/assets/pdf_file/0017/55520/Allsop-CJ-20190326.pdf)
 
-Allsop: conferenza del 26 marzo 2019, pag. 2–4 e 11–12.
+Conferenza del 26 marzo 2019, pp. 2–4 e 11–12, pubblicata dalla Corte federale australiana.
 
 - [4. Costituzione federale · RS 101](https://www.fedlex.admin.ch/eli/cc/1999/404/it)
 
-Costituzione federale: art. 29, 29a, 30 e 191c. Versione vigente del 3 marzo 2024; verificata il 9 ottobre 2026.
+Art. 29 cpv. 1–2, 29a, 30 cpv. 1 e 3 e 191c. Versione esaminata: 3 marzo 2024.
 
 - [5. Tribunale federale · DTF 129 I 232](https://www.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?lang=de&type=show_document&highlight_docid=atf://129-I-232:de)
 
-Tribunale federale: DTF 129 I 232, consid. 3.2, pag. 236–237. Principio generale di motivazione espresso in una causa di naturalizzazione.
+Consid. 3.2, pp. 236–237. Si riprende soltanto il principio generale della motivazione; la decisione riguardava una naturalizzazione.
 
-### La portata di questa edizione
-I metodi di lavoro e i criteri di valutazione sono nostre proposte. Non attestano un aumento di produttività dimostrato né una validazione giuridica completa. La parte pratica descrive il pilota CourtOS e i suoi limiti. Le osservazioni sono distinte dalle garanzie generali.
+### Questa edizione
+Metodi di lavoro e criteri progettuali sono nostre proposte. Non dimostrano né un guadagno di produttività né la liceità di un uso specifico dell’IA. Stato delle funzioni: 10 ottobre 2026. Verifica delle fonti, qualità del modello e approvazione istituzionale restano compiti distinti.
 

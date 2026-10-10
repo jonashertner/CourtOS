@@ -14,13 +14,14 @@ function reader(lang = 'de', hash = '#purpose') {
   w.matchMedia = () => ({ matches: true, addEventListener(){} });
   w.ResizeObserver = class { observe(){} disconnect(){} };
   w.HTMLElement.prototype.scrollIntoView = function () {};
+  w.scrollTo = ({top}) => { Object.defineProperty(w, 'scrollY', {value:top, configurable:true}); };
   w.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   w.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new w.Event('close')); };
   w.localStorage.setItem('courtos-guide-reading-mode','text');
   w.eval(script);
   return { dom, w, d: w.document };
 }
-for (const lang of ['de','fr','it']) {
+for (const lang of ['de','fr','it','en']) {
   test(lang + ': an exact source note preserves chapter, content and focus', () => {
     const { dom, w, d } = reader(lang);
     const link = d.querySelector('#purpose [data-source="1"]');
@@ -43,7 +44,7 @@ for (const lang of ['de','fr','it']) {
     const dom = new JSDOM(fs.readFileSync(path.join(base, 'output', lang + '.html'), 'utf8'));
     const d=dom.window.document;
     const references = [...d.querySelectorAll('[data-source]')];
-    assert.ok(references.length >= 6);
+    assert.ok(references.length >= 5);
     for (const ref of references) {
       const source = d.querySelector(ref.getAttribute('href'));
       assert.ok(source?.classList.contains('source-entry'));
@@ -52,7 +53,7 @@ for (const lang of ['de','fr','it']) {
     }
     assert.equal(d.querySelectorAll('.source-entry[id]').length, 5);
     assert.equal(new Set([...d.querySelectorAll('[id]')].map(x=>x.id)).size, d.querySelectorAll('[id]').length);
-    assert.equal(d.querySelectorAll('details.chapter[open]').length,13);
+    assert.equal(d.querySelectorAll('details.chapter[open]').length,9);
     dom.window.close();
   });
 }
@@ -68,7 +69,7 @@ test('chapter navigation preserves corresponding chapter in all language links, 
 });
 test('chapter names preserve spaces at typographic line breaks and controls do not expose unavailable editions', () => {
   const { dom, d } = reader();
-  assert.equal(d.querySelector('option[value="purpose"]').textContent,'01 · Vom Zweck her denken');
+  assert.equal(d.querySelector('option[value="purpose"]').textContent,'01 · Bei der Aufgabe beginnen');
   const editions=Object.keys(JSON.parse(fs.readFileSync(path.join(base,'manuscript/content.json'),'utf8')));
   assert.deepEqual([...d.querySelectorAll('.site-header .language a')].map(link=>link.lang),editions);
   assert.equal(d.querySelector('#reader-text-mode').getAttribute('aria-pressed'),'true');
@@ -180,5 +181,96 @@ test('resize preserves an explicitly selected chapter on the right-hand leaf of 
   assert.equal(select.value,id);
   assert.equal(w.location.hash,'#'+id);
   assert.equal(d.getElementById(id).closest('.folio').getAttribute('aria-hidden'),'false');
+  dom.window.close();
+});
+
+for (const [old, current] of Object.entries({quality:'later',test:'later',local:'first-steps',public:'first-steps'})) {
+  test('old shared chapter link '+old+' still opens '+current+' in all editions', () => {
+    for (const lang of ['de','fr','it','en']) {
+      const {dom,w,d}=reader(lang,'#'+old);
+      assert.ok(d.getElementById(old)?.closest('#'+current));
+      assert.equal(d.querySelector('#reader-chapter').value,current);
+      for(const link of d.querySelectorAll('.language a')) assert.ok(link.getAttribute('href').endsWith('#'+current));
+      assert.equal(w.location.hash,'#'+old);
+      dom.window.close();
+    }
+  });
+}
+
+
+const nextFrame = w => new Promise(resolve => w.requestAnimationFrame(resolve));
+async function settledFrames(w) { for (let index=0; index<4; index++) await nextFrame(w); }
+// Deterministic geometry is a unit regression for manuscript identity/offset
+// and event ordering; it does not stand in for browser layout acceptance.
+function movingTextGeometry(w,d,id) {
+  const target=d.querySelector(`#${id} .text-block p`);
+  const groups=[d.querySelector('.opening'),d.querySelector('#chapter-directory'),...d.querySelectorAll('details.chapter')];
+  const selected=groups.findIndex(group=>group.id===id);
+  const state={width:375,paragraphTop:2000,anchoringShift:0};
+  Object.defineProperty(w,'innerWidth',{get:()=>state.width,configurable:true});
+  const rect=(top,height)=>({top,bottom:top+height,left:0,right:state.width,width:state.width,height});
+  d.querySelector('#reader-controls').getBoundingClientRect=()=>rect(0,60);
+  d.querySelector('#reading-source').getBoundingClientRect=()=>rect(-w.scrollY,9000);
+  groups.forEach((group,index)=>{
+    group.getBoundingClientRect=()=>rect(state.paragraphTop-100+(index-selected)*1000-w.scrollY,900);
+  });
+  target.getBoundingClientRect=()=>rect(state.paragraphTop+state.anchoringShift-w.scrollY,500);
+  w.Range.prototype.getClientRects=function(){
+    if(!target.contains(this.startContainer))return[];
+    const line=Math.floor(this.startOffset/(state.width<600?25:50));
+    return[rect(state.paragraphTop+state.anchoringShift+line*22-w.scrollY,22)];
+  };
+  return {state,target};
+}
+test('continuous resize preserves the last visible word despite a scroll event arriving after reflow', async()=>{
+  const {dom,w,d}=reader('de','#work');
+  const {state,target}=movingTextGeometry(w,d,'work');
+  w.scrollTo({top:state.paragraphTop+88-76});
+  w.dispatchEvent(new w.Event('scroll'));await nextFrame(w);
+  assert.equal(d.querySelector('#reader-chapter').value,'work');
+  const words=[...target.textContent.matchAll(/\S+/g)].map(match=>match.index);
+  const offset=words.find(start=>Math.floor(start/25)*22+22>88);
+  assert.ok(offset>0);
+  const url=w.location.href,history=w.history.length;
+  state.width=768;state.paragraphTop=950;
+  // The stale pixel distance now exposes a later chapter. A scroll callback
+  // must not replace the saved pre-resize paragraph before resize restoration.
+  w.dispatchEvent(new w.Event('scroll'));w.dispatchEvent(new w.Event('resize'));
+  await settledFrames(w);
+  assert.equal(w.scrollY,950+Math.floor(offset/50)*22-76);
+  assert.equal(d.querySelector('#reader-chapter').value,'work');
+  assert.equal(d.querySelector('.language a[lang="fr"]').getAttribute('href'),'fr.html#work');
+  assert.equal(w.location.href,url);assert.equal(w.history.length,history);
+  state.width=320;state.paragraphTop=2400;
+  w.dispatchEvent(new w.Event('resize'));await settledFrames(w);
+  assert.equal(w.scrollY,2400+Math.floor(offset/25)*22-76);
+  assert.equal(w.location.href,url);assert.equal(w.history.length,history);
+  dom.window.close();
+});
+test('book to continuous restores the original block under the toolbar after a delayed layout shift', async()=>{
+  const {dom,w,d}=reader('de','#work');
+  const target=positionContinuousChapter(d,'work');
+  w.Range.prototype.getClientRects=()=>[];
+  d.querySelector('#reader-book-mode').click();
+  assert.equal(d.querySelector('#reader-chapter').value,'work');
+  const page=target.closest('.folio');
+  // Book opening is its first original token, not the enclosing chapter's
+  // pre-restore pixel position; identify that original node in the fixture.
+  const first=page.querySelector('.folio-body .chapter-number');
+  assert.ok(first);
+  let absoluteTop=2200;
+  const rect=(top,height)=>({top,bottom:top+height,left:0,right:320,width:320,height});
+  first.getBoundingClientRect=()=>rect(absoluteTop-w.scrollY,30);
+  const url=w.location.href,history=w.history.length;
+  d.querySelector('#reader-text-mode').click();
+  assert.equal(d.querySelector('#reader-chapter').value,'work');
+  assert.equal(w.scrollY,2200-76);
+  absoluteTop+=45; // e.g. details/source reinsertion and scroll anchoring
+  w.dispatchEvent(new w.Event('scroll'));
+  await settledFrames(w);
+  assert.equal(w.scrollY,2245-76);
+  assert.ok(d.querySelector('#reading-source').contains(first));
+  assert.equal(d.querySelector('#reader-chapter').value,'work');
+  assert.equal(w.location.href,url);assert.equal(w.history.length,history);
   dom.window.close();
 });

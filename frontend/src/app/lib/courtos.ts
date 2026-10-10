@@ -1,3 +1,5 @@
+import { isCourtOSLocale } from "./courtosLocale";
+
 /** Public build-time presentation settings. Security policy lives on the server. */
 export const COURTOS_PILOT_MODE =
     process.env.NEXT_PUBLIC_COURTOS_PILOT_MODE === "true";
@@ -28,6 +30,13 @@ export const COURTOS_HYBRID_PATH = "/hybrid/";
 export const COURTOS_GUIDE_PATH = "/guide/";
 /** Official landing page links to this standalone browser application. No document hand-off. */
 export const COURTOS_CITECHECK_URL = "https://jonashertner.github.io/citecheck/taskpane.html?lang=de";
+/** Citecheck supports the same four interface languages. Pass language only;
+ * its own saved preference may take precedence after the separate app opens. */
+export function courtosCitecheckUrl(locale: unknown): string {
+    const url = new URL(COURTOS_CITECHECK_URL);
+    url.searchParams.set("lang", isCourtOSLocale(locale) ? locale : "de");
+    return url.href;
+}
 export const COURTOS_SOURCE_URL = "https://github.com/jonashertner/CourtOS";
 export const COURTOS_UPSTREAM_URL = "https://github.com/open-legal-products/mike";
 
