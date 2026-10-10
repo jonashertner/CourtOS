@@ -1,0 +1,31 @@
+{
+  "status": "LOCAL CANDIDATE; not deployed or native-verified",
+  "origin": "https://sandbox.swisslaw.io",
+  "public_exact_paths": {
+    "/word-bootstrap/index.html": "index.html",
+    "/word-bootstrap/bootstrap.js": "bootstrap.js",
+    "/word-bootstrap/runtime.js": "runtime.js",
+    "/word-bootstrap/style.css": "style.css",
+    "/word-bootstrap/login.html": "login.html",
+    "/word-bootstrap/login.js": "login.js",
+    "/word-bootstrap/commands.html": "commands.html",
+    "/word-bootstrap/commands.js": "commands.js",
+    "/word-bootstrap/icons/icon-16.png": "icons/icon-16.png",
+    "/word-bootstrap/icons/icon-32.png": "icons/icon-32.png",
+    "/word-bootstrap/icons/icon-64.png": "icons/icon-64.png",
+    "/word-bootstrap/icons/icon-80.png": "icons/icon-80.png"
+  },
+  "access_protected_exact_paths": {
+    "/word-auth/complete.html": "complete.html",
+    "/word-auth/complete.js": "complete.js"
+  },
+  "protected_api_paths": [
+    "/api/auth/cloudflare",
+    "/api/auth/session"
+  ],
+  "notes": [
+    "No wildcard bypass is permitted. Only the listed inert static files are public.",
+    "Do not map the whole source directory under a public prefix: it also contains protected completion files.",
+    "Every auth, research, private source, storage, model and application API path keeps its current Access and backend authorization."
+  ]
+}

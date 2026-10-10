@@ -6,14 +6,14 @@
   xsi:type="TaskPaneApp">
 
   <Id>ef0ca59c-c3c6-406f-adf5-abcd5fcfd466</Id>
-  <Version>0.1.0.0</Version>
+  <Version>0.1.1.0</Version>
   <ProviderName>CourtOS</ProviderName>
   <DefaultLocale>de-CH</DefaultLocale>
   <DisplayName DefaultValue="CourtOS" />
   <Description DefaultValue="Rechtsrecherche mit Quellen direkt in Word" />
 
-  <IconUrl DefaultValue="https://sandbox.swisslaw.io/word-assets/icon-32.png" />
-  <HighResolutionIconUrl DefaultValue="https://sandbox.swisslaw.io/word-assets/icon-80.png" />
+  <IconUrl DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/icons/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/icons/icon-64.png" />
   <SupportUrl DefaultValue="https://sandbox.swisslaw.io" />
 
   <AppDomains>
@@ -31,7 +31,7 @@
   </Requirements>
 
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://sandbox.swisslaw.io/word/research" />
+    <SourceLocation DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/index.html" />
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -78,13 +78,13 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://sandbox.swisslaw.io/word-assets/icon-16.png" />
-        <bt:Image id="Icon.32x32" DefaultValue="https://sandbox.swisslaw.io/word-assets/icon-32.png" />
-        <bt:Image id="Icon.80x80" DefaultValue="https://sandbox.swisslaw.io/word-assets/icon-80.png" />
+        <bt:Image id="Icon.16x16" DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/icons/icon-16.png" />
+        <bt:Image id="Icon.32x32" DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/icons/icon-32.png" />
+        <bt:Image id="Icon.80x80" DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/icons/icon-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Commands.Url" DefaultValue="https://sandbox.swisslaw.io/word-assets/commands.html" />
-        <bt:Url id="Taskpane.Url" DefaultValue="https://sandbox.swisslaw.io/word/research" />
+        <bt:Url id="Commands.Url" DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/commands.html" />
+        <bt:Url id="Taskpane.Url" DefaultValue="https://sandbox.swisslaw.io/word-bootstrap/index.html" />
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="CourtOS" />
