@@ -53,10 +53,16 @@ STYLES={
  'link':ParagraphStyle('link',fontName='Sans',fontSize=10,leading=15,textColor=INK),
 }
 
+def autolink(value, *, pdf):
+ # Sentence punctuation follows the link; it is not part of the destination.
+ url=value.rstrip('.,;:!?')
+ suffix=value[len(url):]
+ return (f'<link href="{url}"><u>{url}</u></link>' if pdf else f'<a href="{url}">{url}</a>')+suffix
+
 def rich(s):
  escaped=html.escape(s).replace('\n','<br/>')
  escaped=re.sub(r'\[(\d+(?:, \d+)*)\]',r'<super><link href="#sources">\1</link></super>',escaped)
- return re.sub(r'(https://[^\s<]+)',lambda m:f'<link href="{m.group(1)}"><u>{m.group(1)}</u></link>',escaped)
+ return re.sub(r'(https://[^\s<]+)',lambda m:autolink(m.group(1), pdf=True),escaped)
 def para(s,kind='body',width=CW):
  p=Paragraph(rich(s),STYLES[kind]); _,h=p.wrap(width,1000);return p,h
 
@@ -146,7 +152,7 @@ def language_links(current,anchor='start'):
 def htext(s):
  escaped=html.escape(s).replace('\n','<br>')
  escaped=re.sub(r'\[(\d+(?:, \d+)*)\]',r'<a class="noteref" href="#sources"><sup>\1</sup></a>',escaped)
- return re.sub(r'(https://[^\s<]+)',lambda m:f'<a href="{m.group(1)}">{m.group(1)}</a>',escaped)
+ return re.sub(r'(https://[^\s<]+)',lambda m:autolink(m.group(1), pdf=False),escaped)
 def block_html(b):
  heading=f'<h3>{html.escape(b["heading"])}</h3>' if b.get('heading') else ''
  if b['type'] in ('text','note'):
