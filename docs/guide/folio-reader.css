@@ -1,0 +1,396 @@
+@font-face{font-family:Timeless Serif;src:url('./fonts/TimelessSerifVF.woff2') format('woff2');font-weight:200 700;font-style:normal;font-display:swap}
+
+@font-face{font-family:Timeless Grotesk;src:url('./fonts/TimelessSansVF.woff2') format('woff2');font-weight:300 800;font-style:normal;font-display:swap}
+:root{--paper:#f8f7f3;--ink:#171717;--link:#174bc7;--line:#cac9c3;--type-display:clamp(2.35rem,5.3vw,5rem);--type-section:clamp(1.5rem,2.3vw,2.15rem);--type-chapter:1.125rem;--type-body:1rem;--type-caption:.875rem;--fast:80ms;--moderate:160ms;--slow:240ms;color-scheme:light;scroll-behavior:smooth;scroll-padding-top:2rem}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Timeless Serif,Georgia,serif;font-size:var(--type-body);font-weight:400;line-height:1.65;font-variation-settings:"STYL" 100;font-variant-numeric:tabular-nums}h1,h2,h3,p,ul,ol,dl,dd{margin:0}h1,h2,h3{text-wrap:balance;font-weight:600;line-height:1.2}h1{font-size:var(--type-display)}h2{font-size:var(--type-section)}h3{font-size:var(--type-chapter)}p{text-wrap:pretty}p+p{margin-top:1.1rem}strong{font-weight:600}a{color:var(--link);text-underline-offset:.22em;text-decoration-thickness:1px}a:hover{text-decoration-thickness:2px}a:focus-visible,button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--link);outline-offset:5px}button,select{font:inherit;color:inherit}button,summary,select{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:default}.caption{font-size:var(--type-caption);line-height:1.55}.skip{position:fixed;top:-8rem;left:1rem;background:var(--paper);padding:1rem;z-index:10}.skip:focus{top:1rem}.site-header,main,footer{max-width:1440px;margin:auto;padding-inline:clamp(1.25rem,4vw,4rem)}.site-header{display:flex;justify-content:space-between;align-items:center;gap:2rem;padding-block:1.5rem;border-bottom:1px solid var(--ink)}.wordmark{font-weight:600;color:var(--ink);text-decoration:none}.site-header nav{display:flex;gap:1.6rem;font-size:var(--type-caption)}.site-header nav a{color:var(--ink)}.opening{padding-block:4rem 3.25rem;display:grid;grid-template-columns:minmax(0,3fr) minmax(12rem,1fr);column-gap:3rem;border-bottom:1px solid var(--ink)}.subtitle{margin-top:1.4rem}.opening-note{padding-top:.4rem;font-size:var(--type-caption)}.opening-note p+p{margin-top:1.8rem}.premise{grid-column:1/-1;max-width:63ch;margin-top:2.8rem;font-weight:500}.document-layout{display:grid;grid-template-columns:15rem minmax(0,1fr);column-gap:clamp(2rem,5vw,5rem);padding-top:3.5rem}.contents{align-self:start;position:sticky;top:2rem;font-size:var(--type-caption)}.contents-title{font-weight:600}.contents nav{display:grid;margin-top:1.2rem;gap:1rem}.contents nav a{color:var(--ink);text-decoration:none;line-height:1.5}.contents nav a:hover,.contents nav a[aria-current=true]{color:var(--link)}.contents nav span{display:block;font-weight:500}.aside-note{margin-top:2.2rem;max-width:23ch}.document-body{min-width:0;padding-bottom:4.5rem}.orientation>p,.essay-section>p{max-width:64ch;margin-top:1.3rem}.outline-tools{margin-top:2.7rem;padding-top:1.3rem;border-top:1px solid var(--line)}.outline-tools>p{max-width:56ch}.js-tools{margin-top:1rem;gap:1.25rem;flex-wrap:wrap}.js-tools:not([hidden]){display:flex}.js-tools button{padding:0;border:0;background:none;color:var(--link);font-size:var(--type-caption);text-decoration:underline;text-underline-offset:.22em;min-height:2rem}.part{margin-top:3rem;scroll-margin-top:2rem}.part-heading{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding-bottom:1.4rem}.part-heading .caption{white-space:nowrap}.chapter{border-top:1px solid var(--line)}.chapter:last-child{border-bottom:1px solid var(--line)}.chapter summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:2.4rem minmax(0,1fr) 1.2rem;column-gap:1rem;padding-block:1.35rem}.chapter summary::-webkit-details-marker{display:none}.chapter summary::after{content:'+';font-size:var(--type-chapter);text-align:center;line-height:1.4;color:var(--link)}.chapter[open] summary::after{content:'−'}.chapter-number{font-size:var(--type-chapter);line-height:1.4;font-feature-settings:normal}.chapter-title{display:block;font-size:var(--type-chapter);line-height:1.4;font-weight:600;text-wrap:balance}.chapter-question{display:block;margin-top:.4rem;font-size:var(--type-body);line-height:1.55;max-width:59ch}.chapter summary:hover .chapter-title{color:var(--link)}.chapter-body{padding:0 2.2rem 1.7rem 3.4rem;max-width:70ch}.essay-section{margin-top:4rem;padding-top:2rem;border-top:1px solid var(--ink);scroll-margin-top:2rem}.case-controls{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2rem}label{display:block;font-weight:500;font-size:var(--type-caption);margin-bottom:.5rem}select{width:100%;min-height:3rem;border:1px solid var(--ink);border-radius:0;background:var(--paper);padding:.6rem 2rem .6rem .7rem;font-size:var(--type-caption)}.case-spread{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem}.case-spread article{border-top:2px solid var(--ink);padding-top:1rem}.case-response{border-top-color:var(--link)!important}.case-spread h3+p,.case-spread h3+div{margin-top:1rem}.case-spread dl,.case-spread ol{margin-top:1rem}.case-spread dt{font-weight:500;margin-top:1rem}.case-spread dd{margin-top:.35rem}.case-spread ol{padding-left:1.5rem}.case-spread li+li{margin-top:.8rem}.case-spread ol+p{margin-top:1rem}.case-conclusion{padding-top:1rem;border-top:1px solid var(--line)}.reading{list-style:none;padding:0;margin-top:1.6rem}.reading li{padding-top:1.2rem;border-top:1px solid var(--line)}.reading li+li{margin-top:1.2rem}.reading span{display:block;margin-top:.4rem}.reading a{font-weight:500}footer{padding-block:2rem 3rem;border-top:1px solid var(--ink);display:grid;grid-template-columns:1fr 1.35fr auto;gap:2rem;align-items:start;font-size:var(--type-caption)}footer p+p{margin-top:0}footer>a{white-space:nowrap}.document-body section[id]{scroll-margin-top:2rem}
+@media(min-width:1600px){body{font-size:1.0625rem}}
+@media(max-width:1000px){.document-layout{grid-template-columns:1fr;column-gap:2rem}.contents{position:static;border-bottom:1px solid var(--line);padding-bottom:2rem}.contents nav{grid-template-columns:1fr 1fr;gap:1rem 1.4rem}.contents .aside-note{display:none}.document-body{padding-top:2rem}.opening{grid-template-columns:1fr}.opening-note{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.3rem;margin-top:2rem}.opening-note p+p{margin:0}.case-controls,.case-spread{grid-template-columns:minmax(0,1fr);gap:1.8rem}.case-spread article{min-width:0;overflow-wrap:anywhere}.part-heading{display:block}.part-heading .caption{display:block;margin-top:.7rem}footer{grid-template-columns:1fr 1fr}footer>a{grid-column:1/-1}}
+@media(max-width:720px){.site-header{align-items:flex-start;gap:1rem;flex-direction:column}.site-header nav{gap:1rem;flex-wrap:wrap}.opening{padding-top:2.5rem;grid-template-columns:1fr;gap:0}.opening-note{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;margin-top:2rem}.opening-note p+p{margin:0}.opening-note p:last-child{grid-column:1/-1}.premise{margin-top:2rem}.document-layout{grid-template-columns:1fr;padding-top:2rem}.contents{position:static;border-bottom:1px solid var(--line);padding-bottom:2rem}.contents nav{grid-template-columns:1fr 1fr;gap:1rem 1.4rem}.contents .aside-note{display:none}.document-body{padding-top:2rem}.chapter summary{grid-template-columns:2rem minmax(0,1fr) 1rem;gap:.65rem}.chapter-body{padding-left:2.65rem;padding-right:0}.case-controls{grid-template-columns:1fr}footer{grid-template-columns:1fr;gap:1.4rem}footer>a{grid-column:auto}.essay-section{margin-top:3rem}}
+@media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}*{transition:none!important}}
+@media print{@page{margin:18mm}.site-header nav,.contents,.js-tools,.case-controls,footer>a{display:none!important}body{background:white;font-size:10pt}h1{font-size:30pt}h2{font-size:17pt}h3,.chapter-title{font-size:12pt}.caption,.chapter-question{font-size:10pt}.site-header,main,footer{padding-inline:0}.opening{padding-top:2rem}.document-layout{display:block;padding-top:2rem}.chapter-body{display:block!important}.chapter{break-inside:avoid}.chapter summary::after{display:none}.case-spread{grid-template-columns:1fr 1fr}a{color:var(--ink)}.essay-section{break-inside:avoid}footer{display:block}.opening-note{font-size:10pt}}
+
+/* Timeless: Text for reading, Serif for titles, Grotesk for navigation. */
+h1,h2,h3,.chapter-title{font-variation-settings:"STYL" 0;font-weight:400}
+.site-header,.contents,.caption,.chapter-number,.opening-note,.js-tools,label,select,button,footer{font-family:Timeless Grotesk,Arial,sans-serif;font-variation-settings:"STYL" 0;font-weight:420}
+.subtitle{font-style:italic;font-variation-settings:"STYL" 0}
+
+/* The manuscript remains a normal document; this layer gives it a book view. */
+[hidden] { display: none !important; }
+.skip { z-index: 100; }
+html[data-reader="book"] { scroll-behavior: auto; overflow: hidden; }
+html[data-reader="book"] body { height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: #efeee8; }
+html[data-reader="book"] .site-header { width: 100%; max-width: none; flex: 0 0 auto; padding: 15px 24px; min-height: 52px; gap: 1rem; border-color: #dfddd5; }
+html[data-reader="book"] .site-header nav { font-size: .75rem; gap: 1.4rem; }
+html[data-reader="book"] .site-header nav a { color: #575950; text-decoration: none; }
+html[data-reader="book"] .site-header nav a:hover { text-decoration: underline; text-underline-offset: .3em; }
+.reader-toolbar, .reader-navigation, .reader-hint, .folio-running, .folio-number, .folio-turn, .folio-toc { font-family: "Timeless Grotesk", Arial, sans-serif; font-variation-settings: "STYL" 0; font-weight: 420; }
+.reader-toolbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; width: min(100% - 48px, 1120px); margin: 0 auto; padding: 12px 0; font-size: .8125rem; }
+.reader-location { display: flex; align-items: center; gap: .65rem; min-width: 0; }
+.reader-location label, .reader-contents { margin: 0; font-size: .6875rem; color: #56584f; white-space: nowrap; }
+.reader-contents { padding-block: .6rem; text-decoration: none; text-underline-offset: .3em; }
+.reader-contents:is(:hover, :focus-visible) { text-decoration: underline; }
+.reader-location select { width: 24rem; max-width: 42vw; min-height: 38px; padding: .45rem 1.5rem .45rem .6rem; font-size: .75rem; border-color: transparent; border-bottom-color: transparent; background: transparent; text-overflow: ellipsis; }
+.reader-mode { display: flex; flex: 0 0 auto; align-items: center; gap: 3px; padding: 3px; border: 1px solid #d8d6cd; border-radius: 24px; }
+.reader-mode button { background: transparent; border: 0; border-radius: 20px; font-size: .75rem; padding: 7px 15px; min-height: 34px; color: #51514a; white-space: nowrap; }
+.reader-mode button[aria-pressed="true"] { background: #252820; color: #fffef9; }
+.reader-mode button:focus-visible { outline-offset: 2px; }
+.book-reader { flex: 1 1 auto; min-height: 0; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; padding: 4px 24px 12px; overflow: clip; }
+.reader-canvas { min-height: 0; min-width: 0; width: 100%; display: flex; align-items: center; justify-content: center; padding: 12px 12px 18px; }
+.book-stage { position: relative; flex: 0 0 auto; min-width: 0; isolation: isolate; touch-action: pinch-zoom; }
+.book-stage::before { content: ""; position: absolute; z-index: -1; inset: 2px -2px -3px; border: 1px solid #d5d0c5; border-radius: 1px; background: repeating-linear-gradient(to bottom, #faf9f4 0 1px, #dedad0 1px 2px); box-shadow: 0 1px 3px #332a1717, 0 12px 26px #332a1720, 0 1px 0 3px #d9d4c8; }
+.page-book { width: 100%; height: 100%; margin: auto; outline-offset: 8px; }
+.folio { color: var(--ink); background: #faf9f4; border: 1px solid #e5e2d8; overflow: hidden; }
+.folio.--left { background: linear-gradient(90deg, #faf9f4 89%, #f7f5ef 95%, #eae6dc 99%, #ded9ce); border-radius: 2px 0 0 2px; border-right-color: #d8d2c6; }
+.folio.--right { background: linear-gradient(90deg, #e2ded4, #f6f4ee 3%, #faf9f4 10%, #faf9f4 99%, #f4f2eb); border-radius: 0 2px 2px 0; }
+.folio-inner { --folio-margin: clamp(24px, calc(var(--page-width) * .085), 44px); height: 100%; display: flex; flex-direction: column; padding: var(--folio-margin); }
+.book-reader[data-orientation="landscape"] .folio.--left:not(.folio-front-cover) .folio-inner { padding-right: calc(var(--folio-margin) + 4px); }
+.book-reader[data-orientation="landscape"] .folio.--right:not(.folio-front-cover) .folio-inner { padding-left: calc(var(--folio-margin) + 4px); }
+/* The reader opens inside the book; the preceding cover can be turned back to. */
+.folio.folio-cover-spacer { border: 0; background: transparent; box-shadow: none; }
+.book-reader[data-orientation="landscape"] .book-stage[data-at-cover="true"]::before { left: calc(50% + 1px); }
+
+.folio-running { flex: 0 0 auto; display: flex; align-items: baseline; gap: .7rem; font-size: .625rem; letter-spacing: .01em; margin-bottom: 1.4rem; line-height: 1.45; color: #66665e; }
+.folio-running-number { flex: 0 0 2ch; font-variant-numeric: tabular-nums; }
+.folio-running-title { min-width: 0; text-wrap: balance; }
+.folio-body { flex: 1; min-height: 0; overflow: hidden; overflow-wrap: anywhere; font-size: 1.0625rem; line-height: 1.5; font-kerning: normal; font-variant-ligatures: common-ligatures; }
+.folio-body p { text-wrap: pretty; orphans: 2; widows: 2; }
+.folio-body :is(h1,h2,h3) { overflow-wrap: anywhere; }
+.folio-body h2 { font-size: 1.9rem; line-height: 1.1; letter-spacing: -.025em; text-wrap: balance; }
+.folio-body h3 { font-size: 1.0625rem; line-height: 1.3; }
+.folio-number { flex: 0 0 auto; padding-top: .7rem; margin-top: auto; font-size: .625rem; text-align: right; line-height: 1.2; color: #67655c; }
+.folio.--left .folio-number { text-align: left; }
+.folio-turn { position: absolute; z-index: 8; bottom: 0; width: 42px; height: 42px; padding: 0; border: 0; background: transparent; color: transparent; font: inherit; font-size: 0; opacity: .75; transition: opacity 160ms, background 160ms; touch-action: none; cursor: grab; }
+.folio-turn[data-direction="prev"] { left: 0; border-radius: 0 100% 0 0; }
+.folio-turn[data-direction="next"] { right: 0; border-radius: 100% 0 0 0; }
+.folio-turn::after { content: ""; position: absolute; bottom: 12px; width: 8px; height: 8px; border-bottom: 1px solid #6b6b5b; opacity: 0; transition: opacity 160ms; }
+.folio-turn[data-direction="prev"]::after { left: 12px; border-left: 1px solid #6b6b5b; }
+.folio-turn[data-direction="next"]::after { right: 12px; border-right: 1px solid #6b6b5b; }
+.folio-turn:is(:hover, :focus-visible)::after { opacity: .6; }
+.folio-turn:hover { opacity: 1; background: #6c725e0a; }
+.book-reader[data-state="flipping"] .book-stage, .book-reader[data-state="flipping"] .book-stage * { cursor: grabbing; }
+.reader-curl-layer { user-select: none; }
+.folio-turn:disabled { opacity: 0; pointer-events: none; }
+.reader-navigation { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: min(100%, var(--book-width, 1180px)); margin: 0 auto; font-size: .75rem; }
+.reader-navigation button { font-size: inherit; background: transparent; border: 1px solid transparent; border-radius: 2px; padding: 7px 12px; min-width: 92px; min-height: 36px; color: #323b29; white-space: nowrap; }
+.reader-navigation button:hover:not(:disabled) { background: #e6e5dc; border-color: transparent; }
+.reader-navigation button:disabled { opacity: .3; cursor: default; }
+.reader-navigation p { font-size: .6875rem; text-align: center; color: #585a4e; }
+.reader-hint { margin-top: 6px; text-align: center; font-size: .625rem; color: #686a60; }
+/* Source elements are repaginated without maintaining another manuscript. */
+.folio .opening { display: flex; flex-direction: column; border: 0; padding: 0; gap: 0; }
+.folio .opening h1 { font-size: clamp(2rem, calc(var(--page-width) * .12), 3.4rem); line-height: 1.03; letter-spacing: -.035em; font-weight: 400; }
+.folio .opening .subtitle { font-family: "Timeless Grotesk", Arial, sans-serif; font-size: .9375rem; line-height: 1.45; font-style: normal; margin-top: 1.3rem; }
+.folio .opening-note { display: grid; grid-template-columns: 1fr 1.2fr; gap: .55rem 1.1rem; margin-top: 1.35rem; padding: 0; font-size: .6875rem; }
+.folio .opening-note p:last-child { grid-column: 1 / -1; }
+.folio .opening-note p { margin: 0; }
+.folio .premise { margin-top: 1.35rem; font-size: 1rem; line-height: 1.5; font-weight: 400; }
+.folio .orientation > p, .folio .essay-section > p { margin-top: 1rem; }
+.folio .contents { position: static; border: 0; padding: 0; font-size: .75rem; }
+.folio .contents nav { display: grid; grid-template-columns: 1fr; gap: .65rem; }
+.folio .contents .aside-note { display: block; max-width: none; margin-top: 1.25rem; }
+.folio .contents nav span { display: inline; margin-right: .6rem; }
+.folio .part-heading { display: block; padding-bottom: 1.6rem; }
+.folio .part-heading h2 { font-family: "Timeless Grotesk", Arial, sans-serif; font-size: .625rem; line-height: 1.4; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
+.folio .part-heading .caption { display: none; }
+.folio .chapter { border: 0; }
+.folio .chapter summary { display: block; padding: 0; list-style: none; cursor: default; }
+.folio .chapter summary::after { display: none; }
+.folio .chapter-number { display: block; font-size: .6875rem; font-variant-numeric: tabular-nums; letter-spacing: .08em; margin-bottom: .9rem; color: #65645d; }
+.folio .chapter-title { font-size: 1.9rem; line-height: 1.1; letter-spacing: -.025em; font-weight: 400; text-wrap: balance; }
+.folio .chapter-question { font-family: "Timeless Grotesk", Arial, sans-serif; font-size: .875rem; font-weight: 420; line-height: 1.5; margin-top: 1.15rem; }
+.folio .chapter summary:hover .chapter-title { color: inherit; }
+.folio .chapter-body { padding: 0; margin-top: 1.3rem; }
+.folio .chapter-body > p + p { margin-top: .85rem; }
+.folio .chapter-body > .chapter-output { margin-top: 1.35rem; padding-top: .8rem; border-top: 1px solid #d6d2c7; font-size: 1rem; line-height: 1.5; }
+.folio .chapter-output > strong { font-family: "Timeless Grotesk", Arial, sans-serif; font-size: .6875rem; font-weight: 550; letter-spacing: .045em; text-transform: uppercase; }
+.folio .folio-flow-start, .folio .folio-continuation { margin-top: 0 !important; }
+.folio .chapter-output.folio-continuation { padding-top: 0; border-top: 0; }
+.folio-body li.folio-continuation { list-style: none; }
+.folio-cover:not(.folio-continuation-leaf) .folio-running,
+.folio:has(.chapter summary) .folio-running { visibility: hidden; }
+.folio-chapter-opener .folio-body { display: flex; flex-direction: column; justify-content: center; }
+.folio .essay-section { border: 0; padding: 0; margin: 0; }
+.folio .case-controls { display: grid; grid-template-columns: 1fr; gap: .7rem; margin: 0 0 1rem; }
+.folio .case-controls label { font-size: .6875rem; }
+.folio .case-controls select { font-size: .75rem; min-height: 2.4rem; padding-block: .35rem; }
+.folio .case-spread { display: block; margin-top: 1.1rem; }
+.folio .case-spread article { padding-top: .85rem; }
+.folio .case-response { border-top: 1px solid var(--link); padding-top: .85rem; }
+.folio .case-response h3 { margin-bottom: .85rem; }
+.folio :is(dt, label) { font-weight: 500; }
+.folio dt { margin-top: .8rem; }
+.folio dd { margin-top: .25rem; }
+.folio :is(ol, ul) { padding-left: 1.15rem; }
+.folio li + li { margin-top: .55rem; }
+.folio #case-actions { margin-block: .7rem; }
+.folio .case-conclusion { margin-top: 1rem; }
+.folio .caption { font-size: .6875rem; line-height: 1.45; }
+.folio .reading { padding: 0; margin-top: 1.1rem; }
+.folio .reading li { padding-top: .75rem; }
+.folio .reading li + li { margin-top: .75rem; }
+.folio footer { display: flex; flex-direction: column; border: 0; padding: 0; gap: 1.5rem; font-size: .875rem; }
+.folio footer .caption { margin: 0; }
+/* A full contents table in every reading mode. Fixed folio columns keep
+   references from changing the measured pagination after they are filled. */
+.chapter-directory:empty { display: none; }
+.chapter-directory { margin-block: 2.5rem 3rem; }
+.chapter-directory-list { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+.chapter-directory-list .chapter-directory-entry { margin: 0; padding: .42rem 0; break-inside: avoid; }
+.chapter-directory-list .directory-part-start:not(:first-child) { margin-top: 1rem; }
+.directory-link { display: grid; grid-template-columns: 2.1ch minmax(0, 1fr) 3ch; column-gap: .8rem; align-items: first baseline; color: var(--ink); text-decoration: none; }
+.directory-number, .directory-folio { font-family: "Timeless Grotesk", Arial, sans-serif; font-variation-settings: "STYL" 0; font-size: .6875rem; line-height: 1.35; font-variant-numeric: tabular-nums; color: #66665e; }
+.directory-label { font-family: "Timeless Serif", Georgia, serif; font-variation-settings: "STYL" 100; font-size: 1.0625rem; font-weight: 400; line-height: 1.3; text-wrap: pretty; }
+.directory-folio { text-align: right; }
+.directory-link:is(:hover, :focus-visible) .directory-label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+.folio .chapter-directory { margin: 0; }
+.folio .chapter-directory-list { margin-top: 1.25rem; padding: 0; }
+.folio .chapter-directory-list .chapter-directory-entry { margin: 0; padding: .42rem 0; }
+.folio .chapter-directory-list .directory-part-start:not(:first-child) { margin-top: .7rem; }
+.folio-directory:not(.folio-continuation-leaf) .folio-running { visibility: hidden; }
+.folio-directory .folio-flow-start.chapter-directory-list { margin-top: 0; }
+#reading-source .directory-link { grid-template-columns: 2.1ch minmax(0, 1fr); max-width: 38rem; }
+#reading-source .directory-folio { display: none; }
+/* Plain text is a full reading mode, with comfortable lines and persistent controls. */
+html[data-reader="text"] .reader-toolbar { position: sticky; top: 0; z-index: 20; width: 100%; max-width: none; padding: 10px max(24px, calc((100% - 1280px) / 2)); background: #f8f7f3f5; backdrop-filter: blur(12px); border-bottom: 1px solid #d9d6cb; }
+html[data-reader="text"] { scroll-padding-top: calc(var(--reader-toolbar-height, 112px) + 16px); }
+html[data-reader="text"] #reading-source [id] { scroll-margin-top: 0; }
+html[data-reader="text"] .document-body { max-width: 68ch; }
+html[data-reader="text"] :is(.orientation > p, .essay-section > p, .chapter-body) { font-size: 1.0625rem; line-height: 1.6; }
+html[data-reader="text"] .chapter-title { font-size: 1.4rem; }
+html[data-reader="text"] .chapter-body { line-height: 1.6; }
+#reading-source, #reading-source :is(.opening, .opening > *, .document-layout, .document-body, .contents, .contents nav, .chapter, .chapter-body) { min-width: 0; }
+#reading-source :is(h1, h2, h3, p, a, .chapter-title, .chapter-question) { overflow-wrap: anywhere; }
+.reader-example-jump { float: left; padding: 0; border: 0; background: none; color: var(--link); font: inherit; text-decoration: underline; text-underline-offset: .2em; }
+@media (min-width: 1600px) { .folio-body { font-size: 1.0625rem; } }
+@media (max-width: 760px) {
+  html[data-reader="book"] .site-header { padding: 12px 18px; flex-direction: row; align-items: center; min-height: 46px; font-size: .875rem; }
+  html[data-reader="book"] .site-header nav { gap: .8rem; font-size: .6875rem; }
+  .reader-toolbar { width: calc(100% - 36px); gap: .65rem; padding: 8px 0; }
+  .reader-location { flex: 1; }
+  .reader-location label, .reader-contents { display: none; }
+  .reader-location select { max-width: 100%; width: 100%; font-size: .6875rem; min-width: 0; }
+  .reader-mode { gap: 1px; padding: 2px; }
+  .reader-mode button { padding: 6px 10px; font-size: .6875rem; min-height: 34px; }
+  .book-reader { padding: 2px 16px 10px; }
+  .reader-canvas { padding: 8px 7px 14px; }
+  .folio .opening h1 { font-size: clamp(2rem, calc(var(--page-width) * .12), 3.4rem); }
+  .folio .opening .subtitle { font-size: 1rem; margin-top: 1rem; }
+  .folio .opening-note { margin-top: 1.1rem; gap: .6rem 1rem; }
+  .folio .premise { margin-top: 1.2rem; font-size: .9375rem; }
+  .folio .chapter-title { font-size: 1.8rem; }
+  .reader-navigation { font-size: .6875rem; gap: .5rem; }
+  .reader-navigation button { min-width: 82px; min-height: 36px; padding-inline: 12px; }
+  .reader-navigation p { font-size: .625rem; }
+  .reader-hint { font-size: .5625rem; }
+  html[data-reader="text"] .reader-toolbar { padding-inline: 18px; }
+  #reading-source :is(.opening, .document-layout) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) { html[data-reader="book"] .site-header nav { display: none; } }
+@media (max-width: 420px) {
+  .reader-toolbar { flex-wrap: wrap; justify-content: flex-end; }
+  .reader-location { flex: 1 1 12rem; }
+  .reader-navigation { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3px 12px; }
+  .reader-navigation p { grid-column: 1 / -1; grid-row: 1; }
+  .reader-navigation button:first-child { grid-column: 1; grid-row: 2; justify-self: start; }
+  .reader-navigation button:last-child { grid-column: 2; grid-row: 2; justify-self: end; }
+  #reading-source .contents nav { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  html[data-reader="book"] .site-header { padding-block: 7px; min-height: 34px; }
+  .reader-toolbar { padding-block: 4px; }
+  .book-reader { padding-bottom: 5px; }
+  .reader-canvas { padding-block: 4px 9px; }
+  .reader-hint { display: none; }
+  .folio-inner { --folio-margin: 20px; padding: 14px 20px; }
+  .folio-running { margin-bottom: .7rem; }
+  .folio-number { padding-top: .4rem; }
+}
+/* A phone is the page: use the whole reading area between compact controls. */
+@media (max-width: 560px) {
+  html[data-reader="book"] .site-header { display: none; }
+  html[data-reader="book"] .reader-toolbar { width: 100%; padding: 7px 12px; flex-wrap: nowrap; gap: 8px; }
+  html[data-reader="book"] .reader-location { flex: 1 1 0; min-width: 0; }
+  html[data-reader="book"] .reader-location select { min-height: 38px; }
+  .book-reader { padding: 0; }
+  .reader-canvas { padding: 0; }
+  .book-stage::before { display: none; }
+  .folio { border: 0; border-radius: 0; }
+  .folio.--right, .folio.--left { background: #faf9f4; border-radius: 0; }
+  .folio-inner { padding: clamp(20px, 6vw, 28px); }
+  .folio .chapter-directory-list .chapter-directory-entry { padding-block: 0; }
+  .folio .chapter-directory-list .directory-part-start:not(:first-child) { margin-top: .4rem; }
+  .folio .directory-link { min-height: 24px; padding-block: .26rem; }
+  .reader-navigation { display: flex; width: 100%; gap: 8px; padding: 8px 12px; }
+  .reader-navigation button { min-width: 76px; min-height: 36px; padding-inline: 10px; }
+  .reader-navigation p { min-width: 0; font-size: .625rem; }
+  .reader-hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .folio-turn, .folio-turn::after { transition: none; } }
+@media print {
+  .skip, #reader-controls, #book-reader { display: none !important; }
+  #reading-source { display: block !important; }
+  html[data-reader], html[data-reader] body { height: auto; overflow: visible; display: block; background: white; }
+}
+
+/* A static monograph: one upright title, set on a consistent typographic grid. */
+.folio.folio-front-cover {
+  --cover-paper: #f3efe6;
+  --cover-ink: #152444;
+  color: var(--cover-ink);
+  background: var(--cover-paper);
+  border: 1px solid #d1cabb;
+}
+.folio-front-cover .folio-inner {
+  height: 100%;
+  padding: 0;
+}
+.folio-front-cover .folio-running,
+.folio-front-cover .folio-number {
+  display: none;
+}
+.folio-front-cover .folio-body {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.designed-cover {
+  position: relative;
+  container-type: size;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--cover-paper);
+  color: var(--cover-ink);
+  font-family: "Timeless Grotesk", Arial, sans-serif;
+  font-style: normal;
+  font-variation-settings: "STYL" 0;
+  -webkit-font-smoothing: antialiased;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+}
+.designed-cover .cover-imprint {
+  position: absolute;
+  inset: 7cqh 8cqw auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+  font-size: clamp(9px, 2.65cqw, 14px);
+  font-weight: 420;
+  line-height: 1.2;
+  letter-spacing: .015em;
+}
+.designed-cover .cover-volume {
+  font-variant-numeric: tabular-nums;
+}
+.designed-cover .cover-title {
+  position: absolute;
+  inset: 21cqh 8cqw auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  font-family: "Timeless Serif", Georgia, serif;
+  font-style: normal;
+  font-variation-settings: "STYL" 0;
+  font-size: 20cqw;
+  font-weight: 350;
+  line-height: .99;
+  letter-spacing: -.045em;
+  text-transform: none;
+  text-wrap: nowrap;
+  overflow-wrap: normal;
+}
+.designed-cover .cover-title > span {
+  display: block;
+  white-space: nowrap;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.designed-cover .cover-author {
+  position: absolute;
+  inset: auto 8cqw 18cqh;
+  margin: 0;
+  font-size: clamp(11px, 4.4cqw, 24px);
+  font-weight: 420;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+}
+.designed-cover .cover-edition {
+  position: absolute;
+  inset: auto 8cqw 7.5cqh;
+  font-size: clamp(9px, 3.1cqw, 16px);
+  font-weight: 420;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.designed-cover .cover-edition span {
+  display: block;
+}
+/* A phone lengthens the open space without stretching the letterforms. */
+@container (max-aspect-ratio: 3/5) {
+  .designed-cover .cover-title {
+    top: 22cqh;
+    font-size: 21.8cqw;
+  }
+}
+/* Shallow leaves retain the title, author and subtitle in two aligned fields. */
+@container (min-aspect-ratio: 1/1) {
+  .designed-cover .cover-imprint {
+    inset: 7cqh 8cqw auto;
+    font-size: clamp(8px, 4.5cqh, 12px);
+  }
+  .designed-cover .cover-title {
+    inset: 23cqh auto auto 8cqw;
+    font-size: min(13cqw, 18cqh);
+    line-height: 1.01;
+  }
+  .designed-cover .cover-author {
+    inset: auto 8cqw 8cqh;
+    font-size: clamp(9px, 5.5cqh, 14px);
+  }
+  .designed-cover .cover-edition {
+    inset: auto 8cqw 8cqh 66cqw;
+    font-size: clamp(8px, 4.5cqh, 12px);
+    line-height: 1.35;
+  }
+}
+
+/* CourtOS composition: quiet navigation, source notes, and the existing fonts. */
+@font-face{font-family:"Paper Mono";src:url("fonts/PaperMono-Regular.woff2") format("woff2");font-display:swap}
+:root{--paper:#fff;--ink:#20211f;--line:#dedfd9;--link:#293c35}
+.site-header{padding:16px 28px;max-width:none;min-height:60px;gap:24px}
+.site-header .wordmark{font-family:"Timeless Serif",Georgia,serif;font-size:24px;font-weight:400;letter-spacing:-.035em}
+.site-header nav{align-items:center;gap:18px}.language{display:flex;gap:16px;font:10px "Paper Mono",monospace}
+.language a{display:flex;align-items:center;min-height:36px;text-decoration:none}.language a[aria-current]{text-decoration:underline;text-underline-offset:5px}
+#reading-source{max-width:760px;margin:0 auto;padding:0 36px 80px}.opening{display:block}.opening-note{display:flex;justify-content:space-between;gap:24px}
+.opening h1{max-width:11ch;font-size:clamp(48px,7vw,84px);line-height:1.02;letter-spacing:-.045em}.subtitle{font-style:normal;max-width:40ch}
+.opening-note p+p{margin:0}.premise{font-family:"Timeless Serif",Georgia,serif;font-size:23px;font-weight:400;line-height:1.5}
+.chapter-body .text-block+.text-block,.chapter-body .list-block{margin-top:1.4rem}.chapter-body h3{font-family:"Timeless Grotesk",Arial,sans-serif;font-size:14px;margin:0 0 .55rem}.chapter-body h3+p{margin-top:0}
+.chapter-body .note{margin:1.6rem 0;padding:1rem 0;border-block:1px solid var(--line);font-family:"Timeless Grotesk",Arial,sans-serif;font-size:15px}
+.chapter-body .checklist{padding-left:1.25rem}.chapter-body .checklist li+li{margin-top:.7rem}.chapter-body .flow{padding-left:1.25rem;display:block}.chapter-body .flow li+li{margin-top:.55rem}
+.chapter-body .links{list-style:none;padding:0}.chapter-body .links li{margin:.7rem 0}.references{font:10px "Paper Mono",monospace;line-height:0;vertical-align:super}.noteref{padding:4px 2px;text-decoration:none}
+.folio-body .chapter-body{font-size:inherit}.folio .chapter-question{font-size:.92rem}.folio .note{font-size:.86rem;padding-block:.7rem}.folio .chapter-body h3{font-size:.78rem;margin-top:0}.folio .source-entry{font-size:.83rem}
+.folio .opening h1{font-size:2.75rem}.folio .premise{font-size:1.05rem}.folio .opening-note{display:grid;grid-template-columns:1fr 1fr;font-size:.68rem}.folio .subtitle{font-family:"Timeless Grotesk",Arial,sans-serif;font-size:1rem}
+.reader-toolbar{width:min(100% - 48px,1120px)}.reader-location select{max-width:min(45vw,420px)}.reader-contents{background:none;border:0;cursor:pointer;font-size:12px}
+.reader-navigation button{min-height:44px}.book-reader{background:#f3f3ef}.reader-hint{font-size:10px}
+dialog{color:var(--ink);background:#fff;border:1px solid var(--line);padding:30px;max-width:min(620px,calc(100vw - 28px));max-height:calc(100dvh - 36px);overflow:auto;margin:auto}dialog::backdrop{background:#18221e38}.dialog-bar{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding-bottom:20px}.dialog-bar h2{font-size:26px}.dialog-bar button{font:12px "Timeless Grotesk",Arial,sans-serif;background:none;border:0;padding:10px 0;cursor:pointer}.dialog-bar button:focus-visible{outline:2px solid currentColor}.source-entry{font-size:18px;line-height:1.55}.source-entry p{margin-top:14px}.source-entry .links{list-style:none;padding:0}.all-sources{display:inline-block;margin-top:24px;font-size:13px}
+.toc{list-style:none;padding:0}.toc li+li{margin-top:12px}.toc a{display:grid;grid-template-columns:24px 1fr;gap:12px;min-height:32px;font:14px/1.4 "Timeless Grotesk",Arial,sans-serif;text-decoration:none}.toc-number{font:10px "Paper Mono",monospace;color:#6a6b64}.toc-links{display:flex;gap:24px;margin-top:28px;font-size:13px}.chapter-directory{padding-block:32px}.chapter-directory h2{margin-bottom:28px}.chapter-directory ol{list-style:none;padding:0}.directory-link{display:grid;grid-template-columns:24px 1fr 24px;gap:12px;padding:10px 0;font:14px/1.4 "Timeless Grotesk",Arial,sans-serif;text-decoration:none}.directory-folio{text-align:right;font:10px "Paper Mono",monospace}.directory-number{font:10px "Paper Mono",monospace}.folio .chapter-directory{padding:0}.folio .chapter-directory h2{font-size:1.9rem}.folio .directory-link{font-size:.8rem;padding:7px 0}
+.colophon{max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:18px;padding:24px 36px;font-size:11px}.home{max-width:1140px;margin:0 auto;padding:70px 40px}.home h1{font-size:clamp(50px,7vw,94px);max-width:10ch}.home .lead{font-size:24px;max-width:35ch;margin:28px 0 50px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}.card{border-top:1px solid var(--line);padding-top:20px}.card h2{font-size:32px;margin:24px 0}.cover-links{display:flex;gap:24px;font-size:14px}.eyebrow{font:10px "Paper Mono",monospace;letter-spacing:.04em}.smallprint{font-size:12px;margin-top:50px}
+@media(max-width:600px){.site-header{flex-direction:row;align-items:center;padding:10px 18px;gap:16px}.site-header nav{gap:12px}.language{gap:12px}.site-header .wordmark{font-size:23px}.reader-toolbar{width:calc(100% - 28px);gap:12px}.reader-location label{display:none}.reader-location select{max-width:45vw;width:45vw}.reader-mode button{padding-inline:10px}.reader-contents{font-size:11px}.reader-hint{display:none}#reading-source{padding:0 24px 50px}.opening h1{font-size:52px}.chapter-body{padding-left:0}.chapter summary{grid-template-columns:22px 1fr 14px}.chapter-title{font-size:25px}.chapter-question{font-size:17px}.colophon{padding:20px 24px}.home{padding:45px 24px}.home .lead{font-size:21px}.cards{grid-template-columns:1fr;gap:36px}.card h2{max-width:15ch}dialog{padding:22px}}
+@media print{.site-header,.reader-toolbar,.book-reader,dialog,.colophon{display:none!important}#reading-source{display:block!important;padding:0;max-width:none}.chapter-body{display:block!important}.chapter{break-inside:auto}.source-entry a{overflow-wrap:anywhere}}
+
+/* Full-height reading gives the text priority over the colophon. */
+html[data-reader="book"] .colophon{display:none}
+html[data-reader="book"] .site-header{padding-block:8px;min-height:52px;background:#fff}
+html[data-reader="book"] .reader-toolbar{padding-block:8px}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.folio .opening{padding:0;border:0}.folio .opening h1{font-size:2.5rem}.folio .opening-note{margin-top:1.2rem}.folio .premise{margin-top:1.5rem}
+@media(max-width:600px){.reader-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.reader-location{gap:3px}.reader-location select{max-width:100%;width:100%;min-width:0}.reader-contents{padding-inline:0}.reader-mode button{font-size:10px;padding-inline:8px;min-height:34px}.reader-mode{gap:0}.reader-location{min-width:0}.book-reader{padding-inline:10px}}
+
+@media(max-width:700px){.reader-contents{display:inline-flex;align-items:center;min-height:38px;flex:0 0 auto}.reader-location select{min-width:0;width:auto;flex:1 1 auto}.reader-location{flex:1 1 auto}#contents-dialog .language{margin-bottom:24px}#contents-dialog .language a{min-height:40px;padding:0 12px}}

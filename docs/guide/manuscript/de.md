@@ -226,7 +226,7 @@ Angenommene Anfragen zählen auch bei Modellfehlern. Antworten bleiben bis zur v
 Erst nach dem VPS-Test: ein eigener Auftrag für den institutionellen Betrieb.
 
 ### Später: mit Fallakten arbeiten
-Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Die Pseudonymisierung ist noch nicht umgesetzt. Die Word-Oberfläche ist noch nicht vollständig in Word geprüft; Citecheck ist bisher separat verlinkt.
+Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Die Pseudonymisierung ist noch nicht umgesetzt. Anmeldung, Recherche, Einfügen und der Wechsel zwischen Word und Browser wurden in Word für macOS mit einem synthetischen Dokument geprüft. Bei parallelen Änderungen wählen Sie den Stand. Andere Word-Versionen und institutionelle Umgebungen benötigen eigene Tests. Citecheck ist separat verlinkt.
 
 ### Vor echten Akten klären
 - Erlaubte Aufgaben und fachliche sowie betriebliche Verantwortung bestimmen.
@@ -239,11 +239,10 @@ Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Origi
 Eine bestandene Demonstration ist keine Datenschutzfreigabe, Sicherheitszertifizierung oder Bestätigung digitaler Souveränität. Der heutige Pilot liefert Beobachtungen; er ersetzt diese Entscheidungen nicht.
 
 ### Offene Softwarebasis
-CourtOS ist ein Fork von Mike (MikeOSS), dem Projekt von Open Legal Products und seinen Mitwirkenden. Die Softwarelizenz ist GNU AGPL v3.0; die Hinweise im Repository sind massgebend.
+Quellcode, Lizenz und Angaben zu den Mitwirkenden sind im öffentlichen Repository dokumentiert. Die Software steht unter GNU AGPL v3.0.
 
 ### Weiterlesen
 - [CourtOS: Quellcode und Lizenz](https://github.com/jonashertner/CourtOS)
-- [Mike: ursprüngliches Projekt](https://github.com/open-legal-products/mike)
 
 ## 14. Quellen und Arbeitsweise
 Die ersten vier Kapitel entwickeln einen Gestaltungsvorschlag. Die folgenden Quellen stützen die ausdrücklich zugeordneten Positionen und Rechtsaussagen.

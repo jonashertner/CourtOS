@@ -16,11 +16,11 @@
         145.85,
         64.65,
         117.15,
-        100.85,
+        90.85,
         142.35
       ],
-      "sha256": "f9a280c2dd08d21eab41a76760b224155cc21ca3533f829156f4d836684e9d33",
-      "bytes": 70631,
+      "sha256": "a7247907a7a470e92d6759fe000eee3469f5c30898b698ac0d48ba6c1ceddb6a",
+      "bytes": 70428,
       "metadata": null,
       "xmp_present": false
     },
@@ -39,11 +39,11 @@
         160.35,
         79.65,
         117.15,
-        86.35,
+        76.35,
         142.35
       ],
-      "sha256": "33872f8dfddb6507b96e7ca5803c27e223e060554333a8b17dfc213ec6283f1c",
-      "bytes": 71191,
+      "sha256": "060e4ae2692e732a7cd67780f5ea8710e734b87826b4d77d36e9b6ad9a5b687e",
+      "bytes": 71005,
       "metadata": null,
       "xmp_present": false
     },
@@ -62,21 +62,30 @@
         188.85,
         93.65,
         131.65,
-        100.85,
+        105.35,
         156.35
       ],
-      "sha256": "00b0dbfe601d08766fb34908afff8d7913c4795d0b3ab30cb4ed0d115be2e3ad",
-      "bytes": 69428,
+      "sha256": "2ddbb962bfde844de085cdb9bb674c33c3f47a008bb1cd303b53aeb969ff1aaa",
+      "bytes": 69236,
       "metadata": null,
       "xmp_present": false
     }
   },
   "metadata_policy": "No PDF Info dictionary or XMP; HTML title and author metadata blank.",
   "typography": "Timeless Serif / Timeless Sans / Paper Mono; fonts embedded under their respective licences",
+  "web_reader": {
+    "languages": [
+      "de",
+      "fr",
+      "it"
+    ],
+    "reader_asset_tag": "ebcb9909c075",
+    "reference": "Rule & Reason measured page reader, adapted for CourtOS"
+  },
   "html_checks": {
     "languages": 3,
     "links": "all internal targets and anchors verified",
     "remote_assets": false,
-    "scripts": "local reader.js; no network requests or persistent storage"
+    "scripts": "local adapted Rule & Reason reader; no network requests; optional reading-mode localStorage only"
   }
 }

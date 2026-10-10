@@ -1,11 +1,11 @@
 # Building the CourtOS guide
 
-`manuscript/content.json` is the editable source for all three languages.
+`manuscript/content.json` is the editable source for all three languages. `build_web_reader.py` renders HTML from it using `folio-reader.js` and `folio-reader.css`; `build_booklet.py` calls the same renderer after building PDFs. The retained legacy `reader.js`/`reader.css` are not used by the new build.
 `output/` contains the reviewed static guide and three fourteen-page PDFs (180 × 270 mm).
 Deploy its contents together, preserving relative paths, under `/guide/`.
-The web guide works without JavaScript and uses local font assets. The continuous reader adapts to phone, tablet and desktop. On larger screens an optional book view measures complete text blocks after fonts load and lays them out in one or two pages. Its page numbers depend on the viewport and are not PDF page numbers. If a block cannot fit, it returns to the complete continuous text rather than clipping it.
+The web guide works without JavaScript and uses local font assets. The continuous reader adapts to phone, tablet and desktop. The default book view adapts the measured page reader from Jonas Hertner’s published Rule & Reason book (pinned provenance in `reference-reader-provenance.json`). It measures text after fonts load, splits at word boundaries and shows one or two pages. Continuous reading remains available. Its page numbers depend on the viewport and are not PDF page numbers. If a block cannot fit, it returns to the complete continuous text rather than clipping it.
 
-Each numbered reference has an individual source anchor. With JavaScript it opens a native dialog containing the existing source link, exact reviewed locator and scope limitation; Escape returns focus to the citing reference without changing the reading position. Without JavaScript the same reference leads to its source entry. Original links in these entries open a separate tab. Native dialogs, chapter navigation and responsive page controls use local `reader.js`, with no network calls or persistent storage. The three PDFs retain fixed fourteen-page pagination and individual source-entry destinations. Neither layout certifies a source claim or removes the stated review limits.
+Each numbered reference has an individual source anchor. With JavaScript it opens a native dialog containing the existing source link, exact reviewed locator and scope limitation; Escape returns focus to the citing reference without changing the reading position. Without JavaScript the same reference leads to its source entry. Original links in these entries open a separate tab. Native dialogs, chapter navigation and responsive page controls use local `reader.js`, with no network calls. Optional localStorage remembers only the reading mode; it stores no reading history or document content. The three PDFs retain fixed fourteen-page pagination and individual source-entry destinations. Neither layout certifies a source claim or removes the stated review limits.
 
 The edition begins with four source-grounded chapters on purpose, judicial
 responsibility, reviewable work and evaluation. The practical entry is now
@@ -45,7 +45,7 @@ without altering them and keep readable working notes alongside them. Notes woul
 distinguish findings, allegations and disputed points, link source versions and
 flag dependencies for review when sources change. The current library uploads
 copies to the VPS; in-place filesystem access and a local Word/browser connector
-are not implemented. No automatic anonymisation or complete native Word acceptance is claimed. Citecheck remains separately linked. The guide no longer prescribes the former Linden case.
+are not implemented. No automatic anonymisation or general Word acceptance is claimed. A synthetic Word for macOS test verified sign-in, exact-citation research, selected-passage insertion and the account-bound browser roundtrip, including a concurrent-edit conflict. Other Office versions, private-source roundtrips and institutional environments need their own acceptance tests. Citecheck remains separately linked. The guide no longer prescribes the former Linden case.
 
 The guide describes email-code self-registration and the current separate
 per-person UTC-day limits: three native local assistant starts and one external

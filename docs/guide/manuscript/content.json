@@ -462,7 +462,7 @@
           {
             "type": "text",
             "heading": "Später: mit Fallakten arbeiten",
-            "body": "Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Die Pseudonymisierung ist noch nicht umgesetzt. Die Word-Oberfläche ist noch nicht vollständig in Word geprüft; Citecheck ist bisher separat verlinkt."
+            "body": "Klage, Klageantwort und Beilagen verlangen eine freigegebene Umgebung für Originalakten. Vor einer externen Prüfung wäre eine konsistente Pseudonymisierung zu entwickeln: gleiche Personen und Organisationen erhalten in allen Dokumenten gleiche Ersatzbezeichnungen; die Zuordnung bleibt lokal. Das garantiert keine Anonymität. Verbleibende Identifizierbarkeit wäre vor dem Versand zu prüfen. Die Pseudonymisierung ist noch nicht umgesetzt. Anmeldung, Recherche, Einfügen und der Wechsel zwischen Word und Browser wurden in Word für macOS mit einem synthetischen Dokument geprüft. Bei parallelen Änderungen wählen Sie den Stand. Andere Word-Versionen und institutionelle Umgebungen benötigen eigene Tests. Citecheck ist separat verlinkt."
           },
           {
             "type": "items",
@@ -483,7 +483,7 @@
           {
             "type": "text",
             "heading": "Offene Softwarebasis",
-            "body": "CourtOS ist ein Fork von Mike (MikeOSS), dem Projekt von Open Legal Products und seinen Mitwirkenden. Die Softwarelizenz ist GNU AGPL v3.0; die Hinweise im Repository sind massgebend."
+            "body": "Quellcode, Lizenz und Angaben zu den Mitwirkenden sind im öffentlichen Repository dokumentiert. Die Software steht unter GNU AGPL v3.0."
           },
           {
             "type": "links",
@@ -492,10 +492,6 @@
               [
                 "CourtOS: Quellcode und Lizenz",
                 "https://github.com/jonashertner/CourtOS"
-              ],
-              [
-                "Mike: ursprüngliches Projekt",
-                "https://github.com/open-legal-products/mike"
               ]
             ]
           }
@@ -1045,7 +1041,7 @@
           {
             "type": "text",
             "heading": "Plus tard: travailler avec les dossiers",
-            "body": "Demande, réponse et pièces exigent un environnement autorisé pour les originaux. Avant un examen externe, une pseudonymisation cohérente reste à développer: mêmes personnes et organisations, mêmes pseudonymes dans tous les documents; la table de correspondance reste locale. Cela ne garantit pas l’anonymat. L’identification encore possible devrait être examinée avant l’envoi. La pseudonymisation reste à développer. L’interface Word n’a pas encore été entièrement vérifiée dans Word; Citecheck est pour l’instant accessible par un lien distinct."
+            "body": "Demande, réponse et pièces exigent un environnement autorisé pour les originaux. Avant un examen externe, une pseudonymisation cohérente reste à développer: mêmes personnes et organisations, mêmes pseudonymes dans tous les documents; la table de correspondance reste locale. Cela ne garantit pas l’anonymat. L’identification encore possible devrait être examinée avant l’envoi. La pseudonymisation reste à développer. La connexion, la recherche, l’insertion et le passage entre Word et le navigateur ont été vérifiés dans Word pour macOS avec un document fictif. En cas de modifications parallèles, vous choisissez la version. Les autres versions de Word et environnements institutionnels nécessitent leurs propres essais. Citecheck reste accessible par un lien distinct."
           },
           {
             "type": "items",
@@ -1066,7 +1062,7 @@
           {
             "type": "text",
             "heading": "Une base logicielle ouverte",
-            "body": "CourtOS est un fork de Mike (MikeOSS), projet d’Open Legal Products et de ses contributeurs. La licence du logiciel est GNU AGPL v3.0; les mentions du dépôt font foi."
+            "body": "Le code source, la licence et les contributions sont documentés dans le dépôt public. Le logiciel est distribué sous GNU AGPL v3.0."
           },
           {
             "type": "links",
@@ -1075,10 +1071,6 @@
               [
                 "CourtOS: code source et licence",
                 "https://github.com/jonashertner/CourtOS"
-              ],
-              [
-                "Mike: projet d’origine",
-                "https://github.com/open-legal-products/mike"
               ]
             ]
           }
@@ -1628,7 +1620,7 @@
           {
             "type": "text",
             "heading": "In seguito: lavorare con i fascicoli",
-            "body": "Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. La pseudonimizzazione resta da sviluppare. L’interfaccia Word non è ancora stata interamente verificata in Word; Citecheck è attualmente accessibile tramite un link separato."
+            "body": "Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. La pseudonimizzazione resta da sviluppare. L’accesso, la ricerca, l’inserimento e il passaggio tra Word e il browser sono stati verificati in Word per macOS con un documento fittizio. In caso di modifiche parallele, scegliete la versione. Altre versioni di Word e ambienti istituzionali richiedono prove specifiche. Citecheck resta accessibile tramite un link separato."
           },
           {
             "type": "items",
@@ -1649,7 +1641,7 @@
           {
             "type": "text",
             "heading": "Una base software aperta",
-            "body": "CourtOS è un fork di Mike (MikeOSS), progetto di Open Legal Products e dei suoi collaboratori. La licenza del software è GNU AGPL v3.0; fanno fede le indicazioni nel repository."
+            "body": "Il codice sorgente, la licenza e i contributi sono documentati nel repository pubblico. Il software è distribuito con licenza GNU AGPL v3.0."
           },
           {
             "type": "links",
@@ -1658,10 +1650,6 @@
               [
                 "CourtOS: codice sorgente e licenza",
                 "https://github.com/jonashertner/CourtOS"
-              ],
-              [
-                "Mike: progetto originale",
-                "https://github.com/open-legal-products/mike"
               ]
             ]
           }

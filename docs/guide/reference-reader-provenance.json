@@ -1,0 +1,13 @@
+{
+  "source": "https://ruleandreason.com/book-1/",
+  "owner_directed_reuse": "Jonas Hertner explicitly requested reuse of his reference book code on10October2026",
+  "repository": "jonashertner/rule-and-reason",
+  "commit": "f03d3d4941bb03d0bb114a04c8d1f46d0c900c52",
+  "published_asset_hashes": {
+    "reader.js": "075812d70d4e7ff3b5227c2e2b07e2793fabacc21ef9f8515401aeb54e53ce25",
+    "reader.css": "92fd58e9a51bd9545bb037fb919637df4d513190461aeacccb6c468a07c8aec0",
+    "book.css": "f03a548efcde1dadb0576855a61fe138ed81ebd2b862f506161a552f3cb63c65",
+    "cover.css": "1790c5a34e1eba658ef40b1d8382c28e88a039e3475d71052dc940382920f540"
+  },
+  "scope": "Published reader assets only; no private strategy or internal source published. CourtOS adaptation supplies its own content, localized controls and source dialogs. Existing reviewed font binaries remain embedding-only."
+}

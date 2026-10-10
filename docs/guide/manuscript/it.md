@@ -226,7 +226,7 @@ Le richieste ammesse contano anche in caso di errore del modello. Le risposte re
 Dopo il test sul VPS: un progetto distinto per l’impiego istituzionale.
 
 ### In seguito: lavorare con i fascicoli
-Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. La pseudonimizzazione resta da sviluppare. L’interfaccia Word non è ancora stata interamente verificata in Word; Citecheck è attualmente accessibile tramite un link separato.
+Petizione, risposta e allegati richiedono un ambiente autorizzato per gli originali. Prima di un esame esterno occorre sviluppare una pseudonimizzazione coerente: stesse persone e organizzazioni, stessi pseudonimi in tutti i documenti; la tabella di corrispondenza resta locale. Ciò non garantisce l’anonimato. L’identificabilità residua andrebbe verificata prima dell’invio. La pseudonimizzazione resta da sviluppare. L’accesso, la ricerca, l’inserimento e il passaggio tra Word e il browser sono stati verificati in Word per macOS con un documento fittizio. In caso di modifiche parallele, scegliete la versione. Altre versioni di Word e ambienti istituzionali richiedono prove specifiche. Citecheck resta accessibile tramite un link separato.
 
 ### Prima dei fascicoli reali
 - Definire compiti autorizzati e responsabilità professionali e operative.
@@ -239,11 +239,10 @@ Petizione, risposta e allegati richiedono un ambiente autorizzato per gli origin
 Una dimostrazione riuscita non vale come autorizzazione in materia di protezione dei dati, certificazione di sicurezza o prova di sovranità digitale. Il progetto pilota fornisce osservazioni; non sostituisce queste decisioni.
 
 ### Una base software aperta
-CourtOS è un fork di Mike (MikeOSS), progetto di Open Legal Products e dei suoi collaboratori. La licenza del software è GNU AGPL v3.0; fanno fede le indicazioni nel repository.
+Il codice sorgente, la licenza e i contributi sono documentati nel repository pubblico. Il software è distribuito con licenza GNU AGPL v3.0.
 
 ### Per approfondire
 - [CourtOS: codice sorgente e licenza](https://github.com/jonashertner/CourtOS)
-- [Mike: progetto originale](https://github.com/open-legal-products/mike)
 
 ## 14. Fonti e metodo
 I primi quattro capitoli propongono un modo di progettare il lavoro giudiziario. Le fonti seguenti sostengono le posizioni e le affermazioni giuridiche espressamente attribuite loro.

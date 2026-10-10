@@ -226,7 +226,7 @@ Les demandes admises comptent même si le modèle échoue. Les réponses restent
 Après le test sur le VPS: un projet distinct pour un usage institutionnel.
 
 ### Plus tard: travailler avec les dossiers
-Demande, réponse et pièces exigent un environnement autorisé pour les originaux. Avant un examen externe, une pseudonymisation cohérente reste à développer: mêmes personnes et organisations, mêmes pseudonymes dans tous les documents; la table de correspondance reste locale. Cela ne garantit pas l’anonymat. L’identification encore possible devrait être examinée avant l’envoi. La pseudonymisation reste à développer. L’interface Word n’a pas encore été entièrement vérifiée dans Word; Citecheck est pour l’instant accessible par un lien distinct.
+Demande, réponse et pièces exigent un environnement autorisé pour les originaux. Avant un examen externe, une pseudonymisation cohérente reste à développer: mêmes personnes et organisations, mêmes pseudonymes dans tous les documents; la table de correspondance reste locale. Cela ne garantit pas l’anonymat. L’identification encore possible devrait être examinée avant l’envoi. La pseudonymisation reste à développer. La connexion, la recherche, l’insertion et le passage entre Word et le navigateur ont été vérifiés dans Word pour macOS avec un document fictif. En cas de modifications parallèles, vous choisissez la version. Les autres versions de Word et environnements institutionnels nécessitent leurs propres essais. Citecheck reste accessible par un lien distinct.
 
 ### Avant les dossiers réels
 - Définir les tâches autorisées et les responsabilités métier et d’exploitation.
@@ -239,11 +239,10 @@ Demande, réponse et pièces exigent un environnement autorisé pour les origina
 Une démonstration réussie ne vaut ni autorisation de protection des données, ni certification de sécurité, ni preuve de souveraineté numérique. Le pilote fournit des observations; il ne remplace pas ces décisions.
 
 ### Une base logicielle ouverte
-CourtOS est un fork de Mike (MikeOSS), projet d’Open Legal Products et de ses contributeurs. La licence du logiciel est GNU AGPL v3.0; les mentions du dépôt font foi.
+Le code source, la licence et les contributions sont documentés dans le dépôt public. Le logiciel est distribué sous GNU AGPL v3.0.
 
 ### Pour aller plus loin
 - [CourtOS: code source et licence](https://github.com/jonashertner/CourtOS)
-- [Mike: projet d’origine](https://github.com/open-legal-products/mike)
 
 ## 14. Sources et méthode
 Les quatre premiers chapitres proposent une conception du travail judiciaire. Les sources suivantes étayent les positions et les propositions juridiques qui leur sont expressément attribuées.
