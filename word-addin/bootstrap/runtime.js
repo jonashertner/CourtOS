@@ -6,6 +6,16 @@
     const ORIGIN = "https://sandbox.swisslaw.io";
     const OFFICE_URL = "https://appsforoffice.microsoft.com/lib/1/hosted/office.js";
     let readiness;
+    const PROBE_CODES = new Set(["TIMEOUT", "NETWORK", "HTTP_OTHER", "MIME", "LENGTH", "STREAM", "READ", "UTF8", "JSON", "IDENTITY", "UNKNOWN",
+        "HTTP400", "HTTP401", "HTTP403", "HTTP404", "HTTP409", "HTTP429", "HTTP500", "HTTP502", "HTTP503", "HTTP504"]);
+    function probeError(code) {
+        const error = new Error("Authentication check failed");
+        error.courtosProbeCode = code;
+        return error;
+    }
+    function diagnosticCode(error) {
+        return PROBE_CODES.has(error?.courtosProbeCode) ? error.courtosProbeCode : "UNKNOWN";
+    }
     function sameOrigin() {
         if (w.location.origin !== ORIGIN) throw new Error("Untrusted host");
         return ORIGIN;
@@ -48,32 +58,47 @@
         sameOrigin();
         if (!((method === "GET" && path === "/api/auth/session") || (method === "POST" && path === "/api/auth/cloudflare"))) throw new Error("Unsupported request");
         const controller = new AbortController();
-        const timer = w.setTimeout(() => controller.abort(), 10000);
+        let timedOut = false;
+        const timer = w.setTimeout(() => { timedOut = true; controller.abort(); }, 10000);
         try {
-            const response = await w.fetch(path, { method, credentials: "include", mode: "same-origin", cache: "no-store", redirect: "error", signal: controller.signal });
-            if (!response.ok || !/^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") || "")) throw new Error("Session unavailable");
+            let response;
+            try { response = await w.fetch(path, { method, credentials: "include", mode: "same-origin", cache: "no-store", redirect: "error", signal: controller.signal }); }
+            catch { throw probeError(timedOut ? "TIMEOUT" : "NETWORK"); }
+            if (!response.ok) throw probeError(PROBE_CODES.has("HTTP" + response.status) ? "HTTP" + response.status : "HTTP_OTHER");
+            if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") || "")) throw probeError("MIME");
             const declaredBytes = response.headers.get("content-length");
-            if (declaredBytes && (!/^\d+$/.test(declaredBytes) || Number(declaredBytes) > 8192)) throw new Error("Invalid session response");
-            if (!response.body || typeof response.body.getReader !== "function") throw new Error("Invalid session response");
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8", { fatal: true });
+            if (declaredBytes && (!/^\d+$/.test(declaredBytes) || Number(declaredBytes) > 8192)) throw probeError("LENGTH");
+            if (!response.body || typeof response.body.getReader !== "function") throw probeError("STREAM");
+            let reader;
+            try { reader = response.body.getReader(); }
+            catch { throw probeError("STREAM"); }
             let raw = "";
             let bytes = 0;
             try {
+                let decoder;
+                try { decoder = new TextDecoder("utf-8", { fatal: true }); }
+                catch { throw probeError("UTF8"); }
                 while (true) {
-                    const part = await reader.read();
+                    let part;
+                    try { part = await reader.read(); }
+                    catch { throw probeError(timedOut ? "TIMEOUT" : "READ"); }
                     if (part.done) break;
                     bytes += part.value.byteLength;
                     if (bytes > 8192) {
                         void reader.cancel().catch(() => {});
-                        throw new Error("Invalid session response");
+                        throw probeError("LENGTH");
                     }
-                    raw += decoder.decode(part.value, { stream: true });
+                    try { raw += decoder.decode(part.value, { stream: true }); }
+                    catch { throw probeError("UTF8"); }
                 }
-                raw += decoder.decode();
+                try { raw += decoder.decode(); }
+                catch { throw probeError("UTF8"); }
             } finally { reader.releaseLock(); }
-            const user = JSON.parse(raw).user;
-            if (!user || typeof user.id !== "string" || !UUID.test(user.id)) throw new Error("Invalid session response");
+            let data;
+            try { data = JSON.parse(raw); }
+            catch { throw probeError("JSON"); }
+            const user = data?.user;
+            if (!user || typeof user.id !== "string" || !UUID.test(user.id)) throw probeError("IDENTITY");
             return user.id;
         } catch (error) {
             controller.abort();
@@ -93,5 +118,5 @@
             } catch { /* The fixed HTTPS anchor remains the explicit fallback. */ }
         });
     }
-    w.CourtOSWordBoot = Object.freeze({ sameOrigin, stateFromUrl, newState, officeReady, authUser, setupBrowserLink, validUserId: value => typeof value === "string" && UUID.test(value), validState: value => typeof value === "string" && STATE.test(value) });
+    w.CourtOSWordBoot = Object.freeze({ sameOrigin, stateFromUrl, newState, officeReady, authUser, diagnosticCode, setupBrowserLink, validUserId: value => typeof value === "string" && UUID.test(value), validState: value => typeof value === "string" && STATE.test(value) });
 })(window);

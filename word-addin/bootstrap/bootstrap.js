@@ -19,16 +19,19 @@
         status.textContent = "Zugang in Word wird geprüft …";
         try {
             const paneUserId = await boot.authUser("GET", "/api/auth/session");
-            if (!userId) { fail("Die Anmeldung wurde geschlossen. Melden Sie sich erneut an."); return; }
-            if (paneUserId !== userId) { fail("Word verwendet eine andere Sitzung. Öffnen Sie die Recherche im Browser und prüfen Sie dort das Konto."); return; }
+            if (paneUserId !== userId) { fail("Word verwendet eine andere Sitzung. Prüfcode P2-KONTO. Öffnen Sie die Recherche im Browser und prüfen Sie dort das Konto."); return; }
             w.location.replace(boot.sameOrigin() + "/word/research");
-        } catch {
-            fail("Word konnte die Anmeldung nicht übernehmen. Verwenden Sie die Recherche im Browser.");
+        } catch (error) {
+            fail("Word konnte die Anmeldung nicht übernehmen. Prüfcode P1-" + boot.diagnosticCode(error) + ". Verwenden Sie die Recherche im Browser.");
         }
     }
     function finish(request, userId) {
         if (active !== request) return;
         active = null;
+        if (!userId) {
+            fail("Das Anmeldefenster wurde ohne Bestätigung beendet. Prüfcode D0-GESCHLOSSEN. Melden Sie sich erneut an.");
+            return;
+        }
         if (userId) {
             try { request.dialog.close(); } catch { /* Authentication is still independently checked below. */ }
         }

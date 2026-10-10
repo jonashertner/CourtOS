@@ -105,9 +105,9 @@ describe("CourtOS Word bootstrap authentication boundary", () => {
     it("does not equate closing the dialog with a completed login, even if an older pane session exists", async () => {
         const h = harness("index"); h.start(); await flush(); fireEvent.click(screen.getByRole("button", { name: "Anmelden" }));
         h.handlers.closed({ error: 12006 }); await flush();
-        expect(h.fetch).toHaveBeenCalledTimes(1);
+        expect(h.fetch).not.toHaveBeenCalled();
         expect(h.window.location.replace).not.toHaveBeenCalled();
-        expect(screen.getByRole("status")).toHaveTextContent("erneut");
+        expect(screen.getByRole("status")).toHaveTextContent("D0-GESCHLOSSEN");
     });
     it("cancels an oversized streamed auth response before buffering the rest or navigating", async () => {
         const h = harness("index");
@@ -209,6 +209,73 @@ describe("Office dialog startup and protected completion", () => {
         fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" })); await flush();
         expect(h.office.context.ui.messageParent).not.toHaveBeenCalled();
         expect(screen.getByRole("status")).toHaveTextContent("nicht bestätigt");
+        expect(screen.getByRole("status")).toHaveTextContent("D3-KONTO");
+    });
+    it.each([
+        { stage: "D1", responses: [new Response("private provider details", { status: 503 })], code: "HTTP503", calls: 1 },
+        { stage: "D2", responses: [json(), new Response("private session details", { status: 401 })], code: "HTTP401", calls: 2 },
+    ])("distinguishes $stage HTTP failure without returning a message or exposing response details", async ({ stage, responses, code, calls }) => {
+        const h = harness("complete", `?state=${state}`);
+        responses.forEach(response => h.fetch.mockResolvedValueOnce(response));
+        h.start(); await flush(); fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" })); await flush();
+        expect(h.fetch).toHaveBeenCalledTimes(calls);
+        expect(screen.getByRole("status")).toHaveTextContent(`${stage}-${code}`);
+        expect(screen.getByRole("status")).not.toHaveTextContent(/private|provider|session details/);
+        expect(h.office.context.ui.messageParent).not.toHaveBeenCalled();
+        expect(screen.getByRole("button", { name: "Zugang in Word bestätigen" })).toBeEnabled();
+        await flush(); expect(h.fetch).toHaveBeenCalledTimes(calls);
+    });
+    it("distinguishes Office callback failure from a rejected session without exposing host errors", async () => {
+        const h = harness("complete", `?state=${state}`);
+        h.office.context.ui.messageParent.mockImplementation(() => { throw new Error("private host session token"); });
+        h.start(); await flush(); fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" })); await flush();
+        expect(h.fetch).toHaveBeenCalledTimes(2);
+        expect(screen.getByRole("status")).toHaveTextContent("D4-RUECKGABE");
+        expect(screen.getByRole("status")).not.toHaveTextContent("private host session token");
+    });
+});
+
+describe("redacted Word authentication probe diagnostics", () => {
+    it.each([
+        ["HTTP403", () => new Response("secret response", { status: 403 })],
+        ["HTTP_OTHER", () => new Response("secret response", { status: 418 })],
+        ["MIME", () => new Response("<h1>private email</h1>", { headers: { "content-type": "text/html" } })],
+        ["LENGTH", () => new Response("{}", { headers: { "content-type": "application/json", "content-length": "8193" } })],
+        ["STREAM", () => ({ ok: true, headers: new Headers({ "content-type": "application/json" }), body: null })],
+        ["UTF8", () => new Response(new Uint8Array([0xc3, 0x28]), { headers: { "content-type": "application/json" } })],
+        ["JSON", () => new Response("private-email is not JSON", { headers: { "content-type": "application/json" } })],
+        ["IDENTITY", () => new Response(JSON.stringify({ user: { id: "private-bad-id", email: "private-email" } }), { headers: { "content-type": "application/json" } })],
+    ] as const)("reports pane %s using only an allowlisted code", async (code, response) => {
+        const h = harness("index"); h.fetch.mockResolvedValue(response());
+        h.start(); await flush(); fireEvent.click(screen.getByRole("button", { name: "Anmelden" })); callback(h); await flush();
+        expect(screen.getByRole("status")).toHaveTextContent(`P1-${code}`);
+        expect(screen.getByRole("status")).not.toHaveTextContent(/secret|private-email|private-bad-id|<h1>/);
+        expect(h.window.location.replace).not.toHaveBeenCalled();
+        expect(h.fetch.mock.calls[0][1].signal.aborted).toBe(true);
+    });
+    it("distinguishes a fetch/redirect rejection from a body read failure without exposing either exception", async () => {
+        const h = harness("complete", `?state=${state}`);
+        h.fetch.mockRejectedValueOnce(new Error("private redirect cookie"));
+        h.start(); await flush(); fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" })); await flush();
+        expect(screen.getByRole("status")).toHaveTextContent("D1-NETWORK");
+        expect(screen.getByRole("status")).not.toHaveTextContent("private redirect cookie");
+        const reader = { read: vi.fn().mockRejectedValue(new Error("private transport details")), releaseLock: vi.fn() };
+        h.fetch.mockResolvedValueOnce({ ok: true, headers: new Headers({ "content-type": "application/json" }), body: { getReader: () => reader } });
+        fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" })); await flush();
+        expect(screen.getByRole("status")).toHaveTextContent("D1-READ");
+        expect(screen.getByRole("status")).not.toHaveTextContent("private transport details");
+        expect(reader.releaseLock).toHaveBeenCalledTimes(1);
+    });
+    it("reports a bounded request timeout separately and never retries it automatically", async () => {
+        vi.useFakeTimers(); const h = harness("complete", `?state=${state}`);
+        h.fetch.mockImplementation((_path, init) => new Promise((_resolve, reject) => init.signal.addEventListener("abort", () => reject(new Error("private abort details")))));
+        h.start(); await vi.advanceTimersByTimeAsync(0);
+        fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" }));
+        await vi.advanceTimersByTimeAsync(10001);
+        expect(screen.getByRole("status")).toHaveTextContent("D1-TIMEOUT");
+        expect(screen.getByRole("status")).not.toHaveTextContent("private abort details");
+        expect(h.fetch).toHaveBeenCalledTimes(1);
+        expect(h.office.context.ui.messageParent).not.toHaveBeenCalled();
     });
 });
 

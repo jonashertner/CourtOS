@@ -21,16 +21,23 @@
         busy = true;
         button.disabled = true;
         status.textContent = "Zugang wird bestätigt …";
+        let stage = "D1";
         try {
             const signedInUserId = await boot.authUser("POST", "/api/auth/cloudflare");
+            stage = "D2";
             const sessionUserId = await boot.authUser("GET", "/api/auth/session");
-            if (sessionUserId !== signedInUserId) throw new Error("Session mismatch");
+            if (sessionUserId !== signedInUserId) {
+                stage = "D3";
+                throw new Error("Session mismatch");
+            }
+            stage = "D4";
             office.context.ui.messageParent(JSON.stringify({ type: "courtos:word:authenticated", state, userId: sessionUserId }), { targetOrigin: boot.sameOrigin() });
             status.textContent = "Anmeldung bestätigt. Sie können dieses Fenster schliessen.";
-        } catch {
+        } catch (error) {
             busy = false;
             button.disabled = false;
-            status.textContent = "Der Zugang konnte nicht bestätigt werden. Versuchen Sie es erneut oder verwenden Sie die Recherche im Browser.";
+            const reason = stage === "D3" ? "KONTO" : stage === "D4" ? "RUECKGABE" : boot.diagnosticCode(error);
+            status.textContent = "Der Zugang konnte nicht bestätigt werden. Prüfcode " + stage + "-" + reason + ". Versuchen Sie es erneut oder verwenden Sie die Recherche im Browser.";
         }
     });
 })(window);
