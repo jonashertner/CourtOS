@@ -37,7 +37,7 @@ Für Einzelrichter und Kollegialgerichte gilt derselbe Vorschlag: Quellen prüfe
 - Claude Opus 5.5: Die Frontier-Prüfung sendet den von Ihnen freigegebenen Text an Anthropic. Erst nach der vollständigen Vorschau und Ihrer Freigabe.
 
 ### Die Verbindung
-Cloudflare vermittelt Anmeldung und Webverkehr und verarbeitet dabei auch angezeigte Inhalte. Grün kennzeichnet Gemma, Violett die externe Prüfung; Anbieter und Ort stehen zusätzlich im Text.
+Cloudflare vermittelt Anmeldung und Webverkehr und verarbeitet dabei auch angezeigte Inhalte. Grün kennzeichnet Gemma, Violett die externe Prüfung. Die Beschriftung nennt Anbieter und Verarbeitungsweg.
 
 ### Der heutige Testbetrieb
 Verwenden Sie öffentliche Entscheide, rechtmässig nutzbare nicht vertrauliche Literatur oder erfundene Testunterlagen. Keine echten Fallakten oder vertraulichen Dokumente. Eine Anmeldung ist keine institutionelle Freigabe. Automatische Anonymisierung ist nicht vorhanden.
@@ -79,7 +79,7 @@ Ein wörtlich gefundenes Zitat kann unvollständig oder für die Rechtsfrage unp
 Aus Behauptungen und Belegen wird eine überschaubare Prüfliste.
 
 ### Vorbereiten
-Öffnen Sie «Eingaben prüfen». Fügen Sie über die Bibliothek kurze Testklagen, Antworten und Beilagen hinzu. Wählen Sie die Dokumentfassungen, ordnen Sie Dokumentrolle und Partei zu und bestimmen Sie die Berichtssprache. Zum Kennenlernen öffnen Sie «Beispieldossiers» und wählen «Vier PDFs übernehmen». Die Unterlagen sind aus einem veröffentlichten Urteil rekonstruiert, keine Originaleingaben. Prüfen Sie danach Rollen und Parteien.
+Öffnen Sie «Eingaben prüfen». Fügen Sie über die Bibliothek kurze Testklagen, Antworten und Beilagen hinzu. Wählen Sie Fassungen, Dokumentrollen, Parteien und Berichtssprache. Unter «Beispieldossiers» finden Sie vier Übungsfälle auf Deutsch, Französisch, Italienisch und Englisch. «Vier PDFs übernehmen» legt das gewählte Dossier unter einem fiktiven Aktenzeichen ab, geordnet nach Parteien und gemeinsamen Belegauszügen. Die Unterlagen sind aus veröffentlichten Urteilen rekonstruiert, keine Originaleingaben. Prüfen Sie danach Rollen und Parteien.
 
 ### Drei Aufträge
 - Tatsachen und Belege: Behauptung, Beleg und Gegenposition stehen nebeneinander. Die KI schlägt «Stützt die Aussage», «Widerspricht der Aussage», «Bleibt offen» oder «Im ausgewählten Bestand nicht gefunden» vor.

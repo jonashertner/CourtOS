@@ -397,3 +397,10 @@ html[data-reader="book"] .reader-toolbar{padding-block:8px}
 
 /* Retain old shared links after shortening the guide. */
 .legacy-anchor{display:block;height:0;scroll-margin-top:5rem}
+
+/* Use the opening's spare whitespace before sending its premise to a new
+   leaf. Applied only after measurement; all type sizes and gutters stay put. */
+.folio-opening-compact:not(.folio-continuation-leaf) .folio-running{display:none}
+.folio-opening-compact .opening .subtitle{margin-top:.65rem}
+.folio-opening-compact .opening-note{margin-top:.75rem}
+.folio-opening-compact .premise{margin-top:.85rem}

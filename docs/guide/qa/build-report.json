@@ -10,13 +10,13 @@
         256.35,
         184.35,
         256.35,
-        114.35,
+        99.85,
         311.35,
         281.35,
         158.85
       ],
-      "sha256": "d1a3b8f14a473cf34cd758868075a2480795c7d247db9d3546e2a0c94bdf1dc3",
-      "bytes": 56499,
+      "sha256": "12fbf1877d6f3884d8080b1cfba0e6de71cfa0b4c0599f4e664f9190e7786447",
+      "bytes": 56589,
       "metadata": null,
       "xmp_present": false
     },
@@ -29,13 +29,13 @@
         256.35,
         198.85,
         254.85,
-        128.85,
+        114.35,
         311.35,
         281.35,
         173.35
       ],
-      "sha256": "a16a466ded79fe984b66e98b4ddadb007637d3a8ad52b7098d3f967a26522bb9",
-      "bytes": 57177,
+      "sha256": "23dd261b725674edb46b517b11edd7c44e2094ef60f33bae6aee22c9ed4db481",
+      "bytes": 57227,
       "metadata": null,
       "xmp_present": false
     },
@@ -48,13 +48,13 @@
         270.35,
         227.85,
         270.85,
-        157.35,
+        142.85,
         311.35,
         281.35,
         173.35
       ],
-      "sha256": "982ffe1ebb42f643e4bccd1ac5a60c61a689eff2148ebc7a0c45d502692bb185",
-      "bytes": 55961,
+      "sha256": "522affdf56e1d3677e54cbfe632b92adcd44f15be6053a17d766811919be8bd4",
+      "bytes": 56038,
       "metadata": null,
       "xmp_present": false
     },
@@ -67,13 +67,13 @@
         270.35,
         227.85,
         284.85,
-        157.35,
+        142.85,
         311.35,
         310.35,
         172.85
       ],
-      "sha256": "a3ea3ba0cc28f7c3c190ee9ecf158c44219eb93e0b00aeccc61b47d62b10862e",
-      "bytes": 55220,
+      "sha256": "532b85ac0002b803d7b4af722c7dd5d4c026eafe5d231b11520babdea098677e",
+      "bytes": 55289,
       "metadata": null,
       "xmp_present": false
     }
@@ -87,7 +87,7 @@
       "it",
       "en"
     ],
-    "reader_asset_tag": "73976907ac0d",
+    "reader_asset_tag": "0481ebd10f80",
     "reference": "Rule & Reason measured page reader, adapted for CourtOS"
   },
   "html_checks": {

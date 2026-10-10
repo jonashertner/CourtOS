@@ -37,7 +37,7 @@ Here, “local” means the CourtOS server in Germany.
 - Claude Opus 5.5: the frontier review sends your approved text to Anthropic, after a full preview and your confirmation.
 
 ### The connection
-Cloudflare handles access and web traffic, including displayed content. Green indicates Gemma and violet indicates the external review; the provider and location also appear in words.
+Cloudflare handles access and web traffic, including displayed content. Green indicates Gemma and violet indicates the external review. The labels name the provider and explain where the data goes.
 
 ### The present pilot
 Use public decisions, non-confidential literature you are entitled to use, or fictional test documents. No real case files or confidential material. Signing in is not institutional approval. There is no automatic anonymisation.
@@ -79,7 +79,7 @@ A verbatim match can still be incomplete or irrelevant to the legal question. Ch
 Bring allegations and evidence together in a list you can check.
 
 ### Prepare
-Open “Review submissions”. Add short fictional claims, responses and exhibits through the library. Select document versions, assign each document’s role and party, then choose the report language. To try it, open “Example matters” and choose “Import four PDFs”. The documents are reconstructed from a published judgment, not original submissions. Then check the roles and parties.
+Open “Review submissions”. Add short fictional claims, responses and exhibits through the library. Choose versions, document roles, parties and the report language. “Example matters” offers four exercises in German, French, Italian and English. “Import four PDFs” files the chosen matter under a fictitious case number, in folders for each party and shared exhibit summaries. The documents are reconstructed from published judgments, not original submissions. Then check the roles and parties.
 
 ### Three tasks
 - Facts and evidence: allegation, evidence and opposing position appear together. AI proposes “Supports the statement”, “Contradicts the statement”, “Inconclusive” or “Not found in selected sources”.

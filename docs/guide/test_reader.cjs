@@ -274,3 +274,69 @@ test('book to continuous restores the original block under the toolbar after a d
   assert.equal(w.location.href,url);assert.equal(w.history.length,history);
   dom.window.close();
 });
+
+// Test pagination decisions with deterministic heights. Actual type metrics,
+// 320px phone, 768px tablet and desktop composition remain browser QA.
+function openingGeometry(w,d,capacity) {
+  const state={capacity};
+  const canvas=d.querySelector('.reader-canvas');
+  canvas.style.padding='0px';
+  Object.defineProperty(canvas,'clientWidth',{get:()=>1000});
+  Object.defineProperty(canvas,'clientHeight',{get:()=>state.capacity+200});
+  d.head.insertAdjacentHTML('beforeend','<style>.folio-body,p{font-size:16px;line-height:20px}</style>');
+  const openingHeight=body=>{
+    const opening=body.querySelector('.opening');
+    if(!opening)return 0;
+    let height=opening.querySelector('h1')?(body.closest('.folio-opening-compact')?15:60):0;
+    for(const node of opening.querySelectorAll('h1,p')) {
+      height+=node.matches('h1')?100:node.matches('.subtitle')?120:
+        node.matches('.premise')?Math.ceil(node.textContent.length/25)*20:
+        node.matches('.opening-note p:last-child')?40:20;
+    }
+    return height;
+  };
+  Object.defineProperty(w.HTMLElement.prototype,'clientHeight',{get(){return this.matches('.folio-body')?state.capacity:0;},configurable:true});
+  Object.defineProperty(w.HTMLElement.prototype,'clientWidth',{get(){return this.matches('.folio-body')?600:0;},configurable:true});
+  Object.defineProperty(w.HTMLElement.prototype,'scrollHeight',{get(){return this.matches('.folio-body')?openingHeight(this):0;},configurable:true});
+  w.HTMLElement.prototype.getBoundingClientRect=function(){
+    const height=this.matches('.folio-body')?state.capacity:this.matches('.opening')?openingHeight(this.parentElement):0;
+    return{top:0,bottom:height,left:0,right:600,width:600,height};
+  };
+  w.HTMLElement.prototype.getClientRects=function(){return[this.getBoundingClientRect()];};
+  w.Range.prototype.getClientRects=function(){return Array.from({length:Math.ceil(this.toString().length/25)},(_,i)=>({top:i*20,bottom:(i+1)*20,left:0,right:200,width:200,height:20}));};
+  return state;
+}
+for(const lang of ['de','fr','it','en']) {
+  test(lang+': a cramped opening uses whitespace and keeps its premise intact through resize and text mode',async()=>{
+    const {dom,w,d}=reader(lang,'#book-title');
+    const premise=d.querySelector('.premise'),original=premise.textContent;
+    const baseline=340+Math.ceil(original.length/25)*20;
+    const state=openingGeometry(w,d,baseline-20);
+    d.querySelector('#reader-book-mode').click();
+    assert.equal(d.querySelectorAll('.folio .premise').length,1);
+    assert.equal(d.querySelector('.folio .premise'),premise);
+    assert.equal(premise.closest('.folio'),d.querySelector('.folio #book-title').closest('.folio'));
+    assert.ok(premise.closest('.folio-opening-compact'));
+    state.capacity=baseline+100;
+    w.dispatchEvent(new w.Event('resize'));await settledFrames(w);
+    assert.equal(d.querySelectorAll('.folio-opening-compact').length,0,'ample leaves regain their original spacing');
+    assert.equal(d.querySelector('.folio .premise'),premise);
+    assert.equal(premise.textContent,original);
+    d.querySelector('#reader-text-mode').click();
+    assert.equal(d.querySelector('#reading-source .premise'),premise);
+    assert.equal(premise.textContent,original);
+    dom.window.close();
+  });
+  test(lang+': when the whole opening cannot fit, the complete premise moves to a fresh leaf',()=>{
+    const {dom,w,d}=reader(lang,'#book-title');
+    const premise=d.querySelector('.premise'),original=premise.textContent;
+    openingGeometry(w,d,300);
+    d.querySelector('#reader-book-mode').click();
+    assert.equal(d.querySelectorAll('.folio .premise').length,1);
+    assert.equal(d.querySelector('.folio .premise'),premise);
+    assert.notEqual(premise.closest('.folio'),d.querySelector('.folio #book-title').closest('.folio'));
+    assert.equal(premise.textContent,original);
+    assert.ok(premise.closest('.folio-body').scrollHeight<=300);
+    dom.window.close();
+  });
+}

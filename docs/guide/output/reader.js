@@ -239,7 +239,7 @@
   }
   function createPage(entry, continuation) {
     const leaf = document.createElement('section');
-    leaf.className = `folio ${entry.cover ? 'folio-cover' : ''} ${entry.directory ? 'folio-directory' : ''} ${continuation ? 'folio-continuation-leaf' : ''} ${orientation === 'portrait' || pages.length % 2 ? '--right' : '--left'}`;
+    leaf.className = `folio ${entry.cover ? 'folio-cover' : ''} ${entry.compactOpening ? 'folio-opening-compact' : ''} ${entry.directory ? 'folio-directory' : ''} ${continuation ? 'folio-continuation-leaf' : ''} ${orientation === 'portrait' || pages.length % 2 ? '--right' : '--left'}`;
     leaf.dataset.pageIndex = String(pages.length);
     leaf.style.cssText = `position:absolute;left:0;top:0;width:${width}px;height:${height}px;display:block;`;
     leaf.inert = true;
@@ -492,7 +492,10 @@
     cleanShells(page);
     const usedBottom = page.body.lastElementChild?.getBoundingClientRect().bottom || page.body.getBoundingClientRect().top;
     const remaining = page.body.getBoundingClientRect().bottom - usedBottom;
-    const flowText = node.matches('p,li,dd,.chapter-question') &&
+    // The opening thought is one unit. If the title leaf is too short, move
+    // the complete paragraph; only an overlarge paragraph may itself flow.
+    const keepWhole = node.matches('.premise') && measureFreshFlow(entry, [token]).fits;
+    const flowText = !keepWhole && node.matches('p,li,dd,.chapter-question') &&
       !node.matches('.chapter-directory-entry') && remaining >= lineHeight;
     if (!flowText && page.tokens.length) page = flowNextPage(page, entry);
     if (!flowText) {
@@ -652,8 +655,15 @@
     anchors.set('front-cover', 0);
     for (const entry of groups) {
       entry.start = pages.length;
+      entry.compactOpening = false;
       let page = createPage(entry, false);
       const tokens = entry.nodes.flatMap(node => tokensFrom(node));
+      if (entry.cover && !measureFlow(page, tokens).fits) {
+        // Recover only the opening's vertical whitespace, never reduce text
+        // size. Re-evaluate at every geometry/font change, in all editions.
+        entry.compactOpening = true;
+        page.leaf.classList.add('folio-opening-compact');
+      }
       const chapter = prepareChapterTail(entry, tokens);
       const directoryMiddle = entry.directory
         ? tokens.filter(token => token.node.matches('.chapter-directory-entry'))[7] : null;

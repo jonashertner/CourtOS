@@ -37,7 +37,7 @@ Proponiamo lo stesso metodo: verificare le fonti, conservare le obiezioni e asse
 - Claude Opus 5.5: la verifica esterna invia ad Anthropic il testo approvato, soltanto dopo l’anteprima completa e la vostra conferma.
 
 ### La connessione
-Cloudflare gestisce l’accesso e il traffico web, trattando anche i contenuti visualizzati. Il verde indica Gemma, il viola la verifica esterna; fornitore e luogo sono indicati anche per iscritto.
+Cloudflare gestisce l’accesso e il traffico web, trattando anche i contenuti visualizzati. Il verde indica Gemma, il viola la verifica esterna. Il testo indica il fornitore e il percorso dei dati.
 
 ### La prova attuale
 Usate decisioni pubbliche, dottrina non riservata che avete diritto di utilizzare o documenti fittizi. Nessun fascicolo reale o documento riservato. L’accesso non equivale a un’autorizzazione istituzionale. Non è disponibile un’anonimizzazione automatica.
@@ -79,7 +79,7 @@ Una citazione ritrovata alla lettera può essere incompleta o non pertinente all
 Accostare affermazioni e documenti in un elenco da verificare.
 
 ### Preparare
-Aprite «Esaminare gli atti». Aggiungete alla biblioteca brevi petizioni, risposte e allegati fittizi. Scegliete le versioni, assegnate il ruolo del documento e la parte, quindi la lingua del rapporto. Per provare, aprite «Fascicoli di esempio» e scegliete «Importare i quattro PDF». I documenti sono ricostruiti da una decisione pubblicata; non sono gli atti originali. Verificate poi ruoli e parti.
+Aprite «Esaminare gli atti». Aggiungete alla biblioteca brevi petizioni, risposte e allegati fittizi. Scegliete versioni, ruoli, parti e lingua del rapporto. «Fascicoli di esempio» offre quattro esercizi in tedesco, francese, italiano e inglese. «Importare i quattro PDF» archivia il fascicolo scelto sotto un numero fittizio, in cartelle per parte e per estratti comuni. I documenti sono ricostruiti da decisioni pubblicate; non sono gli atti originali. Verificate poi ruoli e parti.
 
 ### Tre compiti
 - Fatti e prove: affermazione, documento e posizione avversa sono affiancati. L’IA propone «Sostiene l’affermazione», «Contraddice l’affermazione», «Resta incerto» o «Non trovato nella selezione».

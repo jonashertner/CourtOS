@@ -37,7 +37,7 @@ Notre proposition vaut pour les deux: vérifier les sources, conserver les objec
 - Claude Opus 5.5: l’analyse externe transmet à Anthropic le texte que vous avez approuvé, après aperçu complet et confirmation.
 
 ### La connexion
-Cloudflare assure l’accès et le trafic web et traite aussi les contenus affichés. Le vert signale Gemma, le violet l’analyse externe; le fournisseur et le lieu figurent également en toutes lettres.
+Cloudflare assure l’accès et le trafic web et traite aussi les contenus affichés. Le vert signale Gemma, le violet l’analyse externe. Le texte indique le fournisseur et le circuit de traitement.
 
 ### Le cadre de l’essai
 Utilisez des décisions publiques, de la doctrine non confidentielle que vous avez le droit d’utiliser, ou des documents fictifs. Aucun dossier réel ni document confidentiel. Se connecter ne vaut pas autorisation institutionnelle. Il n’existe pas d’anonymisation automatique.
@@ -79,7 +79,7 @@ Une citation retrouvée mot pour mot peut être incomplète ou sans pertinence p
 Rapprocher les allégations et les pièces dans une liste à vérifier.
 
 ### Préparer
-Ouvrez «Examiner les écritures». Ajoutez dans la bibliothèque de brèves demandes, réponses et pièces fictives. Choisissez les versions, attribuez un rôle à chaque document et indiquez la partie, puis la langue du rapport. Pour essayer, ouvrez «Dossiers d’exemple» et choisissez «Importer les quatre PDF». Ces documents sont reconstitués à partir d’un arrêt publié; ce ne sont pas les écritures originales. Vérifiez ensuite les rôles et les parties.
+Ouvrez «Examiner les écritures». Ajoutez à la bibliothèque de brèves demandes, réponses et pièces fictives. Choisissez les versions, les rôles, les parties et la langue du rapport. «Dossiers d’exemple» propose quatre exercices en allemand, français, italien et anglais. «Importer les quatre PDF» classe le dossier choisi sous un numéro fictif, avec des dossiers par partie et des extraits communs. Les documents sont reconstitués à partir d’arrêts publiés; ce ne sont pas les actes originaux. Vérifiez ensuite les rôles et les parties.
 
 ### Trois tâches
 - Faits et preuves: allégation, pièce et position adverse apparaissent côte à côte. L’IA propose «Soutient l’énoncé», «Contredit l’énoncé», «Reste indéterminé» ou «Non trouvé dans la sélection».

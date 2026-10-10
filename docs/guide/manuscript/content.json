@@ -103,7 +103,7 @@
           {
             "type": "text",
             "heading": "Die Verbindung",
-            "body": "Cloudflare vermittelt Anmeldung und Webverkehr und verarbeitet dabei auch angezeigte Inhalte. Grün kennzeichnet Gemma, Violett die externe Prüfung; Anbieter und Ort stehen zusätzlich im Text."
+            "body": "Cloudflare vermittelt Anmeldung und Webverkehr und verarbeitet dabei auch angezeigte Inhalte. Grün kennzeichnet Gemma, Violett die externe Prüfung. Die Beschriftung nennt Anbieter und Verarbeitungsweg."
           },
           {
             "type": "note",
@@ -179,7 +179,7 @@
           {
             "type": "text",
             "heading": "Vorbereiten",
-            "body": "Öffnen Sie «Eingaben prüfen». Fügen Sie über die Bibliothek kurze Testklagen, Antworten und Beilagen hinzu. Wählen Sie die Dokumentfassungen, ordnen Sie Dokumentrolle und Partei zu und bestimmen Sie die Berichtssprache. Zum Kennenlernen öffnen Sie «Beispieldossiers» und wählen «Vier PDFs übernehmen». Die Unterlagen sind aus einem veröffentlichten Urteil rekonstruiert, keine Originaleingaben. Prüfen Sie danach Rollen und Parteien."
+            "body": "Öffnen Sie «Eingaben prüfen». Fügen Sie über die Bibliothek kurze Testklagen, Antworten und Beilagen hinzu. Wählen Sie Fassungen, Dokumentrollen, Parteien und Berichtssprache. Unter «Beispieldossiers» finden Sie vier Übungsfälle auf Deutsch, Französisch, Italienisch und Englisch. «Vier PDFs übernehmen» legt das gewählte Dossier unter einem fiktiven Aktenzeichen ab, geordnet nach Parteien und gemeinsamen Belegauszügen. Die Unterlagen sind aus veröffentlichten Urteilen rekonstruiert, keine Originaleingaben. Prüfen Sie danach Rollen und Parteien."
           },
           {
             "type": "items",
@@ -439,7 +439,7 @@
           {
             "type": "text",
             "heading": "La connexion",
-            "body": "Cloudflare assure l’accès et le trafic web et traite aussi les contenus affichés. Le vert signale Gemma, le violet l’analyse externe; le fournisseur et le lieu figurent également en toutes lettres."
+            "body": "Cloudflare assure l’accès et le trafic web et traite aussi les contenus affichés. Le vert signale Gemma, le violet l’analyse externe. Le texte indique le fournisseur et le circuit de traitement."
           },
           {
             "type": "note",
@@ -515,7 +515,7 @@
           {
             "type": "text",
             "heading": "Préparer",
-            "body": "Ouvrez «Examiner les écritures». Ajoutez dans la bibliothèque de brèves demandes, réponses et pièces fictives. Choisissez les versions, attribuez un rôle à chaque document et indiquez la partie, puis la langue du rapport. Pour essayer, ouvrez «Dossiers d’exemple» et choisissez «Importer les quatre PDF». Ces documents sont reconstitués à partir d’un arrêt publié; ce ne sont pas les écritures originales. Vérifiez ensuite les rôles et les parties."
+            "body": "Ouvrez «Examiner les écritures». Ajoutez à la bibliothèque de brèves demandes, réponses et pièces fictives. Choisissez les versions, les rôles, les parties et la langue du rapport. «Dossiers d’exemple» propose quatre exercices en allemand, français, italien et anglais. «Importer les quatre PDF» classe le dossier choisi sous un numéro fictif, avec des dossiers par partie et des extraits communs. Les documents sont reconstitués à partir d’arrêts publiés; ce ne sont pas les actes originaux. Vérifiez ensuite les rôles et les parties."
           },
           {
             "type": "items",
@@ -775,7 +775,7 @@
           {
             "type": "text",
             "heading": "La connessione",
-            "body": "Cloudflare gestisce l’accesso e il traffico web, trattando anche i contenuti visualizzati. Il verde indica Gemma, il viola la verifica esterna; fornitore e luogo sono indicati anche per iscritto."
+            "body": "Cloudflare gestisce l’accesso e il traffico web, trattando anche i contenuti visualizzati. Il verde indica Gemma, il viola la verifica esterna. Il testo indica il fornitore e il percorso dei dati."
           },
           {
             "type": "note",
@@ -851,7 +851,7 @@
           {
             "type": "text",
             "heading": "Preparare",
-            "body": "Aprite «Esaminare gli atti». Aggiungete alla biblioteca brevi petizioni, risposte e allegati fittizi. Scegliete le versioni, assegnate il ruolo del documento e la parte, quindi la lingua del rapporto. Per provare, aprite «Fascicoli di esempio» e scegliete «Importare i quattro PDF». I documenti sono ricostruiti da una decisione pubblicata; non sono gli atti originali. Verificate poi ruoli e parti."
+            "body": "Aprite «Esaminare gli atti». Aggiungete alla biblioteca brevi petizioni, risposte e allegati fittizi. Scegliete versioni, ruoli, parti e lingua del rapporto. «Fascicoli di esempio» offre quattro esercizi in tedesco, francese, italiano e inglese. «Importare i quattro PDF» archivia il fascicolo scelto sotto un numero fittizio, in cartelle per parte e per estratti comuni. I documenti sono ricostruiti da decisioni pubblicate; non sono gli atti originali. Verificate poi ruoli e parti."
           },
           {
             "type": "items",
@@ -1111,7 +1111,7 @@
           {
             "type": "text",
             "heading": "The connection",
-            "body": "Cloudflare handles access and web traffic, including displayed content. Green indicates Gemma and violet indicates the external review; the provider and location also appear in words."
+            "body": "Cloudflare handles access and web traffic, including displayed content. Green indicates Gemma and violet indicates the external review. The labels name the provider and explain where the data goes."
           },
           {
             "type": "note",
@@ -1187,7 +1187,7 @@
           {
             "type": "text",
             "heading": "Prepare",
-            "body": "Open “Review submissions”. Add short fictional claims, responses and exhibits through the library. Select document versions, assign each document’s role and party, then choose the report language. To try it, open “Example matters” and choose “Import four PDFs”. The documents are reconstructed from a published judgment, not original submissions. Then check the roles and parties."
+            "body": "Open “Review submissions”. Add short fictional claims, responses and exhibits through the library. Choose versions, document roles, parties and the report language. “Example matters” offers four exercises in German, French, Italian and English. “Import four PDFs” files the chosen matter under a fictitious case number, in folders for each party and shared exhibit summaries. The documents are reconstructed from published judgments, not original submissions. Then check the roles and parties."
           },
           {
             "type": "items",
