@@ -44,6 +44,7 @@ import { workflowDetailPath } from "./workflowRoutes";
 import { ConfirmPopup } from "../popups/ConfirmPopup";
 import { WorkflowAddonPreviewModal } from "./WorkflowAddonPreviewModal";
 import { TableLoadMoreRow } from "@/app/components/shared/TableLoadMoreRow";
+import { COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
 import { userFacingApiError } from "@/app/lib/userFacingError";
 import {
   SkeletonCheckbox,
@@ -307,7 +308,7 @@ export function WorkflowList({
   }
 
   async function importAddon(addon: WorkflowAddon) {
-    if (importingAddonId || importedAddonIds.includes(addon.id)) return;
+    if (COURTOS_SELF_REGISTRATION || importingAddonId || importedAddonIds.includes(addon.id)) return;
     setImportingAddonId(addon.id);
     setActionError("");
     try {
@@ -332,7 +333,7 @@ export function WorkflowList({
   }
 
   async function importAddons(selectedAddons: WorkflowAddon[]) {
-    if (bulkImportingAddons || selectedAddons.length === 0) return;
+    if (COURTOS_SELF_REGISTRATION || bulkImportingAddons || selectedAddons.length === 0) return;
     setBulkImportingAddons(true);
     try {
       const results = await Promise.allSettled(
@@ -452,7 +453,7 @@ export function WorkflowList({
   const addonToolbarActions =
     activeTab === "addons" && selectedAddonIds.length > 0 ? (
       <TabPillButtonUI
-        disabled={bulkImportingAddons}
+        disabled={COURTOS_SELF_REGISTRATION || bulkImportingAddons}
         onClick={() => void importSelectedAddons()}
       >
         <Plus className="h-3.5 w-3.5" />
@@ -478,6 +479,11 @@ export function WorkflowList({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      {COURTOS_SELF_REGISTRATION && activeTab === "addons" && (
+        <p className="shrink-0 px-4 py-3 text-sm text-gray-600">
+          Add-ons können angesehen werden. Der Import zusätzlicher Arbeitsabläufe ist im öffentlichen Pilot deaktiviert.
+        </p>
+      )}
       <PageHeader
         shrink
         loading={loading}
@@ -1198,7 +1204,7 @@ function AddonTable({
         ? addons.filter((addon) => selectedIds.includes(addon.id))
         : rowAddons
     ).filter((addon) => !importedAddonIds.includes(addon.id));
-    const importDisabled = bulkImporting || importingAddonId !== null;
+    const importDisabled = COURTOS_SELF_REGISTRATION || bulkImporting || importingAddonId !== null;
     return (
       <RowActionMenuItems
         onClose={close}
@@ -1279,7 +1285,7 @@ function AddonTable({
         <TableCell className="flex w-8 justify-end">
           <button
             type="button"
-            disabled={bulkImporting || importing || imported}
+            disabled={COURTOS_SELF_REGISTRATION || bulkImporting || importing || imported}
             aria-label={
               imported ? "Imported" : importing ? "Importing…" : "Import"
             }

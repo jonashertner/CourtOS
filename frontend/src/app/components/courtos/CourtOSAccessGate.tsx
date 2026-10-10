@@ -60,17 +60,17 @@ export function CourtOSAccessGate() {
                 <SiteLogo size="lg" className="mb-10" />
                 <div className={cn(authGlassCardUIClassName, "courtos-access-panel space-y-6")}>
                     <div>
-                        <p className="courtos-kicker mb-4">ARBEITSRAUM FÜR DIE RECHTSPRAXIS</p>
+                        <p className="courtos-kicker mb-4">RECHTSPRECHUNG UND EIGENE QUELLEN</p>
                         <h1 className="courtos-section-title text-foreground">Willkommen bei CourtOS.</h1>
                         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                             {COURTOS_SELF_REGISTRATION
                                 ? "Ihr E-Mail-Code bestätigt Ihre Adresse. Beim ersten Öffnen wird Ihr persönliches CourtOS-Konto erstellt. Eine Einladung oder ein zusätzliches Passwort ist nicht nötig."
-                                : "Ihr E-Mail-Code bestätigt den Zugang. Öffnen Sie jetzt Ihren persönlichen Arbeitsraum; ein zusätzliches Passwort ist nicht nötig."}
+                                : "Ihr E-Mail-Code bestätigt den Zugang. Öffnen Sie jetzt Ihren persönlichen Recherchebereich; ein zusätzliches Passwort ist nicht nötig."}
                         </p>
                     </div>
                     {COURTOS_PILOT_MODE && (
                         <p className="text-sm leading-relaxed text-foreground">
-                            Testbetrieb mit synthetischen Fällen.{COURTOS_KNOWLEDGE_ENABLED && " Öffentliche oder rechtmässig nutzbare, nicht vertrauliche Literaturauszüge sind ebenfalls möglich."} Bitte keine echten Akten, Personendaten oder vertraulichen Texte eingeben. Die Verarbeitung findet auf einem gemieteten Server in Deutschland statt.
+                            Testbetrieb für {COURTOS_KNOWLEDGE_ENABLED ? "öffentliche Quellen, rechtmässig nutzbare nicht vertrauliche Literatur und synthetische Unterlagen" : "synthetische Unterlagen"}. Keine echten Verfahrensakten, Personendaten oder vertraulichen Texte. Die Verarbeitung findet auf einem gemieteten Server in Deutschland statt.
                         </p>
                     )}
                     <PilotUsageNotice />

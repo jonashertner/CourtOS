@@ -632,7 +632,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                 <footer className="courtos-sidebar-fixed-footer shrink-0">
                 {isOpen && (
                     <div className="courtos-sidebar-footer shrink-0 space-y-2 px-3.5 pb-3 pt-3 text-xs">
-                        <a href={COURTOS_HYBRID_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Fall Linden bearbeiten</a>
+                        <a href={COURTOS_HYBRID_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Frontier-Prüfung</a>
                         <a href={COURTOS_GUIDE_PATH} className="block underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Handbuch</a>
                         <a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="block text-muted-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">Quellcode · AGPL-3.0</a>
                     </div>

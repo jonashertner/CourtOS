@@ -13,6 +13,13 @@ import PrivacyDataPage from "./page";
 // These tests pin that wiring (start called with the right type, download
 // only after the poll reports done) — the job itself is backend-tested.
 
+
+const pilot = vi.hoisted(() => ({ public: false, enabled: false }));
+vi.mock("@/app/lib/courtos", () => ({
+    get COURTOS_SELF_REGISTRATION() { return pilot.public; },
+    get COURTOS_PILOT_MODE() { return pilot.enabled; },
+}));
+
 vi.mock("@/app/lib/mikeApi", () => ({
     deleteAllChats: vi.fn(),
     deleteAllMemories: vi.fn(),
@@ -42,6 +49,8 @@ const mockedDownload = vi.mocked(downloadUserExport);
 const mockedDeleteMemories = vi.mocked(deleteAllMemories);
 
 beforeEach(() => {
+    pilot.public = false;
+    pilot.enabled = false;
     vi.clearAllMocks();
     // The page shortens its poll interval to 10ms under NODE_ENV=test, so
     // these tests run on real timers (fake timers fight userEvent).
@@ -52,6 +61,21 @@ afterEach(() => {
 });
 
 describe("privacy-data async exports", () => {
+    it("explains and disables persistent exports in the public pilot", async () => {
+        pilot.public = true;
+        render(<PrivacyDataPage />);
+        expect(screen.getByText(/Gesamtexporte sind im öffentlichen Pilot deaktiviert/)).toBeVisible();
+        const buttons = [...screen.getAllByRole("button", { name: "Export" }), screen.getByRole("button", { name: "Export memory" })];
+        expect(buttons).toHaveLength(4);
+        for (const button of buttons) {
+            expect(button).toBeDisabled();
+            await userEvent.click(button);
+        }
+        expect(mockedStart).not.toHaveBeenCalled();
+        expect(mockedStatus).not.toHaveBeenCalled();
+        expect(mockedDownload).not.toHaveBeenCalled();
+    });
+
     it("schedules the job, polls to done, then downloads the artifact", async () => {
         mockedStart.mockResolvedValue({ export_id: "job-9" });
         mockedStatus

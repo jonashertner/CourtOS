@@ -2,20 +2,33 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const apiMocks = vi.hoisted(() => ({
+    addDocumentToProject: vi.fn(),
+    getProject: vi.fn(),
     uploadStandaloneDocuments: vi.fn(),
     uploadProjectDocuments: vi.fn(),
 }));
 
+
+const pilot = vi.hoisted(() => ({ public: false, enabled: false }));
+vi.mock("@/app/lib/courtos", () => ({
+    get COURTOS_SELF_REGISTRATION() { return pilot.public; },
+    get COURTOS_PILOT_MODE() { return pilot.enabled; },
+}));
+
 vi.mock("@/app/lib/mikeApi", async (importOriginal) => ({
     ...(await importOriginal<typeof import("@/app/lib/mikeApi")>()),
-    addDocumentToProject: vi.fn(),
-    getProject: vi.fn(),
+    addDocumentToProject: apiMocks.addDocumentToProject,
+    getProject: apiMocks.getProject,
     uploadProjectDocuments: apiMocks.uploadProjectDocuments,
     uploadStandaloneDocuments: apiMocks.uploadStandaloneDocuments,
 }));
 
 vi.mock("./Modal", () => ({
-    Modal: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    Modal: ({ children, primaryAction, secondaryAction }: {
+        children: React.ReactNode;
+        primaryAction: { label: string; disabled?: boolean; onClick: () => void };
+        secondaryAction: { label: string; disabled?: boolean; onClick: () => void };
+    }) => <div>{children}<button type="button" disabled={primaryAction.disabled} onClick={primaryAction.onClick}>{primaryAction.label}</button><button type="button" disabled={secondaryAction.disabled} onClick={secondaryAction.onClick}>{secondaryAction.label}</button></div>,
 }));
 
 vi.mock("../shared/FileDirectory", () => ({
@@ -42,7 +55,44 @@ function document(id: string, filename: string) {
 }
 
 describe("AddDocumentsModal upload progress", () => {
-    beforeEach(() => vi.clearAllMocks());
+    beforeEach(() => { pilot.public = false; pilot.enabled = false; vi.clearAllMocks(); });
+
+    it("limits the public project picker to project files and rejects a preselected library import", async () => {
+        pilot.public = true;
+        apiMocks.getProject.mockResolvedValue({ documents: [{ ...document("p-doc", "project.pdf"), project_id: "p1", status: "ready" }], folders: [] });
+        const onSelect = vi.fn();
+        const onClose = vi.fn();
+        render(<AddDocumentsModal open onClose={onClose} onSelect={onSelect} breadcrumb={["Project"]} projectId="p1"
+            initialSelectedDocuments={[document("library-doc", "library.pdf")] as never} />);
+        expect(await screen.findByText(/Bibliotheksdateien können im öffentlichen Pilot/)).toBeVisible();
+        await waitFor(() => expect(screen.getByTestId("loaded-files")).toHaveTextContent("project.pdf"));
+        expect(screen.getByRole("button", { name: "Confirm" })).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Upload" })).toBeEnabled();
+        expect(apiMocks.addDocumentToProject).not.toHaveBeenCalled();
+        expect(onSelect).not.toHaveBeenCalled();
+        expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("retains existing project selections and assistant library references in the public pilot", async () => {
+        pilot.public = true;
+        const projectDocument = { ...document("p-doc", "project.pdf"), project_id: "p1", status: "ready" };
+        apiMocks.getProject.mockResolvedValue({ documents: [projectDocument], folders: [] });
+        const onSelect = vi.fn();
+        const first = render(<AddDocumentsModal open onClose={vi.fn()} onSelect={onSelect} breadcrumb={["Project"]} projectId="p1"
+            initialSelectedDocuments={[projectDocument] as never} />);
+        await waitFor(() => expect(screen.getByRole("button", { name: "Confirm" })).toBeEnabled());
+        fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+        expect(onSelect).toHaveBeenCalledWith([projectDocument], "p1");
+        first.unmount();
+        onSelect.mockClear();
+        const libraryDocument = document("library-doc", "library.pdf");
+        render(<AddDocumentsModal open onClose={vi.fn()} onSelect={onSelect} breadcrumb={["Assistant"]}
+            initialSelectedDocuments={[libraryDocument] as never} />);
+        expect(screen.queryByText(/Bibliotheksdateien können im öffentlichen Pilot/)).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+        expect(onSelect).toHaveBeenCalledWith([libraryDocument], undefined);
+        expect(apiMocks.addDocumentToProject).not.toHaveBeenCalled();
+    });
 
     it("replaces each loading row as that file completes and names failures", async () => {
         let finishUpload!: () => void;

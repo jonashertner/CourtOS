@@ -11,7 +11,8 @@ import { AppSidebar } from "@/app/components/shared/AppSidebar";
 import { FullScreenLoader } from "@/app/components/shared/FullScreenLoader";
 import { HeaderButtonUI, HeaderButtonsUI } from "@/shared/ui/HeaderButtonsUI";
 import { cn } from "@/app/lib/utils";
-import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { COURTOS_PILOT_MODE, isResearchShellPath } from "@/app/lib/courtos";
+import { ResearchShell } from "@/app/components/courtos/ResearchShell";
 import { PilotNotice } from "@/app/components/courtos/PilotNotice";
 
 export default function MikeLayout({
@@ -119,6 +120,16 @@ export default function MikeLayout({
     }
 
     if (!isAuthenticated) return null;
+
+    if (isResearchShellPath(pathname)) {
+        return (
+            <PageChromeContext.Provider value={pageChromeValue}>
+                <SidebarContext.Provider value={sidebarValue}>
+                    <ResearchShell>{children}</ResearchShell>
+                </SidebarContext.Provider>
+            </PageChromeContext.Provider>
+        );
+    }
 
     return (
         <ChatHistoryProvider>

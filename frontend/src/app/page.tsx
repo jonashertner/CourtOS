@@ -1,5 +1,6 @@
+import { COURTOS_HOME } from "@/app/lib/courtos";
 import { redirect } from "next/navigation";
 
 export default function RootPage() {
-    redirect("/pilot");
+    redirect(COURTOS_HOME);
 }

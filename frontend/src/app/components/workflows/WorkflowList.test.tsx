@@ -26,6 +26,13 @@ const {
   workflowRows: { current: [] as Record<string, unknown>[] },
 }));
 
+
+const pilot = vi.hoisted(() => ({ public: false, enabled: false }));
+vi.mock("@/app/lib/courtos", () => ({
+    get COURTOS_SELF_REGISTRATION() { return pilot.public; },
+    get COURTOS_PILOT_MODE() { return pilot.enabled; },
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: routerPush }),
   useSearchParams: () => ({ get: () => null }),
@@ -95,6 +102,8 @@ vi.mock("./WorkflowAddonPreviewModal", () => ({
 
 describe("WorkflowList pack toolbar", () => {
   beforeEach(() => {
+    pilot.public = false;
+    pilot.enabled = false;
     activeTab.current = "addons";
     workflowRows.current = [];
     setActiveTab.mockReset();
@@ -133,6 +142,22 @@ describe("WorkflowList pack toolbar", () => {
     await user.keyboard("{Escape}");
     fireEvent.contextMenu(screen.getByText("Workflow 1"), { clientX: 40, clientY: 40 });
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(items);
+  });
+
+  it("disables public-pilot row and bulk imports and removes the context-menu import", async () => {
+    pilot.public = true;
+    const user = userEvent.setup();
+    listWorkflowAddons.mockResolvedValue([{ id: "addon-1", addon_key: "review", pack_key: null,
+      title: "Review sources", type: "assistant", contributors: [], assets: [], jurisdictions: [] }]);
+    render(<WorkflowList initialTab="addons" />);
+    expect(await screen.findByRole("button", { name: "Import" })).toBeDisabled();
+    expect(screen.getByText(/Import zusätzlicher Arbeitsabläufe/)).toBeVisible();
+    await user.click(screen.getByRole("checkbox", { name: "Select Review sources" }));
+    for (const button of screen.getAllByRole("button", { name: "Import" })) expect(button).toBeDisabled();
+    fireEvent.contextMenu(screen.getByText("Review sources"), { clientX: 40, clientY: 40 });
+    expect(screen.getByRole("menuitem", { name: "View" })).toBeVisible();
+    expect(screen.queryByRole("menuitem", { name: "Import" })).not.toBeInTheDocument();
+    expect(importWorkflowAddon).not.toHaveBeenCalled();
   });
 
   it("replaces workflow tabs with Back on the left inside a pack", async () => {

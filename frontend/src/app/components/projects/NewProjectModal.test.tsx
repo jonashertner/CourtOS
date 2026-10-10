@@ -9,6 +9,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import {
     MikeApiError,
+    addDocumentToProject,
     createProject,
     grantProjectAccess,
     listOrgMembers,
@@ -26,6 +27,13 @@ const { useUserProfile } = vi.hoisted(() => ({
 // `importOriginal` keeps the real `MikeApiError`, which `userFacingApiError`
 // recognises with `instanceof` — a stand-in would make the failure case pass
 // for the wrong reason.
+
+const pilot = vi.hoisted(() => ({ public: false, enabled: false }));
+vi.mock("@/app/lib/courtos", () => ({
+    get COURTOS_SELF_REGISTRATION() { return pilot.public; },
+    get COURTOS_PILOT_MODE() { return pilot.enabled; },
+}));
+
 vi.mock("@/app/lib/mikeApi", async (importOriginal) => ({
     ...(await importOriginal<typeof import("@/app/lib/mikeApi")>()),
     createProject: vi.fn(),
@@ -44,7 +52,7 @@ vi.mock("@/app/contexts/AuthContext", () => ({
 vi.mock("@/app/contexts/UserProfileContext", () => ({
     useUserProfile,
 }));
-vi.mock("../shared/FileDirectory", () => ({ FileDirectory: () => null }));
+vi.mock("../shared/FileDirectory", () => ({ FileDirectory: () => <div data-testid="library-picker" /> }));
 vi.mock("./ProjectPracticeField", () => ({
     ProjectPracticeField: ({
         id,
@@ -121,6 +129,8 @@ function renderModal(onCreated = vi.fn()) {
 
 describe("NewProjectModal sharing", () => {
     beforeEach(() => {
+    pilot.public = false;
+    pilot.enabled = false;
         vi.clearAllMocks();
         vi.mocked(listOrgs).mockResolvedValue([]);
         vi.mocked(listOrgMembers).mockResolvedValue([]);
@@ -145,6 +155,31 @@ describe("NewProjectModal sharing", () => {
         useUserProfile.mockReturnValue({
             profile: { practiceAreas: [], projectMemoryDefault: true },
         });
+    });
+
+    it("keeps direct project uploads while hiding public-pilot imports and automatic memory", async () => {
+        pilot.public = true;
+        pilot.enabled = true;
+        const user = userEvent.setup();
+        const onCreated = renderModal();
+        expect(screen.queryByRole("switch", { name: "Enable project memory" })).not.toBeInTheDocument();
+        expect(screen.getByText(/Automatisches Projektgedächtnis/)).toBeVisible();
+        await user.type(screen.getByPlaceholderText("Add project name"), "Matter");
+        await user.click(screen.getByRole("button", { name: "Next" }));
+        await user.click(screen.getByRole("button", { name: "Next" }));
+        expect(screen.queryByTestId("library-picker")).not.toBeInTheDocument();
+        expect(screen.getByText(/Bibliotheksdateien können im öffentlichen Pilot/)).toBeVisible();
+        const file = new File(["pdf"], "test.pdf", { type: "application/pdf" });
+        vi.mocked(uploadProjectDocuments).mockImplementation(async (_id, inputs) => inputs.map((input) => ({
+            clientId: input.clientId, filename: input.file.name, status: "completed" as const,
+            result: { id: "doc-1", filename: input.file.name, project_id: "p1" }, errorCode: null,
+        })) as never);
+        fireEvent.change(document.querySelector('input[type="file"]')!, { target: { files: [file] } });
+        expect(screen.getByText("test.pdf")).toBeVisible();
+        await user.click(screen.getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(onCreated).toHaveBeenCalled());
+        expect(uploadProjectDocuments).toHaveBeenCalledOnce();
+        expect(addDocumentToProject).not.toHaveBeenCalled();
     });
 
     it("starts with the user's first preset practice area", async () => {

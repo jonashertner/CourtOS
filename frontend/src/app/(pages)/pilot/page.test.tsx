@@ -1,19 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import { isSupportedDocumentFile } from "@/app/lib/documentUploadValidation";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import CourtOSPilotPage from "./page";
 
-vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
-vi.mock("@/app/hooks/useConfiguredModels", () => ({ useConfiguredModels: () => [] }));
-
-describe("CourtOS pilot exercise", () => {
-    it("offers the sample in a format accepted by the workspace upload", () => {
-        render(<CourtOSPilotPage />);
-        const download = screen.getByRole("link", { name: "Testdossier Linden als PDF herunterladen" });
-        expect(download).toHaveAttribute("download");
-        const path = download.getAttribute("href")!;
-        expect(path).toBe("/courtos-examples/Testdossier_Linden.pdf");
-        expect(isSupportedDocumentFile(new File([], path.split("/").pop()!))).toBe(true);
-        expect(screen.getByText(/heruntergeladene PDF-Datei/)).toBeInTheDocument();
-    });
+const state = vi.hoisted(() => ({ knowledgeEnabled: true, redirect: vi.fn() }));
+vi.mock("next/navigation", () => ({ redirect: state.redirect }));
+vi.mock("@/app/lib/courtos", () => ({ get COURTOS_KNOWLEDGE_ENABLED() { return state.knowledgeEnabled; } }));
+beforeEach(() => { state.knowledgeEnabled = true; state.redirect.mockReset(); });
+describe("historical CourtOS entry", () => {
+    it("opens the working research surface directly", () => { CourtOSPilotPage(); expect(state.redirect).toHaveBeenCalledWith("/research"); });
+    it("keeps a useful entry when knowledge is not enabled", () => { state.knowledgeEnabled = false; CourtOSPilotPage(); expect(state.redirect).toHaveBeenCalledWith("/assistant"); });
 });

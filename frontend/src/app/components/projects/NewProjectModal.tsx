@@ -23,6 +23,7 @@ import { ModalSelect } from "../modals/ModalSelect";
 import { ToggleSwitchUI } from "@/shared/ui/ToggleSwitchUI";
 import { ProjectPracticeField } from "./ProjectPracticeField";
 import { userFacingApiError } from "@/app/lib/userFacingError";
+import { COURTOS_PILOT_MODE, COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
 import { createSecureUuid } from "@/shared/lib/secureUuid";
 import {
     CreateAccessStep,
@@ -190,6 +191,10 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
 
     async function createProjectFromDocuments() {
         if (!name.trim() || loading || step !== "documents") return;
+        if (COURTOS_SELF_REGISTRATION && selectedDocuments.length > 0) {
+            setError("Bibliotheksdateien können im öffentlichen Pilot nicht in Projekte kopiert werden. Verwenden Sie einen direkten Upload.");
+            return;
+        }
         setLoading(true);
         setError("");
         try {
@@ -651,7 +656,11 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                             )}
                         </div>
 
-                        <div>
+                        {COURTOS_PILOT_MODE ? (
+                            <p className="text-sm text-gray-600">
+                                Automatisches Projektgedächtnis ist im Pilot deaktiviert.
+                            </p>
+                        ) : <div>
                             <FieldLabel as="p">Project memory</FieldLabel>
                             <ToggleSwitchUI
                                 checked={memoryEnabled}
@@ -663,7 +672,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                             >
                                 Let Mike remember shared project context
                             </ToggleSwitchUI>
-                        </div>
+                        </div>}
                     </div>
                 ) : step === "access" ? (
                     <CreateAccessStep
@@ -681,11 +690,22 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                     />
                 ) : (
                     <div className="flex min-h-0 flex-1 flex-col">
-                        <FileDirectory
-                            selectedDocuments={selectedDocuments}
-                            onChange={setSelectedDocuments}
-                            showTabs
-                        />
+                        {COURTOS_SELF_REGISTRATION ? (
+                            <div className="space-y-3 text-sm text-gray-600">
+                                <p>Bibliotheksdateien können im öffentlichen Pilot nicht in Projekte kopiert werden. Laden Sie Dateien direkt hoch oder erstellen Sie das Projekt zunächst ohne Dateien.</p>
+                                {pendingFiles.length > 0 && (
+                                    <ul className="list-disc space-y-1 pl-5">
+                                        {pendingFiles.map((file, index) => <li key={`${file.name}-${index}`}>{file.name}</li>)}
+                                    </ul>
+                                )}
+                            </div>
+                        ) : (
+                            <FileDirectory
+                                selectedDocuments={selectedDocuments}
+                                onChange={setSelectedDocuments}
+                                showTabs
+                            />
+                        )}
                     </div>
                 )}
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { FrontierDraftEntry } from "@/app/components/courtos/FrontierDraftEntry";
 import { findPendingAskInput } from "@/app/lib/pendingAskInput";
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { createPortal, flushSync } from "react-dom";
@@ -1158,6 +1160,7 @@ export function ChatView({
                                                     />
                                                 ) : (
                                                     <AssistantMessage
+                                                        chatId={chatId}
                                                         events={msg.events}
                                                         isStreaming={
                                                             i === messages.length - 1 &&
@@ -1280,6 +1283,7 @@ export function ChatView({
                                     className="relative z-20 w-full max-w-4xl mx-auto px-4 md:px-6"
                                 >
                                     <div className="w-full rounded-t-[20px] bg-transparent">
+                                        {COURTOS_PILOT_MODE && <FrontierDraftEntry inputRef={chatInputRef} chatId={chatId} />}
                                         <ChatInputPrompt
                                             messages={messages}
                                             chatKey={chatId}

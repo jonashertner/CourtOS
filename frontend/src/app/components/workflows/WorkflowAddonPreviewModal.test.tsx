@@ -1,15 +1,21 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WorkflowAddon } from "../shared/types";
 import { WorkflowAddonPreviewModal } from "./WorkflowAddonPreviewModal";
+
+const pilot = vi.hoisted(() => ({ public: false }));
+vi.mock("@/app/lib/courtos", () => ({ get COURTOS_SELF_REGISTRATION() { return pilot.public; } }));
+beforeEach(() => { pilot.public = false; });
 
 vi.mock("../modals/Modal", () => ({
   Modal: ({
     children,
     secondaryAction,
+    primaryAction,
   }: {
     children: React.ReactNode;
+    primaryAction: { label: string; onClick: () => void; disabled?: boolean };
     secondaryAction?: {
       label: React.ReactNode;
       onClick?: () => void;
@@ -17,6 +23,7 @@ vi.mock("../modals/Modal", () => ({
   }) => (
     <div>
       {children}
+      <button type="button" disabled={primaryAction.disabled} onClick={primaryAction.onClick}>{primaryAction.label}</button>
       {secondaryAction && (
         <button type="button" onClick={secondaryAction.onClick}>
           {secondaryAction.label}
@@ -64,6 +71,16 @@ function addon(assets: WorkflowAddon["assets"]): WorkflowAddon {
 }
 
 describe("WorkflowAddonPreviewModal", () => {
+  it("keeps the preview readable without offering a blocked pilot import", async () => {
+    pilot.public = true;
+    const onImport = vi.fn();
+    render(<WorkflowAddonPreviewModal addon={addon([])} importing={false} onClose={vi.fn()} onImport={onImport} />);
+    expect(screen.getByText(/Import zusätzlicher Arbeitsabläufe/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Import" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: "Import" }));
+    expect(onImport).not.toHaveBeenCalled();
+    expect(screen.getByText("Use the reference.")).toBeVisible();
+  });
   it("shows the add-on's assets in its details", async () => {
     const user = userEvent.setup();
     render(

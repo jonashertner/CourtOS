@@ -21,6 +21,7 @@ import {
     partitionSupportedDocumentFiles,
 } from "@/app/lib/documentUploadValidation";
 import { useRemountPersistentState } from "@/app/hooks/useRemountPersistentState";
+import { COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
 import { userFacingApiError } from "@/app/lib/userFacingError";
 
 interface Props {
@@ -69,11 +70,12 @@ export function AddDocumentsModal({
     disabledDocumentIds,
     uploadStateId,
 }: Props) {
+    const limitToProject = projectDocumentsOnly || (COURTOS_SELF_REGISTRATION && Boolean(projectId));
     const uploadSurfaceId =
         uploadStateId ??
         [
             projectId ?? "standalone",
-            projectDocumentsOnly ? "project" : "all",
+            limitToProject ? "project" : "all",
             initialTab,
         ].join(":");
     const uploadStateKey = `add-documents-upload:${uploadSurfaceId}`;
@@ -109,7 +111,7 @@ export function AddDocumentsModal({
     }, [open]);
 
     useEffect(() => {
-        if (!open || !projectDocumentsOnly || !projectId) return;
+        if (!open || !limitToProject || !projectId) return;
         let cancelled = false;
         setProjectDirectoryLoading(true);
         getProject(projectId)
@@ -135,7 +137,7 @@ export function AddDocumentsModal({
         return () => {
             cancelled = true;
         };
-    }, [open, projectDocumentsOnly, projectId]);
+    }, [open, limitToProject, projectId]);
 
     // Key the sync on the id list itself so a reopen targeting different
     // documents (or ids arriving late) always re-seeds the selection.
@@ -214,6 +216,10 @@ export function AddDocumentsModal({
             const alreadyHere = selectedDocuments.filter(
                 (d) => d.project_id === projectId,
             );
+            if (COURTOS_SELF_REGISTRATION && toAssign.length > 0) {
+                setUploadWarning("Bibliotheksdateien können im öffentlichen Pilot nicht in Projekte kopiert werden. Wählen Sie Projektdateien oder laden Sie Dateien direkt hoch.");
+                return;
+            }
             if (toAssign.length > 0) {
                 setUploading(true);
                 try {
@@ -334,7 +340,7 @@ export function AddDocumentsModal({
         }
     }
 
-    const directoryDocuments = projectDocumentsOnly
+    const directoryDocuments = limitToProject
         ? [
               ...extraUploadedDocs,
               ...projectDocuments.filter(
@@ -395,7 +401,8 @@ export function AddDocumentsModal({
             primaryAction={{
                 label: uploading ? "Saving…" : "Confirm",
                 onClick: handleConfirm,
-                disabled: selectedDocuments.length === 0 || uploading,
+                disabled: selectedDocuments.length === 0 || uploading ||
+                    (COURTOS_SELF_REGISTRATION && Boolean(projectId) && selectedDocuments.some((document) => document.project_id !== projectId)),
             }}
         >
             <input
@@ -407,6 +414,11 @@ export function AddDocumentsModal({
                 onChange={handleUpload}
             />
 
+            {COURTOS_SELF_REGISTRATION && projectId && (
+                <p className="mb-3 text-sm text-gray-600">
+                    Bibliotheksdateien können im öffentlichen Pilot nicht in Projekte kopiert werden. Hier stehen Projektdateien und direkte Uploads zur Verfügung.
+                </p>
+            )}
             {uploadWarning && (
                 <div className="mb-2 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-gray-900">
                     <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" />
@@ -425,22 +437,22 @@ export function AddDocumentsModal({
             <div className="flex min-h-0 flex-1 flex-col">
                 <FileDirectory
                     documents={directoryDocuments}
-                    folders={projectDocumentsOnly ? projectFolders : undefined}
+                    folders={limitToProject ? projectFolders : undefined}
                     loading={projectDirectoryLoading}
                     selectedDocuments={selectedDocuments}
                     onChange={setSelectedDocuments}
                     uploadingFilenames={uploadingFiles.map(
                         (upload) => upload.filename,
                     )}
-                    showTabs={!projectDocumentsOnly}
+                    showTabs={!limitToProject}
                     initialTab={initialTab}
                     tabs={tabs}
                     excludeProjectId={
-                        projectDocumentsOnly ? undefined : projectId
+                        limitToProject ? undefined : projectId
                     }
                     disabledDocumentIds={disabledDocumentIds}
                     onExpandFolder={
-                        projectDocumentsOnly
+                        limitToProject
                             ? handleExpandProjectFolder
                             : undefined
                     }
@@ -451,7 +463,7 @@ export function AddDocumentsModal({
                         handleLoadMoreProjectLevel(folderId)
                     }
                     rootDocumentsHasMore={
-                        projectDocumentsOnly &&
+                        limitToProject &&
                         (projectDocumentCountsByLevel.root ?? 0) >
                             (projectDocumentLimitByLevel.root ??
                                 DIRECTORY_PAGE_SIZE)

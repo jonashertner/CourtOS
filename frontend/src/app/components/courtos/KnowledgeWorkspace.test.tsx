@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KnowledgeWorkspace } from "./KnowledgeWorkspace";
 
-const api = vi.hoisted(() => ({ list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn() }));
+const api = vi.hoisted(() => ({ list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn(), handoff: vi.fn(), research: vi.fn() }));
+vi.mock("@/app/lib/researchDraft", () => ({ prepareResearchDraft: api.research }));
+vi.mock("@/app/lib/frontierDraft", () => ({ prepareFrontierDraft: api.handoff }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: api.push }) }));
 vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "test-owner" } }) }));
 vi.mock("@/app/lib/mikeApi", () => ({ searchLibraryDocuments: api.list }));
@@ -14,6 +16,7 @@ const document = { id: "personal-a", filename: "Muster, Gehör, 2026.pdf", activ
 const hit = { document_id: document.id, version_id: "fixed-version-2", version_number: 2, filename: document.filename, page: 7, quote: "Die Stellungnahme ist zu prüfen. <script>kein HTML</script>", score: 1 };
 beforeEach(() => {
     vi.clearAllMocks();
+    api.handoff.mockReturnValue(false);
     Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
     api.list.mockResolvedValue({ documents: [document], documentsHasMore: false });
     api.local.mockResolvedValue({ results: [hit], documents: [{ document_id: document.id, version_id: hit.version_id, index_status: "partial", indexed_pages: 8, total_pages: 12 }], notices: ["Nur ein Teil der Seiten ist erfasst."] });
@@ -21,8 +24,31 @@ beforeEach(() => {
 });
 
 describe("personal knowledge workspace", () => {
+    it("starts with public research without loading a library or calling a model", () => {
+        render(<KnowledgeWorkspace />);
+        expect(screen.getByRole("textbox", { name: "Öffentliche Rechtsbegriffe" })).toHaveValue("");
+        expect(api.list).not.toHaveBeenCalled();
+        expect(api.local).not.toHaveBeenCalled();
+        expect(api.public).not.toHaveBeenCalled();
+        expect(api.handoff).not.toHaveBeenCalled();
+    });
+    it("offers the exact passage for manual copy if clipboard access is denied", async () => {
+        const user = userEvent.setup();
+        vi.spyOn(navigator.clipboard, "writeText").mockRejectedValueOnce(new DOMException("denied"));
+        render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Meine Bibliothek" }));
+        await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
+        await user.type(screen.getByLabelText("Begriffe oder Frage zu Ihrer Auswahl"), "Gehör");
+        await user.click(screen.getByRole("button", { name: "In ausgewählten Quellen suchen" }));
+        await user.click(await screen.findByRole("button", { name: "Passage und Quelle kopieren" }));
+        const fallback = await screen.findByRole("textbox", { name: "Text zum manuellen Kopieren" });
+        expect(fallback).toHaveAttribute("readonly");
+        expect((fallback as HTMLTextAreaElement).value).toContain(hit.quote);
+        expect(screen.queryByText("Kopiert. In Ihrem Dokument einfügen.")).not.toBeInTheDocument();
+    });
     it("requires explicit document selection and opens the exact version and quote read-only", async () => {
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Meine Bibliothek" }));
         const search = screen.getByRole("button", { name: "In ausgewählten Quellen suchen" });
         await user.type(screen.getByLabelText("Begriffe oder Frage zu Ihrer Auswahl"), "Stellungnahme");
         expect(search).toBeDisabled();
@@ -31,6 +57,13 @@ describe("personal knowledge workspace", () => {
         await screen.findByText(hit.quote);
         expect(api.local).toHaveBeenCalledWith("Stellungnahme", [document.id], expect.any(AbortSignal));
         expect(api.public).not.toHaveBeenCalled();
+        const clipboard = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValueOnce();
+        await user.click(screen.getByRole("button", { name: "Passage und Quelle kopieren" }));
+        const copied = clipboard.mock.calls[0][0];
+        expect(copied).toContain(hit.quote);
+        expect(copied).toContain("Version 2, PDF-Seite 7");
+        expect(copied).toContain(document.filename);
+        expect(copied).not.toContain("https://");
         expect(screen.getByText(/Nur teilweise erfasst/)).toHaveTextContent("8 von 12 Seiten");
         await user.click(screen.getByRole("button", { name: "Beleg im Dokument öffnen" }));
         const viewer = await screen.findByTestId("source-viewer");
@@ -41,6 +74,7 @@ describe("personal knowledge workspace", () => {
     });
     it("does not prefill or submit private terms to public research, and preserves private selection", async () => {
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Meine Bibliothek" }));
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
         await user.type(screen.getByLabelText("Begriffe oder Frage zu Ihrer Auswahl"), "private question");
         await user.click(screen.getByRole("button", { name: "Öffentliche Rechtsprechung" }));
@@ -57,6 +91,7 @@ describe("personal knowledge workspace", () => {
     });
     it("clears stale results when the document selection changes", async () => {
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Meine Bibliothek" }));
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
         await user.type(screen.getByLabelText("Begriffe oder Frage zu Ihrer Auswahl"), "Gehör");
         await user.click(screen.getByRole("button", { name: "In ausgewählten Quellen suchen" }));
@@ -68,6 +103,7 @@ describe("personal knowledge workspace", () => {
     it("makes empty and failed library states actionable", async () => {
         api.list.mockResolvedValueOnce({ documents: [], documentsHasMore: false });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Meine Bibliothek" }));
         await screen.findByText(/Ihre persönliche Bibliothek ist noch leer/);
         expect(screen.getByRole("link", { name: /Dokumente in die Bibliothek aufnehmen/ })).toHaveAttribute("href", "/library");
         api.list.mockRejectedValueOnce(new Error("raw infrastructure error"));
@@ -78,6 +114,7 @@ describe("personal knowledge workspace", () => {
     it("caps explicit selection at 20 documents", async () => {
         api.list.mockResolvedValue({ documents: Array.from({ length: 21 }, (_, index) => ({ ...document, id: String(index), filename: `Quelle ${index}.pdf` })), documentsHasMore: false });
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Meine Bibliothek" }));
         const boxes = await screen.findAllByRole("checkbox");
         for (const box of boxes.slice(0, 20)) await user.click(box);
         expect(boxes[20]).toBeDisabled();
@@ -99,7 +136,31 @@ describe("personal knowledge workspace", () => {
         await waitFor(() => expect(api.detail).toHaveBeenCalledWith("CH_CASE", 0, expect.any(AbortSignal)));
         const dialog = screen.getByRole("dialog");
         await within(dialog).findByText("Der genaue Entscheidtext.");
+        const clipboard = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValueOnce();
+        await user.click(within(dialog).getByRole("button", { name: "Auszug und Quelle kopieren" }));
+        const copied = clipboard.mock.calls[0][0];
+        expect(copied).toContain("Der genaue Entscheidtext.");
+        expect(copied).toContain("https://example.org/case");
+        expect(copied).toContain("OpenCaseLaw-ID: CH_CASE");
+        expect(copied).toContain("Zeichen 0–20 von 20; keine amtlichen Randnummern");
+        expect(copied).not.toContain("javascript:");
         expect(within(dialog).getByRole("button", { name: "Nächster Abschnitt" })).toBeDisabled();
+        await user.click(within(dialog).getByText("Mit KI weiterarbeiten"));
+        api.research.mockReturnValueOnce(true);
+        await user.click(within(dialog).getByRole("button", { name: "Auszug lokal prüfen" }));
+        expect(api.research).toHaveBeenCalledWith("test-owner", expect.stringContaining("Der genaue Entscheidtext."));
+        expect(api.research.mock.calls[0][1]).toContain("OpenCaseLaw-ID: CH_CASE");
+        expect(api.push).toHaveBeenCalledWith("/assistant");
+        expect(api.handoff).not.toHaveBeenCalled();
+        await user.click(within(dialog).getByRole("button", { name: "Auszug mit Frontier prüfen" }));
+        expect(api.handoff).toHaveBeenCalledWith("test-owner", expect.stringContaining("Der genaue Entscheidtext."));
+        const text = api.handoff.mock.calls[0][1];
+        expect(text).toContain("OpenCaseLaw-ID: CH_CASE");
+        expect(text).toContain("Zeichen 0–20 von 20");
+        expect(text).not.toContain("personal-a");
+        expect(text).not.toContain("javascript:");
+        expect(api.local).not.toHaveBeenCalled();
+        expect(within(dialog).getByRole("alert")).toHaveTextContent("Der Auszug konnte nicht übergeben werden");
     });
     it("labels known courts without changing source dates or docket numbers", async () => {
         api.public.mockResolvedValue({ results: [{ decision_id: "source-1", title: null, snippet: "Originalauszug", court: "zh_verwaltungsgericht", docket_number: "VB.2012.00393", decision_date: "2012-03-15" }], query_mode: "literal_terms", database_generation: "test" });
@@ -113,8 +174,10 @@ describe("personal knowledge workspace", () => {
     });
     it("uses the existing new-assistant route without automatic search or submission", async () => {
         const user = userEvent.setup(); render(<KnowledgeWorkspace />);
+        await user.click(screen.getByRole("button", { name: "Meine Bibliothek" }));
         await user.click(await screen.findByRole("checkbox", { name: /Muster, Gehör/ }));
         await user.type(screen.getByLabelText("Begriffe oder Frage zu Ihrer Auswahl"), "Gehör?");
+        await user.click(screen.getByText("Optional: mit lokaler KI weiterarbeiten"));
         await user.click(screen.getByRole("button", { name: "Mit dieser Auswahl fragen" }));
         expect(api.push).toHaveBeenCalledWith("/assistant");
         expect(api.local).not.toHaveBeenCalled();

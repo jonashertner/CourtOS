@@ -15,6 +15,7 @@ import { FileTypeIcon } from "../shared/FileTypeIcon";
 import { PdfView } from "../shared/views/PdfView";
 import { SpreadsheetView } from "../shared/views/SpreadsheetView";
 import { workflowAddonAssetDisplayUrl } from "@/app/lib/mikeApi";
+import { COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
 import { resolveDocumentViewType } from "@/app/lib/documentViewType";
 
 type DetailView = "columns" | "skill" | "assets";
@@ -304,8 +305,8 @@ function WorkflowAddonPreviewDialog({
       primaryAction={{
         label: importing ? "Importing…" : "Import",
         icon: <Plus className="h-4 w-4" />,
-        disabled: importing,
-        onClick: () => void onImport(addon),
+        disabled: COURTOS_SELF_REGISTRATION || importing,
+        onClick: () => { if (!COURTOS_SELF_REGISTRATION) void onImport(addon); },
       }}
       secondaryAction={
         selectedAsset
@@ -318,6 +319,11 @@ function WorkflowAddonPreviewDialog({
       }
       cancelAction={false}
     >
+      {COURTOS_SELF_REGISTRATION && (
+        <p className="mb-3 text-sm text-gray-600">
+          Der Import zusätzlicher Arbeitsabläufe ist im öffentlichen Pilot deaktiviert. Die Vorschau bleibt verfügbar.
+        </p>
+      )}
       {selectedAsset ? (
         <div className="mb-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg">
           <div className="flex min-h-10 shrink-0 items-center gap-2 border-b border-white/60 py-1.5 text-xs">

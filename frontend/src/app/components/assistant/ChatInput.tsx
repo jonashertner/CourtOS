@@ -77,6 +77,7 @@ import {
 export interface ChatInputHandle {
     /** Prepare a visible draft only; refuses to replace an existing draft. */
     prepareDraft?: (prompt: string) => boolean;
+    prepareFrontierDraft?: (prompt: string, onUsed?: () => void) => boolean;
     /** Prepare a visible private question with explicit source references; never submit. */
     prepareKnowledgeDraft?: (prompt: string, documents: Document[]) => boolean;
     addDoc: (doc: Document) => void;
@@ -154,7 +155,7 @@ function placeholderFor({
     if (COURTOS_PILOT_MODE) {
         if (canSend === null) return "Wird geladen…";
         if (!canSend) return "Nur Lesezugriff – zum Senden ist ein Bearbeitungsrecht nötig";
-        if (!chatLoading) return COURTOS_KNOWLEDGE_ENABLED ? "Ihre Frage zu Testakten oder zulässigen Literaturquellen…" : "Ihr Auftrag zum synthetischen Testfall…";
+        if (!chatLoading) return "Ihre Frage oder Ihr Arbeitsauftrag…";
         return isLoading ? "Die Antwort wird noch erstellt…" : "Gespräch wird geladen…";
     }
     if (canSend === null) return "Loading…";
@@ -189,6 +190,14 @@ function ChatInputForChatImpl(
     // names whichever one is missing.
     const composerOpen = canSend === true && !chatLoading;
     const [value, setValue] = useState("");
+    // Keep the browser return draft until an explicit edit/send. A composer
+    // remount during route/profile hydration must not consume the only copy.
+    const frontierDraftRef = useRef<{ text: string; onUsed?: () => void } | null>(null);
+    const useFrontierDraft = () => {
+        const draft = frontierDraftRef.current;
+        frontierDraftRef.current = null;
+        draft?.onUsed?.();
+    };
     const [attachedDocs, setAttachedDocs] = useState<Document[]>([]);
     const [selectedWorkflow, setSelectedWorkflow] = useState<{
         id: string;
@@ -487,6 +496,20 @@ function ChatInputForChatImpl(
             });
             return true;
         },
+        prepareFrontierDraft: (prompt: string, onUsed?: () => void) => {
+            if (!COURTOS_PILOT_MODE || !composerOpen) return false;
+            if (value === prompt && frontierDraftRef.current?.text === prompt) return true;
+            if (value.trim() || attachedDocs.length || selectedWorkflow) return false;
+            frontierDraftRef.current = { text: prompt, onUsed };
+            setValue(prompt);
+            requestAnimationFrame(() => {
+                if (!textareaRef.current) return;
+                textareaRef.current.style.height = "auto";
+                textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+                textareaRef.current.focus();
+            });
+            return true;
+        },
         prepareDraft: (prompt: string) => {
             if (!composerOpen || value.trim()) return false;
             setValue(prompt);
@@ -509,13 +532,14 @@ function ChatInputForChatImpl(
         },
         startWorkflow: (workflow, prompt) => {
             setSelectedWorkflow(workflow);
-            if (prompt !== undefined) setValue(prompt);
+            if (prompt !== undefined) { useFrontierDraft(); setValue(prompt); }
             requestAnimationFrame(() => textareaRef.current?.focus());
         },
         startWorkflowDocumentSelection: (workflow, prompt, options) => {
             setSelectedWorkflow(workflow);
             setDocSelectorInitialTab(options?.initialDocumentTab ?? "files");
             if (prompt !== undefined) {
+                useFrontierDraft();
                 setValue(prompt);
                 requestAnimationFrame(() => {
                     if (!textareaRef.current) return;
@@ -572,6 +596,7 @@ function ChatInputForChatImpl(
     }, [composerOpen, enableGlobalFileDrop, handleDroppedFiles]);
 
     const updateInput = (el: HTMLTextAreaElement) => {
+        useFrontierDraft();
         setValue(el.value);
         setActiveSlashIndex(0);
         setSlashMenuDismissed(false);
@@ -610,6 +635,7 @@ function ChatInputForChatImpl(
             setApiKeyModalProvider(getModelProvider(model));
             return;
         }
+        useFrontierDraft();
         setValue("");
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";
@@ -723,6 +749,7 @@ function ChatInputForChatImpl(
                         LIQUID_GLASS_TRANSLUCENT_CLASS,
                     )}
                 >
+                    {COURTOS_PILOT_MODE && <p className="px-4 pt-3 text-xs text-muted-foreground">Gemma 4 · lokal auf dem CourtOS-Server</p>}
                     {/* Attached chips */}
                     {(selectedWorkflow || attachedDocs.length > 0) && (
                         <div className="flex flex-wrap gap-1.5 px-2 pt-2">
@@ -910,7 +937,7 @@ function ChatInputForChatImpl(
                         </div>
 
                         <div className="flex items-center gap-1">
-                            {!chatSettingsLoading && (
+                            {!COURTOS_PILOT_MODE && !chatSettingsLoading && (
                                 <ModelToggle
                                     value={model}
                                     onChange={handleModelChange}

@@ -29,6 +29,8 @@ import {
   type UserExportType,
 } from "@/app/lib/mikeApi";
 
+import { COURTOS_SELF_REGISTRATION } from "@/app/lib/courtos";
+
 type DeleteDataAction = "chats" | "tabular-reviews" | "projects" | "memory";
 type ExportDataAction =
   | "export-chats"
@@ -108,6 +110,10 @@ export default function PrivacyDataPage() {
     type: UserExportType,
     fallbackFilename: string,
   ) => {
+    if (COURTOS_SELF_REGISTRATION) {
+      setWarningMessage("Gesamtexporte sind im öffentlichen Pilot deaktiviert. Direkte Downloads einzelner Dokumente bleiben verfügbar.");
+      return;
+    }
     const { export_id } = await startUserExport(type);
     for (let i = 0; i < EXPORT_POLL_LIMIT; i++) {
       await new Promise((resolve) => setTimeout(resolve, EXPORT_POLL_MS));
@@ -123,6 +129,7 @@ export default function PrivacyDataPage() {
   };
 
   const handleExportAccountData = async () => {
+    if (COURTOS_SELF_REGISTRATION) return;
     devLog("[privacy-data/mfa] export account requested");
     setIsExportingAccount(true);
     try {
@@ -147,6 +154,7 @@ export default function PrivacyDataPage() {
   };
 
   const handleExportChatData = async () => {
+    if (COURTOS_SELF_REGISTRATION) return;
     devLog("[privacy-data/mfa] export chats requested");
     setIsExportingChats(true);
     try {
@@ -171,6 +179,7 @@ export default function PrivacyDataPage() {
   };
 
   const handleExportTabularReviewsData = async () => {
+    if (COURTOS_SELF_REGISTRATION) return;
     devLog("[privacy-data/mfa] export tabular reviews requested");
     setIsExportingTabularReviews(true);
     try {
@@ -198,6 +207,7 @@ export default function PrivacyDataPage() {
   };
 
   const handleExportMemoryData = async () => {
+    if (COURTOS_SELF_REGISTRATION) return;
     devLog("[privacy-data/mfa] export memory requested");
     setIsExportingMemory(true);
     try {
@@ -288,6 +298,11 @@ export default function PrivacyDataPage() {
     <div className="space-y-8">
       <section className="space-y-3">
         <SettingsHeading>Export data</SettingsHeading>
+        {COURTOS_SELF_REGISTRATION && (
+          <p className="text-sm text-gray-600">
+            Gesamtexporte sind im öffentlichen Pilot deaktiviert. Direkte Downloads einzelner Dokumente bleiben verfügbar.
+          </p>
+        )}
         <GlassCardUI>
           <SettingsRow>
             <div className="space-y-1">
@@ -300,7 +315,7 @@ export default function PrivacyDataPage() {
               tone="black"
               size="sm"
               onClick={handleExportChatData}
-              disabled={isExportingChats}
+              disabled={COURTOS_SELF_REGISTRATION || isExportingChats}
               loading={isExportingChats}
               className="shrink-0"
             >
@@ -320,7 +335,7 @@ export default function PrivacyDataPage() {
               tone="black"
               size="sm"
               onClick={handleExportTabularReviewsData}
-              disabled={isExportingTabularReviews}
+              disabled={COURTOS_SELF_REGISTRATION || isExportingTabularReviews}
               loading={isExportingTabularReviews}
               className="shrink-0"
             >
@@ -340,7 +355,7 @@ export default function PrivacyDataPage() {
               tone="black"
               size="sm"
               onClick={handleExportAccountData}
-              disabled={isExportingAccount}
+              disabled={COURTOS_SELF_REGISTRATION || isExportingAccount}
               loading={isExportingAccount}
               className="shrink-0"
             >
@@ -361,7 +376,7 @@ export default function PrivacyDataPage() {
               size="sm"
               aria-label="Export memory"
               onClick={handleExportMemoryData}
-              disabled={isExportingMemory}
+              disabled={COURTOS_SELF_REGISTRATION || isExportingMemory}
               loading={isExportingMemory}
               className="shrink-0"
             >

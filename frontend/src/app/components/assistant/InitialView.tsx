@@ -6,8 +6,9 @@ import { MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useUserProfile } from "@/app/contexts/UserProfileContext";
 import { COURTOS_KNOWLEDGE_ENABLED, COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { ResearchDraftEntry } from "@/app/components/courtos/ResearchDraftEntry";
 import { KnowledgeDraftEntry } from "@/app/components/courtos/KnowledgeDraftEntry";
-import { CourtOSTaskStarters } from "@/app/components/courtos/CourtOSTaskStarters";
+import { FrontierDraftEntry } from "@/app/components/courtos/FrontierDraftEntry";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import type { Document, Message, QuickAction } from "../shared/types";
 import {
@@ -117,7 +118,9 @@ export function InitialView({
             </div>}
 
             <div className="mx-auto w-full max-w-4xl justify-self-center px-0 xl:px-8">
+                {COURTOS_KNOWLEDGE_ENABLED && <ResearchDraftEntry inputRef={chatInputRef} />}
                 {COURTOS_KNOWLEDGE_ENABLED && user?.id && <KnowledgeDraftEntry owner={user.id} inputRef={chatInputRef} />}
+                {COURTOS_PILOT_MODE && <FrontierDraftEntry inputRef={chatInputRef} />}
                 <ChatInput
                     ref={chatInputRef}
                     onSubmit={onSubmit}
@@ -133,8 +136,6 @@ export function InitialView({
                         {COURTOS_PILOT_MODE ? (COURTOS_KNOWLEDGE_ENABLED ? "Synthetische Akten und rechtmässig nutzbare, nicht vertrauliche Literatur. Antworten und Quellen selbst prüfen." : "Nur synthetische Daten. Antworten und Quellen selbst prüfen.") : "KI kann Fehler machen. Antworten und Quellen selbst prüfen."}
                     </p>
                 </div>
-
-                {COURTOS_PILOT_MODE && <CourtOSTaskStarters prepareDraft={(prompt) => chatInputRef.current?.prepareDraft?.(prompt) ?? false} />}
 
                 {!COURTOS_PILOT_MODE && profile?.quickActionsVisible !== false && (
                     <div className="flex flex-col items-center">

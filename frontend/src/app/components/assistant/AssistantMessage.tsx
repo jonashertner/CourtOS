@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { FrontierAnswerAction } from "@/app/components/courtos/FrontierAnswerAction";
 import { Check, Copy } from "lucide-react";
 import type {
     AssistantEvent,
@@ -33,6 +35,7 @@ import {
 } from "./message/EventBlocks";
 
 interface Props {
+    chatId?: string | null;
     events?: AssistantEvent[];
     isStreaming?: boolean;
     /**
@@ -111,6 +114,7 @@ interface Props {
 }
 
 export function AssistantMessage({
+    chatId,
     events,
     isStreaming = false,
     awaitingInput = false,
@@ -824,6 +828,7 @@ export function AssistantMessage({
     return (
         <div style={{ minHeight }}>
             <ResponseStatus status={status} />
+            {COURTOS_PILOT_MODE && <p className="mt-2 text-xs text-muted-foreground">Gemma 4 · lokal auf dem CourtOS-Server</p>}
             <div className="w-full font-inter relative mt-2">
                 {events && events.length > 0 ? (
                     <div className="flex flex-col gap-4">
@@ -1136,7 +1141,10 @@ export function AssistantMessage({
                 )}
 
                 {/* Copy button */}
-                <div className="flex items-center gap-2 font-sans justify-start">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-sans justify-start">
+                    {COURTOS_PILOT_MODE && !isStreaming && !awaitingInput && !hasError && (
+                        <FrontierAnswerAction text={(events ?? []).filter((event): event is Extract<AssistantEvent, { type: "content" }> => event.type === "content").map((event) => event.text).join("\n\n")} chatId={chatId} />
+                    )}
                     {!isStreaming && !awaitingInput && (
                         <button
                             type="button"
