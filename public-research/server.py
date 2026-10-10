@@ -149,11 +149,15 @@ class PublicResearch:
         parameters.append(request.limit)
         with self.connection() as conn:
             generation = conn.execute("PRAGMA user_version").fetchone()[0]
+            # FTS5's rank cursor can stop once LIMIT matching, filtered rows are
+            # found. ORDER BY bm25(...), decision_id instead sorts every hit.
+            # Pin the same unweighted BM25 function even if the publisher has
+            # configured a different default rank. Equal-score order is unspecified.
             rows = conn.execute(f"""SELECT {METADATA_SQL},
                 snippet(decisions_fts,7,'','',' … ',40) AS snippet
                 FROM decisions_fts JOIN decisions d ON d.rowid=decisions_fts.rowid
-                WHERE decisions_fts MATCH ?{where}
-                ORDER BY bm25(decisions_fts),d.decision_id LIMIT ?""", parameters).fetchall()
+                WHERE decisions_fts MATCH ? AND rank MATCH 'bm25()'{where}
+                ORDER BY decisions_fts.rank LIMIT ?""", parameters).fetchall()
             results = []
             for row in rows:
                 snippet = row["snippet"] or ""
@@ -229,7 +233,7 @@ def create_app(settings: Settings | None = None):
     @app.get("/decisions/{decision_id}")
     def decision(decision_id: str, start: int = Query(default=0, ge=0, le=10000000),
                  length: int = Query(default=4000, ge=1, le=6000)):
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,239}", decision_id):
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.: -]{0,239}", decision_id):
             raise HTTPException(422, "Ungültige Entscheidkennung.")
         result = service.decision(decision_id, start, length)
         if result is None:

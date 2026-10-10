@@ -50,12 +50,19 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
     });
     if (!response.ok) {
         // Do not expose raw infrastructure responses or send search terms to telemetry.
+        let code: unknown;
+        try { code = ((await response.json()) as { code?: unknown })?.code; } catch { /* use the status-only fallback */ }
+        const publicMessage = path.startsWith("/public/") && response.status === 503
+            ? code === "public_research_timeout" ? "Die Suche hat zu lange gedauert. Bitte präzisere Begriffe verwenden oder die Sprache eingrenzen."
+                : code === "public_research_busy" ? "Die öffentliche Suche ist gerade ausgelastet. Bitte kurz warten und erneut suchen." : null
+            : path.startsWith("/public/") && response.status === 400 && code === "public_research_invalid_query"
+                ? "Bitte ein bis acht kurze Suchbegriffe verwenden." : null;
         const message = response.status === 401 ? "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
             : response.status === 403 || response.status === 404 ? "Diese Quelle ist für Ihr Konto nicht verfügbar. Aktualisieren Sie die Auswahl."
             : response.status === 429 ? "Die Suche ist gerade ausgelastet. Bitte versuchen Sie es später erneut."
             : response.status === 400 || response.status === 422 ? "Bitte prüfen Sie Suchtext und Dokumentauswahl."
             : "Die Suche ist vorübergehend nicht verfügbar. Bitte versuchen Sie es erneut.";
-        throw new Error(message);
+        throw new Error(publicMessage || message);
     }
     return response.json() as Promise<T>;
 }

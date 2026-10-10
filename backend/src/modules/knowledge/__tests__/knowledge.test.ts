@@ -87,11 +87,34 @@ describe("selected private knowledge", () => {
   });
 });
 describe("fixed local public-source proxy",()=>{
+  it.each([
+    [503,"public_research_timeout","unavailable","public_research_timeout"],
+    [429,"public_research_busy","unavailable","public_research_busy"],
+    [422,undefined,"validation","public_research_invalid_query"],
+    [503,"unknown_private_error","unavailable","public_research_unavailable"],
+    [500,"public_research_timeout","unavailable","public_research_unavailable"],
+  ])("preserves a safe actionable failure for upstream %s/%s",async(status,code,kind,expectedCode)=>{
+    vi.stubGlobal("fetch",vi.fn().mockResolvedValue(new Response(JSON.stringify({code,detail:"sensitive raw database detail"}),{status:Number(status)})));
+    const result=await publicKnowledgeRequest("search",{query:"Gehör"});
+    expect(result).toMatchObject({ok:false,kind,code:expectedCode});
+    expect(JSON.stringify(result)).not.toContain("sensitive raw database detail");
+  });
   it("rejects private fields and URL injection before network",async()=>{
     const fetch=vi.fn();vi.stubGlobal("fetch",fetch);
     expect(await publicKnowledgeRequest("search",{query:"Gehör",document_ids:[doc]})).toMatchObject({ok:false,kind:"validation"});
     expect(await publicKnowledgeRequest("decision",{id:"https://outside.invalid/a"})).toMatchObject({ok:false,kind:"validation"});
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it("encodes actual corpus identifiers with spaces and colons as one path segment",async()=>{
+    const fetch=vi.fn().mockImplementation(async()=>new Response("{}"));vi.stubGlobal("fetch",fetch);
+    for(const id of ["ow_gerichte_VVGE 1976_77 Nr. 54","source:case_1"]){
+      expect(await publicKnowledgeRequest("decision",{id})).toMatchObject({ok:true});
+      expect(fetch).toHaveBeenLastCalledWith(`http://127.0.0.1:18184/decisions/${encodeURIComponent(id)}?start=0&length=4000`,expect.anything());
+    }
+    for(const id of ["../private","case/other","case\\other","case\nother","a".repeat(241)]){
+      expect(await publicKnowledgeRequest("decision",{id})).toMatchObject({ok:false,kind:"validation"});
+    }
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
   it("forwards only explicit public query to fixed loopback with no credentials or redirects",async()=>{
     const fetch=vi.fn().mockResolvedValue(new Response(JSON.stringify({results:[]})));vi.stubGlobal("fetch",fetch);

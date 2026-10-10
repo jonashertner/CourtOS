@@ -18,7 +18,7 @@ Bind only to `127.0.0.1:18184`; do not expose this port through the tunnel.
   maximum; explicit Content-Length required.
 - `GET /decisions/{decision_id}?start=0&length=4000`: exact canonical identifier
   only, not fuzzy docket or alias resolution. Identifiers contain ASCII letters,
-  digits, underscore, dot, colon or hyphen, at most 240 characters. The passage
+  digits, spaces, underscore, dot, colon or hyphen, at most 240 characters. The passage
   is bounded to 6000 Unicode characters, starting at a zero-based offset up to
   10 million. Its `end` is exclusive; `total_chars` and `has_more` permit another
   bounded request. Offsets are text positions, not judicial paragraph numbers

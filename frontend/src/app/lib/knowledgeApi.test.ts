@@ -3,6 +3,17 @@ import { getPublicDecision, publicSourceUrl, searchKnowledge, searchPublicKnowle
 
 afterEach(() => vi.unstubAllGlobals());
 describe("explicit knowledge requests", () => {
+    it.each([
+        [503, "public_research_timeout", "präzisere Begriffe"],
+        [503, "public_research_busy", "kurz warten"],
+        [400, "public_research_invalid_query", "ein bis acht"],
+        [503, "unknown_error", "vorübergehend nicht verfügbar"],
+        [500, "public_research_timeout", "vorübergehend nicht verfügbar"],
+    ])("shows fixed actionable public-search errors (%s/%s)", async (status, code, message) => {
+        vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => new Response(JSON.stringify({ code, detail: "private raw backend details" }), { status: Number(status) })));
+        await expect(searchPublicKnowledge("Gehör", "de")).rejects.toThrow(String(message));
+        await expect(searchPublicKnowledge("Gehör", "de")).rejects.not.toThrow("private raw backend details");
+    });
     it("sends only selected IDs and the local query, with the cookie session", async () => {
         const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ results: [] })));
         vi.stubGlobal("fetch", fetch);
