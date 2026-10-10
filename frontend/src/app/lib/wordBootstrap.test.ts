@@ -85,7 +85,7 @@ describe("CourtOS Word bootstrap authentication boundary", () => {
         callback(h); callback(h); await flush();
         expect(h.dialog.close).toHaveBeenCalledTimes(1);
         expect(h.fetch).toHaveBeenCalledTimes(1);
-        expect(h.fetch).toHaveBeenCalledWith("/api/auth/session", expect.objectContaining({ method: "GET", credentials: "include", mode: "same-origin", redirect: "error", cache: "no-store" }));
+        expect(h.fetch).toHaveBeenCalledWith(origin + "/api/auth/session", expect.objectContaining({ method: "GET", credentials: "include", mode: "cors", redirect: "error", cache: "no-store" }));
         expect(h.window.location.replace).toHaveBeenCalledWith(origin + "/word/research");
     });
     it.each(["no cookie", "different owner", "login HTML", "redirect failure"])("fails closed when the pane has %s", async (failure) => {
@@ -198,7 +198,8 @@ describe("Office dialog startup and protected completion", () => {
         expect(h.fetch).not.toHaveBeenCalled();
         fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" }));
         fireEvent.click(screen.getByRole("button", { name: "Zugang in Word bestätigen" })); await flush();
-        expect(h.fetch.mock.calls.map(([path, init]) => [path, init.method])).toEqual([["/api/auth/cloudflare", "POST"], ["/api/auth/session", "GET"]]);
+        expect(h.fetch.mock.calls.map(([path, init]) => [path, init.method])).toEqual([[origin + "/api/auth/cloudflare", "POST"], [origin + "/api/auth/session", "GET"]]);
+        expect(h.fetch.mock.calls.every(([, init]) => init.mode === "cors" && init.redirect === "error" && init.credentials === "include")).toBe(true);
         const [raw, options] = h.office.context.ui.messageParent.mock.calls[0];
         expect(JSON.parse(raw)).toEqual({ type: "courtos:word:authenticated", state, userId: owner });
         expect(options).toEqual({ targetOrigin: origin });
@@ -236,6 +237,18 @@ describe("Office dialog startup and protected completion", () => {
 });
 
 describe("redacted Word authentication probe diagnostics", () => {
+    it("keeps CORS-mode requests confined to the two fixed CourtOS endpoints", async () => {
+        const h = harness("index");
+        const boot = (h.window as typeof h.window & { CourtOSWordBoot: { authUser(method: string, path: string): Promise<string> } }).CourtOSWordBoot;
+        for (const [method, path] of [
+            ["POST", "https://attacker.example/api/auth/cloudflare"],
+            ["POST", "//attacker.example/api/auth/cloudflare"],
+            ["POST", "/api/auth/cloudflare?next=https://attacker.example"],
+            ["GET", "/api/auth/cloudflare"],
+            ["POST", "/api/auth/session"],
+        ]) await expect(boot.authUser(method, path)).rejects.toThrow("Unsupported request");
+        expect(h.fetch).not.toHaveBeenCalled();
+    });
     it.each([
         ["HTTP403", () => new Response("secret response", { status: 403 })],
         ["HTTP_OTHER", () => new Response("secret response", { status: 418 })],

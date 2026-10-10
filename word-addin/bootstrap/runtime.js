@@ -55,14 +55,17 @@
         return readiness;
     }
     async function authUser(method, path) {
-        sameOrigin();
+        const origin = sameOrigin();
         if (!((method === "GET" && path === "/api/auth/session") || (method === "POST" && path === "/api/auth/cloudflare"))) throw new Error("Unsupported request");
         const controller = new AbortController();
         let timedOut = false;
         const timer = w.setTimeout(() => { timedOut = true; controller.abort(); }, 10000);
         try {
             let response;
-            try { response = await w.fetch(path, { method, credentials: "include", mode: "same-origin", cache: "no-store", redirect: "error", signal: controller.signal }); }
+            // Under no-referrer, a non-CORS POST serializes Origin as null.
+            // CORS mode retains the true Origin; the fixed URL and redirect:error
+            // still confine this request to the validated CourtOS host.
+            try { response = await w.fetch(origin + path, { method, credentials: "include", mode: "cors", cache: "no-store", redirect: "error", signal: controller.signal }); }
             catch { throw probeError(timedOut ? "TIMEOUT" : "NETWORK"); }
             if (!response.ok) throw probeError(PROBE_CODES.has("HTTP" + response.status) ? "HTTP" + response.status : "HTTP_OTHER");
             if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") || "")) throw probeError("MIME");
