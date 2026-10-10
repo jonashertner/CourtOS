@@ -115,6 +115,117 @@ class BackendTests(unittest.TestCase):
             self.assertEqual(anonymous.get(path).status_code, 401, path)
         self.assertEqual(anonymous.post("/api/local", json={"action": "chronology"}).status_code, 401)
 
+    def reviewed(self, **changes):
+        body = {"text": "Öffentlicher Text zu Art. 29 BV.", "purpose": "Prüfe die Argumentationslücken.", "acknowledge_public": True} | changes
+        return self.client.post("/api/packets/reviewed", json=body, headers=self.headers)
+
+    def workbench(self, gateway_model=None, gateway_enabled=True):
+        cfg = self.cfg
+        class ReadyHTTP:
+            def __init__(self, **kwargs): pass
+            async def __aenter__(self): return self
+            async def __aexit__(self, *args): pass
+            async def get(self, url):
+                value = {"ready": True, "model": gateway_model or cfg.external_model, "reviewed_handoff": gateway_enabled} if url.endswith('/health') else {"data": []}
+                return httpx.Response(200, json=value, request=httpx.Request("GET", url))
+        with patch("backend.httpx.AsyncClient", ReadyHTTP):
+            return self.client.get("/api/workbench")
+
+    def test_reviewed_handoff_requires_opt_in_auth_and_explicit_public_confirmation(self):
+        self.assertEqual(self.reviewed().status_code, 404)
+        self.assertEqual(self.workbench().status_code, 404)
+        self.cfg.reviewed_handoff_enabled = True
+        anonymous = TestClient(self.app, base_url="https://testserver")
+        body = {"text": "Public", "purpose": "Review", "acknowledge_public": True}
+        self.assertEqual(anonymous.get("/api/workbench").status_code, 401)
+        self.assertEqual(anonymous.post("/api/packets/reviewed", json=body).status_code, 401)
+        self.assertEqual(self.client.post("/api/packets/reviewed", json=body).status_code, 403)
+        self.assertEqual(self.client.post("/api/packets/reviewed", json=body, headers={**self.headers,"Origin":"https://evil.test"}).status_code, 403)
+        for changes in [{"acknowledge_public":False},{"acknowledge_public":1},{"text":" "},{"purpose":" "},{"text":"ü"*6001},{"purpose":"ü"*501},{"text":"x\x00y"},{"files":[]},{"history":[]}]:
+            self.assertEqual(self.reviewed(**changes).status_code, 422, changes.keys())
+        self.assertEqual(self.external_calls, [])
+
+    def test_reviewed_payload_is_exact_immutable_owned_and_uses_same_one_use_quota(self):
+        self.cfg.reviewed_handoff_enabled = True
+        packet = self.reviewed().json()
+        self.assertEqual(packet['kind'], 'reviewed')
+        self.assertEqual(backend.REVIEWED_SYSTEM, gateway.REVIEWED_SYSTEM)
+        gateway.check_reviewed_payload(packet['payload'], self.cfg.external_model)
+        content = json.loads(packet['payload']['messages'][0]['content'])
+        self.assertEqual(content, {"purpose":"Prüfe die Argumentationslücken.","text":"Öffentlicher Text zu Art. 29 BV.","classification":"user_confirmed_public"})
+        self.assertNotIn('PRIVATE_CONTEXT', json.dumps(packet))
+        self.assertNotIn('PRIVATE_CANARY', json.dumps(packet))
+        self.assertEqual(self.external_calls, [])
+        self.assertEqual(self.reviewed().json()['id'], packet['id'])
+        bob = TestClient(self.app, base_url='https://testserver')
+        headers = self.login(bob,'bob')
+        self.assertEqual(bob.get('/api/packets/'+packet['id']).status_code,404)
+        self.assertEqual(bob.post('/api/packets/'+packet['id']+'/send',json={'hash':packet['hash']},headers=headers).status_code,404)
+        wrong = self.client.post('/api/packets/'+packet['id']+'/send',json={'hash':'0'*64},headers=self.headers)
+        self.assertEqual(wrong.status_code,409)
+        sent = self.client.post('/api/packets/'+packet['id']+'/send',json={'hash':packet['hash']},headers=self.headers)
+        self.assertEqual(sent.status_code,200,sent.text)
+        self.assertEqual(self.finish(sent.json()['id'])['status'],'succeeded')
+        exported=self.client.get('/api/export/'+sent.json()['id'])
+        self.assertIn('CourtOS · Frontier-Prüfung',exported.text)
+        self.assertNotIn('synthetischer Pilot',exported.text)
+        self.assertIn('courtos-frontier-pruefung.md',exported.headers['content-disposition'])
+        self.assertEqual(self.external_calls[0]['version'],2)
+        self.assertEqual(self.external_calls[0]['payload'],packet['payload'])
+        self.assertEqual(self.client.post('/api/packets/'+packet['id']+'/send',json={'hash':packet['hash']},headers=self.headers).status_code,409)
+        another=self.reviewed(text='Anderer öffentlicher Text.').json()
+        self.assertEqual(self.client.post('/api/packets/'+another['id']+'/send',json={'hash':another['hash']},headers=self.headers).status_code,429)
+        self.assertEqual(len(self.external_calls),1)
+
+    def test_workbench_only_resumes_reviewed_owner_packet_and_checks_model_readiness(self):
+        self.packet()
+        self.cfg.reviewed_handoff_enabled = True
+        empty = self.workbench().json()
+        self.assertEqual(empty['resume'],{'packet':None,'job':None})
+        self.assertNotIn('documents',empty);self.assertNotIn('questions',empty)
+        self.assertNotIn('PRIVATE_CONTEXT',json.dumps(empty))
+        packet = self.reviewed().json()
+        current = self.workbench().json()
+        self.assertEqual(current['resume']['packet']['id'],packet['id'])
+        self.assertTrue(current['frontier']['ready'])
+        self.assertFalse(self.workbench(gateway_model='another-model').json()['frontier']['ready'])
+        self.assertFalse(self.workbench(gateway_enabled=False).json()['frontier']['ready'])
+        with backend.database(self.cfg.db) as db:
+            db.execute("INSERT INTO packets(id,user_id,tenant,payload,hash,provider,model,status,created,expires,kind) VALUES(?,?,?,?,?,?,?,?,?,?,?)", ('foreign','alice','another',json.dumps(packet['payload']),packet['hash'],'Anthropic',packet['model'],'prepared',time.time()+100,time.time()+10000,'reviewed'))
+        self.assertEqual(self.workbench().json()['resume']['packet']['id'],packet['id'])
+        sent=self.client.post('/api/packets/'+packet['id']+'/send',json={'hash':packet['hash']},headers=self.headers).json()
+        self.finish(sent['id'])
+        self.assertEqual(self.workbench().json()['resume']['job']['id'],sent['id'])
+
+    def test_reviewed_preview_storage_admission_is_durable_and_atomic(self):
+        self.cfg.reviewed_handoff_enabled = True
+        with ThreadPoolExecutor(max_workers=12) as pool:
+            responses=list(pool.map(lambda n:self.reviewed(text=f'Öffentlicher Text {n}.'),range(12)))
+        self.assertEqual(sum(r.status_code==200 for r in responses),10)
+        self.assertEqual(sum(r.status_code==429 for r in responses),2)
+        accepted=next(r.json() for r in responses if r.status_code==200)
+        approved_text=json.loads(accepted['payload']['messages'][0]['content'])['text']
+        with backend.database(self.cfg.db) as db:
+            initial=db.execute('SELECT created FROM packets WHERE id=?',(accepted['id'],)).fetchone()[0]
+        self.assertEqual(self.reviewed(text=approved_text).json()['id'],accepted['id'])
+        backend.ensure_schema(self.cfg.db)
+        self.assertEqual(self.reviewed(text='Noch eine andere Vorschau.').status_code,429)
+        with backend.database(self.cfg.db) as db:
+            self.assertEqual(db.execute('SELECT created FROM packets WHERE id=?',(accepted['id'],)).fetchone()[0],initial)
+        self.assertEqual(self.external_calls,[])
+
+    def test_reviewed_preview_global_limit_and_model_change_fail_before_inference(self):
+        self.cfg.reviewed_handoff_enabled = True
+        with patch('backend.REVIEWED_PREVIEWS_GLOBAL',1):
+            packet=self.reviewed().json()
+            bob=TestClient(self.app,base_url='https://testserver');headers=self.login(bob,'bob')
+            denied=bob.post('/api/packets/reviewed',json={'text':'Public','purpose':'Review','acknowledge_public':True},headers=headers)
+            self.assertEqual(denied.status_code,429)
+        self.cfg.external_model='new-model'
+        self.assertEqual(self.client.post('/api/packets/'+packet['id']+'/send',json={'hash':packet['hash']},headers=self.headers).status_code,409)
+        self.assertEqual(self.external_calls,[])
+        with backend.database(self.cfg.db) as db:self.assertEqual(db.execute('SELECT count(*) FROM jobs').fetchone()[0],0)
+
     def test_cookie_security_and_stored_token_hash(self):
         response = self.client.post("/api/login", json={"username": "alice", "password": "a-long-test-password"}, headers={"Origin": "https://testserver"})
         cookie = response.headers["set-cookie"]
@@ -588,6 +699,43 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(self.client.post("/v1/execute", json=packet).status_code, 409)
         self.assertEqual(len(self.calls), 1)
 
+    def test_reviewed_gateway_enforces_separate_opt_in_shape_model_and_replay(self):
+        packet=self.envelope('reviewed')
+        packet['version']=2
+        packet['payload']['system']=backend.REVIEWED_SYSTEM
+        packet['payload']['messages'][0]['content']=backend.canonical({'purpose':'Prüfen','text':'Öffentlicher Text.','classification':'user_confirmed_public'}).decode()
+        packet['hash']=backend.digest(packet['payload']);self.sign(packet)
+        self.assertEqual(self.client.post('/v1/execute',json=packet).status_code,403)
+        self.cfg.reviewed_handoff_enabled=True
+        for changes in [{'classification':'private'},{'history':[]},{'files':[]},{'text':'ü'*6001},{'purpose':' '},{'text':'x\x00y'}]:
+            changed=json.loads(json.dumps(packet))
+            content=json.loads(changed['payload']['messages'][0]['content']) | changes
+            changed['payload']['messages'][0]['content']=backend.canonical(content).decode()
+            changed['hash']=backend.digest(changed['payload']);self.sign(changed)
+            self.assertEqual(self.client.post('/v1/execute',json=changed).status_code,403,changes.keys())
+        changed=json.loads(json.dumps(packet));changed['payload']['model']='other-model'
+        changed['hash']=backend.digest(changed['payload']);self.sign(changed)
+        self.assertEqual(self.client.post('/v1/execute',json=changed).status_code,403)
+        changed=json.loads(json.dumps(packet));changed['payload']['tools']=[]
+        changed['hash']=backend.digest(changed['payload']);self.sign(changed)
+        self.assertEqual(self.client.post('/v1/execute',json=changed).status_code,403)
+        changed=json.loads(json.dumps(packet));changed['version']=1;self.sign(changed)
+        self.assertEqual(self.client.post('/v1/execute',json=changed).status_code,403)
+        self.assertEqual(self.calls,[])
+        self.assertEqual(self.client.post('/v1/execute',json=packet).status_code,200)
+        self.assertEqual(self.client.post('/v1/execute',json=packet).status_code,409)
+        self.assertEqual(self.calls,[packet['payload']])
+
+    def test_reviewed_failure_consumes_packet_without_retry_or_substitution(self):
+        self.cfg.reviewed_handoff_enabled=True;self.fail=True
+        packet=self.envelope('reviewed-failed');packet['version']=2
+        packet['payload']['system']=backend.REVIEWED_SYSTEM
+        packet['payload']['messages'][0]['content']=backend.canonical({'purpose':'Prüfen','text':'Öffentlicher Text.','classification':'user_confirmed_public'}).decode()
+        packet['hash']=backend.digest(packet['payload']);self.sign(packet)
+        self.assertEqual(self.client.post('/v1/execute',json=packet).status_code,502)
+        self.assertEqual(self.client.post('/v1/execute',json=packet).status_code,409)
+        self.assertEqual(len(self.calls),1)
+
     def test_provider_receives_exact_approved_bytes_at_fixed_endpoint(self):
         captured = {}
 
@@ -603,7 +751,7 @@ class GatewayTests(unittest.TestCase):
 
             async def post(self, url, **kwargs):
                 captured["url"], captured["request"] = url, kwargs
-                return httpx.Response(200, json={"content": [{"type": "text", "text": "Public answer"}]}, request=httpx.Request("POST", url))
+                return httpx.Response(200, json={"model":"test-model", "content": [{"type": "text", "text": "Public answer"}]}, request=httpx.Request("POST", url))
 
         packet = self.envelope()
         with patch("gateway.httpx.AsyncClient", FakeHTTP):
@@ -614,6 +762,17 @@ class GatewayTests(unittest.TestCase):
         self.assertFalse(captured["client"]["trust_env"])
         self.assertFalse(captured["client"]["follow_redirects"])
         self.assertNotIn(b"alice", captured["request"]["content"])
+
+    def test_provider_model_mismatch_is_rejected_without_substitution(self):
+        class FakeHTTP:
+            def __init__(self, **kwargs): pass
+            async def __aenter__(self): return self
+            async def __aexit__(self, *args): pass
+            async def post(self, url, **kwargs):
+                return httpx.Response(200,json={"model":"unexpected-model","content":[{"type":"text","text":"Answer"}]},request=httpx.Request('POST',url))
+        with patch('gateway.httpx.AsyncClient',FakeHTTP):
+            with self.assertRaises(ValueError):
+                asyncio.run(gateway.provider_call(self.cfg,self.envelope()['payload']))
 
 
 class InferenceResultTests(unittest.TestCase):
