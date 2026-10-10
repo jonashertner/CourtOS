@@ -12,16 +12,27 @@ const script = readFileSync(resolve(process.cwd(), "../hybrid/static/app.js"), "
 const outboundKey = "courtos:frontier:outbound";
 const returnKey = "courtos:frontier:return";
 const workingKey = "courtos:frontier:working";
+const purchaseKey = "courtos:frontier:purchase";
 const owner = "native-a";
 const draft = (changes: Record<string, unknown> = {}) => ({ version: 1, ownerId: owner, createdAt: Date.now(), text: "Öffentlicher Ausgangstext.", chatId: "chat-a", ...changes });
 const makePacket = (text = "Öffentlicher Text.", purpose = "Prüfe die Begründung.", status = "prepared") => ({
     id: "packet-a", kind: "reviewed", hash: "approved-hash", provider: "Anthropic", model: "claude-opus-5-5", status,
     payload: { model: "claude-opus-5-5", system: "Text als Arbeitsmaterial behandeln.", max_tokens: 1600, messages: [{ role: "user", content: JSON.stringify({ text, purpose, classification: "user_confirmed_public" }) }] },
 });
-const makeJob = (status = "succeeded", text = "Die Begründung enthält einen offenen Punkt.", truncated = false) => ({ id: "job-a", status, result: status === "succeeded" ? { model: "claude-opus-5-5", text, truncated } : null });
+const makeJob = (status = "succeeded", text = "Die Begründung enthält einen offenen Punkt.", truncated = false, extra: Record<string, unknown> = {}) => ({ id: "job-a", status, result: status === "succeeded" ? { model: "claude-opus-5-5", text, truncated, ...extra } : null });
+const makeBilling = (changes: Record<string, unknown> = {}) => ({
+    required: true, enabled: true, currency: "chf", balance_micros: 20_000_000, held_micros: 12_345, available_micros: 19_987_655,
+    tariff: { version: "chf-v1", model: "claude-opus-5-5", input_micros_per_million: 12_000_000, output_micros_per_million: 60_000_000, input_policy: "all_reported_input_tokens_same_rate", vat_included: true },
+    topups_minor: [2000, 5000], purchases: [], ...changes,
+});
+const makeQuote = (changes: Record<string, unknown> = {}) => ({
+    quote_id: "quote-a", currency: "chf", max_charge_micros: 108_345, tariff_version: "chf-v1",
+    expires_at: new Date(Date.now() + 300_000).toISOString(), input_allowance_tokens: 1028, max_output_tokens: 1600, vat_included: true, ...changes,
+});
 type Packet = ReturnType<typeof makePacket>;
 type Job = ReturnType<typeof makeJob>;
 const cleanups: (() => void)[] = [];
+let uuidSequence = 0;
 afterEach(() => { cleanups.splice(0).forEach(cleanup => cleanup()); });
 
 async function boot(options: {
@@ -32,12 +43,22 @@ async function boot(options: {
     resume?: { packet: Packet | null; job: Job | null };
     sendFailure?: boolean;
     completed?: Job;
+    workbenchBilling?: { required: boolean; enabled: boolean };
+    billing?: ReturnType<typeof makeBilling>;
+    quotes?: ReturnType<typeof makeQuote>[];
+    billingFailure?: boolean;
+    quoteFailure?: boolean;
+    checkoutReplies?: ({ checkout_url: string; purchase_id?: string } | Error)[];
+    clock?: number;
 } = {}) {
     const dom = new JSDOM(html, { url: "https://sandbox.example/hybrid/" });
     const doc = dom.window.document;
     const identity = { id: options.nativeId === undefined ? owner : options.nativeId };
     const assign = vi.fn(), copy = vi.fn().mockResolvedValue(undefined);
-    const timers = new Set<ReturnType<typeof setTimeout>>();
+    const timers = new Map<ReturnType<typeof setTimeout>, { callback: () => void; at: number }>();
+    let clock = options.clock ?? Date.now();
+    class TestDate extends Date { static now() { return clock; } }
+    let quoteNumber = 0, checkoutNumber = 0;
     const storage = dom.window.sessionStorage;
     for (const [key, value] of Object.entries(options.storage || {})) storage.setItem(key, value);
     if (options.handoff) storage.setItem(outboundKey, JSON.stringify(options.handoff));
@@ -53,9 +74,23 @@ async function boot(options: {
             frontier: { model: "claude-opus-5-5", provider: "Anthropic", ready: options.ready !== false, enabled: true },
             local: { model: "gemma-4", ready: true }, limits: { frontier_daily_user: 1, frontier_daily_global: 10 },
             resume: options.resume || { packet: null, job: null },
+            ...(options.workbenchBilling ? { billing: options.workbenchBilling } : {}),
         };
+        else if (pathname === "/hybrid/api/billing" && method === "GET") {
+            if (options.billingFailure) throw new TypeError("Billing unavailable");
+            data = options.billing || makeBilling();
+        } else if (pathname === "/hybrid/api/billing/checkout" && method === "POST") {
+            const reply = options.checkoutReplies?.[checkoutNumber++];
+            if (reply instanceof Error) throw reply;
+            const body = JSON.parse(String(init.body));
+            data = reply ? { purchase_id: body.purchase_id, ...reply } : { checkout_url: "https://checkout.stripe.com/c/pay/synthetic", purchase_id: body.purchase_id };
+        }
         else if (pathname === "/hybrid/api/packets/reviewed" && method === "POST") {
             const body = JSON.parse(String(init.body)); packet = makePacket(body.text, body.purpose); data = packet;
+        } else if (pathname === "/hybrid/api/packets/packet-a/quote" && method === "POST") {
+            if (options.quoteFailure) throw new TypeError("Quote unavailable");
+            const quotes = options.quotes || [makeQuote({ expires_at: new Date(clock + 300_000).toISOString() })];
+            data = quotes[Math.min(quoteNumber++, quotes.length - 1)];
         } else if (pathname === "/hybrid/api/packets/packet-a/send" && method === "POST") {
             if (options.sendFailure) throw new TypeError("Network unavailable");
             packet.status = "submitted"; data = makeJob("running");
@@ -68,13 +103,14 @@ async function boot(options: {
     });
     const context = createContext({
         document: doc,
-        window: { location: { assign }, addEventListener: dom.window.addEventListener.bind(dom.window) },
+        window: { location: { assign, href: dom.window.location.href }, addEventListener: dom.window.addEventListener.bind(dom.window) },
         navigator: { clipboard: { writeText: copy } }, sessionStorage: storage,
-        fetch, TextEncoder, URL, AbortController, Date, console,
-        setTimeout: (callback: () => void, delay: number) => { const id = setTimeout(callback, delay); timers.add(id); return id; },
+        fetch, TextEncoder, URL, AbortController, Date: TestDate, console,
+        crypto: { randomUUID: vi.fn(() => `00000000-0000-4000-8000-${String(++uuidSequence).padStart(12, "0")}`) },
+        setTimeout: (callback: () => void, delay: number) => { const id = setTimeout(() => { timers.delete(id); callback(); }, delay); timers.set(id, { callback, at: clock + delay }); return id; },
         clearTimeout: (id: ReturnType<typeof setTimeout>) => { clearTimeout(id); timers.delete(id); },
     });
-    cleanups.push(() => { timers.forEach(clearTimeout); dom.window.close(); });
+    cleanups.push(() => { timers.forEach((_, id) => clearTimeout(id)); dom.window.close(); });
     runInContext(script, context, { filename: "hybrid/static/app.js" });
     const el = <T extends HTMLElement = HTMLElement>(id: string) => doc.getElementById(id) as T;
     await vi.waitFor(() => expect(el("loading").hidden).toBe(true));
@@ -83,6 +119,7 @@ async function boot(options: {
         if (typeof value === "boolean") (input as HTMLInputElement).checked = value;
         else input.value = value;
         input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+        if (typeof value === "boolean") input.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
     };
     const submit = () => el("request-form").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }));
     const posts = () => fetch.mock.calls.filter(([, init]) => init?.method === "POST");
@@ -91,7 +128,12 @@ async function boot(options: {
         set("material", text); set("purpose", purpose); set("public-confirmation", true); submit();
         await vi.waitFor(() => expect(el("preview").hidden).toBe(false));
     }
-    return { doc, el, identity, fetch, storage, set, submit, posts, requestPath, prepare, assign, copy };
+    const advanceClock = async (milliseconds: number) => {
+        clock += milliseconds;
+        for (const [id, timer] of [...timers]) if (timer.at <= clock) { clearTimeout(id); timers.delete(id); timer.callback(); }
+        await Promise.resolve();
+    };
+    return { doc, el, identity, fetch, storage, set, submit, posts, requestPath, prepare, assign, copy, advanceClock };
 }
 
 describe("frontier workbench browser contract", () => {
@@ -159,6 +201,7 @@ describe("frontier workbench browser contract", () => {
         const app = await boot({ resume: { packet: makePacket(undefined, undefined, "submitted"), job: makeJob("running") } });
         await vi.waitFor(() => expect(app.el("result").hidden).toBe(false));
         expect(app.el("send").hidden).toBe(true);
+        expect(app.el("preview").querySelector(".processing-note")?.textContent).toBe("Freigegeben · Externer Auftrag beauftragt");
         expect(app.posts()).toHaveLength(0);
         expect(app.fetch.mock.calls.some(([input]) => app.requestPath(input) === "/hybrid/api/jobs/job-a")).toBe(true);
     });
@@ -169,6 +212,7 @@ describe("frontier workbench browser contract", () => {
         await vi.waitFor(() => expect(app.el("global-message").textContent).toMatch(/Versandstatus ist ungeklärt/));
         expect(app.el<HTMLButtonElement>("send").disabled).toBe(true);
         expect(app.posts().filter(([input]) => app.requestPath(input).endsWith("/send"))).toHaveLength(1);
+        expect(app.el("preview").querySelector(".processing-note")?.textContent).toBe("Übermittlungsstatus wird geprüft");
     });
 
     it("returns an owner-bound editable answer without starting a local model request", async () => {
@@ -200,6 +244,7 @@ describe("frontier workbench browser contract", () => {
         expect(app.el<HTMLButtonElement>("return-local").disabled).toBe(true);
         await app.prepare("Anderer öffentlicher Text.", "Neuer Prüfauftrag");
         expect(app.el("result-section").hidden).toBe(true);
+        expect(app.el("preview").querySelector(".processing-note")?.textContent).toBe("Zur Freigabe · Noch nicht an Anthropic gesendet");
         expect(app.el<HTMLButtonElement>("return-local").disabled).toBe(true);
     });
 
@@ -222,5 +267,254 @@ describe("frontier workbench browser contract", () => {
         app.set("public-confirmation", true); app.set("material", "ü".repeat(6001)); app.submit();
         expect(app.el<HTMLButtonElement>("prepare").disabled).toBe(true);
         expect(app.posts()).toHaveLength(0);
+    });
+});
+
+describe("frontier workbench explicit CHF billing contract", () => {
+    const enabled = { required: true, enabled: true };
+    const requestsTo = (app: Awaited<ReturnType<typeof boot>>, path: string) => app.fetch.mock.calls.filter(([input]) => app.requestPath(input) === "/hybrid/api/" + path);
+    async function prepared(app: Awaited<ReturnType<typeof boot>>) {
+        await app.prepare();
+        await vi.waitFor(() => expect(app.el("quote-section").hidden).toBe(false));
+        await vi.waitFor(() => expect(app.el("quote-amount").textContent).toMatch(/0\.108345/));
+    }
+
+    it.each([undefined, { required: false, enabled: true }])("makes no billing or checkout requests when workbench billing is not required (%j)", async workbenchBilling => {
+        const app = await boot({ workbenchBilling });
+        await app.prepare();
+        expect(app.fetch.mock.calls.some(([input]) => /\/billing(?:\/|$)|\/quote$/.test(app.requestPath(input)))).toBe(false);
+        expect(app.el("billing-panel").hidden).toBe(true);
+        app.el<HTMLButtonElement>("send").click();
+        await vi.waitFor(() => expect(app.el("result").hidden).toBe(false));
+        const send = requestsTo(app, "packets/packet-a/send")[0];
+        expect(JSON.parse(String(send[1]?.body))).toEqual({ hash: "approved-hash" });
+    });
+
+    it("reads the required wallet without initiating purchase, quote or model calls", async () => {
+        const app = await boot({ workbenchBilling: enabled });
+        await vi.waitFor(() => expect(app.el("billing-balance").textContent).toMatch(/19\.987655/));
+        expect(app.el("billing-held").textContent).toMatch(/0\.012345/);
+        expect(app.el("billing-tariff").textContent).toMatch(/12/);
+        expect(app.el("billing-tariff").textContent).toMatch(/60/);
+        expect(app.el("billing-tariff").textContent).toMatch(/MwSt|Mehrwertsteuer/i);
+        expect(app.el("topup-20").textContent).toMatch(/20/);
+        expect(app.el("topup-50").textContent).toMatch(/50/);
+        expect(requestsTo(app, "billing")).toHaveLength(1);
+        expect(app.posts()).toHaveLength(0);
+        expect(app.assign).not.toHaveBeenCalled();
+    });
+
+    it.each(["disabled", "wallet failure", "quote failure"])("fails closed for required billing with %s", async failure => {
+        const app = await boot({ workbenchBilling: failure === "disabled" ? { required: true, enabled: false } : enabled,
+            ready: failure !== "disabled", billing: makeBilling({ enabled: failure !== "disabled" }),
+            billingFailure: failure === "wallet failure", quoteFailure: failure === "quote failure" });
+        app.set("material", "Öffentlicher Text."); app.set("purpose", "Prüfen"); app.set("public-confirmation", true); app.submit();
+        await new Promise(resolve => setTimeout(resolve, 10));
+        const consent = app.el<HTMLInputElement>("quote-consent");
+        if (consent) app.set("quote-consent", true);
+        app.el<HTMLButtonElement>("send").click();
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(0);
+        expect(app.assign).not.toHaveBeenCalled();
+    });
+
+    it("obtains a quote for the exact prepared hash and requires separate unchecked cost consent", async () => {
+        const app = await boot({ workbenchBilling: enabled }); await prepared(app);
+        const quotes = requestsTo(app, "packets/packet-a/quote");
+        expect(quotes).toHaveLength(1);
+        expect(JSON.parse(String(quotes[0][1]?.body))).toEqual({ hash: "approved-hash" });
+        expect(quotes[0][1]?.headers).toMatchObject({ "X-CSRF-Token": "session-csrf" });
+        expect(app.el<HTMLInputElement>("quote-consent").checked).toBe(false);
+        expect(app.el<HTMLButtonElement>("send").disabled).toBe(true);
+        app.el<HTMLButtonElement>("send").click();
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(0);
+        expect(app.el("quote-section").textContent).toMatch(/MwSt|Mehrwertsteuer/i);
+    });
+
+    it("sends the accepted integer ceiling, quote and CHF once despite a double click", async () => {
+        const app = await boot({ workbenchBilling: enabled }); await prepared(app);
+        app.set("quote-consent", true);
+        expect(app.el<HTMLButtonElement>("send").disabled).toBe(false);
+        app.el<HTMLButtonElement>("send").click(); app.el<HTMLButtonElement>("send").click();
+        await vi.waitFor(() => expect(app.el("result").hidden).toBe(false));
+        const sends = requestsTo(app, "packets/packet-a/send");
+        expect(sends).toHaveLength(1);
+        expect(JSON.parse(String(sends[0][1]?.body))).toEqual({ hash: "approved-hash", billing: { quote_id: "quote-a", max_charge_micros: 108_345, currency: "chf" } });
+    });
+
+    it.each([
+        ["foreign currency", { currency: "eur" }], ["fractional microCHF", { max_charge_micros: 1.5 }],
+        ["empty charge ceiling", { max_charge_micros: 0 }],
+        ["unconfirmed VAT", { vat_included: undefined }], ["invalid expiry", { expires_at: "not-a-date" }],
+        ["expired quote", { expires_at: "2020-01-01T00:00:00Z" }],
+    ])("refuses a quote with %s instead of accepting cost consent", async (_label, changes) => {
+        const app = await boot({ workbenchBilling: enabled, quotes: [makeQuote(changes)] }); await app.prepare();
+        await vi.waitFor(() => expect(app.el("quote-expires").textContent).toMatch(/nicht berechnet/));
+        expect(app.el<HTMLInputElement>("quote-consent").disabled).toBe(true);
+        app.set("quote-consent", true); app.el<HTMLButtonElement>("send").click();
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(0);
+    });
+
+    it("does not permit a confirmed quote exceeding available funds", async () => {
+        const app = await boot({ workbenchBilling: enabled, billing: makeBilling({ available_micros: 108_344 }) });
+        await prepared(app); app.set("quote-consent", true);
+        expect(app.el<HTMLButtonElement>("send").disabled).toBe(true);
+        expect(app.el("quote-funds").hidden).toBe(false);
+        expect(app.el("quote-funds").textContent).toMatch(/Guthaben reicht.*nicht aus/);
+        expect(app.el("quote-funds").querySelector("a")?.getAttribute("href")).toBe("#billing-panel");
+        app.el<HTMLButtonElement>("send").click();
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(0);
+    });
+
+    it("blocks paid actions for a blocked wallet even when balance and a prepared quote are present", async () => {
+        const app = await boot({ workbenchBilling: enabled, billing: makeBilling({ blocked: true }), resume: { packet: makePacket(), job: null } });
+        expect(app.el("billing-status").textContent).toMatch(/geprüft.*Support/);
+        for (const id of ["topup-20", "topup-50", "send"]) expect(app.el<HTMLButtonElement>(id).disabled).toBe(true);
+        app.set("quote-consent", true);
+        app.el<HTMLButtonElement>("send").click(); app.el<HTMLButtonElement>("topup-20").click();
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(0);
+        expect(requestsTo(app, "billing/checkout")).toHaveLength(0);
+        app.el<HTMLButtonElement>("edit").click();
+        app.set("public-confirmation", true); app.submit();
+        expect(app.el<HTMLButtonElement>("prepare").disabled).toBe(true);
+        expect(requestsTo(app, "packets/reviewed")).toHaveLength(0);
+    });
+
+    it("expires a quote, removes consent and permits another send only after explicit renewal and new consent", async () => {
+        const now = Date.now();
+        const app = await boot({ workbenchBilling: enabled, clock: now, quotes: [makeQuote({ expires_at: new Date(now + 1000).toISOString() }), makeQuote({ quote_id: "quote-b", expires_at: new Date(now + 300_000).toISOString() })] });
+        await prepared(app); app.set("quote-consent", true);
+        await app.advanceClock(1001);
+        await vi.waitFor(() => expect(app.el<HTMLButtonElement>("send").disabled).toBe(true));
+        expect(app.el<HTMLInputElement>("quote-consent").checked).toBe(false);
+        expect(requestsTo(app, "packets/packet-a/quote")).toHaveLength(1);
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(0);
+        app.el<HTMLButtonElement>("refresh-quote").click();
+        await vi.waitFor(() => expect(requestsTo(app, "packets/packet-a/quote")).toHaveLength(2));
+        await vi.waitFor(() => expect(app.el<HTMLButtonElement>("refresh-quote").disabled).toBe(false));
+        expect(requestsTo(app, "packets/reviewed")).toHaveLength(1);
+        expect(requestsTo(app, "packets/packet-a/quote").map(([, init]) => JSON.parse(String(init?.body)))).toEqual([{ hash: "approved-hash" }, { hash: "approved-hash" }]);
+        expect(app.el<HTMLInputElement>("quote-consent").checked).toBe(false);
+        expect(app.el<HTMLButtonElement>("send").disabled).toBe(true);
+        app.set("quote-consent", true); app.el<HTMLButtonElement>("send").click();
+        await vi.waitFor(() => expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(1));
+        expect(JSON.parse(String(requestsTo(app, "packets/packet-a/send")[0][1]?.body)).billing.quote_id).toBe("quote-b");
+    });
+
+    it("retires accepted cost consent so its old expiry cannot appear above a completed receipt", async () => {
+        const now = Date.now();
+        const app = await boot({ workbenchBilling: enabled, clock: now, quotes: [makeQuote({ expires_at: new Date(now + 1000).toISOString() })] });
+        await prepared(app); app.set("quote-consent", true); app.el<HTMLButtonElement>("send").click();
+        await vi.waitFor(() => expect(app.el("result").hidden).toBe(false));
+        expect(app.el("quote-section").hidden).toBe(true);
+        expect(app.el<HTMLInputElement>("quote-consent").checked).toBe(false);
+        await app.advanceClock(1001);
+        expect(app.el("quote-section").hidden).toBe(true);
+        expect(app.el("quote-expires").textContent).not.toMatch(/abgelaufen/);
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(1);
+    });
+
+    it("does not carry accepted cost consent into edited material or a resumed preview", async () => {
+        const app = await boot({ workbenchBilling: enabled }); await prepared(app); app.set("quote-consent", true);
+        app.el<HTMLButtonElement>("edit").click();
+        await prepared(app);
+        expect(app.el<HTMLInputElement>("quote-consent").checked).toBe(false);
+        expect(app.el<HTMLButtonElement>("send").disabled).toBe(true);
+        const reloaded = await boot({ workbenchBilling: enabled, resume: { packet: makePacket(), job: null } });
+        await vi.waitFor(() => expect(reloaded.el("preview").hidden).toBe(false));
+        expect(reloaded.el<HTMLInputElement>("quote-consent").checked).toBe(false);
+        expect(requestsTo(reloaded, "packets/packet-a/send")).toHaveLength(0);
+    });
+
+    it("renders actual settlement and released hold with exact microCHF precision and VAT disclosure", async () => {
+        const billing = { currency: "chf", charged_micros: 12_345, reserved_micros: 108_345, released_micros: 96_000, tariff_version: "chf-v1", input_tokens: 200, output_tokens: 100, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, vat_included: true };
+        const app = await boot({ workbenchBilling: enabled, completed: makeJob("succeeded", "Prüfbarer Entwurf.", false, { billing }) });
+        await prepared(app); app.set("quote-consent", true); app.el<HTMLButtonElement>("send").click();
+        await vi.waitFor(() => expect(app.el("result").hidden).toBe(false));
+        expect(app.el("billing-result").hidden).toBe(false);
+        expect(app.el("billing-result").textContent).toMatch(/0\.012345/);
+        expect(app.el("billing-result").textContent).toMatch(/0\.096/);
+        expect(app.el("billing-result").textContent).toMatch(/MwSt|Mehrwertsteuer/i);
+        expect(app.el("billing-result").textContent).not.toMatch(/CHF\s*12[’' ]?345/);
+    });
+
+    it("does not invent an inclusive-VAT receipt when settlement VAT evidence is missing", async () => {
+        const billing = { currency: "chf", charged_micros: 12_345, reserved_micros: 108_345, released_micros: 96_000, tariff_version: "chf-v1" };
+        const app = await boot({ workbenchBilling: enabled, resume: { packet: makePacket(undefined, undefined, "submitted"), job: makeJob("succeeded", "Antwort", false, { billing }) } });
+        expect(app.el("billing-result").textContent).not.toMatch(/inklusive.*MwSt/i);
+        expect(app.el("billing-result").textContent).toMatch(/abgeglichen|prüfen|ungeklärt/i);
+    });
+
+    it("shows a failed job's zero charge and released reservation from the actual top-level receipt", async () => {
+        const failed = { ...makeJob("failed"), billing: { currency: "chf", charged_micros: 0, reserved_micros: 108_345, released_micros: 108_345, tariff_version: "chf-v1", vat_included: true } };
+        const app = await boot({ workbenchBilling: enabled, resume: { packet: makePacket(undefined, undefined, "submitted"), job: failed } });
+        expect(app.el("result").hidden).toBe(true);
+        expect(app.el("billing-result").textContent).toMatch(/CHF 0\.00 abgerechnet/);
+        expect(app.el("billing-result").textContent).toMatch(/CHF 0\.108345 freigegeben/);
+        expect(requestsTo(app, "packets/packet-a/send")).toHaveLength(0);
+    });
+
+    it("starts a CHF20 or CHF50 checkout only on an explicit action with a UUID purchase key", async () => {
+        const app = await boot({ workbenchBilling: enabled });
+        await vi.waitFor(() => expect(app.el<HTMLButtonElement>("topup-20").disabled).toBe(false));
+        expect(requestsTo(app, "billing/checkout")).toHaveLength(0);
+        app.el<HTMLButtonElement>("topup-20").click(); app.el<HTMLButtonElement>("topup-20").click();
+        await vi.waitFor(() => expect(app.assign).toHaveBeenCalledWith("https://checkout.stripe.com/c/pay/synthetic"));
+        const checkouts = requestsTo(app, "billing/checkout"); expect(checkouts).toHaveLength(1);
+        expect(JSON.parse(String(checkouts[0][1]?.body))).toEqual({ purchase_id: expect.stringMatching(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/), amount_minor: 2000 });
+        expect(checkouts[0][1]?.headers).toMatchObject({ "X-CSRF-Token": "session-csrf" });
+        const fifty = await boot({ workbenchBilling: enabled }); fifty.el<HTMLButtonElement>("topup-50").click();
+        await vi.waitFor(() => expect(requestsTo(fifty, "billing/checkout")).toHaveLength(1));
+        expect(JSON.parse(String(requestsTo(fifty, "billing/checkout")[0][1]?.body)).amount_minor).toBe(5000);
+    });
+
+    it("preserves a checkout purchase key across an uncertain response and reload without automatic retry", async () => {
+        const app = await boot({ workbenchBilling: enabled, checkoutReplies: [new TypeError("Uncertain network outcome")] });
+        app.el<HTMLButtonElement>("topup-20").click();
+        await vi.waitFor(() => expect(requestsTo(app, "billing/checkout")).toHaveLength(1));
+        await vi.waitFor(() => expect(app.el<HTMLButtonElement>("topup-20").disabled).toBe(false));
+        const first = JSON.parse(String(requestsTo(app, "billing/checkout")[0][1]?.body));
+        const saved = app.storage.getItem(purchaseKey); expect(saved).not.toBeNull();
+        expect(app.assign).not.toHaveBeenCalled();
+        const reloaded = await boot({ workbenchBilling: enabled, storage: { [purchaseKey]: saved! } });
+        expect(requestsTo(reloaded, "billing/checkout")).toHaveLength(0);
+        expect(reloaded.assign).not.toHaveBeenCalled();
+        reloaded.el<HTMLButtonElement>("topup-20").click();
+        await vi.waitFor(() => expect(requestsTo(reloaded, "billing/checkout")).toHaveLength(1));
+        expect(JSON.parse(String(requestsTo(reloaded, "billing/checkout")[0][1]?.body))).toEqual(first);
+    });
+
+    it("never resumes a pending checkout purchase belonging to another account", async () => {
+        const id = "abcdef01-0000-4000-8000-000000000001";
+        const app = await boot({ workbenchBilling: enabled, storage: { [purchaseKey]: JSON.stringify({ owner: "hybrid-other", amount: 2000, id, createdAt: Date.now() }) } });
+        expect(requestsTo(app, "billing/checkout")).toHaveLength(0);
+        app.el<HTMLButtonElement>("topup-20").click();
+        await vi.waitFor(() => expect(requestsTo(app, "billing/checkout")).toHaveLength(1));
+        expect(JSON.parse(String(requestsTo(app, "billing/checkout")[0][1]?.body)).purchase_id).not.toBe(id);
+    });
+
+    it("retains an unresolved checkout key beyond 24 hours rather than creating a second purchase", async () => {
+        const now = Date.now(), id = "abcdef01-0000-4000-8000-000000000001";
+        const saved = JSON.stringify({ owner: "hybrid-a", amount: 2000, id, createdAt: now - 3 * 86_400_000 });
+        const app = await boot({ workbenchBilling: enabled, clock: now, storage: { [purchaseKey]: saved }, billing: makeBilling({ purchases: [] }) });
+        expect(requestsTo(app, "billing/checkout")).toHaveLength(0);
+        expect(app.storage.getItem(purchaseKey)).toBe(saved);
+        app.el<HTMLButtonElement>("topup-20").click();
+        await vi.waitFor(() => expect(requestsTo(app, "billing/checkout")).toHaveLength(1));
+        expect(JSON.parse(String(requestsTo(app, "billing/checkout")[0][1]?.body))).toEqual({ purchase_id: id, amount_minor: 2000 });
+    });
+
+    it("rejects a Stripe URL associated with a different returned purchase ID", async () => {
+        const app = await boot({ workbenchBilling: enabled, checkoutReplies: [{ checkout_url: "https://checkout.stripe.com/c/pay/synthetic", purchase_id: "different-purchase" }] });
+        app.el<HTMLButtonElement>("topup-20").click();
+        await vi.waitFor(() => expect(app.el("global-message").textContent).toMatch(/nicht geöffnet/));
+        expect(app.assign).not.toHaveBeenCalled();
+    });
+
+    it.each(["http://checkout.stripe.com/c/pay/x", "https://checkout.stripe.com.attacker.example/pay", "https://checkout.stripe.com@attacker.example/pay", "https://user:password@checkout.stripe.com/pay", "https://checkout.stripe.com:444/pay", "javascript:alert(1)"])("refuses untrusted checkout navigation: %s", async checkout_url => {
+        const app = await boot({ workbenchBilling: enabled, checkoutReplies: [{ checkout_url }] });
+        app.el<HTMLButtonElement>("topup-20").click();
+        await vi.waitFor(() => expect(requestsTo(app, "billing/checkout")).toHaveLength(1));
+        await vi.waitFor(() => expect(app.el<HTMLButtonElement>("topup-20").disabled).toBe(false));
+        expect(app.assign).not.toHaveBeenCalled();
     });
 });

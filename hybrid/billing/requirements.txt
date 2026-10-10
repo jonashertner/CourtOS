@@ -1,0 +1,2 @@
+# Installed with the hybrid runtime; no Stripe calls occur while billing is disabled.
+stripe==16.0.0

@@ -3,10 +3,88 @@
   const $ = id => document.getElementById(id);
   const base = new URL('../', document.querySelector('script[src$="app.js"]').src);
   const outboundKey = 'courtos:frontier:outbound', returnKey = 'courtos:frontier:return', workingKey = 'courtos:frontier:working';
-  const state = { csrf: null, user: null, nativeId: null, config: null, packet: null, job: null, handoff: null, busy: false, timer: null, startedAt: 0, failures: 0 };
+  const purchaseKey = 'courtos:frontier:purchase';
+  const state = { csrf: null, user: null, nativeId: null, config: null, packet: null, job: null, handoff: null, busy: false, timer: null, startedAt: 0, failures: 0, billing: null, quote: null, quoteTimer: null, checkoutBusy: false, purchase: null };
   const bytes = text => new TextEncoder().encode(text).length;
   const active = job => job && ['queued', 'running'].includes(job.status);
   const modelName = id => id === 'claude-opus-5-5' ? 'Claude Opus 5.5' : id || 'Modell nicht konfiguriert';
+  const billingRequired = () => state.config?.billing?.required === true;
+  const validMicros = value => Number.isSafeInteger(value) && value >= 0;
+  function chf(micros) {
+    if (!validMicros(micros)) return '—';
+    const whole = Math.floor(micros / 1000000).toLocaleString('de-CH');
+    const decimal = String(micros % 1000000).padStart(6, '0').replace(/0+$/, '').padEnd(2, '0');
+    return `CHF ${whole}.${decimal}`;
+  }
+  function validQuote() {
+    return state.quote && typeof state.quote.quote_id === 'string' && state.quote.quote_id.length > 0 && state.quote.currency === 'chf' && state.quote.vat_included === true && validMicros(state.quote.max_charge_micros) && state.quote.max_charge_micros > 0 && typeof state.quote.expires_at === 'string' && Date.parse(state.quote.expires_at) > Date.now();
+  }
+  function billingReady() { return !billingRequired() || (state.billing?.enabled === true && state.billing.blocked !== true && state.billing.currency === 'chf' && validMicros(state.billing.available_micros)); }
+  function clearQuote() { clearTimeout(state.quoteTimer); state.quote = null; $('quote-consent').checked = false; $('quote-consent').disabled = true; $('quote-amount').textContent = '—'; }
+  function renderBilling() {
+    $('billing-panel').hidden = !billingRequired();
+    if (!billingRequired()) return;
+    const bill = state.billing;
+    $('billing-balance').textContent = chf(bill?.available_micros);
+    $('billing-held').hidden = !validMicros(bill?.held_micros) || bill.held_micros === 0;
+    $('billing-held').textContent = `${chf(bill?.held_micros)} für laufende Aufträge reserviert.`;
+    $('billing-status').textContent = state.billing?.blocked === true ? 'Ihr Guthaben wird nach einer Zahlungsänderung geprüft. Bitte wenden Sie sich an den Support.' : (billingReady() ? 'Aufladen über Stripe. Keine automatische Aufladung.' : 'Bezahlte Aufträge sind noch nicht verfügbar.');
+    const tariff = bill?.tariff;
+    $('billing-tariff').textContent = tariff?.vat_included === true ? `${chf(tariff.input_micros_per_million)} je Million Eingabetokens · ${chf(tariff.output_micros_per_million)} je Million Ausgabetokens. Preise inklusive MWST.` : '';
+    refreshControls();
+  }
+  async function loadBilling() {
+    if (!billingRequired()) return;
+    try {
+      state.billing = await api('billing');
+      let saved = state.purchase; try { saved = JSON.parse(sessionStorage.getItem(purchaseKey)) || saved; } catch {}
+      if (saved?.owner === state.user.id && state.billing.purchases?.some(item => item.purchase_id === saved.id && ['paid', 'expired'].includes(item.status))) {
+        state.purchase = null; try { sessionStorage.removeItem(purchaseKey); } catch {}
+      }
+    }
+    catch { state.billing = null; }
+    renderBilling();
+  }
+  async function loadQuote() {
+    if (!billingRequired() || state.packet?.status !== 'prepared') return;
+    const packet = state.packet;
+    clearQuote(); $('quote-section').hidden = false; $('quote-expires').textContent = 'Kosten werden lokal berechnet. Noch kein Modellaufruf.'; refreshControls();
+    try {
+      const quote = await api(`packets/${encodeURIComponent(packet.id)}/quote`, { method: 'POST', body: { hash: packet.hash } });
+      if (state.packet !== packet) return;
+      state.quote = quote;
+      if (!validQuote()) throw new Error('invalid_quote');
+      $('quote-amount').textContent = chf(quote.max_charge_micros);
+      $('quote-expires').textContent = `Inklusive MWST · gültig bis ${new Date(quote.expires_at).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })}.`;
+      $('quote-consent').disabled = false;
+      state.quoteTimer = setTimeout(() => { clearQuote(); $('quote-expires').textContent = 'Die Kostenfreigabe ist abgelaufen. Bitte neu berechnen.'; refreshControls(); }, Math.min(2147483647, Date.parse(quote.expires_at) - Date.now()));
+    } catch {
+      if (state.packet !== packet) return;
+      clearQuote(); $('quote-expires').textContent = 'Die Kosten konnten nicht berechnet werden. Bitte erneut versuchen.';
+    }
+    refreshControls();
+  }
+  function readPurchase(amount) {
+    let saved = state.purchase;
+    try { saved = JSON.parse(sessionStorage.getItem(purchaseKey)) || saved; } catch {}
+    if (saved?.owner === state.user.id && saved.amount === amount && typeof saved.id === 'string' && /^[0-9a-f-]{36}$/i.test(saved.id)) return saved;
+    return null;
+  }
+  async function checkout(amount) {
+    if (!billingRequired() || !billingReady() || state.checkoutBusy || state.busy || active(state.job)) return;
+    state.checkoutBusy = true; refreshControls(); message('');
+    try {
+      const purchase = readPurchase(amount) || { owner: state.user.id, amount, id: crypto.randomUUID(), createdAt: Date.now() };
+      state.purchase = purchase;
+      try { sessionStorage.setItem(purchaseKey, JSON.stringify(purchase)); } catch { /* Same-page retries still keep the purchase ID. */ }
+      saveWorkingDraft();
+      const result = await api('billing/checkout', { method: 'POST', body: { purchase_id: purchase.id, amount_minor: amount } });
+      const url = new URL(result.checkout_url);
+      if (url.protocol !== 'https:' || url.hostname !== 'checkout.stripe.com' || url.port || url.username || url.password || result.purchase_id !== purchase.id) throw new Error('invalid_checkout');
+      window.location.assign(url.href);
+    } catch { message('Die Zahlungsseite konnte nicht geöffnet werden. Erneut versuchen; dieselbe Bestellung wird wieder aufgenommen.', true); }
+    finally { state.checkoutBusy = false; refreshControls(); }
+  }
   function message(text, error = false) { $('global-message').textContent = text; $('global-message').hidden = !text; $('global-message').classList.toggle('error', error); }
   async function api(path, options = {}) {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 25000);
@@ -57,8 +135,12 @@
     const size = bytes($('material').value), purposeSize = bytes($('purpose').value);
     $('material-count').textContent = `${size.toLocaleString('de-CH')} / 12’000 Bytes`;
     $('material-count').classList.toggle('over', size > 12000);
-    $('prepare').disabled = state.busy || !state.config?.frontier?.enabled || !state.config.frontier.ready || !$('material').value.trim() || !$('purpose').value.trim() || size > 12000 || purposeSize > 1000 || !$('public-confirmation').checked || active(state.job);
-    $('send').disabled = state.busy || state.packet?.status !== 'prepared' || !state.config?.frontier?.ready || active(state.job);
+    $('prepare').disabled = state.busy || !billingReady() || !state.config?.frontier?.enabled || !state.config.frontier.ready || !$('material').value.trim() || !$('purpose').value.trim() || size > 12000 || purposeSize > 1000 || !$('public-confirmation').checked || active(state.job);
+    $('send').disabled = state.busy || !billingReady() || state.packet?.status !== 'prepared' || !state.config?.frontier?.ready || active(state.job) || (billingRequired() && (!validQuote() || !$('quote-consent').checked || state.billing.available_micros < state.quote.max_charge_micros));
+    const insufficient = billingRequired() && billingReady() && validQuote() && state.billing.available_micros < state.quote.max_charge_micros;
+    $('quote-funds').hidden = !insufficient;
+    $('refresh-quote').disabled = state.busy || !billingReady() || state.packet?.status !== 'prepared' || active(state.job);
+    ['topup-20', 'topup-50'].forEach(id => { $(id).disabled = state.checkoutBusy || state.busy || !billingReady() || active(state.job); });
     $('return-local').disabled = !state.nativeId || state.job?.status !== 'succeeded';
     $('new-request').disabled = state.busy || active(state.job);
     $('edit').disabled = state.busy || active(state.job);
@@ -80,7 +162,8 @@
   }
   function showPacket(packet) {
     const content = packetContent(packet);
-    state.packet = packet;
+    state.packet = packet; clearQuote(); $('quote-section').hidden = !billingRequired() || packet.status !== 'prepared';
+    renderProcessingState();
     $('preview-purpose').textContent = content.purpose;
     $('preview-material').textContent = content.text;
     $('preview-system').textContent = packet.payload.system;
@@ -91,13 +174,20 @@
     $('send').hidden = packet.status !== 'prepared';
     refreshControls();
   }
+  function renderProcessingState() {
+    $('preview').querySelector('.processing-note').textContent = state.packet?.status === 'prepared'
+      ? 'Zur Freigabe · Noch nicht an Anthropic gesendet'
+      : state.packet?.status === 'submitted'
+        ? 'Freigegeben · Externer Auftrag beauftragt'
+        : 'Übermittlungsstatus wird geprüft';
+  }
   async function prepare(event) {
     event.preventDefault(); if ($('prepare').disabled) return;
     setBusy(true); message('');
     try {
       if (state.handoff && await nativeIdentity() !== state.handoff.ownerId) throw new Error('Die lokale Sitzung hat gewechselt. Öffnen Sie die Anfrage im zugehörigen Konto neu.');
       const packet = await api('packets/reviewed', { method: 'POST', body: { text: $('material').value, purpose: $('purpose').value, acknowledge_public: true } });
-      clearJob(); showPacket(packet); try { sessionStorage.removeItem(workingKey); } catch {} $('preview-title').focus({ preventScroll: true }); $('preview').scrollIntoView({ behavior: 'auto', block: 'start' });
+      clearJob(); showPacket(packet); try { sessionStorage.removeItem(workingKey); } catch {} $('preview-title').focus({ preventScroll: true }); $('preview').scrollIntoView({ behavior: 'auto', block: 'start' }); await loadQuote();
     } catch (error) { message(error.message, true); } finally { setBusy(false); }
   }
   function renderProse(target, text) {
@@ -125,6 +215,9 @@
     const seconds = Math.max(0, Math.floor((Date.now() - state.startedAt) / 1000));
     $('elapsed').textContent = active(job) ? `${seconds} Sekunden seit Beginn der Statusanzeige.` : '';
     $('result').hidden = job.status !== 'succeeded';
+    const settlement = job.result?.billing || job.billing;
+    $('billing-result').hidden = !billingRequired();
+    $('billing-result').textContent = settlement?.currency === 'chf' && settlement.vat_included === true && validMicros(settlement.charged_micros) && validMicros(settlement.released_micros) ? `${chf(settlement.charged_micros)} abgerechnet · ${chf(settlement.released_micros)} freigegeben. Inklusive MWST.` : (active(job) ? 'Der freigegebene Höchstbetrag ist reserviert.' : 'Die Abrechnung wird mit Ihrem Guthaben abgeglichen.');
     if (job.status === 'succeeded' && job.result) {
       $('result-meta').textContent = `ANTHROPIC · ${modelName(job.result.model || state.packet.model)} · KI-ANTWORT`;
       $('truncation').hidden = !job.result.truncated; renderProse($('result-text'), job.result.text);
@@ -135,23 +228,27 @@
   async function poll() {
     const id = state.job?.id; if (!id || !active(state.job)) return;
     if (Date.now() - state.startedAt > 12 * 60 * 1000) { $('retry-status').hidden = false; message('Der Auftrag dauert länger als erwartet. Sie können den aktuellen Status erneut abrufen.'); return; }
-    try { const job = await api(`jobs/${encodeURIComponent(id)}`); if (state.job?.id !== id) return; state.job = job; state.failures = 0; renderJob(); }
+    try { const job = await api(`jobs/${encodeURIComponent(id)}`); if (state.job?.id !== id) return; state.job = job; state.failures = 0; renderJob(); if (!active(job)) await loadBilling(); }
     catch (error) { state.failures++; if (state.failures >= 3 || [401, 403, 404].includes(error.status)) { message(error.message, true); $('retry-status').hidden = false; return; } }
     if (active(state.job)) state.timer = setTimeout(poll, 2000);
   }
   function track(job) { clearTimeout(state.timer); state.job = job; state.startedAt = Date.now(); state.failures = 0; $('retry-status').hidden = true; renderJob(); if (active(job)) poll(); }
   async function send() {
+    refreshControls();
     if ($('send').disabled || !state.packet) return;
     setBusy(true); message('');
     try {
-      const job = await api(`packets/${encodeURIComponent(state.packet.id)}/send`, { method: 'POST', body: { hash: state.packet.hash } });
-      state.packet.status = 'submitted'; $('send').hidden = true; track(job); $('result-title').focus({ preventScroll: true }); $('result-section').scrollIntoView({ block: 'start' });
+      const billing = billingRequired() ? { quote_id: state.quote.quote_id, max_charge_micros: state.quote.max_charge_micros, currency: 'chf' } : null;
+      const job = await api(`packets/${encodeURIComponent(state.packet.id)}/send`, { method: 'POST', body: { hash: state.packet.hash, ...(billing ? { billing } : {}) } });
+      state.packet.status = 'submitted'; clearQuote(); $('quote-section').hidden = true; $('send').hidden = true; track(job); $('result-title').focus({ preventScroll: true }); $('result-section').scrollIntoView({ block: 'start' });
+      renderProcessingState();
     } catch (error) {
       message(error.message, true);
       try {
         const actual = await api(`packets/${encodeURIComponent(state.packet.id)}`); state.packet = actual;
-        if (actual.status === 'submitted') { $('send').hidden = true; if (actual.job_id) track(await api(`jobs/${encodeURIComponent(actual.job_id)}`)); }
-      } catch { state.packet.status = 'unknown'; message('Der Versandstatus ist ungeklärt. Es erfolgt kein Neuversand. Bitte den Arbeitsbereich neu laden, um einen angenommenen Auftrag wieder aufzunehmen.', true); }
+        renderProcessingState();
+        if (actual.status === 'submitted') { clearQuote(); $('quote-section').hidden = true; $('send').hidden = true; if (actual.job_id) track(await api(`jobs/${encodeURIComponent(actual.job_id)}`)); }
+      } catch { state.packet.status = 'unknown'; renderProcessingState(); message('Der Versandstatus ist ungeklärt. Es erfolgt kein Neuversand. Bitte den Arbeitsbereich neu laden, um einen angenommenen Auftrag wieder aufzunehmen.', true); }
     } finally { setBusy(false); }
   }
   async function returnLocal() {
@@ -172,18 +269,19 @@
     if (active(state.job)) return;
     if (state.packet) { const content = packetContent(state.packet); $('purpose').value = content.purpose; $('material').value = content.text; }
     $('compose').hidden = false; $('preview').hidden = true; $('public-confirmation').checked = false;
-    state.packet = null; clearJob(); saveWorkingDraft(); refreshControls(); $('purpose').focus();
+    state.packet = null; clearQuote(); clearJob(); saveWorkingDraft(); refreshControls(); $('purpose').focus();
   }
   async function start() {
     try {
       const me = await api('me'); state.user = me.user; state.csrf = me.csrf;
       [state.config, state.nativeId] = await Promise.all([api('workbench'), nativeIdentity()]);
-      renderConfig(); $('workspace').hidden = false;
+      renderConfig(); $('workspace').hidden = false; await loadBilling();
       state.handoff = readHandoff(state.nativeId);
       if (state.handoff) { $('material').value = state.handoff.text; $('handoff-note').hidden = false; saveWorkingDraft(); try { sessionStorage.removeItem(outboundKey); } catch {} }
       else if (!restoreWorkingDraft() && state.config.resume?.packet) {
         showPacket(state.config.resume.packet);
         if (state.config.resume.job) track(state.config.resume.job);
+        else await loadQuote();
       }
       refreshControls();
     } catch (error) { $('login').hidden = false; $('login-message').textContent = error.message; }
@@ -192,11 +290,15 @@
   $('request-form').addEventListener('submit', prepare);
   ['purpose', 'material', 'public-confirmation'].forEach(id => $(id).addEventListener('input', () => { saveWorkingDraft(); refreshControls(); }));
   $('send').addEventListener('click', send); $('edit').addEventListener('click', edit); $('return-local').addEventListener('click', returnLocal);
-  $('new-request').addEventListener('click', () => { state.packet = null; state.job = null; state.handoff = null; $('request-form').reset(); try { sessionStorage.removeItem(workingKey); } catch {} $('handoff-note').hidden = true; $('compose').hidden = false; $('preview').hidden = true; $('result-section').hidden = true; message(''); refreshControls(); $('purpose').focus(); });
+  $('quote-consent').addEventListener('change', refreshControls);
+  $('refresh-quote').addEventListener('click', async () => { if ($('refresh-quote').disabled) return; setBusy(true); try { await loadQuote(); } finally { setBusy(false); } });
+  $('billing-refresh').addEventListener('click', loadBilling);
+  $('topup-20').addEventListener('click', () => checkout(2000)); $('topup-50').addEventListener('click', () => checkout(5000));
+  $('new-request').addEventListener('click', () => { state.packet = null; state.job = null; state.handoff = null; clearQuote(); $('request-form').reset(); try { sessionStorage.removeItem(workingKey); } catch {} $('handoff-note').hidden = true; $('compose').hidden = false; $('preview').hidden = true; $('result-section').hidden = true; message(''); refreshControls(); $('purpose').focus(); });
   $('retry-status').addEventListener('click', () => { $('retry-status').hidden = true; state.startedAt = Date.now(); state.failures = 0; poll(); });
-  $('refresh').addEventListener('click', async () => { try { state.config = await api('workbench'); renderConfig(); message('Betriebsstatus aktualisiert.'); } catch (error) { message(error.message, true); } });
+  $('refresh').addEventListener('click', async () => { try { state.config = await api('workbench'); renderConfig(); await loadBilling(); message('Betriebsstatus aktualisiert.'); } catch (error) { message(error.message, true); } });
   $('copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(state.job.result.text); message('Antwort kopiert.'); } catch { message('Die Zwischenablage ist nicht verfügbar. Markieren und kopieren Sie den Antworttext.', true); } });
   $('logout').addEventListener('click', async () => { try { await api('logout', { method: 'POST', body: {} }); clearTimeout(state.timer); try { sessionStorage.removeItem(outboundKey); sessionStorage.removeItem(returnKey); sessionStorage.removeItem(workingKey); } catch {} window.location.assign('/cdn-cgi/access/logout'); } catch (error) { message(error.message, true); } });
-  window.addEventListener('pagehide', () => clearTimeout(state.timer));
+  window.addEventListener('pagehide', () => { clearTimeout(state.timer); clearTimeout(state.quoteTimer); });
   start();
 })();

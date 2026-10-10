@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
 import base64
 import hashlib
 import hmac
@@ -20,6 +21,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
+
+from billing.client import command as billing_command
+from billing.config import boolean_env
 
 HERE = Path(__file__).resolve().parent
 COOKIE = "ocl_sandbox"
@@ -84,11 +88,16 @@ def password_valid(password: str, encoded: str) -> bool:
         return False
 
 
+@contextmanager
 def database(path: str):
     conn = sqlite3.connect(path, timeout=10)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys=ON")
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 def ensure_schema(path: str):
@@ -146,6 +155,8 @@ class Settings:
     local_daily_global_limit: int = int(os.environ.get("OCL_LOCAL_DAILY_GLOBAL_LIMIT", "30"))
     frontier_daily_user_limit: int = int(os.environ.get("OCL_FRONTIER_DAILY_USER_LIMIT", "1"))
     frontier_daily_global_limit: int = int(os.environ.get("OCL_FRONTIER_DAILY_GLOBAL_LIMIT", "10"))
+    billing_required: bool = boolean_env("BILLING_REQUIRED", default=True)
+    billing_enabled: bool = boolean_env("BILLING_ENABLED", default=False)
     external_enabled: bool = os.environ.get("EXTERNAL_ENABLED", "0").lower() in {"1", "true", "yes"}
     reviewed_handoff_enabled: bool = os.environ.get("OCL_REVIEWED_HANDOFF_ENABLED", "false").lower() in {"1", "true", "yes"}
 
@@ -175,7 +186,23 @@ class ReviewedPacketInput(StrictInput):
     acknowledge_public: bool = Field(strict=True)
 
 
+class BillingApproval(StrictInput):
+    quote_id: str = Field(min_length=1, max_length=160)
+    max_charge_micros: int = Field(gt=0, le=1_000_000_000_000, strict=True)
+    currency: str = Field(pattern=r"^chf$")
+
+
+class CheckoutInput(StrictInput):
+    purchase_id: str = Field(pattern=r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+    amount_minor: int = Field(strict=True)
+
+
+class QuoteInput(StrictInput):
+    hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+
+
 class Approval(StrictInput):
+    billing: BillingApproval | None = None
     hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
 
 
@@ -226,10 +253,15 @@ async def gateway_inference(settings: Settings, envelope: dict) -> dict:
         value = response.json()
     if not isinstance(value.get("text"), str) or not value["text"].strip():
         raise ValueError("No provider text")
-    return {"text": value["text"][:100000], "model": settings.external_model, "truncated": bool(value.get("truncated")) or len(value["text"]) > 100000}
+    result = {"text": value["text"][:100000], "model": settings.external_model, "truncated": bool(value.get("truncated")) or len(value["text"]) > 100000}
+    if settings.billing_required or settings.billing_enabled:
+        if not isinstance(value.get("billing"), dict):
+            raise ValueError("Missing billing receipt")
+        result["billing"] = value["billing"]
+    return result
 
 
-def create_app(settings: Settings | None = None, *, local_caller=None, gateway_caller=None):
+def create_app(settings: Settings | None = None, *, local_caller=None, gateway_caller=None, billing_caller=None):
     cfg = settings or Settings()
     if cfg.auth_mode not in {"password", "cloudflare"}:
         raise ValueError("Unknown AUTH_MODE")
@@ -240,10 +272,13 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
     loopback_url(cfg.gateway_url)
     local_call = local_caller or local_inference
     gateway_call = gateway_caller or gateway_inference
+    bill_call = billing_caller or billing_command
     tasks: set[asyncio.Task] = set()
 
     async def lifespan(app):
         ensure_schema(cfg.db)
+        with database(cfg.db) as db:
+            db.execute("UPDATE packets SET status='prepared' WHERE status='billing_pending' AND job_id IS NULL")
         with database(cfg.db) as db:
             db.execute("UPDATE jobs SET status='failed',error=? WHERE status IN ('queued','running')", ("Dienst wurde neu gestartet; keine automatische Wiederholung.",))
         app.state.demo = json.loads(Path(cfg.data).read_text())
@@ -270,12 +305,13 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
     @app.middleware("http")
     async def security_headers(request, call_next):
         chunks, total = [], 0
+        maximum = 262144 if request.url.path == "/api/billing/webhook" else 16384
         async for chunk in request.stream():
             total += len(chunk)
-            if total > 16384:
+            if total > maximum:
                 break
             chunks.append(chunk)
-        if total > 16384:
+        if total > maximum:
             response = JSONResponse({"error": "Anfrage zu gross."}, status_code=413)
         else:
             request._body = b"".join(chunks)
@@ -308,6 +344,29 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
             if not hmac.compare_digest(request.headers.get("x-csrf-token", ""), row["csrf"]):
                 raise HTTPException(403, "Ungültiger Sitzungsschutz.")
         return dict(row)
+
+    async def bill(u, action, data=None):
+        return await bill_call(cfg, app.state.secret, u, action, data or {})
+
+    def require_billing():
+        if not cfg.billing_enabled:
+            raise HTTPException(503, "Die Abrechnung ist noch nicht freigeschaltet. Es wurde nichts übermittelt.")
+
+    async def recovered_job(row, u):
+        view = job_view(row)
+        if row["action"] == "external" and row["packet_id"] and row["status"] == "failed" and cfg.billing_enabled:
+            try:
+                outcome = await bill(u, "result", {"packet_id": row["packet_id"]})
+                if outcome.get("state") == "settled" and isinstance(outcome.get("result"), dict):
+                    result = outcome["result"]
+                    with database(cfg.db) as db:
+                        db.execute("UPDATE jobs SET status='succeeded',result=?,error=NULL WHERE id=? AND user_id=? AND tenant=?", (json.dumps(result), row["id"], u["id"], u["tenant"]))
+                    view = {"id": row["id"], "action": row["action"], "status": "succeeded", "result": result}
+                elif isinstance(outcome.get("billing"), dict):
+                    view["billing"] = outcome["billing"]
+            except HTTPException:
+                pass  # A failed status never invents a release or debit.
+        return view
 
     def me(u):
         return {"user": {k: u[k] for k in ("id", "username", "tenant")}, "csrf": u["csrf"], "auth_mode": cfg.auth_mode}
@@ -505,7 +564,7 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
             except Exception:
                 return False
         local_ready, external_ready = await asyncio.gather(ready(cfg.local_url.rsplit("/", 2)[0] + "/models"), ready(cfg.gateway_url + "/health"))
-        external_ready = external_ready and cfg.external_enabled
+        external_ready = external_ready and cfg.external_enabled and (not cfg.billing_required or cfg.billing_enabled)
         data = app.state.demo
         docs = [{k: doc[k] for k in ("id", "title", "date", "fictional") if k in doc} | {"paragraphs": [{"id": p["id"], "text": p["text"]} for p in doc["paragraphs"]]} for doc in data["documents"]]
         return {"title": data.get("title", "OpenCaseLaw Pilot"), "scope_note": data.get("scope_note", "Nur synthetische Akten."), "documents": docs, "sources": data["sources"], "questions": data["questions"], "model": {"name": cfg.local_model, "ready": local_ready}, "status": {"local_ready": local_ready, "external_ready": external_ready, "location": cfg.location, "auth_mode": cfg.auth_mode}, "resume": resume_state(u)}
@@ -523,7 +582,8 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
             except Exception:
                 return None
         local_health, gateway_health = await asyncio.gather(health(cfg.local_url.rsplit("/", 2)[0] + "/models"), health(cfg.gateway_url + "/health"))
-        external_ready = bool(cfg.external_enabled and isinstance(gateway_health, dict) and gateway_health.get("ready") is True and gateway_health.get("model") == cfg.external_model and gateway_health.get("reviewed_handoff") is True)
+        billing_ready = bool(cfg.billing_enabled and isinstance(gateway_health, dict) and gateway_health.get("billing", {}).get("enabled") is True)
+        external_ready = bool(cfg.external_enabled and isinstance(gateway_health, dict) and gateway_health.get("ready") is True and gateway_health.get("model") == cfg.external_model and gateway_health.get("reviewed_handoff") is True and (not cfg.billing_required or billing_ready))
         with database(cfg.db) as db:
             db.execute("BEGIN")
             packet = db.execute("SELECT * FROM packets WHERE user_id=? AND tenant=? AND kind='reviewed' ORDER BY expires DESC,rowid DESC LIMIT 1", (u["id"], u["tenant"])).fetchone()
@@ -534,10 +594,57 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
             "mode": "reviewed_handoff", "title": "CourtOS · geprüfte Übergabe",
             "scope_note": "Nur den selbst ausgewählten und als öffentlich oder synthetisch bestätigten Text übermitteln. Die Bestätigung ist keine automatische Anonymisierung. Akten und frühere Chats werden nicht angehängt.",
             "local": {"model": cfg.local_model, "ready": local_health is not None},
+            "billing": {"required": cfg.billing_required, "enabled": billing_ready},
             "frontier": {"provider": "Anthropic", "model": cfg.external_model, "ready": external_ready, "enabled": cfg.external_enabled},
             "limits": {"text_utf8_bytes": REVIEWED_TEXT_BYTES, "purpose_utf8_bytes": REVIEWED_PURPOSE_BYTES, "frontier_daily_user": cfg.frontier_daily_user_limit, "frontier_daily_global": cfg.frontier_daily_global_limit, "preview_daily_user": REVIEWED_PREVIEWS_USER},
-            "resume": {"packet": packet_view(packet) if packet is not None else None, "job": job_view(job) if job is not None else None},
+            "resume": {"packet": packet_view(packet) if packet is not None else None, "job": await recovered_job(job, u) if job is not None else None},
         }
+
+    @app.get("/api/billing")
+    async def billing_status(request: Request):
+        u = user(request)
+        if not cfg.billing_enabled:
+            return {"required": cfg.billing_required, "enabled": False}
+        result = await bill(u, "status")
+        return result | {"required": cfg.billing_required}
+
+    @app.post("/api/billing/checkout")
+    async def billing_checkout(body: CheckoutInput, request: Request):
+        u = user(request, True)
+        require_billing()
+        return await bill(u, "checkout", body.model_dump())
+
+    @app.post("/api/billing/webhook")
+    async def billing_webhook(request: Request):
+        # Exact externally routable path; Stripe's signed raw body is the authority.
+        # No session/CSRF exception is shared with any other application route.
+        require_billing()
+        raw = await request.body()
+        try:
+            async with httpx.AsyncClient(timeout=25, trust_env=False, follow_redirects=False) as client:
+                response = await client.post(cfg.gateway_url + "/v1/stripe/webhook", content=raw,
+                    headers={"stripe-signature": request.headers.get("stripe-signature", ""), "content-type": "application/json"})
+            if response.status_code != 200:
+                raise HTTPException(503, "Zahlungsbestätigung noch nicht verarbeitet.")
+            return {"received": True}
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(503, "Zahlungsbestätigung noch nicht verarbeitet.") from None
+
+    @app.post("/api/packets/{packet_id}/quote")
+    async def billing_quote(packet_id: str, body: QuoteInput, request: Request):
+        u = user(request, True)
+        require_billing()
+        with database(cfg.db) as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = own_packet(packet_id, u, db)
+            if row["status"] != "prepared" or not hmac.compare_digest(row["hash"], body.hash):
+                raise HTTPException(409, "Paket ist geändert oder bereits verwendet.")
+            # Explicit local quote refresh retains exact reviewed text, but
+            # permits a fresh expiry and requires a fresh accepted quote ID.
+            db.execute("UPDATE packets SET expires=? WHERE id=?", (time.time() + 600, packet_id))
+        return await bill(u, "quote", {"packet_id": packet_id, "hash": row["hash"], "payload": json.loads(row["payload"])})
 
     @app.post("/api/packets/reviewed")
     async def reviewed_packet(body: ReviewedPacketInput, request: Request):
@@ -579,7 +686,8 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
 
     @app.get("/api/jobs/{job_id}")
     async def job(job_id: str, request: Request):
-        return job_view(own_job(job_id, user(request)))
+        u = user(request)
+        return await recovered_job(own_job(job_id, u), u)
 
     @app.post("/api/packets")
     async def packet(body: PacketInput, request: Request):
@@ -620,6 +728,15 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
         u = user(request, True)
         if not cfg.external_enabled:
             raise HTTPException(503, "Externe Analyse ist noch nicht eingerichtet. Es wurde nichts übermittelt.")
+        paid = cfg.billing_required or cfg.billing_enabled
+        if paid:
+            require_billing()
+            if body.billing is None:
+                raise HTTPException(422, "Bitte die Kostenobergrenze ausdrücklich bestätigen.")
+        elif body.billing is not None:
+            raise HTTPException(409, "Eine Kostenfreigabe kann derzeit nicht verarbeitet werden.")
+        # Claim packet first, without a model/daily quota reservation. Concurrent
+        # senders cannot release the first sender's monetary reservation.
         with database(cfg.db) as db:
             db.execute("BEGIN IMMEDIATE")
             row = own_packet(packet_id, u, db)
@@ -629,10 +746,31 @@ def create_app(settings: Settings | None = None, *, local_caller=None, gateway_c
                 raise HTTPException(503, "Die geprüfte Textübergabe ist nicht aktiviert. Es wurde nichts übermittelt.")
             if row["status"] != "prepared" or row["expires"] <= time.time() or not hmac.compare_digest(row["hash"], body.hash):
                 raise HTTPException(409, "Freigabe ungültig, abgelaufen oder bereits verwendet.")
-            job_id = admit(db, u, "external", packet_id)
-            db.execute("UPDATE packets SET status='submitted',job_id=? WHERE id=?", (job_id, packet_id))
+            db.execute("UPDATE packets SET status='billing_pending' WHERE id=?", (packet_id,))
             envelope = {"version": 2 if row["kind"] == "reviewed" else 1, "packet_id": packet_id, "user_id": u["id"], "tenant_id": u["tenant"], "expires_at": row["expires"], "payload": json.loads(row["payload"]), "hash": row["hash"]}
+        reserved = False
+        try:
+            if paid:
+                envelope["billing"] = body.billing.model_dump()
+                await bill(u, "reserve", {"packet_id": packet_id, "hash": body.hash, "billing": envelope["billing"]})
+                reserved = True
+            with database(cfg.db) as db:
+                db.execute("BEGIN IMMEDIATE")
+                row = own_packet(packet_id, u, db)
+                if row["status"] != "billing_pending":
+                    raise HTTPException(409, "Paketstatus wurde geändert.")
+                job_id = admit(db, u, "external", packet_id)
+                db.execute("UPDATE packets SET status='submitted',job_id=? WHERE id=?", (job_id, packet_id))
             envelope["signature"] = hmac.new(app.state.secret, canonical(envelope), hashlib.sha256).hexdigest()
+        except BaseException:
+            if reserved:
+                try:
+                    await bill(u, "release", {"quote_id": body.billing.quote_id})
+                except HTTPException:
+                    pass  # Startup/expiry recovery releases an interrupted hold.
+            with database(cfg.db) as db:
+                db.execute("UPDATE packets SET status=? WHERE id=? AND status='billing_pending'", ("cancelled" if reserved else "prepared", packet_id))
+            raise
         return start(job_id, envelope, True)
 
     @app.get("/api/export/{job_id}")

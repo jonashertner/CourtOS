@@ -3,3 +3,4 @@ uvicorn==0.54.0
 httpx==0.28.1
 PyJWT[crypto]==2.15.1
 cryptography==50.0.2
+-r billing/requirements.txt

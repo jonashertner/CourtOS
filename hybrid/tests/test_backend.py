@@ -36,7 +36,7 @@ class BackendTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / "data.json").write_text(json.dumps(DATA))
         (self.root / "hmac").write_bytes(b"S" * 48)
-        self.cfg = backend.Settings(db=str(self.root / "app.sqlite"), data=str(self.root / "data.json"), secret_file=str(self.root / "hmac"), origin="https://testserver", base_path="", auth_mode="password", external_enabled=True, access_self_registration=False, local_daily_user_limit=3, local_daily_global_limit=30, frontier_daily_user_limit=1, frontier_daily_global_limit=10)
+        self.cfg = backend.Settings(billing_required=False, db=str(self.root / "app.sqlite"), data=str(self.root / "data.json"), secret_file=str(self.root / "hmac"), origin="https://testserver", base_path="", auth_mode="password", external_enabled=True, access_self_registration=False, local_daily_user_limit=3, local_daily_global_limit=30, frontier_daily_user_limit=1, frontier_daily_global_limit=10)
         backend.ensure_schema(self.cfg.db)
         encoded = backend.password_hash("a-long-test-password")
         with backend.database(self.cfg.db) as db:
@@ -550,7 +550,7 @@ class CloudflareTests(unittest.TestCase):
         (p / "jwks.json").write_text(json.dumps({"keys": [jwk]}))
         (p / "data.json").write_text(json.dumps(DATA))
         (p / "hmac").write_bytes(b"S" * 48)
-        self.cfg = backend.Settings(db=str(p / "db"), data=str(p / "data.json"), secret_file=str(p / "hmac"), origin="https://testserver", base_path="", auth_mode="cloudflare", access_issuer="https://team.cloudflareaccess.com", access_aud="our-app", access_jwks_file=str(p / "jwks.json"), access_self_registration=False)
+        self.cfg = backend.Settings(billing_required=False, db=str(p / "db"), data=str(p / "data.json"), secret_file=str(p / "hmac"), origin="https://testserver", base_path="", auth_mode="cloudflare", access_issuer="https://team.cloudflareaccess.com", access_aud="our-app", access_jwks_file=str(p / "jwks.json"), access_self_registration=False)
         backend.ensure_schema(self.cfg.db)
         with backend.database(self.cfg.db) as db:
             db.execute("INSERT INTO users VALUES('alice','alice@example.org','one','disabled',1)")
@@ -643,7 +643,7 @@ class GatewayTests(unittest.TestCase):
         (p / "key").write_bytes(b"S" * 48)
         catalog = {"questions": [{"id": "Q1", "text": "Public?", "source_ids": ["S1"]}], "sources": DATA["sources"]}
         (p / "catalog.json").write_text(json.dumps(catalog))
-        self.cfg = gateway.Settings(db=str(p / "gateway.db"), secret_file=str(p / "key"), model="test-model", provider_key="test-key", public_catalog=str(p / "catalog.json"))
+        self.cfg = gateway.Settings(billing=gateway.BillingConfig(required=False), db=str(p / "gateway.db"), secret_file=str(p / "key"), model="test-model", provider_key="test-key", public_catalog=str(p / "catalog.json"))
         self.calls = []
         self.fail = False
 

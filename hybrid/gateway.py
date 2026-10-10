@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from contextlib import closing
+from dataclasses import dataclass, field
 import hashlib
 import hmac
 import json
@@ -14,6 +15,9 @@ import time
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+
+from billing.runtime import BillingConfig, BillingRuntime
+from billing.tariffs import BillingError, Usage
 
 ANTHROPIC_ENDPOINT = "https://api.anthropic.com/v1/messages"
 PUBLIC_SYSTEM = (
@@ -48,6 +52,7 @@ class Settings:
     model: str = os.environ.get("EXTERNAL_MODEL", "claude-sonnet-4-6")
     provider_key: str = os.environ.get("ANTHROPIC_API_KEY", "")
     public_catalog: str = os.environ.get("PUBLIC_CATALOG", str(Path(__file__).parent / "data/public-catalog.json"))
+    billing: BillingConfig = field(default_factory=BillingConfig.from_env)
     reviewed_handoff_enabled: bool = os.environ.get("OCL_REVIEWED_HANDOFF_ENABLED", "false").lower() in {"1", "true", "yes"}
 
 
@@ -61,7 +66,9 @@ async def provider_call(cfg, payload):
     text = "\n".join(item["text"] for item in data.get("content", []) if item.get("type") == "text")
     if not text.strip():
         raise ValueError("Provider returned no text")
-    return {"text": text[:100000], "model": cfg.model, "truncated": data.get("stop_reason") == "max_tokens" or len(text) > 100000}
+    return {"text": text[:100000], "model": cfg.model, "truncated": data.get("stop_reason") == "max_tokens" or len(text) > 100000,
+            "usage": data.get("usage"), "provider_message_id": data.get("id"),
+            "provider_request_id": response.headers.get("request-id")}
 
 
 def check_reviewed_payload(payload, model):
@@ -129,14 +136,15 @@ def check_payload(payload, model, catalog):
         raise ValueError("Public text does not match approved catalogue")
 
 
-def create_app(settings=None, *, caller=None):
+def create_app(settings=None, *, caller=None, billing_runtime=None):
     cfg = settings or Settings()
     call = caller or provider_call
     lock = asyncio.Semaphore(2)
+    billing = billing_runtime or BillingRuntime.configured(cfg.billing)
 
     async def lifespan(app):
         Path(cfg.db).parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(cfg.db) as db:
+        with closing(sqlite3.connect(cfg.db)) as db, db:
             db.execute("CREATE TABLE IF NOT EXISTS replay(packet_id TEXT PRIMARY KEY,user_id TEXT NOT NULL,tenant_id TEXT NOT NULL,hash TEXT NOT NULL,consumed REAL NOT NULL)")
         os.chmod(cfg.db, 0o600)
         app.state.secret = Path(cfg.secret_file).read_bytes().strip()
@@ -145,6 +153,7 @@ def create_app(settings=None, *, caller=None):
         app.state.catalog = json.loads(Path(cfg.public_catalog).read_text())
         if set(app.state.catalog) != {"questions", "sources"}:
             raise ValueError("Expected isolated public-only catalogue")
+        billing.startup()
         yield
 
     app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
@@ -153,9 +162,64 @@ def create_app(settings=None, *, caller=None):
     async def error(request, exc):
         return JSONResponse({"error": str(exc.detail)}, status_code=exc.status_code)
 
+    @app.exception_handler(BillingError)
+    async def billing_error(request, exc):
+        # Fixed, intentional vocabulary only: no Stripe/provider exception text.
+        code = str(exc)
+        messages = {
+            "insufficient_credit": "Das Guthaben reicht für die bestätigte Obergrenze nicht aus.",
+            "quote_expired": "Die Kostenobergrenze ist abgelaufen. Bitte neu vorbereiten und bestätigen.",
+            "approval_changed": "Kostenfreigabe oder Text haben sich geändert. Bitte erneut prüfen.",
+            "wallet_blocked": "Das Guthabenkonto ist vorübergehend gesperrt.",
+            "quote_already_used": "Diese Kostenfreigabe wurde bereits verwendet.",
+            "quote_not_found": "Kostenfreigabe nicht gefunden.",
+            "checkout_expired": "Der Zahlungsvorgang ist abgelaufen. Bitte Guthaben aktualisieren und eine neue Aufladung beginnen.",
+            "checkout_rate_limited": "Zu viele neue Zahlungsvorgänge. Bitte einen bestehenden Vorgang fortsetzen oder später erneut versuchen.",
+            "invalid_webhook_signature": "Ungültige Zahlungsbestätigung.",
+        }
+        status = 400 if code == "invalid_webhook_signature" else 429 if code == "checkout_rate_limited" else 402 if code == "insufficient_credit" else 404 if code == "quote_not_found" else 409 if code in messages else 503
+        return JSONResponse({"error": messages.get(code, "Die Abrechnung ist derzeit nicht verfügbar. Es wurde kein neuer Aufruf gestartet."),
+                             "code": code if code in messages else "billing_unavailable"}, status_code=status)
+
+    @app.post("/v1/billing")
+    async def billing_command(request: Request):
+        raw = await request.body()
+        if len(raw) > 120000:
+            raise HTTPException(413, "Anfrage zu gross.")
+        try:
+            value = json.loads(raw)
+            if set(value) != {"domain", "user_id", "tenant_id", "expires_at", "action", "data", "signature"}:
+                raise ValueError()
+            signature = value.pop("signature")
+            expected = hmac.new(app.state.secret, canonical(value), hashlib.sha256).hexdigest()
+            if not isinstance(signature, str) or not hmac.compare_digest(signature, expected):
+                raise ValueError()
+            if value["domain"] != "courtos.billing.v1" or not time.time() < value["expires_at"] <= time.time() + 65:
+                raise ValueError()
+            if not all(isinstance(value[k], str) and 1 <= len(value[k]) <= 120 for k in ("user_id", "tenant_id")) or not isinstance(value["data"], dict):
+                raise ValueError()
+        except Exception:
+            raise HTTPException(403, "Ungültiger interner Auftrag.") from None
+        return await asyncio.to_thread(billing.command, value["user_id"], value["tenant_id"], value["action"], value["data"])
+
+    @app.post("/v1/stripe/webhook")
+    async def stripe_webhook(request: Request):
+        if not billing.ready:
+            raise BillingError("billing_unavailable")
+        chunks, size = [], 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > 262144:
+                raise HTTPException(413, "Anfrage zu gross.")
+            chunks.append(chunk)
+        return await asyncio.to_thread(billing.checkout.webhook, b"".join(chunks), request.headers.get("stripe-signature", ""))
+
     @app.get("/health")
     async def health():
-        return JSONResponse({"ready": bool(cfg.provider_key), "provider": "Anthropic", "model": cfg.model, "reviewed_handoff": cfg.reviewed_handoff_enabled}, status_code=200 if cfg.provider_key else 503)
+        ready = bool(cfg.provider_key) and (not (cfg.billing.required or cfg.billing.enabled) or billing.ready)
+        return JSONResponse({"ready": ready, "provider": "Anthropic", "model": cfg.model,
+                             "reviewed_handoff": cfg.reviewed_handoff_enabled,
+                             "billing": {"required": cfg.billing.required, "enabled": billing.ready}}, status_code=200 if ready else 503)
 
     @app.post("/v1/execute")
     async def execute(request: Request):
@@ -168,7 +232,10 @@ def create_app(settings=None, *, caller=None):
         raw = b"".join(chunks)
         try:
             envelope = json.loads(raw)
-            if set(envelope) != {"version", "packet_id", "user_id", "tenant_id", "expires_at", "payload", "hash", "signature"}:
+            expected_keys = {"version", "packet_id", "user_id", "tenant_id", "expires_at", "payload", "hash", "signature"}
+            if "billing" in envelope:
+                expected_keys.add("billing")
+            if set(envelope) != expected_keys:
                 raise ValueError("Unexpected envelope")
             signature = envelope.pop("signature")
             expected = hmac.new(app.state.secret, canonical(envelope), hashlib.sha256).hexdigest()
@@ -190,18 +257,55 @@ def create_app(settings=None, *, caller=None):
             raise HTTPException(403, "Ungültiges freigegebenes Paket.") from None
         if not cfg.provider_key:
             raise HTTPException(503, "Externer Dienst ist nicht eingerichtet.")
+        paid = cfg.billing.required or cfg.billing.enabled
+        if paid:
+            billing.require_ready()
+            reservation = billing.approve(envelope["user_id"], envelope["tenant_id"], {
+                "packet_id": envelope["packet_id"], "hash": envelope["hash"], "billing": envelope.get("billing")})
+            if reservation["state"] == "settled":
+                return billing.outcome(envelope["user_id"], envelope["tenant_id"], envelope["packet_id"])["result"]
+            if reservation["state"] != "reserved":
+                raise BillingError("quote_already_used")
+        elif "billing" in envelope:
+            raise BillingError("billing_unavailable")
         # Commit consumption before network I/O; a timeout cannot lead to an implicit retry.
         try:
-            with sqlite3.connect(cfg.db, timeout=10) as db:
+            with closing(sqlite3.connect(cfg.db, timeout=10)) as db, db:
                 db.execute("BEGIN IMMEDIATE")
                 db.execute("INSERT INTO replay VALUES(?,?,?,?,?)", (envelope["packet_id"], envelope["user_id"], envelope["tenant_id"], envelope["hash"], time.time()))
         except sqlite3.IntegrityError:
             raise HTTPException(409, "Paket wurde bereits verwendet.") from None
+        acquired = False
+        dispatched = False
         try:
-            async with lock:
-                return await call(cfg, envelope["payload"])
-        except Exception:
-            raise HTTPException(502, "Externer Dienst fehlgeschlagen; Paket bleibt verbraucht.") from None
+            await asyncio.wait_for(lock.acquire(), timeout=10)
+            acquired = True
+            if paid:
+                dispatched = billing.ledger.claim_dispatch(envelope["user_id"], envelope["tenant_id"], reservation["id"])
+                if not dispatched:
+                    raise BillingError("quote_already_used")
+            result = await asyncio.wait_for(call(cfg, envelope["payload"]), timeout=155)
+            public_result = {k: result[k] for k in ("text", "model", "truncated") if k in result}
+            if not isinstance(public_result.get("text"), str) or not public_result["text"].strip() or len(canonical(public_result)) > 120000:
+                raise BillingError("unusable_result")
+            if paid:
+                usage = Usage.from_anthropic(result.get("usage"))
+                settled = billing.ledger.settle(envelope["user_id"], envelope["tenant_id"], reservation["id"],
+                    usage=usage, response_model=result.get("model"),
+                    provider_message_id=result.get("provider_message_id"), provider_request_id=result.get("provider_request_id"),
+                    result_hash=hashlib.sha256(canonical(public_result)).hexdigest(), result=public_result)
+                public_result["billing"] = billing.receipt(settled)
+            return public_result
+        except BaseException:
+            if paid:
+                state = billing.ledger.get_quote(envelope["user_id"], envelope["tenant_id"], reservation["id"])["state"]
+                if state in {"reserved", "dispatched"}:
+                    billing.ledger.release_failed(envelope["user_id"], envelope["tenant_id"], reservation["id"],
+                        reason="outcome_unknown" if dispatched else "before_dispatch")
+            raise HTTPException(502, "Externer Dienst fehlgeschlagen; keine Belastung des Guthabens und keine automatische Wiederholung.") from None
+        finally:
+            if acquired:
+                lock.release()
 
     return app
 
