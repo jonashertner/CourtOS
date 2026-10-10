@@ -1,0 +1,453 @@
+{
+  "version": 1,
+  "policy": "Published judgments only. No original party pleadings or underlying exhibits were obtained. All four input documents per matter are expressly reconstructed exercise documents. Quoted English phrases are separately marked. No signatures, letterheads or fabricated evidence images.",
+  "cases": [
+    {
+      "id": "DE-01",
+      "judgment": {
+        "court": "Schweizerisches Bundesgericht",
+        "number": "4A_252/2023",
+        "date": "2023-10-24",
+        "original_language": "de",
+        "url": "https://search.bger.ch/ext/eurospider/live/de/php/aza/http/index.php?highlight_docid=aza%3A%2F%2F24-10-2023-4A_252-2023&lang=de&type=show_document",
+        "locators": [
+          "Sachverhalt A.a–A.b, B.a–B.d",
+          "E. 2",
+          "E. 3.1–3.6",
+          "Dispositiv 1"
+        ]
+      },
+      "documents": [
+        {
+          "id": "D01",
+          "role": "claim",
+          "party_label": "Vermieterin",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D01-P01",
+              "locator": "Sachverhalt B.b–B.c"
+            },
+            {
+              "id": "D01-P02",
+              "locator": "E. 2"
+            },
+            {
+              "id": "D01-P03",
+              "locator": "E. 2"
+            }
+          ]
+        },
+        {
+          "id": "D02",
+          "role": "response",
+          "party_label": "Mieter",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D02-P01",
+              "locator": "Sachverhalt B.c"
+            },
+            {
+              "id": "D02-P02",
+              "locator": "Sachverhalt A.b"
+            },
+            {
+              "id": "D02-P03",
+              "locator": "E. 2; E. 3.4.1"
+            }
+          ]
+        },
+        {
+          "id": "D03",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D03-P01",
+              "locator": "Sachverhalt A.a"
+            },
+            {
+              "id": "D03-P02",
+              "locator": "Sachverhalt A.a"
+            },
+            {
+              "id": "D03-P03",
+              "locator": "Didaktische Abgrenzung; keine zusätzliche Falltatsache"
+            }
+          ]
+        },
+        {
+          "id": "D04",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D04-P01",
+              "locator": "Sachverhalt A.b"
+            },
+            {
+              "id": "D04-P02",
+              "locator": "Sachverhalt A.b, B.a"
+            },
+            {
+              "id": "D04-P03",
+              "locator": "Sachverhalt B.b"
+            },
+            {
+              "id": "D04-P04",
+              "locator": "Didaktische Abgrenzung; keine zusätzliche Falltatsache"
+            }
+          ]
+        }
+      ],
+      "checked_date": "2026-10-10",
+      "verification": "Official full text read through primary-source browser results and HTTP before authoring. A subsequent HTML archival attempt was blocked; no full-source archive hash is claimed."
+    },
+    {
+      "id": "FR-01",
+      "judgment": {
+        "court": "Schweizerisches Bundesgericht",
+        "number": "4A_635/2016",
+        "date": "2018-01-22",
+        "original_language": "fr",
+        "url": "https://search.bger.ch/ext/eurospider/live/fr/php/aza/http/index.php?highlight_docid=aza%3A%2F%2F22-01-2018-4A_635-2016&lang=fr&type=show_document",
+        "locators": [
+          "Faits A, B.a–B.c, C",
+          "Consid. 4",
+          "Consid. 5.1–5.4",
+          "Dispositif 1"
+        ]
+      },
+      "documents": [
+        {
+          "id": "D01",
+          "role": "claim",
+          "party_label": "Demandeur",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D01-P01",
+              "locator": "Consid. 5"
+            },
+            {
+              "id": "D01-P02",
+              "locator": "Consid. 5.3.1"
+            },
+            {
+              "id": "D01-P03",
+              "locator": "Faits B.a; consid. 4"
+            },
+            {
+              "id": "D01-P04",
+              "locator": "Consid. 5.3.2; délimitation didactique"
+            }
+          ]
+        },
+        {
+          "id": "D02",
+          "role": "response",
+          "party_label": "Défenderesse",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D02-P01",
+              "locator": "Faits C; consid. 5 et 5.4.2"
+            },
+            {
+              "id": "D02-P02",
+              "locator": "Faits B.c; consid. 5"
+            },
+            {
+              "id": "D02-P03",
+              "locator": "Faits C"
+            },
+            {
+              "id": "D02-P04",
+              "locator": "Faits B.a; consid. 4"
+            }
+          ]
+        },
+        {
+          "id": "D03",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D03-P01",
+              "locator": "Faits B.a"
+            },
+            {
+              "id": "D03-P02",
+              "locator": "Faits B.a"
+            },
+            {
+              "id": "D03-P03",
+              "locator": "Faits A"
+            },
+            {
+              "id": "D03-P04",
+              "locator": "Délimitation didactique; aucun fait supplémentaire"
+            }
+          ]
+        },
+        {
+          "id": "D04",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D04-P01",
+              "locator": "Faits C"
+            },
+            {
+              "id": "D04-P02",
+              "locator": "Faits C; délimitation didactique"
+            },
+            {
+              "id": "D04-P03",
+              "locator": "Faits B.b"
+            },
+            {
+              "id": "D04-P04",
+              "locator": "Délimitation didactique; aucun fait supplémentaire"
+            }
+          ]
+        }
+      ],
+      "checked_date": "2026-10-10",
+      "verification": "Official full text read through primary-source browser results and HTTP before authoring. A subsequent HTML archival attempt was blocked; no full-source archive hash is claimed."
+    },
+    {
+      "id": "IT-01",
+      "judgment": {
+        "court": "Schweizerisches Bundesgericht",
+        "number": "5A_121/2021",
+        "date": "2022-04-06",
+        "original_language": "it",
+        "url": "https://search.bger.ch/ext/eurospider/live/it/php/aza/http/index.php?highlight_docid=aza%3A%2F%2F06-04-2022-5A_121-2021&lang=it&type=show_document",
+        "locators": [
+          "Fatti A.a–A.b",
+          "Consid. 2.1.1–2.2.2",
+          "Consid. 3.1–3.3",
+          "Dispositivo 1"
+        ]
+      },
+      "documents": [
+        {
+          "id": "D01",
+          "role": "claim",
+          "party_label": "Creditore",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D01-P01",
+              "locator": "Fatti A.b; consid. 3.1"
+            },
+            {
+              "id": "D01-P02",
+              "locator": "Fatti A.a; consid. 3.1"
+            },
+            {
+              "id": "D01-P03",
+              "locator": "Consid. 3.1, 3.3"
+            }
+          ]
+        },
+        {
+          "id": "D02",
+          "role": "response",
+          "party_label": "Debitrice",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D02-P01",
+              "locator": "Consid. 3.2–3.3"
+            },
+            {
+              "id": "D02-P02",
+              "locator": "Consid. 3.2"
+            },
+            {
+              "id": "D02-P03",
+              "locator": "Consid. 3.2; distinzione redazionale"
+            },
+            {
+              "id": "D02-P04",
+              "locator": "Consid. 2.1.1, 3.3; delimitazione didattica"
+            }
+          ]
+        },
+        {
+          "id": "D03",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D03-P01",
+              "locator": "Fatti A.a"
+            },
+            {
+              "id": "D03-P02",
+              "locator": "Fatti A.a"
+            },
+            {
+              "id": "D03-P03",
+              "locator": "Fatti A.a"
+            },
+            {
+              "id": "D03-P04",
+              "locator": "Delimitazione didattica; nessun fatto aggiunto"
+            }
+          ]
+        },
+        {
+          "id": "D04",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D04-P01",
+              "locator": "Fatti A.a"
+            },
+            {
+              "id": "D04-P02",
+              "locator": "Fatti A.a; delimitazione didattica"
+            },
+            {
+              "id": "D04-P03",
+              "locator": "Fatti A.b"
+            },
+            {
+              "id": "D04-P04",
+              "locator": "Perimetro: consid. 1.1, 3; delimitazione didattica"
+            }
+          ]
+        }
+      ],
+      "checked_date": "2026-10-10",
+      "verification": "Official full text read through primary-source browser results and HTTP before authoring. A subsequent HTML archival attempt was blocked; no full-source archive hash is claimed."
+    },
+    {
+      "id": "EN-01",
+      "judgment": {
+        "court": "Schweizerisches Bundesgericht",
+        "number": "4A_421/2015",
+        "date": "2016-02-11",
+        "original_language": "de",
+        "url": "https://search.bger.ch/ext/eurospider/live/de/php/aza/http/index.php?highlight_docid=aza%3A%2F%2F11-02-2016-4A_421-2015&lang=de&type=show_document",
+        "locators": [
+          "Facts A, B, B.a",
+          "Considerations 4–4.3.2",
+          "Operative part 1"
+        ]
+      },
+      "documents": [
+        {
+          "id": "D01",
+          "role": "claim",
+          "party_label": "Tenant company",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D01-P01",
+              "locator": "Facts B–B.a; consideration 4.2"
+            },
+            {
+              "id": "D01-P02",
+              "locator": "Consideration 4.3.1"
+            },
+            {
+              "id": "D01-P03",
+              "locator": "Facts A; consideration 4.2, 4.3.2"
+            }
+          ]
+        },
+        {
+          "id": "D02",
+          "role": "response",
+          "party_label": "Landlord company",
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D02-P01",
+              "locator": "Facts A; consideration 4.1"
+            },
+            {
+              "id": "D02-P02",
+              "locator": "Consideration 4.1, 4.3.1–4.3.2"
+            },
+            {
+              "id": "D02-P03",
+              "locator": "Facts A; editorial separation of issues"
+            }
+          ]
+        },
+        {
+          "id": "D03",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D03-P01",
+              "locator": "Consideration 4.3.1"
+            },
+            {
+              "id": "D03-P02",
+              "locator": "Consideration 4.3.1; two original English quotations"
+            },
+            {
+              "id": "D03-P03",
+              "locator": "Consideration 4.3.1; exercise-file limitation"
+            },
+            {
+              "id": "D03-P04",
+              "locator": "Didactic boundary; no additional case fact"
+            }
+          ]
+        },
+        {
+          "id": "D04",
+          "role": "exhibit",
+          "party_label": null,
+          "classification": "reconstructed_exercise_document",
+          "paragraphs": [
+            {
+              "id": "D04-P01",
+              "locator": "Facts A"
+            },
+            {
+              "id": "D04-P02",
+              "locator": "Facts A; consideration 4; editorial distinction"
+            },
+            {
+              "id": "D04-P03",
+              "locator": "Facts A"
+            },
+            {
+              "id": "D04-P04",
+              "locator": "Facts B"
+            }
+          ]
+        }
+      ],
+      "checked_date": "2026-10-10",
+      "verification": "Official full text read through primary-source browser results and HTTP before authoring. A subsequent HTML archival attempt was blocked; no full-source archive hash is claimed."
+    }
+  ],
+  "editorial_changes": [
+    "New concise party-position texts, document titles, paragraph IDs and ordering are didactic reconstructions, not original pleadings.",
+    "Names remain generic party labels. No addresses, signatures, logos, personal birth dates or medical details were added.",
+    "Exhibits are narrative extracts of the judgment account, not fabricated bank records, signed contracts or email screenshots.",
+    "The EN case is an unofficial English reconstruction of a German judgment. Only the two marked short phrases in D03-P02 reproduce original English wording quoted by the judgment.",
+    "Scope is deliberately narrower than the full cases: DE rent reduction; FR villa funding; IT first repayment instalment; EN authority. Procedural side disputes are omitted and the omission is not a claim that they did not occur.",
+    "FR: facts B.a and consideration5/5.4.2 give total transfers of2,222,000FF; consideration5.4.1 once says2,000,000FF. The input follows B.a and separately identifies purchase price; no silent correction of the official source."
+  ]
+}

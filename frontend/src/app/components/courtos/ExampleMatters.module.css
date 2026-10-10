@@ -1,0 +1,11 @@
+.container { margin: 1.5rem 0; padding: 1rem 0; border-block: 1px solid var(--border); }
+.container summary { cursor: pointer; font-weight: 550; }
+.container p { margin: .8rem 0; max-width: 68ch; }
+.container h3 { margin: 1.25rem 0 .5rem; font-weight: 550; }
+.container ol { list-style: none; padding: 0; display: grid; gap: .65rem; margin: 1rem 0; }
+.container a { overflow-wrap: anywhere; }
+.language { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 1rem 0; }
+.language select { width: auto; min-width: 10rem; }
+.locators { color: var(--muted-foreground); }
+.references { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; margin-top: 1.4rem; }
+.references small { flex-basis: 100%; color: var(--muted-foreground); }

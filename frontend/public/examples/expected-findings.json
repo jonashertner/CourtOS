@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "purpose": "Independent human evaluation key. Do not upload with exercise documents or include in the model prompt.",
+  "evaluation": {
+    "literal_citation": "Every quoted assertion must match the named input PDF paragraph and actual page. Official judgment locators supplement, but never replace, citations to the uploaded exercise file.",
+    "semantic_limits": "A party submission proves that the party makes an assertion, not that it is true. Reconstructed exhibits preserve what the judgment reports, but are not original evidence. These exercises do not measure fidelity to an unavailable full court file.",
+    "legal_limits": "None of the four input packs contains an authority document. The legal-review workflow must disclose that it has not checked external law automatically. A substantive legal assessment requires a deliberate review of the original judgment or another identified public authority.",
+    "scoring": "Assess each listed finding as present, absent or contradicted. Separately record wrong actors, amounts, dates, invented evidence, unsupported legal certainty and exact citation failures. Do not combine these into a spurious universal accuracy percentage."
+  },
+  "cases": [
+    {
+      "id": "DE-01",
+      "language": "de",
+      "factual_findings": [
+        {"finding":"CHF 3’500 ursprünglicher Nettomietzins, CHF 3’393 gewährte Reduktion und CHF 3’215 begehrte Reduktion sind unterschiedliche Grössen.","input_refs":["D01-P01","D02-P01","D03-P01","D04-P03"],"judgment":"A.a, B.b–B.d"},
+        {"finding":"Das Begehren von 2017 wurde wegen der Indexklausel abgelehnt; daraus folgt keine damals tatsächlich gewährte Mietzinsänderung.","input_refs":["D02-P02","D04-P01"],"judgment":"A.b"},
+        {"finding":"Das Schreiben vom 4. März 2020, das Ende der Indexdauer und der verlangte Wirkungstermin sind getrennt zu behandeln. Eine Zustellung bis Dezember 2019 ist nicht belegt.","input_refs":["D01-P02","D03-P01","D04-P02","D04-P04"],"judgment":"A.a–A.b, E.2, E.3.6"}
+      ],
+      "chronology": [
+        {"date":"2015-02-06","event":"Mietvertrag geschlossen","refs":["D03-P01"]},
+        {"date":"2015-04-01","event":"Mietbeginn","refs":["D03-P01"]},
+        {"date":"2017-06-02","event":"Erstes Herabsetzungsbegehren","refs":["D04-P01"]},
+        {"date":"2019-09-13","event":"Nachtrag zur Kündigungsregelung","refs":["D03-P02"]},
+        {"date":"2020-03-04","event":"Neues Herabsetzungsbegehren","refs":["D04-P02"]},
+        {"date":"2020-03-31","event":"Ende der Indexdauer, kein nachgewiesenes Enddatum des Mietverhältnisses","refs":["D03-P01"]},
+        {"date":"2020-04-17","event":"Antrag an die Schlichtungsstelle","refs":["D04-P02"]},
+        {"date":"2020-07-01","event":"Wirkungsbeginn der gewährten Mietzinsreduktion; Erklärung selbst nicht genau datiert","refs":["D04-P03"]}
+      ],
+      "legal_check": "E.3.5–3.6: Anpassungen wegen während der Indexdauer eingetretener Änderungen müssen fristgerecht auf deren Ende verlangt werden. Im konkreten Fall massgebend: Dezember 2019 mit 1,5 Prozent, später 1,25 Prozent; keine zusätzliche Senkung auf CHF 3’215. BGer heisst Vermieterinnenbeschwerde gut. Nicht pauschal behaupten, alle späteren Mietzinssenkungen seien ausgeschlossen.",
+      "must_not_invent": ["Datum oder Zugang der Ablehnung von 2017", "genaues Erklärungsdatum der Reduktion auf CHF 3’393", "Mietzahlung oder Kündigung des Mietverhältnisses"]
+    },
+    {
+      "id": "FR-01",
+      "language": "fr",
+      "factual_findings": [
+        {"finding":"La remise des fonds pour l’acquisition est établie dans le récit judiciaire; l’obligation de remboursement reste l’objet du désaccord.","input_refs":["D01-P01","D02-P01","D02-P02","D03-P01"],"judgment":"B.a, consid.5"},
+        {"finding":"Une participation aux rénovations ne prouve pas le montant allégué de 509’285 FF.","input_refs":["D01-P03","D02-P04"],"judgment":"B.a, consid.4"},
+        {"finding":"Le classement pénal ne certifie ni l’authenticité ni la falsification de la convention; sa date de 1997 et son apparition en 2012 sont distinctes.","input_refs":["D02-P03","D04-P01","D04-P02"],"judgment":"C, consid.5.3.1"},
+        {"finding":"Ne pas répartir arbitrairement les 2’222’000 FF entre les deux transferts. Ne pas confondre ce total avec le prix d’achat de 2’000’000 FF.","input_refs":["D03-P01","D03-P02"],"judgment":"B.a"}
+      ],
+      "chronology": [
+        {"date":"1997-06-25","event":"Premier transfert rapporté; montant individuel non ventilé","refs":["D03-P01"]},
+        {"date":"1997-08-25","event":"Second transfert rapporté; montant individuel non ventilé","refs":["D03-P01"]},
+        {"date":"1997-09-02","event":"Acquisition de la villa","refs":["D03-P02"]},
+        {"date":"1997-09-30","event":"Date portée sur la convention contestée, et non authenticité ou signature prouvée","refs":["D04-P01"]},
+        {"date":"1999-01-15","event":"Installation commune","refs":["D03-P03"]},
+        {"date":"1999-02-01","event":"Retraite anticipée","refs":["D03-P03"]},
+        {"date":"2002-06-12","event":"Revente de la villa","refs":["D03-P02"]},
+        {"date":"2003-07-31","event":"Première demande de restitution mentionnée","refs":["D04-P03"]},
+        {"date":"2005-01-28","event":"Demande de 2’650’000 FF","refs":["D04-P03"]},
+        {"date":"2005-07-26","event":"Nouvelle demande de 2’650’000 FF","refs":["D04-P03"]},
+        {"date":null,"original":"2012","event":"Apparition de la convention dans la procédure; ne pas inventer de jour","refs":["D04-P01"]}
+      ],
+      "legal_check":"Consid.5.1–5.4: la remise d’argent ne suffit pas à prouver un prêt. Examiner d’abord la volonté subjective, puis l’interprétation objective. Le Tribunal fédéral estime que la bénéficiaire pouvait comprendre de bonne foi qu’il s’agissait d’une donation compensant sa perte de prévoyance; recours rejeté. Ce résultat ne découle pas d’une présomption générale de donation.",
+      "source_discrepancy":"B.a et consid.5/5.4.2 indiquent 2’222’000 FF; consid.5.4.1 mentionne une fois 2’000’000 FF comme somme transférée. L’exercice utilise le total de B.a et distingue le prix d’achat. Le registre signale cette divergence sans corriger le jugement.",
+      "must_not_invent":["montant de chaque transfert", "authenticité ou faux définitivement établi", "fortune globale du demandeur", "contenu non publié de l’expertise"]
+    },
+    {
+      "id":"IT-01",
+      "language":"it",
+      "factual_findings":[
+        {"finding":"Ricezione del denaro e obbligo di restituire CHF 435’000 non sono contestati; è controversa l’esigibilità.","input_refs":["D02-P01"],"judgment":"consid.3.2–3.3"},
+        {"finding":"Il testo riportato contiene rate precise e una clausola sull’eventuale proroga dell’ultima scadenza; non riporta una proroga espressa di tutte le rate.","input_refs":["D02-P03","D03-P02","D03-P03"],"judgment":"A.a, consid.3.2–3.3"},
+        {"finding":"La tesi sulla revoca della postergazione è una posizione giuridica della debitrice; il fascicolo non contiene un bilancio o una revoca che ne provi i presupposti.","input_refs":["D02-P02","D04-P04"],"judgment":"consid.3.2–3.3; delimitazione del fascicolo"},
+        {"finding":"Gli ulteriori CHF 180’000 e le rate successive sono distinti dalla prima rata oggetto dell’esercizio.","input_refs":["D03-P02","D04-P03","D04-P04"],"judgment":"A.b, consid.1.1,3"}
+      ],
+      "chronology":[
+        {"date":"2015-12-16","event":"Primo contratto descritto","refs":["D04-P01"]},
+        {"date":"2019-02-01","event":"Prestito originariamente accordato all’altra società","refs":["D04-P02"]},
+        {"date":"2019-10-07","event":"Novazione","refs":["D04-P02"]},
+        {"date":"2019-10-14","event":"Nuovo accordo per CHF 2’415’000","refs":["D03-P01"]},
+        {"date":"2019-12-31","event":"Scadenza scritta della prima rata; esigibilità contestata","refs":["D03-P02","D02-P01"]},
+        {"date":"2020-01-08","event":"Avvio dell’esecuzione; nessuna data di notifica inventata","refs":["D04-P03"]}
+      ],
+      "legal_check":"Consid.2.1.1–2.2.2 e3.3: il rigetto provvisorio riguarda il titolo esecutivo, non un accertamento definitivo del credito. L’interpretazione oggettiva è limitata agli elementi intrinseci del titolo. Nel caso la prima rata risulta esigibile e il ricorso è respinto. Non concludere che ogni prestito postergato sia sempre immediatamente rimborsabile.",
+      "must_not_invent":["insolvenza o solvibilità provata", "revoca della postergazione", "pagamenti intermedi fra i precedenti prestiti", "decisione definitiva sul merito del credito"]
+    },
+    {
+      "id":"EN-01",
+      "language":"en",
+      "factual_findings":[
+        {"finding":"The employee made the director-name signature. The real dispute is authority, not whether the director personally signed.","input_refs":["D01-P01","D04-P02"],"judgment":"consideration4"},
+        {"finding":"The email supports an authorisation. The later alleged telephone withdrawal remains a distinct assertion with no corroborating call evidence in this exercise.","input_refs":["D01-P02","D03-P01","D03-P02","D03-P03"],"judgment":"consideration4.3.1"},
+        {"finding":"The cancellation request and dismissal on29November postdate the13November authorisation and20November covering letter. They are not evidence of a telephone withdrawal on13November.","input_refs":["D03-P01","D03-P02","D04-P02","D04-P03"],"judgment":"FactsA, consideration4.3.1"},
+        {"finding":"CHF10,000 provisionally enforced is distinct from the CHF20,000 claim; the remaining half was not due at the relevant enforcement point.","input_refs":["D01-P01","D04-P04"],"judgment":"FactsB"}
+      ],
+      "chronology":[
+        {"date":"2013-10-23","event":"Winter lease negotiations","refs":["D04-P01"]},
+        {"date":"2013-11-13","event":"12:00 request;12:19 permission;13:20 reassurance. Retain order and distinguish alleged later call from documented messages.","refs":["D03-P01","D03-P02","D03-P03"]},
+        {"date":"2013-11-20","event":"Date of covering letter, not independently established exact signing time","refs":["D04-P02"]},
+        {"date":"2013-11-29","event":"Cancellation request and employee dismissal","refs":["D04-P03"]},
+        {"date":"2013-12-13","event":"Invoice and exchange about cancellation/signature","refs":["D04-P03"]},
+        {"date":"2013-12-15","event":"Contractual beginning of winter lease","refs":["D04-P01"]},
+        {"date":"2014-02-28","event":"Provisional enforcement ruling for CHF10,000","refs":["D04-P04"]},
+        {"date":"2014-03-15","event":"Contractual end of winter lease","refs":["D04-P01"]}
+      ],
+      "legal_check":"Considerations4.3.1–4.3.2: Article32CO requires authority and acting for the represented person. Signing under another’s name can satisfy representation in the stated circumstances. The court found no demonstrated arbitrariness in the authority finding and rejected the appeal. Do not generalise that forging another’s signature is always valid, or treat the German judgment as an official English ruling.",
+      "must_not_invent":["telephone call transcript or timing", "original email headers", "director’s own wet signature", "legal effectiveness of every cancellation request", "actual possession or payment of rent"]
+    }
+  ]
+}

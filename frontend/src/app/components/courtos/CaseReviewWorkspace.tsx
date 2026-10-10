@@ -14,9 +14,11 @@ import { searchLibraryDocuments } from "@/app/lib/mikeApi";
 import type { Document } from "@/app/components/shared/types";
 import { LocalSource } from "./KnowledgeWorkspace";
 import { ProcessingLocation } from "./ProcessingLocation";
+import { ExampleMatters } from "./ExampleMatters";
 
 const roles: CaseReviewRole[] = ["claim", "response", "exhibit", "authority", "other"];
 const kinds: CaseReviewKind[] = ["facts", "legal", "chronology"];
+const guideLabel: CourtOSText = {de:"Anleitung",fr:"Guide",it:"Guida",en:"Guide"};
 const errorMessages: Record<CaseReviewError["code"], CourtOSText> = { unavailable: R.errorGeneric, source: R.errorSource, input: R.errorInput, quota: R.errorQuota, conflict: R.errorConflict, session: R.errorSession, grounding: R.errorGrounding, context: R.errorContext, missing: R.errorSource };
 const errorMessage = (error: unknown) => error instanceof CaseReviewError ? errorMessages[error.code] : R.errorGeneric;
 const originalPdf = (doc: Document) => doc.status === "ready" && !!doc.current_version_id && (/\.pdf$/i.test(doc.filename) || ["pdf", "application/pdf"].includes(doc.file_type?.toLowerCase() ?? ""));
@@ -41,6 +43,7 @@ function CaseReviewContent({ owner }: { owner: string }) {
     const [record, setRecord] = useState<CaseReviewRecord | null>(null);
     const [jobId, setJobId] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const [importingExample, setImportingExample] = useState(false);
     const [error, setError] = useState<CourtOSText | null>(null);
     const [pollError, setPollError] = useState<CourtOSText | null>(null);
     const [pollRetry, setPollRetry] = useState(0);
@@ -49,7 +52,7 @@ function CaseReviewContent({ owner }: { owner: string }) {
     const pendingInput = useRef<CaseReviewInput | null>(null);
     const submitting = useRef(false);
     const active = isReviewActive(record);
-    const locked = busy || active || !!pendingInput.current || !!jobId;
+    const locked = busy || importingExample || active || !!pendingInput.current || !!jobId;
 
     useEffect(() => { setJobId(savedCaseReview(owner)); }, [owner]);
     useEffect(() => {
@@ -104,17 +107,18 @@ function CaseReviewContent({ owner }: { owner: string }) {
     }
     const report = record?.status === "completed" ? record.report : null;
     return <div className="courtos-research-page courtos-review-page">
-        <header className="courtos-review-heading"><h1>{t(R.title)}</h1><p>{t(R.intro)}</p></header>
+        <header className="courtos-review-heading"><div className="courtos-review-section-heading"><h1>{t(R.title)}</h1><a className="courtos-link" href={`/guide/${locale}.html#work`} target="_blank" rel="noopener noreferrer">{t(guideLabel)}</a></div><p>{t(R.intro)}</p></header>
         {!record && <>
             <section className="courtos-review-selection" aria-labelledby="review-source-title">
                 <div className="courtos-review-section-heading"><h2 id="review-source-title">{t(R.select)}</h2><Link className="courtos-link" href={inWord ? "/library?host=word" : "/library"}>{t(M.addDocuments)}</Link></div>
                 <p className="courtos-review-help">{t(R.limits)}</p>
+                <ExampleMatters disabled={locked || chosen.length > 0} inWord={inWord} onImportingChange={setImportingExample} onImported={(sources, sourceLanguage) => {setChosen(sources);setLanguage(sourceLanguage);setRefresh(value=>value+1);}} />
                 {chosen.length > 0 && <ol className="courtos-review-assignments">{chosen.map((item, index) => <li key={item.document.id}>
                     <div><strong>{item.document.filename}</strong><p>{t(M.version, {number: item.document.active_version_number ?? t(M.unnumbered)})}</p></div>
                     <label>{t(R.role)}<select className="courtos-field" value={item.role} disabled={locked} onChange={event => setChosen(previous => previous.map((value, i) => i === index ? {...value, role: event.target.value as CaseReviewRole} : value))}>{roles.map(role => <option key={role} value={role}>{t(R[role])}</option>)}</select></label>
                     <label>{t(R.party)}<input className="courtos-field" value={item.party} maxLength={80} placeholder={t(R.partyHint)} disabled={locked} onChange={event => setChosen(previous => previous.map((value, i) => i === index ? {...value, party: event.target.value} : value))} /></label>
                 </li>)}</ol>}
-                <details open={!chosen.length} className="courtos-review-inventory"><summary>{t(M.selectSources)} · {chosen.length}/5</summary>
+                <details open className="courtos-review-inventory"><summary>{t(M.selectSources)} · {chosen.length}/5</summary>
                     {loading ? <p role="status">{t(M.loadingLibrary)}</p> : listError ? <p role="alert">{t(M.libraryFailed)}</p> : <>
                         {!documents.length && <p>{t(M.noDocuments)}</p>}
                         <ul>{documents.map(doc => { const selected = chosen.some(item => item.document.id === doc.id); const eligible = originalPdf(doc); return <li key={doc.id}><label><input type="checkbox" checked={selected} disabled={locked || !eligible || (!selected && chosen.length >= 5)} onChange={() => select(doc)} /><span>{doc.filename}{!eligible && <small>{t(R.notPdf)}</small>}</span></label></li>; })}</ul>

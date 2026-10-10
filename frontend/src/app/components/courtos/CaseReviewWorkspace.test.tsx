@@ -5,10 +5,11 @@ import { CaseReviewWorkspace } from "./CaseReviewWorkspace";
 import { CourtOSLocaleProvider } from "@/app/contexts/CourtOSLocaleContext";
 import { setCourtOSLocale } from "@/app/lib/courtosLocale";
 import { CaseReviewError } from "@/app/lib/caseReviewApi";
-const api=vi.hoisted(()=>({list:vi.fn(),start:vi.fn(),get:vi.fn(),stop:vi.fn(),owner:"owner"}));
+const api=vi.hoisted(()=>({list:vi.fn(),start:vi.fn(),get:vi.fn(),stop:vi.fn(),importExample:vi.fn(),owner:"owner"}));
 vi.mock("@/app/contexts/AuthContext",()=>({useAuth:()=>({user:{id:api.owner}})}));
 vi.mock("next/navigation",()=>({useSearchParams:()=>new URLSearchParams()}));
 vi.mock("@/app/lib/mikeApi",()=>({searchLibraryDocuments:api.list}));
+vi.mock("@/app/lib/importExampleMatter",async original=>({...await original<typeof import("@/app/lib/importExampleMatter")>(),importExampleMatter:api.importExample}));
 vi.mock("@/app/lib/caseReviewApi",async original=>({...await original<typeof import("@/app/lib/caseReviewApi")>(),startCaseReview:api.start,getCaseReview:api.get,stopCaseReview:api.stop}));
 vi.mock("./KnowledgeWorkspace",()=>({LocalSource:({result}:{result:{quote:string;version_id:string;page:number}})=><div data-testid="original-source" data-version={result.version_id} data-page={result.page}>{result.quote}</div>}));
 const doc={id:"22222222-2222-4222-8222-222222222222",current_version_id:"33333333-3333-4333-8333-333333333333",active_version_number:2,filename:"Eingabe.pdf",file_type:"pdf",status:"ready"};
@@ -16,10 +17,23 @@ const pending=(input:CaseReviewInput):CaseReviewRecord=>({id:input.request_id,in
 const renderApp=()=>render(<CourtOSLocaleProvider ownerId={api.owner}><CaseReviewWorkspace/></CourtOSLocaleProvider>);
 beforeEach(()=>{vi.clearAllMocks();sessionStorage.clear();localStorage.clear();api.owner="owner";setCourtOSLocale("owner","de");api.list.mockResolvedValue({documents:[doc,{...doc,id:"other",filename:"Antwort.docx",file_type:"docx"}],documentsHasMore:false});api.start.mockImplementation(async input=>pending(input));api.get.mockImplementation(async()=>new Promise(()=>{}));});
 describe("submission review work flow",()=>{
+    it("imports an optional matter into an empty selection, preserves ready versions and never starts analysis automatically",async()=>{
+        let resolve!:(value:unknown)=>void;api.importExample.mockReturnValue(new Promise(r=>{resolve=r;}));
+        const sources=(["claim","response","exhibit","exhibit"] as const).map((role,index)=>({document:{...doc,id:`example-${index}`,current_version_id:`version-${index}`,filename:`Example${index}.pdf`},role,party:index===0?"Creditore":index===1?"Debitrice":""}));
+        renderApp();await screen.findByRole("checkbox",{name:/Eingabe.pdf/});fireEvent.click(screen.getByText("Beispieldossiers"));
+        fireEvent.change(screen.getByLabelText("Dossiersprache"),{target:{value:"IT-01"}});fireEvent.click(screen.getByRole("button",{name:"Vier PDFs übernehmen"}));
+        expect(screen.getByRole("checkbox",{name:/Eingabe.pdf/})).toBeDisabled();
+        await act(async()=>resolve(sources));
+        expect(screen.getAllByLabelText("Dokumentrolle").map(element=>(element as HTMLSelectElement).value)).toEqual(["claim","response","exhibit","exhibit"]);
+        expect(screen.getByLabelText("Sprache des Entwurfs")).toHaveValue("it");expect(api.start).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByRole("button",{name:"Teilanalyse starten"}));await screen.findByText("Entwurf wird erstellt");
+        expect(api.start.mock.calls[0][0].sources.map((source:{version_id:string})=>source.version_id)).toEqual(["version-0","version-1","version-2","version-3"]);
+    });
     it("requires explicit original-PDF selection and sends roles, party label and exact version only on start",async()=>{
         renderApp();expect(api.start).not.toHaveBeenCalled();expect(screen.getByRole("button",{name:"Teilanalyse starten"})).toBeDisabled();
         expect(await screen.findByRole("checkbox",{name:/Antwort.docx/})).toBeDisabled();
         fireEvent.click(screen.getByRole("checkbox",{name:/Eingabe.pdf/}));
+        expect(screen.getByRole("checkbox",{name:/Eingabe.pdf/}).closest("details")).toHaveAttribute("open");
         fireEvent.change(screen.getByLabelText("Dokumentrolle"),{target:{value:"claim"}});
         fireEvent.change(screen.getByLabelText("Partei / Urheber"),{target:{value:"Partei A"}});
         fireEvent.click(screen.getByRole("button",{name:"Teilanalyse starten"}));
@@ -43,9 +57,11 @@ describe("submission review work flow",()=>{
     });
     it("renders an English task and keeps the explicitly chosen report language when interface language changes",async()=>{
         setCourtOSLocale("owner","en");renderApp();await screen.findByRole("heading",{name:"Review submissions"});
+        expect(screen.getByRole("link",{name:"Guide"})).toHaveAttribute("href","/guide/en.html#work");
         fireEvent.change(screen.getByLabelText("Draft language"),{target:{value:"fr"}});
         await act(async()=>{setCourtOSLocale("owner","it");});
         expect(screen.getByRole("heading",{name:"Esaminare gli atti"})).toBeVisible();expect(screen.getByLabelText("Lingua della bozza")).toHaveValue("fr");expect(api.start).not.toHaveBeenCalled();
+        expect(screen.getByRole("link",{name:"Guida"})).toHaveAttribute("href","/guide/it.html#work");
     });
     it("keeps an uncertain request after a retry loses authentication, until GET can resolve it",async()=>{
         api.start.mockRejectedValueOnce(new Error("network")).mockRejectedValueOnce(new CaseReviewError("session",true));
