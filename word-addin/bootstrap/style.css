@@ -10,3 +10,5 @@ a { display: inline-block; min-height: 44px; padding: 12px 0; margin-top: 12px; 
 :focus-visible { outline: 2px solid #181818; outline-offset: 4px; }
 .note { color: #626262; font-size: 12px; line-height: 18px; margin-top: 32px; }
 [hidden] { display: none !important; }
+.language { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 24px; font-size: 13px; }
+.language select { min-height: 40px; padding: 6px 8px; border: 1px solid #d4d4d4; border-radius: 0; background: #fff; color: inherit; font: inherit; }

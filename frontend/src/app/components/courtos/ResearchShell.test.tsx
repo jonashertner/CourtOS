@@ -27,7 +27,8 @@ describe("compact research window", () => {
         render(<ResearchShell><p>Source results</p></ResearchShell>);
         expect(screen.getByRole("link", { name: "Recherche" })).toHaveAttribute("aria-current", "page");
         expect(screen.getByRole("link", { name: "Bibliothek" })).toHaveAttribute("href", "/library");
-        expect(screen.getByRole("link", { name: /Quellcode/ })).toHaveAttribute("href", "https://github.com/jonashertner/CourtOS");
+        expect(screen.queryByRole("contentinfo")).toBeNull();
+        expect(screen.getByRole("link", {name:"Eingaben prüfen"})).toHaveAttribute("href", "/review");
         const citecheck = screen.getByRole("link", { name: "Zitate prüfen" });
         expect(citecheck).toHaveAttribute("href", "https://jonashertner.github.io/citecheck/taskpane.html?lang=de");
         expect(citecheck).toHaveAttribute("target", "_blank");
@@ -35,6 +36,8 @@ describe("compact research window", () => {
         expect(screen.getByText(state.email)).not.toBeVisible();
         fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
         expect(screen.getByText(state.email)).toBeVisible();
+        fireEvent.click(screen.getByText("Hilfe und Quellcode"));
+        expect(screen.getByRole("link", { name: /GitHub · Quellcode/ })).toHaveAttribute("href", "https://github.com/jonashertner/CourtOS");
         expect(screen.getByRole("main")).toHaveTextContent("Source results");
         expect(screen.queryByRole("link", { name: /Projekte|Arbeitsabläufe|Assistent/ })).toBeNull();
         expect(screen.queryByRole("link", { name: "Im Browser fortsetzen" })).toBeNull();

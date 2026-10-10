@@ -1,4 +1,7 @@
 "use client";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
+
 
 import { useRef, useState } from "react";
 import {
@@ -118,6 +121,7 @@ export function DocVersionHistory({
     ) => Promise<void> | void;
     onExtensionChangeBlocked?: (filename: string) => void;
 }) {
+    const t = useLibraryText();
     const [editingVersionId, setEditingVersionId] = useState<string | null>(
         null,
     );
@@ -194,7 +198,7 @@ export function DocVersionHistory({
                     className={`sticky left-0 z-[60] ${DOC_NAME_COL_W} bg-gray-50/80 py-2 pl-3 pr-2`}
                     style={treeNameCellStyle(depth)}
                 >
-                    <div>No version history.</div>
+                    <div>{t(L.noVersions)}</div>
                 </div>
             </div>
         );
@@ -361,7 +365,7 @@ export function DocVersionHistory({
                                               }
                                             : undefined
                                     }
-                                    renameLabel="Rename version"
+                                    renameLabel={t(L.renameVersion)}
                                     onDownload={() =>
                                         onDownloadVersion(
                                             docId,

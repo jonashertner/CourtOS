@@ -1,5 +1,9 @@
 "use client";
 
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import type { CourtOSText } from "@/app/lib/courtosLocale";
+import { researchMessages as M } from "@/app/lib/researchMessages";
+
 import type { ResearchHandoffState, ResearchHandoffPublicSource } from "@mike/contracts";
 import { emptyResearchState, useResearchHandoff } from "./ResearchHandoffContext";
 import { ResearchContinuation, ResearchContinuationStatus } from "./ResearchHandoffControls";
@@ -21,16 +25,20 @@ import { getWordResearchDocumentScope, type WordResearchHost, type WordSourceCit
 import { BookOpen, Copy, ExternalLink, Search, X } from "lucide-react";
 import { searchLibraryDocuments } from "@/app/lib/mikeApi";
 import { panelDocumentFromCitation, type Document, type DocumentCitation } from "@/app/components/shared/types";
-import { getPublicDecision, publicSourceUrl, searchKnowledge, searchPublicKnowledge, type KnowledgeResult, type KnowledgeSearch, type PublicDecision, type PublicDecisionDetail, type PublicSearch } from "@/app/lib/knowledgeApi";
+import { KnowledgeApiError, getPublicDecision, publicSourceUrl, searchKnowledge, searchPublicKnowledge, type KnowledgeResult, type KnowledgeSearch, type PublicDecision, type PublicDecisionDetail, type PublicSearch } from "@/app/lib/knowledgeApi";
 
-const DocumentContent = dynamic(() => import("@/app/components/shared/DocumentContent").then((module) => module.DocumentContent), { ssr: false, loading: () => <p role="status" className="p-6">Dokument wird geöffnet…</p> });
+function DocumentLoading() { const { t } = useCourtOSLocale(); return <p role="status" className="p-6">{t(M.loadingDocument)}</p>; }
+const DocumentContent = dynamic(() => import("@/app/components/shared/DocumentContent").then((module) => module.DocumentContent), { ssr: false, loading: DocumentLoading });
 const button = "courtos-button";
 const secondary = "courtos-button courtos-button--secondary";
 const field = "courtos-field";
 const link = "courtos-link";
-const errorText = (error: unknown) => error instanceof Error ? error.message : "Das Laden ist fehlgeschlagen. Bitte versuchen Sie es erneut.";
+const apiErrors: Record<string, CourtOSText> = { timeout: M.errorTimeout, busy: M.errorBusy, query: M.errorQuery, session: M.errorSession, changed: M.errorChanged, source: M.errorSource, capacity: M.errorCapacity, input: M.errorInput, unavailable: M.errorUnavailable };
+const errorText = (error: unknown) => error instanceof KnowledgeApiError ? apiErrors[error.code] ?? M.errorUnavailable : M.errorUnavailable;
+const analysisMessages: CourtOSText[] = [M.analysisEmpty, M.analysisMany, M.analysisPending, M.analysisFormat];
 
 function CopySource({ text, label, wordHost, wordCitation }: { text: string; label: string; wordHost?: WordResearchHost | null; wordCitation: WordSourceCitation }) {
+    const { t } = useCourtOSLocale();
     const [insertStatus, setInsertStatus] = useState<"idle" | "inserting" | "inserted" | "error">("idle");
     const [status, setStatus] = useState<"idle" | "copied" | "manual">("idle");
     useEffect(() => { setStatus("idle"); setInsertStatus("idle"); }, [text]);
@@ -43,68 +51,74 @@ function CopySource({ text, label, wordHost, wordCitation }: { text: string; lab
             setInsertStatus("inserting");
             try { await wordHost.insertCitationAfterSelection(wordCitation); setInsertStatus("inserted"); }
             catch { setInsertStatus("error"); }
-        }}>In Word einfügen</button>{insertStatus === "inserted" && <p role="status" className="mt-2 text-xs">In Word eingefügt.</p>}{insertStatus === "error" && <p role="alert" className="mt-2 text-xs">Einfügen nicht bestätigt. Prüfen Sie zuerst das Word-Dokument; der Text könnte bereits eingefügt sein.</p>}</>}
-        {status === "copied" && <p role="status" className="mt-2 text-xs text-muted-foreground">Kopiert. In Ihrem Dokument einfügen.</p>}
-        {status === "manual" && <div className="mt-3"><p role="status" className="text-xs text-muted-foreground">Die Zwischenablage ist nicht verfügbar. Text hier markieren und kopieren.</p><textarea aria-label="Text zum manuellen Kopieren" readOnly rows={6} className={field} value={text} onFocus={(event) => event.currentTarget.select()} /></div>}
+        }}>{t(M.insertWord)}</button>{insertStatus === "inserted" && <p role="status" className="mt-2 text-xs">{t(M.insertedWord)}</p>}{insertStatus === "error" && <p role="alert" className="mt-2 text-xs">{t(M.insertUncertain)}</p>}</>}
+        {status === "copied" && <p role="status" className="mt-2 text-xs text-muted-foreground">{t(M.copied)}</p>}
+        {status === "manual" && <div className="mt-3"><p role="status" className="text-xs text-muted-foreground">{t(M.manualCopy)}</p><textarea aria-label={t(M.copyText)} readOnly rows={6} className={field} value={text} onFocus={(event) => event.currentTarget.select()} /></div>}
     </div>;
 }
 
-function libraryExcerpt(hit: KnowledgeResult) {
+type Translate = ReturnType<typeof useCourtOSLocale>["t"];
+function libraryExcerpt(hit: KnowledgeResult, t: Translate) {
     const url = typeof window !== "undefined" ? librarySourceUrl(window.location.origin, hit.document_id, hit.version_id, hit.page) : null;
-    return `${hit.quote}\n\nQuelle: ${hit.filename}, Version ${hit.version_number ?? "nicht nummeriert"}, PDF-Seite ${hit.page}.${url ? `\nQuelle öffnen (Anmeldung erforderlich): ${url}` : ""}\nAuszug aus dem erfassten Dokumenttext; Zitat an der Quelle prüfen.`;
+    return `${hit.quote}\n\n${t(M.sourceLabel)}: ${hit.filename}, ${t(M.privatePinpoint,{version:hit.version_number??t(M.unnumbered),page:hit.page})}.${url ? `\n${t(M.privateSourceLink,{url})}` : ""}\n${t(M.privateSourceNote)}`;
 }
 
-function libraryWordCitation(hit: KnowledgeResult): WordSourceCitation {
+function libraryWordCitation(hit: KnowledgeResult, t: Translate): WordSourceCitation {
     return {
         quote: hit.quote, source: hit.filename,
-        pinpoint: `Version ${hit.version_number ?? "nicht nummeriert"}, PDF-Seite ${hit.page}`,
+        pinpoint: t(M.privatePinpoint,{version:hit.version_number??t(M.unnumbered),page:hit.page}),
+        sourceLabel: t(M.sourceLabel),
         sourceUrl: typeof window !== "undefined" ? librarySourceUrl(window.location.origin, hit.document_id, hit.version_id, hit.page) : null,
-        notes: ["Quelle öffnen: Anmeldung erforderlich. Auszug aus dem erfassten Dokumenttext; Zitat an der Quelle prüfen."],
+        notes: [t(M.privateSourceNote)],
     };
 }
 
-function publicWordCitation(decision: PublicDecision, excerpt: SelectedSourcePassage, originalSearch: string | null): WordSourceCitation {
-    const date = decision.decision_date ? `${decision.decision_date}${decision.date_is_estimated ? " (Datum geschätzt)" : ""}` : null;
+function publicWordCitation(decision: PublicDecision, excerpt: SelectedSourcePassage, originalSearch: string | null, t: Translate): WordSourceCitation {
+    const date = decision.decision_date ? `${decision.decision_date}${decision.date_is_estimated ? ` (${t(M.copyEstimatedDate)})` : ""}` : null;
     const title = decisionTitle(decision);
     const titleParts = title.split(" · ");
     const metadata = [courtLabel(decision.court), decision.docket_number, date].filter(part => part && !titleParts.includes(part));
     return {
         quote: excerpt.text,
         source: [title, ...metadata].join(" · "),
-        pinpoint: `Zeichen ${excerpt.start}–${excerpt.end} von ${excerpt.total_chars} im erfassten Text; keine amtlichen Randnummern`,
+        pinpoint: t(M.publicPinpoint,{start:excerpt.start,end:excerpt.end,total:excerpt.total_chars}),
+        sourceLabel: t(M.sourceLabel), pinpointLinkLabel: t(M.searchPassage),
         sourceUrl: publicSourceUrl(decision.source_url) || publicSourceUrl(decision.pdf_url),
         pinpointUrl: originalSearch,
-        notes: [`OpenCaseLaw-ID: ${decision.decision_id}. Position im Original nicht geprüft; Wortlaut und Kontext an der Originalquelle prüfen.`, ...(decision.source_note ? [`Hinweis von OpenCaseLaw: ${decision.source_note}`] : [])],
+        notes: [`OpenCaseLaw-ID: ${decision.decision_id}. ${t(M.publicSourceNote)}`, ...(decision.source_note ? [t(M.publicSourceNotePrefix,{note:decision.source_note})] : [])],
     };
 }
 
-function publicReference(decision: PublicDecision) {
-    const date = decision.decision_date ? `${decision.decision_date}${decision.date_is_estimated ? " (Datum geschätzt)" : ""}` : null;
-    return [decisionTitle(decision), [courtLabel(decision.court), decision.docket_number, date].filter(Boolean).join(" · "), publicSourceUrl(decision.source_url) || publicSourceUrl(decision.pdf_url), `OpenCaseLaw-ID: ${decision.decision_id}`, decision.source_note ? `Hinweis von OpenCaseLaw: ${decision.source_note}` : null].filter(Boolean).join("\n");
+function publicReference(decision: PublicDecision, t: Translate) {
+    const date = decision.decision_date ? `${decision.decision_date}${decision.date_is_estimated ? ` (${t(M.copyEstimatedDate)})` : ""}` : null;
+    return [decisionTitle(decision), [courtLabel(decision.court), decision.docket_number, date].filter(Boolean).join(" · "), publicSourceUrl(decision.source_url) || publicSourceUrl(decision.pdf_url), `OpenCaseLaw-ID: ${decision.decision_id}`, decision.source_note ? t(M.publicSourceNotePrefix,{note:decision.source_note}) : null].filter(Boolean).join("\n");
 }
 
 function SourceDialog({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+    const { t } = useCourtOSLocale();
     const ref = useRef<HTMLDialogElement>(null);
     useEffect(() => { ref.current?.showModal(); }, []);
     return <dialog ref={ref} onCancel={onClose} onClose={onClose} aria-label={title} className="courtos-source-dialog">
         <div className="flex h-full min-h-0 flex-col">
-            <header className="courtos-source-dialog-header"><h2>{title}</h2><ResearchContinuation /><button className={secondary} onClick={onClose} aria-label="Quelle schliessen"><X size={18} aria-hidden="true" /></button></header>
+            <header className="courtos-source-dialog-header"><h2>{title}</h2><ResearchContinuation /><button className={secondary} onClick={onClose} aria-label={t(M.closeSource)}><X size={18} aria-hidden="true" /></button></header>
             <ResearchContinuationStatus />
             {children}
         </div>
     </dialog>;
 }
 
-function LocalSource({ result, onClose }: { result: KnowledgeResult; onClose: () => void }) {
+export function LocalSource({ result, onClose }: { result: KnowledgeResult; onClose: () => void }) {
+    const { t } = useCourtOSLocale();
     // This passage is a literal, page-local substring returned by the
     // version-bound server index, not a quotation generated by a model.
     const citation: DocumentCitation = { type: "citation_data", kind: "document", ref: 1, doc_id: result.document_id, document_id: result.document_id, version_id: result.version_id, version_number: result.version_number, filename: result.filename, page: result.page, quote: result.quote, verified: true, quotes: [{ page: result.page, quote: result.quote, verification: { verified: true } }] };
-    return <SourceDialog title={`${result.filename} · Seite ${result.page}`} onClose={onClose}>
+    return <SourceDialog title={`${result.filename} · ${t(M.page, {page: result.page})}`} onClose={onClose}>
         <div className="min-h-0 flex-1"><DocumentContent document={panelDocumentFromCitation(citation)} mode={{ kind: "citation", citation }} canEdit={false} /></div>
     </SourceDialog>;
 }
 
 function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?: WordResearchHost | null; inWord?: boolean; initialState: ResearchHandoffState["private"]; onState(state: ResearchHandoffState["private"]): void }) {
+    const { t } = useCourtOSLocale();
     const router = useRouter();
     const { user } = useAuth();
     const edited = useResearchHandoff()?.edited;
@@ -116,31 +130,32 @@ function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(false);
     const [loadingDocuments, setLoadingDocuments] = useState(true);
-    const [listError, setListError] = useState("");
+    const [listError, setListError] = useState<CourtOSText | null>(null);
     const [query, setQuery] = useState(initialState.query);
     const [searching, setSearching] = useState(false);
-    const [searchError, setSearchError] = useState("");
+    const [searchError, setSearchError] = useState<CourtOSText | null>(null);
     const [result, setResult] = useState<KnowledgeSearch | null>(initialState.result);
     const [submitted, setSubmitted] = useState(initialState.submitted);
     const [source, setSource] = useState<KnowledgeResult | null>(initialState.source);
     useEffect(() => {
         onState({ query, submitted, selected: selected.map(doc => ({ id: doc.id, filename: doc.filename, file_type: doc.file_type ?? null, active_version_id: doc.current_version_id ?? null, active_version_number: doc.active_version_number ?? null, size_bytes: doc.size_bytes ?? null })), result, source });
     }, [query, submitted, selected, result, source, onState]);
-    const analysisIssue = knowledgeAnalysisIssue(selected);
+    const analysisRaw = knowledgeAnalysisIssue(selected);
+    const analysisIssue = analysisMessages.find(message => message.de === analysisRaw) ?? null;
     const searchController = useRef<AbortController | null>(null);
     useEffect(() => {
         const controller = new AbortController();
-        setLoadingDocuments(true); setListError("");
+        setLoadingDocuments(true); setListError(null);
         searchLibraryDocuments("files", { search: filter, limit: 20, offset, sortKey: "name", sortDirection: "asc", signal: controller.signal })
             .then((data) => { if (!controller.signal.aborted) { setDocuments(data.documents); setHasMore(data.documentsHasMore); } })
-            .catch(() => { if (!controller.signal.aborted) setListError("Die Bibliothek konnte nicht geladen werden. Bitte versuchen Sie es erneut."); })
+            .catch(() => { if (!controller.signal.aborted) setListError(M.libraryFailed); })
             .finally(() => { if (!controller.signal.aborted) setLoadingDocuments(false); });
         return () => controller.abort();
     }, [filter, offset, refresh]);
     useEffect(() => () => searchController.current?.abort(), []);
     function changeSelection(doc: Document) {
         edited?.();
-        searchController.current?.abort(); setSearching(false); setResult(null); setSearchError("");
+        searchController.current?.abort(); setSearching(false); setResult(null); setSearchError(null);
         setSelected((previous) => previous.some((item) => item.id === doc.id) ? previous.filter((item) => item.id !== doc.id) : [...previous, doc]);
     }
     async function search(event: FormEvent) {
@@ -148,51 +163,51 @@ function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?
         if (!selected.length || !query.trim() || searching) return;
         edited?.();
         const controller = new AbortController(); searchController.current?.abort(); searchController.current = controller;
-        setSearching(true); setSearchError(""); setResult(null); setSubmitted(query.trim());
+        setSearching(true); setSearchError(null); setResult(null); setSubmitted(query.trim());
         try { const data = await searchKnowledge(query.trim(), selected.map((doc) => doc.id), controller.signal); if (!controller.signal.aborted) setResult(data); }
         catch (error) { if (!controller.signal.aborted) setSearchError(errorText(error)); }
         finally { if (!controller.signal.aborted) setSearching(false); }
     }
     return <section aria-labelledby="private-knowledge-title" className="courtos-private-workspace">
-        <h2 id="private-knowledge-title" className="courtos-research-section-title">Eigene Quellen</h2>
-        <ProcessingLocation service="library" className="mt-3">Textsuche ohne KI · Verarbeitung auf dem Server</ProcessingLocation>
-        <div className="mt-5 flex flex-wrap gap-5"><Link href={inWord ? "/library?host=word" : "/library"} target={inWord ? undefined : "_blank"} rel="noopener noreferrer" className={link}>Dokumente hinzufügen <ExternalLink size={14} aria-hidden="true" /></Link><button className={link} onClick={() => setRefresh((value) => value + 1)}>Bestand aktualisieren</button></div>
+        <h2 id="private-knowledge-title" className="sr-only">{t(M.ownSources)}</h2>
+        <ProcessingLocation service="library" className="mt-3">{t(M.localSearchLocation)}</ProcessingLocation>
+        <div className="mt-5 flex flex-wrap gap-5"><Link href={inWord ? "/library?host=word" : "/library"} target={inWord ? undefined : "_blank"} rel="noopener noreferrer" className={link}>{t(M.addDocuments)} <ExternalLink size={14} aria-hidden="true" /></Link><button className={link} onClick={() => setRefresh((value) => value + 1)}>{t(M.refreshLibrary)}</button></div>
         <div className="courtos-library-grid">
             <div className="courtos-source-list">
-                <h3 className="font-medium">Quellenauswahl</h3>
-                <form className="mt-3" onSubmit={(event) => { event.preventDefault(); setFilter(filename.trim()); setOffset(0); setRefresh((value) => value + 1); }}><label htmlFor="library-filter" className="text-sm">Dateiname</label><div className="flex items-end gap-2"><input id="library-filter" className={field} value={filename} maxLength={200} onChange={(event) => setFilename(event.target.value)} /><button className={secondary} aria-label="Dateinamen filtern"><Search size={17} aria-hidden="true" /></button></div></form>
-                <p className="mt-4 text-xs text-muted-foreground" role="status">{selected.length} von höchstens 20 Dokumenten ausgewählt</p>
-                {selected.length > 0 && <div className="mt-2 space-y-1" aria-label="Ausgewählte Dokumente">{selected.map((doc) => <button key={doc.id} className="flex w-full items-center justify-between gap-2 rounded-lg bg-app-surface-active px-2 py-2 text-left text-xs focus-visible:outline-2 focus-visible:outline-ring" onClick={() => changeSelection(doc)} aria-label={`${doc.filename} aus Auswahl entfernen`}><span className="break-all">{doc.filename}</span><X size={14} className="shrink-0" aria-hidden="true" /></button>)}</div>}
-                {loadingDocuments ? <p className="mt-5 text-sm" role="status">Bibliothek wird geladen…</p> : listError ? <p className="mt-5 text-sm" role="alert">{listError}</p> : <>
-                    {!documents.length && <p className="mt-5 text-sm leading-relaxed">{filter ? "Kein Dokument mit diesem Dateinamen gefunden." : "Noch keine Dokumente. Fügen Sie Ihre Quellen hinzu."}</p>}
-                    <ul className="mt-3 max-h-80 divide-y divide-border overflow-y-auto">{documents.map((doc) => { const checked = selected.some((item) => item.id === doc.id); return <li key={doc.id}><label className="flex min-h-12 cursor-pointer items-start gap-3 py-3 text-sm"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-foreground" checked={checked} disabled={!checked && selected.length >= 20} onChange={() => changeSelection(doc)} /><span className="min-w-0 break-all">{doc.filename}<span className="mt-1 block text-xs text-muted-foreground">{doc.active_version_number ? `Version ${doc.active_version_number}` : "Aktuelle Version"}</span></span></label></li>; })}</ul>
-                    <div className="mt-3 flex items-center justify-between gap-2"><button className={secondary} disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 20))}>Zurück</button><span className="text-xs">Seite {offset / 20 + 1}</span><button className={secondary} disabled={!hasMore} onClick={() => setOffset(offset + 20)}>Weiter</button></div>
+                <h3 className="font-medium">{t(M.selectSources)}</h3>
+                <form className="mt-3" onSubmit={(event) => { event.preventDefault(); setFilter(filename.trim()); setOffset(0); setRefresh((value) => value + 1); }}><label htmlFor="library-filter" className="text-sm">{t(M.filename)}</label><div className="flex items-end gap-2"><input id="library-filter" className={field} value={filename} maxLength={200} onChange={(event) => setFilename(event.target.value)} /><button className={secondary} aria-label={t(M.filterFilenames)}><Search size={17} aria-hidden="true" /></button></div></form>
+                <p className="mt-4 text-xs text-muted-foreground" role="status">{t(M.selectedCount, {count: selected.length})}</p>
+                {selected.length > 0 && <div className="mt-2 space-y-1" aria-label={t(M.selectedDocuments)}>{selected.map((doc) => <button key={doc.id} className="flex w-full items-center justify-between gap-2 rounded-lg bg-app-surface-active px-2 py-2 text-left text-xs focus-visible:outline-2 focus-visible:outline-ring" onClick={() => changeSelection(doc)} aria-label={t(M.removeSelected, {name: doc.filename})}><span className="break-all">{doc.filename}</span><X size={14} className="shrink-0" aria-hidden="true" /></button>)}</div>}
+                {loadingDocuments ? <p className="mt-5 text-sm" role="status">{t(M.loadingLibrary)}</p> : listError ? <p className="mt-5 text-sm" role="alert">{listError && t(listError)}</p> : <>
+                    {!documents.length && <p className="mt-5 text-sm leading-relaxed">{filter ? t(M.noFilename) : t(M.noDocuments)}</p>}
+                    <ul className="mt-3 max-h-80 divide-y divide-border overflow-y-auto">{documents.map((doc) => { const checked = selected.some((item) => item.id === doc.id); return <li key={doc.id}><label className="flex min-h-12 cursor-pointer items-start gap-3 py-3 text-sm"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-foreground" checked={checked} disabled={!checked && selected.length >= 20} onChange={() => changeSelection(doc)} /><span className="min-w-0 break-all">{doc.filename}<span className="mt-1 block text-xs text-muted-foreground">{doc.active_version_number ? t(M.version, {number: doc.active_version_number}) : t(M.currentVersion)}</span></span></label></li>; })}</ul>
+                    <div className="mt-3 flex items-center justify-between gap-2"><button className={secondary} disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 20))}>{t(M.back)}</button><span className="text-xs">{t(M.page, {page: offset / 20 + 1})}</span><button className={secondary} disabled={!hasMore} onClick={() => setOffset(offset + 20)}>{t(M.next)}</button></div>
                 </>}
             </div>
             <div>
                 <form onSubmit={search} className="courtos-search-form">
-                    <h3 className="font-medium">Textsuche</h3>
-                    <label htmlFor="private-query" className="mt-4 block text-sm">Suchbegriffe</label><textarea id="private-query" className={field} rows={3} maxLength={300} value={query} onChange={(event) => { edited?.(); setQuery(event.target.value); }} aria-describedby="private-search-help" />
-                    <p id="private-search-help" className="mt-2 text-xs leading-relaxed text-muted-foreground">Durchsucht den erfassten Text. Bildscans benötigen eine Textebene.</p>
-                    <button className={`${button} mt-4`} disabled={searching || selected.length === 0 || !query.trim()}><Search size={16} aria-hidden="true" />{searching ? "Passagen werden gesucht…" : "Auswahl durchsuchen"}</button>
+                    <h3 className="font-medium">{t(M.textSearch)}</h3>
+                    <label htmlFor="private-query" className="mt-4 block text-sm">{t(M.terms)}</label><textarea id="private-query" className={field} rows={3} maxLength={300} value={query} onChange={(event) => { edited?.(); setQuery(event.target.value); }} aria-describedby="private-search-help" />
+                    <p id="private-search-help" className="mt-2 text-xs leading-relaxed text-muted-foreground">{t(M.scanHelp)}</p>
+                    <button className={`${button} mt-4`} disabled={searching || selected.length === 0 || !query.trim()}><Search size={16} aria-hidden="true" />{searching ? t(M.searchingPassages) : t(M.searchSelection)}</button>
                 </form>
                 {!inWord && <details className="mt-4 border-t border-border pt-4">
-                    <summary className="cursor-pointer text-sm">Mit Gemma weiterarbeiten</summary>
-                    <p id="knowledge-analysis-help" className="mt-3 text-xs leading-relaxed text-muted-foreground">Bis zu fünf PDF-Dateien mit auslesbarem Text.</p>
-                    {analysisIssue && <p id="knowledge-analysis-issue" role="status" className="mt-2 text-sm leading-relaxed">{analysisIssue}</p>}
+                    <summary className="cursor-pointer text-sm">{t(M.continueGemma)}</summary>
+                    <p id="knowledge-analysis-help" className="mt-3 text-xs leading-relaxed text-muted-foreground">{t(M.pdfHelp)}</p>
+                    {analysisIssue && <p id="knowledge-analysis-issue" role="status" className="mt-2 text-sm leading-relaxed">{t(analysisIssue!)}</p>}
                     <div className="mt-3 flex flex-wrap gap-3">
-                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>Mit dieser Auswahl fragen</button>
-                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>Chronologie erstellen</button>
+                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue || !query.trim()} onClick={() => { if (user?.id && prepareKnowledgeDraft(user.id, query, selected)) router.push("/assistant"); }}>{t(M.askSelection)}</button>
+                        <button type="button" className={secondary} aria-describedby={analysisIssue ? "knowledge-analysis-issue" : "knowledge-analysis-help"} disabled={!user?.id || !!analysisIssue} onClick={() => { if (user?.id && prepareChronologyDraft(user.id, selected)) router.push("/assistant"); }}>{t(M.chronology)}</button>
                     </div>
-                    <ProcessingLocation service="gemma" stage="draft" className="mt-3">Öffnet Auftrag und Quellenauswahl. Erst im Assistenten senden.</ProcessingLocation>
+                    <ProcessingLocation service="gemma" stage="draft" className="mt-3">{t(M.assistantDraftHelp)}</ProcessingLocation>
                 </details>}
-                {searching && <p role="status" className="mt-4 text-sm">Die Dokumenttexte werden auf dem CourtOS-Server durchsucht · ohne KI.</p>}
-                {searchError && <p role="alert" className="mt-5 text-sm">{searchError}</p>}
-                {result && <section aria-label="Lokale Suchergebnisse" className="mt-7"><h3 className="font-serif text-xl">{result.results.length} Passagen zu «{submitted}»</h3>
+                {searching && <p role="status" className="mt-4 text-sm">{t(M.localSearchRunning)}</p>}
+                {searchError && <p role="alert" className="mt-5 text-sm">{searchError && t(searchError)}</p>}
+                {result && <section aria-label={t(M.localResults)} className="mt-7"><h3 className="font-serif text-xl">{t(M.passageCount, {count: result.results.length, query: submitted})}</h3>
                     {result.notices.map((notice, index) => <p key={index} className="mt-2 text-sm leading-relaxed">{notice}</p>)}
-                    <details className="mt-4 rounded-xl border border-border p-3 text-sm"><summary className="cursor-pointer">Umfang der erfassten Quellen prüfen</summary><ul className="mt-3 space-y-2">{result.documents.map((doc) => <li key={doc.document_id} className="break-words"><strong className="font-medium">{selected.find((item) => item.id === doc.document_id)?.filename ?? "Dokument"}</strong>: {doc.index_status === "ready" ? "Text erfasst" : doc.index_status === "partial" ? "Nur teilweise erfasst" : "Kein durchsuchbarer Text"} · {doc.indexed_pages} von {doc.total_pages} Seiten</li>)}</ul></details>
-                    {result.results.length === 0 && <p className="mt-4 text-sm leading-relaxed">Keine passende Passage in den erfassten Seiten. Versuchen Sie einen anderen Begriff und prüfen Sie oben den Erfassungsumfang.</p>}
-                    <ol className="mt-4 space-y-4">{result.results.map((hit, index) => <li key={`${hit.document_id}-${hit.version_id}-${hit.page}-${index}`} className="courtos-source-hit"><p className="courtos-source-meta">{hit.filename} · Version {hit.version_number ?? "nicht nummeriert"} · PDF-Seite {hit.page}</p><blockquote className="mt-3 whitespace-pre-wrap break-words font-serif text-base leading-relaxed">{hit.quote}</blockquote><div className="mt-3 flex flex-wrap items-start gap-x-5 gap-y-3"><button className={link} onClick={() => { edited?.(); setSource(hit); }}>Beleg im Dokument öffnen <BookOpen size={15} aria-hidden="true" /></button><CopySource text={libraryExcerpt(hit)} label="Passage und Quelle kopieren" wordHost={wordHost} wordCitation={libraryWordCitation(hit)} /></div></li>)}</ol>
+                    <details className="mt-4 rounded-xl border border-border p-3 text-sm"><summary className="cursor-pointer">{t(M.coverage)}</summary><ul className="mt-3 space-y-2">{result.documents.map((doc) => <li key={doc.document_id} className="break-words"><strong className="font-medium">{selected.find((item) => item.id === doc.document_id)?.filename ?? t(M.document)}</strong>: {doc.index_status === "ready" ? t(M.textReady) : doc.index_status === "partial" ? t(M.textPartial) : t(M.textUnreadable)} · {t(M.pagesCoverage, {indexed: doc.indexed_pages, total: doc.total_pages})}</li>)}</ul></details>
+                    {result.results.length === 0 && <p className="mt-4 text-sm leading-relaxed">{t(M.noPassage)}</p>}
+                    <ol className="mt-4 space-y-4">{result.results.map((hit, index) => <li key={`${hit.document_id}-${hit.version_id}-${hit.page}-${index}`} className="courtos-source-hit"><p className="courtos-source-meta">{hit.filename} · {t(M.versionPage, {version: hit.version_number ?? t(M.unnumbered), page: hit.page})}</p><blockquote className="mt-3 whitespace-pre-wrap break-words font-serif text-base leading-relaxed">{hit.quote}</blockquote><div className="mt-3 flex flex-wrap items-start gap-x-5 gap-y-3"><button className={link} onClick={() => { edited?.(); setSource(hit); }}>{t(M.openEvidence)} <BookOpen size={15} aria-hidden="true" /></button><CopySource text={libraryExcerpt(hit,t)} label={t(M.copyPassage)} wordHost={wordHost} wordCitation={libraryWordCitation(hit,t)} /></div></li>)}</ol>
                 </section>}
             </div>
         </div>
@@ -201,8 +216,9 @@ function LocalKnowledge({ wordHost, inWord, initialState, onState }: { wordHost?
 }
 
 function OriginalLinks({ decision }: { decision: PublicDecision }) {
+    const { t } = useCourtOSLocale();
     const source = publicSourceUrl(decision.source_url); const pdf = publicSourceUrl(decision.pdf_url);
-    return <div className="flex flex-wrap gap-x-5">{source && <a href={source} target="_blank" rel="noopener noreferrer" className={link}>Ganzes Original <ExternalLink size={14} aria-hidden="true" /></a>}{pdf && pdf !== source && <a href={pdf} target="_blank" rel="noopener noreferrer" className={link}>Ganzes Original-PDF <ExternalLink size={14} aria-hidden="true" /></a>}</div>;
+    return <div className="flex flex-wrap gap-x-5">{source && <a href={source} target="_blank" rel="noopener noreferrer" className={link}>{t(M.wholeOriginal)} <ExternalLink size={14} aria-hidden="true" /></a>}{pdf && pdf !== source && <a href={pdf} target="_blank" rel="noopener noreferrer" className={link}>{t(M.wholePdf)} <ExternalLink size={14} aria-hidden="true" /></a>}</div>;
 }
 // Only known source identifiers are expanded. Unknown metadata is displayed as supplied.
 function courtLabel(court: string | null | undefined) {
@@ -215,20 +231,21 @@ function handoffDecision(decision: PublicDecision): PublicDecision {
 function decisionTitle(decision: PublicDecision) { return decision.title || [courtLabel(decision.court), decision.docket_number].filter(Boolean).join(" · ") || decision.decision_id; }
 
 function PublicSource({ decision, onClose, wordHost, inWord, initialState, onState }: { decision: PublicDecision; onClose: () => void; wordHost?: WordResearchHost | null; inWord?: boolean; initialState?: ResearchHandoffPublicSource; onState(state: ResearchHandoffPublicSource): void }) {
+    const { t } = useCourtOSLocale();
     const { user } = useAuth();
     const router = useRouter();
     const edited = useResearchHandoff()?.edited;
-    const [handoffError, setHandoffError] = useState("");
+    const [handoffError, setHandoffError] = useState<CourtOSText | null>(null);
     const sourceText = useRef<HTMLPreElement>(null);
     const [excerpt, setExcerpt] = useState<SelectedSourcePassage | null>(null);
-    const [selectionError, setSelectionError] = useState("");
+    const [selectionError, setSelectionError] = useState<CourtOSText | null>(null);
     const { model } = useResearchModelPreference(user?.id, !inWord);
     const [detail, setDetail] = useState<PublicDecisionDetail | null>(null);
     const [start, setStart] = useState(initialState?.start ?? 0); const [history, setHistory] = useState<number[]>(initialState?.history ?? []);
     const restoreSource = useRef(initialState);
-    const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [retry, setRetry] = useState(0);
+    const [loading, setLoading] = useState(true); const [error, setError] = useState<CourtOSText | null>(null); const [retry, setRetry] = useState(0);
     useEffect(() => {
-        const controller = new AbortController(); setLoading(true); setError(""); setExcerpt(null); setSelectionError(""); setHandoffError("");
+        const controller = new AbortController(); setLoading(true); setError(null); setExcerpt(null); setSelectionError(null); setHandoffError(null);
         getPublicDecision(decision.decision_id, start, controller.signal).then((data) => {
             if (controller.signal.aborted) return;
             setDetail(data);
@@ -236,7 +253,7 @@ function PublicSource({ decision, onClose, wordHost, inWord, initialState, onSta
             if (restored?.excerpt) {
                 const valid = revalidateHandoffExcerpt(restored, data);
                 if (valid) setExcerpt(valid);
-                else setSelectionError("Die übernommene Textstelle konnte nicht bestätigt werden. Bitte erneut markieren.");
+                else setSelectionError(M.restoreExcerptFailed);
             }
         }).catch((problem) => { if (!controller.signal.aborted) setError(errorText(problem)); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
@@ -247,27 +264,27 @@ function PublicSource({ decision, onClose, wordHost, inWord, initialState, onSta
         if (!loading) onState({ decision: handoffDecision(authoritative), start, history, excerpt });
     }, [authoritative, start, history, excerpt, loading, onState]);
     const originalSearch = detail && excerpt ? originalTextSearchUrl(publicSourceUrl(detail.source_url), publicSourceUrl(detail.pdf_url), excerpt.text) : null;
-    const excerptReference = detail && excerpt ? `${publicReference(detail)}\nAusgewählte Textstelle: Zeichen ${excerpt.start}–${excerpt.end} von ${excerpt.total_chars}; keine amtlichen Randnummern.${originalSearch ? `\nTextstelle im Original suchen: ${originalSearch}` : ""}\nPosition im Original nicht geprüft; Wortlaut und Kontext an der Originalquelle prüfen.` : "";
+    const excerptReference = detail && excerpt ? `${publicReference(detail,t)}\n${t(M.selectedPinpoint,{start:excerpt.start,end:excerpt.end,total:excerpt.total_chars})}${originalSearch ? `\n${t(M.originalPassageLink,{url:originalSearch})}` : ""}\n${t(M.publicSourceNote)}` : "";
     return <SourceDialog title={decisionTitle(authoritative)} onClose={onClose}><div className="courtos-source-reading">
         <p className="text-sm text-muted-foreground">{[courtLabel(authoritative.court), authoritative.docket_number, authoritative.decision_date, authoritative.language?.toUpperCase()].filter(Boolean).join(" · ")}</p><OriginalLinks decision={authoritative} />
-        {loading ? <p role="status" className="mt-6">Entscheidtext wird geladen…</p> : error ? <div role="alert" className="mt-6"><p>{error}</p><button className={`${secondary} mt-3`} onClick={() => setRetry((value) => value + 1)}>Erneut laden</button></div> : detail && <>
-            {detail.date_is_estimated && <p className="mt-4 text-sm text-muted-foreground">Das Entscheidungsdatum ist im Quellenbestand nur geschätzt.</p>}
-            {detail.source_note && <p className="mt-4 text-sm text-muted-foreground">Hinweis von OpenCaseLaw: {detail.source_note}</p>}
-            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">Erfasster Text · Zeichenposition {detail.passage.start}–{detail.passage.end} von {detail.passage.total_chars}. Diese Positionen beginnen bei 0 und sind keine amtlichen Randnummern.</p>
-            <p className="mt-3 text-sm">Kurze Textstelle markieren (20–800 Zeichen).</p>
-            <pre ref={sourceText} tabIndex={0} aria-label="Erfasster Entscheidtext" className="courtos-decision-text">{detail.passage.text}</pre>
+        {loading ? <p role="status" className="mt-6">{t(M.loadingDecision)}</p> : error ? <div role="alert" className="mt-6"><p>{error && t(error)}</p><button className={`${secondary} mt-3`} onClick={() => setRetry((value) => value + 1)}>{t(M.retry)}</button></div> : detail && <>
+            {detail.date_is_estimated && <p className="mt-4 text-sm text-muted-foreground">{t(M.estimatedDate)}</p>}
+            {detail.source_note && <p className="mt-4 text-sm text-muted-foreground">{t(M.sourceNote, {note: detail.source_note})}</p>}
+            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{t(M.positions, {start: detail.passage.start, end: detail.passage.end, total: detail.passage.total_chars})}</p>
+            <p className="mt-3 text-sm">{t(M.selectPassage)}</p>
+            <pre ref={sourceText} tabIndex={0} aria-label={t(M.decisionText)} className="courtos-decision-text">{detail.passage.text}</pre>
             <button type="button" className={secondary} onMouseDown={(event) => event.preventDefault()} onClick={() => {
                 const selected = selectedSourcePassage(sourceText.current, window.getSelection(), detail.passage);
-                if (!selected) { setExcerpt(null); setSelectionError("Bitte eine zusammenhängende Textstelle mit 20–800 Zeichen im Entscheidtext markieren."); return; }
-                edited?.(); setExcerpt(selected); setSelectionError(""); setHandoffError("");
-            }}>Markierte Stelle übernehmen</button>
-            {selectionError && <p role="alert" className="mt-3 text-sm">{selectionError}</p>}
-            {excerpt && <div className="mt-5 border-t border-border pt-4" aria-label="Ausgewählte Textstelle">
+                if (!selected) { setExcerpt(null); setSelectionError(M.selectPassageError); return; }
+                edited?.(); setExcerpt(selected); setSelectionError(null); setHandoffError(null);
+            }}>{t(M.useSelection)}</button>
+            {selectionError && <p role="alert" className="mt-3 text-sm">{selectionError && t(selectionError)}</p>}
+            {excerpt && <div className="mt-5 border-t border-border pt-4" aria-label={t(M.selectedPassage)}>
                 <blockquote className="whitespace-pre-wrap text-sm leading-relaxed">{excerpt.text}</blockquote>
-                <p className="mt-2 text-xs text-muted-foreground">Zeichen {excerpt.start}–{excerpt.end} · Position im Original nicht geprüft</p>
-                {originalSearch && <><a className={`${link} mt-3`} href={originalSearch} target="_blank" rel="noopener noreferrer">Textstelle im Original suchen</a><p className="mt-2 text-xs text-muted-foreground">Der Textsprung hängt von Website und Browser ab.</p></>}
-                {!originalSearch && <p className="mt-2 text-xs text-muted-foreground">Für diese Quelle steht kein Textsprung zur Verfügung. Die Stelle im ganzen Original prüfen.</p>}
-                <div className="mt-3"><CopySource text={`${excerpt.text}\n\nQuelle: ${excerptReference}`} label="Textstelle und Quelle kopieren" wordHost={wordHost} wordCitation={publicWordCitation(detail, excerpt, originalSearch)} /></div>
+                <p className="mt-2 text-xs text-muted-foreground">{t(M.positionUnverified, {start: excerpt.start, end: excerpt.end})}</p>
+                {originalSearch && <><a className={`${link} mt-3`} href={originalSearch} target="_blank" rel="noopener noreferrer">{t(M.findOriginal)}</a><p className="mt-2 text-xs text-muted-foreground">{t(M.jumpDepends)}</p></>}
+                {!originalSearch && <p className="mt-2 text-xs text-muted-foreground">{t(M.noJump)}</p>}
+                <div className="mt-3"><CopySource text={`${excerpt.text}\n\nQuelle: ${excerptReference}`} label={t(M.copySelected)} wordHost={wordHost} wordCitation={publicWordCitation(detail, excerpt, originalSearch,t)} /></div>
             </div>}
             {!inWord && excerpt && <div className="courtos-source-ai">
                 <button type="button" className={secondary} disabled={!user?.id} onClick={() => {
@@ -275,29 +292,30 @@ function PublicSource({ decision, onClose, wordHost, inWord, initialState, onSta
                     if (model === "gemma") {
                         const text = `Prüfe den folgenden Entscheidauszug anhand seiner eigenen Aussagen. Unterscheide belegte Aussagen und offene Fragen. Erfinde keine Quellen und behaupte nicht, den vollständigen Entscheid gelesen zu haben.\n\n${excerptReference}\n\n${excerpt.text}`;
                         if (prepareResearchDraft(user.id, text)) router.push("/assistant");
-                        else setHandoffError("Der Auszug konnte nicht übergeben werden. Bitte kopieren Sie ihn in den lokalen Assistenten.");
+                        else setHandoffError(M.localDraftFailed);
                     } else {
                         const text = [excerptReference, excerpt.text].join("\n\n");
                         if (prepareFrontierDraft(user.id, text)) window.location.assign("/hybrid/");
-                        else setHandoffError("Der Auszug konnte nicht übergeben werden. Bitte die Frontier-Prüfung separat öffnen.");
+                        else setHandoffError(M.frontierDraftFailed);
                     }
-                }}>{model === "gemma" ? "Mit Gemma prüfen" : "Mit Opus prüfen"}</button>
+                }}>{model === "gemma" ? t(M.checkGemma) : t(M.checkOpus)}</button>
                 <ProcessingLocation service={model === "gemma" ? "gemma" : "anthropic"} stage="draft" className="mt-3" />
-                {handoffError && <p role="alert">{handoffError}</p>}
+                {handoffError && <p role="alert">{handoffError && t(handoffError)}</p>}
             </div>}
-            <div className="mt-6 flex flex-wrap gap-3"><button className={secondary} disabled={!history.length} onClick={() => { edited?.(); setStart(history[history.length - 1]); setHistory((items) => items.slice(0, -1)); }}>Vorheriger Abschnitt</button><button className={secondary} disabled={!detail.passage.has_more} onClick={() => { edited?.(); setHistory((items) => [...items, start]); setStart(detail.passage.end); }}>Nächster Abschnitt</button></div>
-            <details className="mt-6 text-xs leading-relaxed text-muted-foreground"><summary className="cursor-pointer">Quellennachweis</summary><p className="mt-2 break-all">OpenCaseLaw-ID: {detail.decision_id}<br />Erfasst: {detail.scraped_at || "nicht angegeben"}<br />Text-Hash: {detail.content_hash || "nicht angegeben"}</p></details>
+            <div className="mt-6 flex flex-wrap gap-3"><button className={secondary} disabled={!history.length} onClick={() => { edited?.(); setStart(history[history.length - 1]); setHistory((items) => items.slice(0, -1)); }}>{t(M.previousSection)}</button><button className={secondary} disabled={!detail.passage.has_more} onClick={() => { edited?.(); setHistory((items) => [...items, start]); setStart(detail.passage.end); }}>{t(M.nextSection)}</button></div>
+            <details className="mt-6 text-xs leading-relaxed text-muted-foreground"><summary className="cursor-pointer">{t(M.provenance)}</summary><p className="mt-2 break-all">OpenCaseLaw-ID: {detail.decision_id}<br />{t(M.captured, {date: detail.scraped_at || t(M.notGiven)})}<br />{t(M.textHash, {hash: detail.content_hash || t(M.notGiven)})}</p></details>
         </>}
     </div></SourceDialog>;
 }
 
 function PublicKnowledge({ wordHost, wordHostError, inWord, initialState, onState }: { wordHost?: WordResearchHost | null; wordHostError?: string; inWord?: boolean; initialState: ResearchHandoffState["public"]; onState(state: ResearchHandoffState["public"]): void }) {
+    const { t } = useCourtOSLocale();
     const edited = useResearchHandoff()?.edited;
-    const [selectionError, setSelectionError] = useState("");
+    const [selectionError, setSelectionError] = useState<CourtOSText | null>(null);
     const [readingSelection, setReadingSelection] = useState(false);
     const [query, setQuery] = useState(initialState.query); const [language, setLanguage] = useState<ResearchHandoffState["public"]["language"]>(initialState.language);
     const [result, setResult] = useState<PublicSearch | null>(initialState.result); const [submitted, setSubmitted] = useState(initialState.submitted);
-    const [searching, setSearching] = useState(false); const [error, setError] = useState(""); const [source, setSource] = useState<PublicDecision | null>(initialState.source?.decision ?? null);
+    const [searching, setSearching] = useState(false); const [error, setError] = useState<CourtOSText | null>(null); const [source, setSource] = useState<PublicDecision | null>(initialState.source?.decision ?? null);
     const sourceState = useRef<ResearchHandoffPublicSource | null>(initialState.source);
     const publishSource = useCallback((value: ResearchHandoffPublicSource) => { sourceState.current = value; onState({ query, submitted, language, result, source: value }); }, [query, submitted, language, result, onState]);
     useEffect(() => { onState({ query, submitted, language, result, source: source ? sourceState.current : null }); }, [query, submitted, language, result, source, onState]);
@@ -306,7 +324,7 @@ function PublicKnowledge({ wordHost, wordHostError, inWord, initialState, onStat
     async function search(event: FormEvent) {
         event.preventDefault(); if (!query.trim() || searching) return;
         edited?.();
-        controller.current?.abort(); const pending = new AbortController(); controller.current = pending; setSearching(true); setError(""); setResult(null); setSubmitted(query.trim());
+        controller.current?.abort(); const pending = new AbortController(); controller.current = pending; setSearching(true); setError(null); setResult(null); setSubmitted(query.trim());
         try { const data = await searchPublicKnowledge(query.trim(), language, pending.signal); if (!pending.signal.aborted) setResult(data); }
         catch (problem) { if (!pending.signal.aborted) setError(errorText(problem)); }
         finally { if (!pending.signal.aborted) setSearching(false); }
@@ -317,52 +335,53 @@ function PublicKnowledge({ wordHost, wordHostError, inWord, initialState, onStat
                 <h2 id="public-knowledge-title" className="sr-only">OpenCaseLaw</h2>
             </div>
             <form onSubmit={search} className="courtos-public-search">
-                <label htmlFor="public-query">Öffentliche Rechtsbegriffe</label>
+                <label htmlFor="public-query">{t(M.publicTerms)}</label>
                 <div className="courtos-search-line">
-                    <input id="public-query" placeholder="Rechtsbegriffe" className={field} value={query} maxLength={180} onChange={(event) => { edited?.(); setQuery(event.target.value); }} aria-describedby="public-search-help" />
-                    <button className={button} disabled={searching || !query.trim()}><Search size={17} aria-hidden="true" />{searching ? "Suche läuft…" : "Suchen"}</button>
+                    <input id="public-query" placeholder={t(M.legalTerms)} className={field} value={query} maxLength={180} onChange={(event) => { edited?.(); setQuery(event.target.value); }} aria-describedby="public-search-help" />
+                    <button className={button} disabled={searching || !query.trim()}><Search size={17} aria-hidden="true" />{searching ? t(M.searching) : t(M.search)}</button>
                 </div>
                 <div className="courtos-search-options">
-                    <p id="public-search-help">KI-gestützte Suche · Bis zu acht Begriffe</p>
-                    <label htmlFor="public-language"><span className="sr-only">Sprache</span><select id="public-language" value={language} onChange={(event) => { edited?.(); controller.current?.abort(); setLanguage(event.target.value as ResearchHandoffState["public"]["language"]); setSearching(false); setResult(null); setError(""); }} className={field}><option value="">Alle Sprachen</option><option value="de">Deutsch</option><option value="fr">Französisch</option><option value="it">Italienisch</option></select></label>
+                    <p id="public-search-help">{t(M.aiSearchHelp)}</p>
+                    <label htmlFor="public-language"><span className="sr-only">{t(M.language)}</span><select id="public-language" value={language} onChange={(event) => { edited?.(); controller.current?.abort(); setLanguage(event.target.value as ResearchHandoffState["public"]["language"]); setSearching(false); setResult(null); setError(null); }} className={field}><option value="">{t(M.allLanguages)}</option><option value="de">{t(M.german)}</option><option value="fr">{t(M.french)}</option><option value="it">{t(M.italian)}</option></select></label>
                 </div>
-                <ProcessingLocation service="opencaselaw">Mit «Suchen» werden Ihre Begriffe übermittelt. Keine vertraulichen Angaben eingeben.</ProcessingLocation>
+                <ProcessingLocation service="opencaselaw">{t(M.publicConsent)}</ProcessingLocation>
                 {inWord && <div className="courtos-word-selection"><button type="button" className={link} disabled={!wordHost || readingSelection} onClick={async () => {
                     if (!wordHost) return;
-                    setReadingSelection(true); setSelectionError("");
+                    setReadingSelection(true); setSelectionError(null);
                     try {
                         const selected = (await wordHost.readSelection()).trim();
-                        if (!selected || selected.length > 180 || selected.split(/\s+/).length > 8) { setSelectionError("Bitte bis zu acht Rechtsbegriffe in Word markieren."); return; }
+                        if (!selected || selected.length > 180 || selected.split(/\s+/).length > 8) { setSelectionError(M.wordSelectionLimit); return; }
                         edited?.(); setQuery(selected);
-                    } catch { setSelectionError("Die Auswahl konnte nicht gelesen werden. Bitte Rechtsbegriffe eingeben."); }
+                    } catch { setSelectionError(M.wordSelectionFailed); }
                     finally { setReadingSelection(false); }
-                }}>{readingSelection ? "Auswahl wird gelesen…" : "Auswahl aus Word übernehmen"}</button>{(selectionError || wordHostError) && <p role="alert">{selectionError || wordHostError}</p>}</div>}
-                {searching && <p role="status" className="courtos-search-state">Anfrage an OpenCaseLaw läuft…</p>}
-                {error && <p role="alert" className="courtos-search-state courtos-search-state--error">{error}</p>}
+                }}>{readingSelection ? t(M.readingSelection) : t(M.readWord)}</button>{(selectionError || wordHostError) && <p role="alert">{selectionError ? t(selectionError) : wordHostError}</p>}</div>}
+                {searching && <p role="status" className="courtos-search-state">{t(M.publicRunning)}</p>}
+                {error && <p role="alert" className="courtos-search-state courtos-search-state--error">{error && t(error)}</p>}
             </form>
         </div>
-        {result && <section className="courtos-public-results" aria-label="Öffentliche Suchergebnisse">
+        {result && <section className="courtos-public-results" aria-label={t(M.publicResults)}>
             <header className="courtos-results-heading">
-                <h3>{result.results.length} Entscheide zu «{submitted}»</h3>
-                <details className="courtos-result-scope"><summary>Zum Suchumfang</summary><p>Bis zu fünf Texttreffer{result.candidate_limit ? ` aus einer begrenzten Auswahl von höchstens ${result.candidate_limit} passenden Datensätzen` : ""}, keine vollständige Recherche. Datum und Aktenzeichen stammen aus dem Datenbestand; die Originalquelle bleibt massgeblich.</p></details>
+                <h3>{t(M.decisionCount, {count: result.results.length, query: submitted})}</h3>
+                <details className="courtos-result-scope"><summary>{t(M.searchScope)}</summary><p>{t(M.publicScope, {candidate: result.candidate_limit ? t(M.candidateScope, {count: result.candidate_limit}) : ""})}</p></details>
             </header>
-            {!result.results.length && <p className="courtos-empty-results">Die Suche hat keine Entscheide zurückgegeben. Versuchen Sie weniger oder andere Begriffe.</p>}
-            {result.degraded && <p className="courtos-search-state">OpenCaseLaw hat eine eingeschränkte Rangfolge geliefert. Bitte die Suche später wiederholen oder präzisere Begriffe verwenden.</p>}
+            {!result.results.length && <p className="courtos-empty-results">{t(M.noDecisions)}</p>}
+            {result.degraded && <p className="courtos-search-state">{t(M.degraded)}</p>}
             <ol className="courtos-public-result-list">{result.results.map((decision) => <li key={decision.decision_id} className="courtos-public-result">
                 <p className="courtos-result-meta"><span>{[courtLabel(decision.court), decision.canton].filter(Boolean).join(" · ")}</span>{" "}<span>{[decision.decision_date, decision.language?.toUpperCase()].filter(Boolean).join(" · ")}</span></p>
                 <div className="courtos-result-content">
                     <h4>{decisionTitle(decision)}</h4>
                     <p className="courtos-result-excerpt">{decision.snippet}</p>
-                    <div className="courtos-result-actions"><button className={link} onClick={() => { edited?.(); sourceState.current = { decision, start: 0, history: [], excerpt: null }; setSource(decision); }}>Entscheidtext öffnen <BookOpen size={15} aria-hidden="true" /></button><OriginalLinks decision={decision} /></div>
+                    <div className="courtos-result-actions"><button className={link} onClick={() => { edited?.(); sourceState.current = { decision, start: 0, history: [], excerpt: null }; setSource(decision); }}>{t(M.openDecision)} <BookOpen size={15} aria-hidden="true" /></button><OriginalLinks decision={decision} /></div>
                 </div>
             </li>)}</ol>
-            <p className="courtos-results-generation">OpenCaseLaw · {result.query_mode === "opencaselaw_ai" ? "KI-gestützte Suche" : "öffentliche Suche"} · Datenstand-Kennung: {result.database_generation ?? "nicht angegeben"}</p>
+            <p className="courtos-results-generation">OpenCaseLaw · {t(result.query_mode === "opencaselaw_ai" ? M.aiSearch : M.publicSearch)} · {t(M.dataset, {id: result.database_generation ?? t(M.notGiven)})}</p>
         </section>}
         {source && <PublicSource key={source.decision_id} decision={source} onClose={() => { edited?.(); sourceState.current = null; setSource(null); }} wordHost={wordHost} inWord={inWord} initialState={sourceState.current ?? undefined} onState={publishSource} />}
     </section>;
 }
 
 export function KnowledgeWorkspace({ wordHost, wordHostError }: { wordHost?: WordResearchHost | null; wordHostError?: string } = {}) {
+    const { t } = useCourtOSLocale();
     const inWord = wordHost !== undefined;
     const handoff = useResearchHandoff();
     const register = handoff?.register, changed = handoff?.changed, bindWordDocument = handoff?.bindWordDocument;
@@ -392,8 +411,8 @@ export function KnowledgeWorkspace({ wordHost, wordHostError }: { wordHost?: Wor
         state.current = { ...state.current, mode: next }; changed?.(state.current);
     }
     return <div className="courtos-research-page">
-        <header className="courtos-research-intro"><h1>Recherche</h1></header>
-        <nav aria-label="Quellenart" className="courtos-source-tabs"><button aria-pressed={mode === "public"} className="courtos-source-tab" onClick={() => changeMode("public")}>OpenCaseLaw</button><button aria-pressed={mode === "private"} className="courtos-source-tab" onClick={() => changeMode("private")}>Eigene Quellen</button></nav>
+        <h1 className="sr-only">{t(M.research)}</h1>
+        <nav aria-label={t(M.sourceType)} className="courtos-source-tabs"><button aria-pressed={mode === "public"} className="courtos-source-tab" onClick={() => changeMode("public")}>OpenCaseLaw</button><button aria-pressed={mode === "private"} className="courtos-source-tab" onClick={() => changeMode("private")}>{t(M.ownSources)}</button></nav>
         <div key={restored.generation}>
             {libraryVisited && <div hidden={mode !== "private"}><LocalKnowledge wordHost={wordHost} inWord={inWord} initialState={restored.state.private} onState={publishPrivate} /></div>}
             <div hidden={mode !== "public"}><PublicKnowledge wordHost={wordHost} wordHostError={wordHostError} inWord={inWord} initialState={restored.state.public} onState={publishPublic} /></div>

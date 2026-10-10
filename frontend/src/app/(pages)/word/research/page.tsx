@@ -5,12 +5,16 @@ import Script from "next/script";
 import Link from "next/link";
 import { KnowledgeWorkspace } from "@/app/components/courtos/KnowledgeWorkspace";
 import { COURTOS_KNOWLEDGE_ENABLED } from "@/app/lib/courtos";
-import { connectWordResearchHost, WordResearchHostError, type WordResearchHost } from "@/app/lib/wordResearchHost";
+import { connectWordResearchHost, type WordResearchHost } from "@/app/lib/wordResearchHost";
+
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { researchMessages as M } from "@/app/lib/researchMessages";
 
 export default function WordResearchPage() {
+    const {t} = useCourtOSLocale();
     const [loadOffice, setLoadOffice] = useState(false);
     const [host, setHost] = useState<WordResearchHost | null>(null);
-    const [error, setError] = useState<string>();
+    const [error, setError] = useState(false);
     const active = useRef(false);
     const generation = useRef(0);
     const historyMethods = useRef<Pick<History, "pushState" | "replaceState"> | null>(null);
@@ -32,7 +36,7 @@ export default function WordResearchPage() {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time host bootstrap, no document read
         setLoadOffice(true);
         scriptTimeout.current = setTimeout(() => {
-            if (active.current) setError(new WordResearchHostError("not_available").message);
+            if (active.current) setError(true);
         }, 20_000);
         return () => {
             active.current = false;
@@ -47,13 +51,13 @@ export default function WordResearchPage() {
         clearTimeout(scriptTimeout.current);
         const attempt = ++generation.current;
         void connectWordResearchHost().then((nextHost) => {
-            if (active.current && generation.current === attempt) { setHost(nextHost); setError(undefined); }
+            if (active.current && generation.current === attempt) { setHost(nextHost); setError(false); }
         }).catch(() => {
-            if (active.current && generation.current === attempt) setError(new WordResearchHostError("not_available").message);
+            if (active.current && generation.current === attempt) setError(true);
         });
     }, [restoreHistory]);
 
-    if (!COURTOS_KNOWLEDGE_ENABLED) return <div className="p-8"><h1 className="font-serif text-3xl">Recherche</h1><p className="mt-4">Die Recherche ist in dieser Installation nicht freigeschaltet.</p><Link className="courtos-link mt-5" href="/pilot">Zum Einstieg</Link></div>;
+    if (!COURTOS_KNOWLEDGE_ENABLED) return <div className="p-8"><h1 className="font-serif text-3xl">{t(M.research)}</h1><p className="mt-4">{t(M.researchDisabled)}</p><Link className="courtos-link mt-5" href="/pilot">CourtOS</Link></div>;
 
     return <>
         {loadOffice && <Script
@@ -64,9 +68,9 @@ export default function WordResearchPage() {
             onReady={connect}
             onError={() => {
                 restoreHistory(); clearTimeout(scriptTimeout.current);
-                if (active.current) setError(new WordResearchHostError("not_available").message);
+                if (active.current) setError(true);
             }}
         />}
-        <KnowledgeWorkspace wordHost={host} wordHostError={error} />
+        <KnowledgeWorkspace wordHost={host} wordHostError={error ? t(M.wordUnavailable) : undefined} />
     </>;
 }

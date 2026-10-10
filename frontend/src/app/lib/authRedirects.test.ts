@@ -23,6 +23,11 @@ describe("safeCourtOSResearchNext", () => {
     });
 });
 
+describe("review auth continuation", () => {
+    it.each(["/review", "/review?host=word"])("preserves the exact route %s", path => expect(safeCourtOSResearchNext(path,"/research")).toBe(path));
+    it.each(["/review?host=word&next=https://evil.example", "/review?host=word&host=word", "/review?host=browser", "/review#private", "/review/../login", "//review?host=word"])("rejects extra or ambiguous state %s", path => expect(safeCourtOSResearchNext(path,"/research")).toBe("/research"));
+});
+
 describe("safeAuthNext", () => {
     it("allows known internal destinations with query parameters", () => {
         expect(safeAuthNext("/settings?emailChange=processed")).toBe(

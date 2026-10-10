@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // Exercise the deployed, framework-free workbench against its real HTML and
 // HTTP contract. No provider, browser, production account or model is contacted.
 const html = readFileSync(resolve(process.cwd(), "../hybrid/static/index.html"), "utf8");
+const localeScript = readFileSync(resolve(process.cwd(), "../hybrid/static/i18n.js"), "utf8");
 const script = readFileSync(resolve(process.cwd(), "../hybrid/static/app.js"), "utf8");
 const outboundKey = "courtos:frontier:outbound";
 const returnKey = "courtos:frontier:return";
@@ -38,6 +39,9 @@ afterEach(() => { cleanups.splice(0).forEach(cleanup => cleanup()); });
 async function boot(options: {
     handoff?: Record<string, unknown>;
     storage?: Record<string, string>;
+    preferences?: Record<string, string>;
+    languageHint?: string;
+    blockedPreferences?: boolean;
     nativeId?: string | null;
     ready?: boolean;
     resume?: { packet: Packet | null; job: Job | null };
@@ -60,6 +64,8 @@ async function boot(options: {
     class TestDate extends Date { static now() { return clock; } }
     let quoteNumber = 0, checkoutNumber = 0;
     const storage = dom.window.sessionStorage;
+    for (const [key, value] of Object.entries(options.preferences || {})) dom.window.localStorage.setItem(key, value);
+    const preferences = options.blockedPreferences ? { getItem: () => { throw new Error("blocked"); }, setItem: () => { throw new Error("blocked"); } } : dom.window.localStorage;
     for (const [key, value] of Object.entries(options.storage || {})) storage.setItem(key, value);
     if (options.handoff) storage.setItem(outboundKey, JSON.stringify(options.handoff));
     dom.window.HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -104,13 +110,14 @@ async function boot(options: {
     const context = createContext({
         document: doc,
         window: { location: { assign, href: dom.window.location.href }, addEventListener: dom.window.addEventListener.bind(dom.window) },
-        navigator: { clipboard: { writeText: copy } }, sessionStorage: storage,
+        navigator: { clipboard: { writeText: copy }, languages: [options.languageHint || "de-CH"] }, sessionStorage: storage, localStorage: preferences,
         fetch, TextEncoder, URL, AbortController, Date: TestDate, console,
         crypto: { randomUUID: vi.fn(() => `00000000-0000-4000-8000-${String(++uuidSequence).padStart(12, "0")}`) },
         setTimeout: (callback: () => void, delay: number) => { const id = setTimeout(() => { timers.delete(id); callback(); }, delay); timers.set(id, { callback, at: clock + delay }); return id; },
         clearTimeout: (id: ReturnType<typeof setTimeout>) => { clearTimeout(id); timers.delete(id); },
     });
     cleanups.push(() => { timers.forEach((_, id) => clearTimeout(id)); dom.window.close(); });
+    runInContext(localeScript, context, { filename: "hybrid/static/i18n.js" });
     runInContext(script, context, { filename: "hybrid/static/app.js" });
     const el = <T extends HTMLElement = HTMLElement>(id: string) => doc.getElementById(id) as T;
     await vi.waitFor(() => expect(el("loading").hidden).toBe(true));
@@ -133,7 +140,7 @@ async function boot(options: {
         for (const [id, timer] of [...timers]) if (timer.at <= clock) { clearTimeout(id); timers.delete(id); timer.callback(); }
         await Promise.resolve();
     };
-    return { doc, el, identity, fetch, storage, set, submit, posts, requestPath, prepare, assign, copy, advanceClock };
+    return { doc, el, identity, fetch, storage, preferences: dom.window.localStorage, chooseLanguage: (value: string) => { el<HTMLSelectElement>("ui-language").value = value; el("ui-language").dispatchEvent(new dom.window.Event("change", { bubbles: true })); }, set, submit, posts, requestPath, prepare, assign, copy, advanceClock };
 }
 
 describe("frontier workbench browser contract", () => {
@@ -516,5 +523,65 @@ describe("frontier workbench explicit CHF billing contract", () => {
         await vi.waitFor(() => expect(requestsTo(app, "billing/checkout")).toHaveLength(1));
         await vi.waitFor(() => expect(app.el<HTMLButtonElement>("topup-20").disabled).toBe(false));
         expect(app.assign).not.toHaveBeenCalled();
+    });
+});
+
+describe("frontier interface language isolation", () => {
+    const preference = (ownerId: string, locale: string) => JSON.stringify({version:1,ownerId,locale});
+    const key = (id: string) => `courtos:ui-language:v1:account:${encodeURIComponent(id)}`;
+    it("uses only this native account preference, with safe browser-hint fallback", async () => {
+        const app = await boot({preferences:{[key(owner)]:preference(owner,"fr"),[key("native-b")]:preference("native-b","it")}});
+        expect(app.doc.documentElement.lang).toBe("fr-CH");
+        expect(app.el("prepare").textContent).toContain("Vérifier la demande");
+        expect(app.doc.querySelector("a[data-guide]")?.getAttribute("href")).toBe("/guide/fr.html");
+        const other = await boot({nativeId:"native-b",preferences:{[key(owner)]:preference(owner,"fr")},languageHint:"it-CH"});
+        expect(other.doc.documentElement.lang).toBe("it-CH");
+        const forged = await boot({preferences:{[key(owner)]:preference("native-b","fr")}});
+        expect(forged.doc.documentElement.lang).toBe("de-CH");
+    });
+    it("changes only visible copy, leaving exact text, preview, costs and approval untouched with no request", async () => {
+        const app = await boot({workbenchBilling:{required:true,enabled:true}});
+        await app.prepare("Auftrag · Antwort kopieren · raw source <x>","Prüfe exakt diese Wörter.");
+        await vi.waitFor(() => expect(app.el<HTMLInputElement>("quote-consent").disabled).toBe(false));
+        app.set("quote-consent",true);
+        const calls=app.fetch.mock.calls.length, preview=app.el("preview-json").textContent, amount=app.el("quote-amount").textContent;
+        app.chooseLanguage("en");
+        expect(app.doc.documentElement.lang).toBe("en");
+        expect(app.el("send").textContent).toContain("Send to Anthropic");
+        expect(app.el("preview-material").textContent).toBe("Auftrag · Antwort kopieren · raw source <x>");
+        expect(app.el("preview-purpose").textContent).toBe("Prüfe exakt diese Wörter.");
+        expect(app.el("preview-json").textContent).toBe(preview);
+        expect(app.el("quote-amount").textContent).toBe(amount);
+        expect(app.el<HTMLInputElement>("quote-consent").checked).toBe(true);
+        expect(app.fetch).toHaveBeenCalledTimes(calls);
+        expect(app.assign).not.toHaveBeenCalled();
+        expect(JSON.parse(app.preferences.getItem(key(owner))!)).toEqual({version:1,ownerId:owner,locale:"en"});
+        expect(app.doc.querySelector("a[data-guide]")?.textContent).toBe("Workbook (German)");
+        expect(app.doc.querySelector("a[data-guide]")?.getAttribute("href")).toBe("/guide/de.html");
+    });
+    it("never translates result prose, triggers a retry or blocks work when preference storage fails", async () => {
+        const original = "Antwort kopieren\n\nAuftrag · Das erhält Anthropic.";
+        const app=await boot({blockedPreferences:true,resume:{packet:makePacket(undefined,undefined,"submitted"),job:makeJob("succeeded",original)}});
+        const calls=app.fetch.mock.calls.length, before=app.el("result-text").textContent;
+        app.chooseLanguage("it");
+        expect(app.doc.documentElement.lang).toBe("it-CH");
+        expect(app.el("result-text").textContent).toBe(before);
+        expect(app.el("copy").textContent).toBe("Copia la risposta");
+        expect(app.el("language-status").hidden).toBe(false);
+        app.el("copy").click();
+        await vi.waitFor(()=>expect(app.copy).toHaveBeenCalledWith(original));
+        expect(app.fetch).toHaveBeenCalledTimes(calls);
+    });
+    it("provides all four UI strings with matching placeholders and Swiss German spelling", () => {
+        const match=localeScript.match(/const rows = (\[[\s\S]*?\]);\n  const catalog/);
+        expect(match).not.toBeNull();
+        const rows=JSON.parse(match![1]) as string[][];
+        expect(rows.length).toBeGreaterThan(100);
+        for(const row of rows){
+            expect(row).toHaveLength(4);
+            expect(row[0]).not.toContain("ß");
+            const placeholders=(text:string)=>[...text.matchAll(/\{([a-zA-Z]+)\}/g)].map(value=>value[1]).sort();
+            for(const value of row){ expect(value.trim()).not.toBe("");expect(placeholders(value)).toEqual(placeholders(row[0])); }
+        }
     });
 });

@@ -1,5 +1,8 @@
 "use client";
 
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { researchMessages as M } from "@/app/lib/researchMessages";
+
 import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
 
 import {
@@ -86,10 +89,7 @@ type LibraryWorkspaceContextValue = {
     ) => void;
 };
 
-const LIBRARY_TABS: { id: LibraryKind; label: string }[] = [
-    { id: "files", label: COURTOS_PILOT_MODE ? "Dokumente" : "Documents" },
-    { id: "templates", label: COURTOS_PILOT_MODE ? "Vorlagen" : "Templates" },
-];
+
 
 // Keep the upstream layout unchanged outside the CourtOS web pilot.
 function LibraryChrome({ className, children }: { className: string; children: ReactNode }) {
@@ -513,6 +513,8 @@ export function LibraryCollectionPage({
     kind: LibraryKind;
     folderId?: string | null;
 }) {
+    const { t } = useCourtOSLocale();
+    const LIBRARY_TABS = [{id: "files" as const, label: COURTOS_PILOT_MODE ? t(M.documents) : "Documents"}, {id: "templates" as const, label: COURTOS_PILOT_MODE ? t(M.templates) : "Templates"}];
     const router = useRouter();
     const hostQuery = useSearchParams().get("host") === "word" ? "?host=word" : "";
     const {
@@ -534,8 +536,8 @@ export function LibraryCollectionPage({
     const collectionRootPath = kind === "files" ? "/library" : "/library/templates";
   const debouncedSearch = useDebouncedValue(search, 250);
     const title = kind === "files"
-        ? (COURTOS_PILOT_MODE ? "Dokumente" : "Documents")
-        : (COURTOS_PILOT_MODE ? "Vorlagen" : "Templates");
+        ? (COURTOS_PILOT_MODE ? t(M.documents) : "Documents")
+        : (COURTOS_PILOT_MODE ? t(M.templates) : "Templates");
     const [selectionActions, setSelectionActions] = useState<DocTableSelectionActions | null>(null);
   const [documentTypeOptions, setDocumentTypeOptions] = useState<string[]>([]);
   const [tableQuery, setTableQuery] = useState<DocTableQuery>({
@@ -649,7 +651,7 @@ export function LibraryCollectionPage({
         );
     }, [collectionRootPath, folderId, hostQuery, router]);
     const presetsEmptyStateAction = useMemo(
-        () => ({ label: COURTOS_PILOT_MODE ? "Vorlagenkatalog" : "Presets", onClick: openPresets }),
+        () => ({ label: COURTOS_PILOT_MODE ? t(M.presets) : "Presets", onClick: openPresets }),
         [openPresets],
     );
 
@@ -932,7 +934,7 @@ export function LibraryCollectionPage({
                 shrink={COURTOS_PILOT_MODE}
                 breadcrumbs={[
                     {
-                        label: COURTOS_PILOT_MODE ? "Meine Bibliothek" : "Library",
+                        label: COURTOS_PILOT_MODE ? t(M.myLibrary) : "Library",
                         onClick: () => router.push(`/library${hostQuery}`),
                     },
                     {
@@ -948,16 +950,16 @@ export function LibraryCollectionPage({
                                 type: "search",
                                 value: search,
                 onChange: (value) => setSearchForKind(kind, value),
-                                placeholder: COURTOS_PILOT_MODE ? "Dateinamen suchen…" : `Search ${title.toLowerCase()}...`,
+                                placeholder: COURTOS_PILOT_MODE ? t(M.filenameSearch) : `Search ${title.toLowerCase()}...`,
                             },
                             kind === "templates" && {
                                 type: "custom",
                                 render: (
                                     <HeaderActionsMenu
-                                        title={COURTOS_PILOT_MODE ? "Weitere Aktionen" : "More actions"}
+                                        title={COURTOS_PILOT_MODE ? t(M.moreActions) : "More actions"}
                                         items={[
                                             {
-                                                label: COURTOS_PILOT_MODE ? "Vorlagen aus dem Katalog aufnehmen" : "Add preset templates",
+                                                label: COURTOS_PILOT_MODE ? t(M.addTemplates) : "Add preset templates",
                                                 icon: BookOpen,
                                                 onSelect: openPresets,
                                             },
@@ -983,7 +985,7 @@ export function LibraryCollectionPage({
                     },
                 ]}
             />
-            {COURTOS_PILOT_MODE && <ProcessingLocation service="library" className="courtos-library-location">Uploads werden hier gespeichert. Keine Übermittlung an Anthropic.</ProcessingLocation>}
+            {COURTOS_PILOT_MODE && <ProcessingLocation service="library" className="courtos-library-location">{t(M.uploadLocation)}</ProcessingLocation>}
             </LibraryChrome>
 
             <div className={COURTOS_PILOT_MODE ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex h-full min-h-0 flex-1 flex-col overflow-hidden"}>
@@ -1000,7 +1002,7 @@ export function LibraryCollectionPage({
                         folderBackAction ? (
                             <TabPillButtonUI onClick={folderBackAction} className="pl-2">
                                 <ChevronLeft className="h-3.5 w-3.5" />
-                                {COURTOS_PILOT_MODE ? "Zurück" : "Back"}
+                                {COURTOS_PILOT_MODE ? t(M.back) : "Back"}
                             </TabPillButtonUI>
                         ) : undefined
                     }
@@ -1010,12 +1012,12 @@ export function LibraryCollectionPage({
                                 <SelectionActionsMenu renderItems={selectionActions.renderMenuItems} />
                             )}
                             <TabPillButtonUI
-                                aria-label={COURTOS_PILOT_MODE ? "Ordner erstellen" : undefined}
+                                aria-label={COURTOS_PILOT_MODE ? t(M.createFolder) : undefined}
                                 onClick={createFolderAction ?? undefined}
                                 disabled={!createFolderAction || loading}
                             >
                                 <Plus className="h-3.5 w-3.5" />
-                                <span className="hidden sm:inline">{COURTOS_PILOT_MODE ? "Ordner" : "Folder"}</span>
+                                <span className="hidden sm:inline">{COURTOS_PILOT_MODE ? t(M.folder) : "Folder"}</span>
                             </TabPillButtonUI>
                         </>
                     }

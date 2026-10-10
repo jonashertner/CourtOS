@@ -1,4 +1,8 @@
 "use client";
+import { COURTOS_PILOT_MODE } from "@/app/lib/courtos";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
+
 
 import { createPortal } from "react-dom";
 import { useEffect, useId, type ReactNode } from "react";
@@ -36,6 +40,9 @@ export function ConfirmPopup({
   confirmDisabled = false,
   className,
 }: ConfirmPopupProps) {
+  const t = useLibraryText();
+  if (confirmLabel === "Confirm") confirmLabel = t(L.confirm);
+  if (cancelLabel === "Cancel") cancelLabel = t(L.cancel);
   const titleId = useId();
 
   /**
@@ -76,9 +83,9 @@ export function ConfirmPopup({
   const isDangerAction = confirmVariant === "danger";
   const resolvedConfirmLabel =
     confirmStatus === "loading" ? (
-      progressiveLabel(normalizedConfirmLabel)
+      COURTOS_PILOT_MODE ? t(L.executing) : progressiveLabel(normalizedConfirmLabel)
     ) : confirmStatus === "complete" ? (
-      completedLabel(normalizedConfirmLabel)
+      COURTOS_PILOT_MODE ? t(L.completed) : completedLabel(normalizedConfirmLabel)
     ) : (
       confirmLabel
     );
@@ -88,7 +95,7 @@ export function ConfirmPopup({
       <div
         role="dialog"
         aria-labelledby={title ? titleId : undefined}
-        aria-label={title ? undefined : "Confirm action"}
+        aria-label={title ? undefined : t(L.confirmAction)}
         className={cn(
           `pointer-events-auto w-[min(92vw,520px)] rounded-2xl px-4 py-3 text-sm ${LIQUID_GLASS_FLOAT_CLASS}`,
           className,

@@ -14,7 +14,7 @@ const AUTH_REDIRECT_PATHS = new Set([
 /** Only exact research routes or validated immutable library references may return after login. */
 export function safeCourtOSResearchNext(candidate: string | null | undefined, fallback: string): string {
     const handoff = candidate?.startsWith("/research?") && parseResearchHandoffLocation(candidate.slice("/research".length));
-    return candidate && (candidate === "/word/research" || candidate === "/research" || handoff || parseLibrarySourcePath(candidate)) ? candidate : fallback;
+    return candidate && (candidate === "/word/research" || candidate === "/research" || candidate === "/review" || candidate === "/review?host=word" || handoff || parseLibrarySourcePath(candidate)) ? candidate : fallback;
 }
 
 export function safeAuthNext(

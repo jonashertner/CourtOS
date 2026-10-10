@@ -1,4 +1,7 @@
 "use client";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
+
 
 import { useRef, type ReactNode } from "react";
 import { cn } from "@/app/lib/utils";
@@ -38,6 +41,7 @@ export function SelectionActionsMenu({
     /** Applied to the trigger, for responsive visibility. */
     className?: string;
 }) {
+    const t=useLibraryText();
     const actionChosenRef = useRef(false);
     return (
         <Dropdown
@@ -50,7 +54,7 @@ export function SelectionActionsMenu({
                     data-icon-position="right"
                     className={cn("pl-3 pr-2", className)}
                 >
-                    Actions
+                    {t(L.actions)}
                     <ChevronDown className="h-3.5 w-3.5" />
                 </TabPillButtonUI>
             </DropdownTrigger>

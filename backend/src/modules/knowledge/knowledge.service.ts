@@ -2,3 +2,5 @@ export { searchKnowledge, parseKnowledgeInput, knowledgePassages } from "./knowl
 export type { KnowledgeInput, KnowledgeSearch, KnowledgeResult } from "./knowledge.search";
 export { publicKnowledgeRequest } from "./knowledge.public";
 export { researchHandoff, parseResearchHandoffState } from "./knowledge.handoff";
+
+export { startCaseReview, getCaseReview, stopCaseReview, caseReviewRun } from "./knowledge.review";

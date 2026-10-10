@@ -133,10 +133,43 @@ class ExistingTests(unittest.IsolatedAsyncioTestCase):
         calls=[]
         async def slow(request):calls.append(request);await asyncio.sleep(1);return httpx.Response(200,json=SEARCH)
         service=ExistingOpenCaseLaw(1,server.literal_terms,server.public_url,transport=httpx.MockTransport(slow))
-        with patch('existing.TOTAL_TIMEOUT_SECONDS',.01):
+        with patch('existing.SEARCH_TIMEOUT_SECONDS',.01):
             with self.assertRaises(RemoteUnavailable) as error:await service.search(server.SearchInput(query='Gehör'))
         self.assertEqual(error.exception.code,'public_research_timeout');self.assertEqual(len(calls),1)
         self.assertTrue(service.slots.acquire(False))
+
+    async def test_search_has_more_time_than_detail_without_an_automatic_second_attempt(self):
+        calls=[]
+        async def delayed(request):
+            calls.append(request)
+            await asyncio.sleep(.03)
+            return httpx.Response(200,json=envelope(SEARCH) if request.method=='POST' else {**ROW,'full_text':'Synthetic'})
+        service=ExistingOpenCaseLaw(1,server.literal_terms,server.public_url,transport=httpx.MockTransport(delayed))
+        # Scaled time preserves the relative gap without sleeping45s in a test.
+        with patch('existing.SEARCH_TIMEOUT_SECONDS',.1),patch('existing.DETAIL_TIMEOUT_SECONDS',.01):
+            result=await service.search(server.SearchInput(query='rechtliches Gehör'))
+            self.assertEqual(result['results'][0]['decision_id'],ID)
+            with self.assertRaises(RemoteUnavailable) as error:await service.decision(ID,0,10)
+        self.assertEqual(error.exception.code,'public_research_timeout')
+        self.assertEqual([request.method for request in calls],['POST','GET'])
+        self.assertTrue(service.slots.acquire(False));service.slots.release()
+
+    async def test_search_stream_deadline_covers_wait_after_headers_and_closes_response(self):
+        calls=[]
+        class SlowStream(httpx.AsyncByteStream):
+            closed=False
+            async def __aiter__(self):
+                yield b': progress\n\n'
+                await asyncio.sleep(1)
+                yield ('data: '+json.dumps(envelope(SEARCH))+'\n\n').encode()
+            async def aclose(self):self.closed=True
+        stream=SlowStream()
+        def handle(request):calls.append(request);return httpx.Response(200,stream=stream,headers={'Content-Type':'text/event-stream'})
+        service=ExistingOpenCaseLaw(1,server.literal_terms,server.public_url,transport=httpx.MockTransport(handle))
+        with patch('existing.SEARCH_TIMEOUT_SECONDS',.01):
+            with self.assertRaises(RemoteUnavailable) as error:await service.search(server.SearchInput(query='Gehör'))
+        self.assertEqual(error.exception.code,'public_research_timeout');self.assertTrue(stream.closed)
+        self.assertEqual(len(calls),1);self.assertTrue(service.slots.acquire(False));service.slots.release()
 
     async def test_upstream_failures_and_capacity_are_safe(self):
         for status,code in [(429,'public_research_busy'),(503,'public_research_unavailable')]:

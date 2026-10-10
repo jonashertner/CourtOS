@@ -383,3 +383,85 @@
 .courtos-web .courtos-introduction-models > [data-processing-route] { border-inline-start: 2px solid var(--processing-accent); padding-inline-start: 12px; }
 .courtos-web .courtos-introduction-models > [data-processing-route] dt { color: var(--processing-accent); }
 .courtos-web .courtos-library-location { margin: 0 var(--research-gutter) 18px; }
+
+/* Research taskpane: quiet chrome, one work surface, no duplicate page title/footer. */
+.courtos-web .courtos-research-nav { gap: 20px; flex-wrap: wrap; }
+.courtos-web .courtos-research-page .courtos-source-tabs { margin-top: 0; }
+.courtos-web .courtos-research-bar { gap: 16px; }
+.courtos-web .courtos-research-page { padding-top: 20px; }
+.courtos-web .courtos-source-dialog-header { flex-wrap: wrap; }
+.courtos-web .courtos-source-dialog-header h2 { flex: 1 1 20ch; }
+.courtos-web .courtos-source-dialog-header .courtos-word-browser-link { max-width: 18ch; text-align: left; }
+@media (max-width: 600px) {
+    .courtos-web .courtos-research-shell { --research-gutter: 16px; }
+    .courtos-web .courtos-research-nav { justify-content: flex-start; column-gap: 20px; row-gap: 0; }
+    .courtos-web .courtos-research-nav a { padding-block: 8px; }
+    .courtos-web .courtos-research-context { padding-top: 4px; padding-bottom: 8px; }
+    .courtos-web .courtos-public-result { padding-block: 20px; }
+    .courtos-web .courtos-source-dialog-header h2 { flex-basis: calc(100% - 60px); order: 0; }
+    .courtos-web .courtos-source-dialog-header > button:last-child { order: 1; }
+    .courtos-web .courtos-source-dialog-header .courtos-word-browser-link { order: 2; max-width: none; flex-basis: 100%; }
+}
+
+/* Submissions: source-first rows, readable in a narrow taskpane and a wide browser. */
+.courtos-web .courtos-review-heading { margin-bottom: 32px; }
+.courtos-web .courtos-review-heading h1 { font-size: 28px; line-height: 34px; font-weight: 700; }
+.courtos-web .courtos-review-heading p { margin-top: 8px; color: var(--muted-foreground); }
+.courtos-web .courtos-review-section-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; }
+.courtos-web .courtos-review-page h2 { font-size: 18px; line-height: 26px; font-weight: 550; }
+.courtos-web .courtos-review-help { max-width: 88ch; margin-top: 12px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-review-assignments { margin-block: 20px; border-top: 1px solid var(--border); }
+.courtos-web .courtos-review-assignments li { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(160px,1fr) minmax(160px,1fr); gap: 16px 24px; padding-block: 16px; border-bottom: 1px solid var(--border); }
+.courtos-web .courtos-review-assignments strong { overflow-wrap: anywhere; font-weight: 550; }
+.courtos-web .courtos-review-assignments p { font-size: 12px; color: var(--muted-foreground); }
+.courtos-web .courtos-review-inventory { margin-block: 20px; }
+.courtos-web .courtos-review-inventory summary { cursor: pointer; padding-block: 12px; font-weight: 550; }
+.courtos-web .courtos-review-inventory ul { max-height: 280px; overflow-y: auto; border-top: 1px solid var(--border); }
+.courtos-web .courtos-review-inventory li label { display: flex; align-items: flex-start; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--border); }
+.courtos-web .courtos-review-inventory li span { min-width: 0; overflow-wrap: anywhere; }
+.courtos-web .courtos-review-page input:is([type=checkbox],[type=radio]) { accent-color: var(--foreground); flex-shrink: 0; margin-top: 4px; width: 16px; height: 16px; }
+.courtos-web .courtos-review-page small { display: block; font-size: 12px; line-height: 18px; color: var(--muted-foreground); margin-top: 4px; }
+.courtos-web .courtos-review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 16px; }
+.courtos-web .courtos-review-actions .courtos-link { min-height: 44px; }
+.courtos-web .courtos-review-kind { margin-top: 28px; }
+.courtos-web .courtos-review-kind legend { font-size: 18px; line-height: 26px; font-weight: 550; }
+.courtos-web .courtos-review-kind > div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; margin-block: 16px; }
+.courtos-web .courtos-review-kind label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+.courtos-web .courtos-review-kind strong { font-weight: 550; }
+.courtos-web .courtos-review-language { display: block; width: fit-content; margin-top: 24px; }
+.courtos-web .courtos-review-error { margin-block: 20px; padding-left: 12px; border-left: 2px solid var(--destructive); }
+.courtos-web .courtos-review-job { padding-block: 24px; border-block: 1px solid var(--border); margin-top: 24px; }
+.courtos-web .courtos-review-job p { margin-block: 8px; max-width: 72ch; }
+.courtos-web .courtos-review-report { margin-top: 32px; }
+.courtos-web .courtos-review-report > header p { max-width: 95ch; margin-top: 12px; }
+.courtos-web .courtos-review-caveat { margin-block: 24px; border-left: 2px solid var(--foreground); padding-left: 16px; }
+.courtos-web .courtos-review-caveat .courtos-link { margin-top: 8px; }
+.courtos-web .courtos-review-table-wrap { margin-top: 24px; }
+.courtos-web .courtos-review-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.courtos-web .courtos-review-table th { text-align: left; font-weight: 550; padding: 12px 12px 12px 0; border-block: 1px solid var(--foreground); vertical-align: top; }
+.courtos-web .courtos-review-table td { vertical-align: top; padding: 20px 16px 24px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.courtos-web .courtos-review-table th:first-child { width: 12%; }
+.courtos-web .courtos-review-table strong { font-weight: 550; }
+.courtos-web .courtos-review-table p { margin-top: 8px; }
+.courtos-web .courtos-review-source + .courtos-review-source { margin-top: 16px; }
+.courtos-web .courtos-review-source blockquote { white-space: pre-wrap; font-size: 14px; line-height: 22px; }
+.courtos-web .courtos-review-source figcaption { margin-top: 8px; font-size: 12px; line-height: 18px; }
+.courtos-web .courtos-review-source button { text-align: left; overflow-wrap: anywhere; }
+.courtos-web .courtos-review-table details { margin-top: 16px; }
+.courtos-web .courtos-review-table summary { cursor: pointer; font-weight: 550; }
+.courtos-web .courtos-review-coverage { margin-top: 32px; font-size: 12px; line-height: 18px; }
+.courtos-web .courtos-review-coverage summary { min-height: 44px; cursor: pointer; }
+.courtos-web .courtos-review-coverage li { margin-top: 8px; overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+    .courtos-web .courtos-review-assignments li { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .courtos-web .courtos-review-assignments li > div { grid-column: 1 / -1; }
+    .courtos-web .courtos-review-kind > div { grid-template-columns: 1fr; gap: 20px; }
+    .courtos-web .courtos-review-table, .courtos-web .courtos-review-table tbody { display: block; }
+    .courtos-web .courtos-review-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .courtos-web .courtos-review-table tr { display: block; border-top: 1px solid var(--foreground); padding-block: 12px 24px; }
+    .courtos-web .courtos-review-table td { display: block; border: 0; padding: 12px 0; }
+    .courtos-web .courtos-review-table td::before { content: attr(data-label); display: block; font-weight: 550; color: var(--muted-foreground); font-size: 12px; line-height: 18px; margin-bottom: 8px; }
+}
+@media (max-width: 380px) { .courtos-web .courtos-review-assignments li { grid-template-columns: 1fr; } }
+
+.courtos-web .courtos-review-group th { padding-block: 20px 8px; font-size: 14px; font-weight: 550; border: 0; }

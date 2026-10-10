@@ -14,7 +14,7 @@ describe("optional book-first research entry", () => {
         const fetch = vi.spyOn(globalThis, "fetch");
         render(<ResearchIntroduction><h1>Research controls</h1></ResearchIntroduction>);
         const book = screen.getByRole("link", { name: "Arbeitsbuch lesen" });
-        expect(book).toHaveAttribute("href", "/guide/");
+        expect(book).toHaveAttribute("href", "/guide/de.html");
         book.addEventListener("click", event => event.preventDefault());
         fireEvent.click(book);
         expect(hasContinuedToResearch(auth.user.id)).toBe(false);

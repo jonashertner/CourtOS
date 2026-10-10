@@ -115,6 +115,8 @@ export type ProviderSettings = {
 };
 
 export type StreamChatParams = {
+    /** Server-only bounded task; never copied from a generic chat request. */
+    courtosTask?: "case-review";
     model: string;
     systemPrompt: string;
     messages: LlmMessage[];

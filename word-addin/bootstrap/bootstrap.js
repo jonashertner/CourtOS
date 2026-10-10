@@ -9,27 +9,27 @@
     let opening = false;
     let generation = 0;
     boot.setupBrowserLink();
-    function fail(message) {
-        status.textContent = message;
+    function fail(key, values) {
+        boot.text(status, key, values);
         browser.hidden = false;
         opening = false;
         button.disabled = !office;
     }
     async function checkPane(userId) {
-        status.textContent = "Zugang in Word wird geprüft …";
+        boot.text(status, "checkingPane");
         try {
             const paneUserId = await boot.authUser("GET", "/api/auth/session");
-            if (paneUserId !== userId) { fail("Word verwendet eine andere Sitzung. Prüfcode P2-KONTO. Öffnen Sie die Recherche im Browser und prüfen Sie dort das Konto."); return; }
+            if (paneUserId !== userId) { fail("differentAccount"); return; }
             w.location.replace(boot.sameOrigin() + "/word/research");
         } catch (error) {
-            fail("Word konnte die Anmeldung nicht übernehmen. Prüfcode P1-" + boot.diagnosticCode(error) + ". Verwenden Sie die Recherche im Browser.");
+            fail("paneFailed", { code: boot.diagnosticCode(error) });
         }
     }
     function finish(request, userId) {
         if (active !== request) return;
         active = null;
         if (!userId) {
-            fail("Das Anmeldefenster wurde ohne Bestätigung beendet. Prüfcode D0-GESCHLOSSEN. Melden Sie sich erneut an.");
+            fail("closed");
             return;
         }
         if (userId) {
@@ -41,15 +41,15 @@
         if (!office || opening || active) return;
         opening = true;
         button.disabled = true;
-        status.textContent = "Anmeldung im separaten Fenster …";
+        boot.text(status, "separateWindow");
         let state;
         try { state = boot.newState(); boot.sameOrigin(); }
-        catch { fail("Die Anmeldung kann hier nicht sicher geöffnet werden. Verwenden Sie den Browser."); return; }
+        catch { fail("unsafeWindow"); return; }
         const attempt = ++generation;
         const timeout = w.setTimeout(() => {
             if (generation !== attempt) return;
             generation += 1;
-            fail("Das Anmeldefenster reagiert nicht. Versuchen Sie es erneut oder verwenden Sie den Browser.");
+            fail("noResponse");
         }, 15000);
         try { office.context.ui.displayDialogAsync(boot.sameOrigin() + "/word-bootstrap/login.html?state=" + state,
             { height: 65, width: 40, displayInIframe: false, promptBeforeOpen: true }, result => {
@@ -59,7 +59,7 @@
                     return;
                 }
                 if (result.status !== office.AsyncResultStatus.Succeeded || !result.value) {
-                    fail("Das Anmeldefenster konnte nicht geöffnet werden. Versuchen Sie es erneut oder verwenden Sie den Browser."); return;
+                    fail("cannotOpen"); return;
                 }
                 const request = { state, dialog: result.value };
                 active = request;
@@ -74,7 +74,7 @@
             }); } catch {
                 w.clearTimeout(timeout);
                 generation += 1;
-                fail("Das Anmeldefenster konnte nicht geöffnet werden. Verwenden Sie die Recherche im Browser.");
+                fail("cannotOpen");
             }
     });
     boot.officeReady().then(value => {
@@ -82,6 +82,6 @@
         if (!value.context?.requirements?.isSetSupported("DialogApi", "1.1") || !value.context.requirements.isSetSupported("DialogOrigin", "1.1") || typeof value.context.ui?.displayDialogAsync !== "function") throw new Error("Dialog unavailable");
         office = value;
         button.disabled = false;
-        status.textContent = "Rechtsrecherche neben Ihrem Dokument.";
-    }).catch(() => fail("Die Word-Verbindung ist nicht verfügbar. Verwenden Sie die Recherche im Browser."));
+        boot.text(status, "besideDocument");
+    }).catch(() => fail("wordUnavailable"));
 })(window);

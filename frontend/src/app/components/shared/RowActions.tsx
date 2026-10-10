@@ -1,4 +1,6 @@
 "use client";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -103,6 +105,7 @@ export function RowActionMenuItems({
     deleteLabel = "Delete",
     onClose,
 }: RowActionMenuItemsProps) {
+    const t=useLibraryText();
     const run = (action: () => void) => () => {
         onClose?.();
         action();
@@ -112,20 +115,18 @@ export function RowActionMenuItems({
         <>
             {onDeselect && (
                 <DropdownItem onSelect={run(onDeselect)}>
-                    <X className="h-3.5 w-3.5" />
-                    Deselect rows
-                </DropdownItem>
+                    <X className="h-3.5 w-3.5" />{t(L.deselect)}</DropdownItem>
             )}
             {onView && (
                 <DropdownItem onSelect={run(onView)}>
                     <Eye className="h-3.5 w-3.5" />
-                    {viewLabel}
+                    {viewLabel === "View" ? t(L.view) : viewLabel}
                 </DropdownItem>
             )}
             {onAdd && (
                 <DropdownItem onSelect={run(onAdd)}>
                     <Plus className="h-3.5 w-3.5" />
-                    {addLabel}
+                    {addLabel === "Add" ? t(L.add) : addLabel}
                 </DropdownItem>
             )}
             {onNewSubfolder && (
@@ -136,19 +137,19 @@ export function RowActionMenuItems({
                     onSelect={run(onNewSubfolder)}
                 >
                     <SubfolderSvgIcon className="h-3.5 w-3.5 shrink-0" />
-                    {newSubfolderLabel}
+                    {newSubfolderLabel === "New subfolder" ? t(L.newSubfolder) : newSubfolderLabel}
                 </DropdownItem>
             )}
             {onRename && (
                 <DropdownItem onSelect={run(onRename)}>
                     <Pencil className="h-3.5 w-3.5" />
-                    {renameLabel}
+                    {renameLabel === "Rename" ? t(L.rename) : renameLabel}
                 </DropdownItem>
             )}
             {onEditDetails && (
                 <DropdownItem onSelect={run(onEditDetails)}>
                     <Pencil className="h-3.5 w-3.5" />
-                    {editDetailsLabel}
+                    {editDetailsLabel === "Edit details" ? t(L.edit) : editDetailsLabel}
                 </DropdownItem>
             )}
             {onUpdateCmNumber && (
@@ -159,45 +160,33 @@ export function RowActionMenuItems({
             )}
             {onDownload && (
                 <DropdownItem onSelect={run(onDownload)}>
-                    <Download className="h-3.5 w-3.5" />
-                    Download
-                </DropdownItem>
+                    <Download className="h-3.5 w-3.5" />{t(L.download)}</DropdownItem>
             )}
             {onShowAllVersions && (
                 <DropdownItem onSelect={run(onShowAllVersions)}>
-                    <History className="h-3.5 w-3.5" />
-                    Show all versions
-                </DropdownItem>
+                    <History className="h-3.5 w-3.5" />{t(L.versions)}</DropdownItem>
             )}
             {onUploadNewVersion && (
                 <DropdownItem onSelect={run(onUploadNewVersion)}>
                     <Upload className="h-3.5 w-3.5" />
-                    {uploadNewVersionLabel}
+                    {uploadNewVersionLabel === "Upload new version" ? t(L.uploadVersion) : uploadNewVersionLabel}
                 </DropdownItem>
             )}
             {onRemoveFromFolder && (
                 <DropdownItem onSelect={run(onRemoveFromFolder)}>
-                    <FolderMinus className="h-3.5 w-3.5" />
-                    Remove from subfolder
-                </DropdownItem>
+                    <FolderMinus className="h-3.5 w-3.5" />{t(L.removeFolder)}</DropdownItem>
             )}
             {onClearResults && (
                 <DropdownItem disabled={clearResultsDisabled} onSelect={run(onClearResults)}>
-                    <Eraser className="h-3.5 w-3.5" />
-                    Clear results
-                </DropdownItem>
+                    <Eraser className="h-3.5 w-3.5" />{t(L.clear)}</DropdownItem>
             )}
             {onUnhide && (
                 <DropdownItem onSelect={run(onUnhide)}>
-                    <Eye className="h-3.5 w-3.5" />
-                    Activate
-                </DropdownItem>
+                    <Eye className="h-3.5 w-3.5" />{t(L.activate)}</DropdownItem>
             )}
             {onHide && (
                 <DropdownItem onSelect={run(onHide)}>
-                    <EyeOff className="h-3.5 w-3.5" />
-                    Deactivate
-                </DropdownItem>
+                    <EyeOff className="h-3.5 w-3.5" />{t(L.deactivate)}</DropdownItem>
             )}
             {onDelete && (
                 <DropdownItem
@@ -214,7 +203,7 @@ export function RowActionMenuItems({
                     })}
                 >
                     <Trash2 className="h-3.5 w-3.5" />
-                    {deleteLabel}
+                    {deleteLabel === "Delete" ? t(L.delete) : deleteLabel}
                 </DropdownItem>
             )}
         </>

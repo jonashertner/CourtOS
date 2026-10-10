@@ -1,6 +1,9 @@
 "use client";
 
 import { ProcessingLocation } from "@/app/components/courtos/ProcessingLocation";
+import { CourtOSLanguageSelect } from "./CourtOSLanguageSelect";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { courtOSMessages as m } from "@/app/lib/courtosMessages";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
@@ -23,6 +26,7 @@ export function ResearchSettings({
     open, onClose, userId, email, onSignOut,
     signingOut = false, signOutError = "", externalAvailable = true, modelsAvailable = true,
 }: ResearchSettingsProps) {
+    const { t, locale } = useCourtOSLocale();
     const dialogRef = useRef<HTMLDialogElement>(null);
     const titleId = useId();
     const modelName = useId();
@@ -47,24 +51,25 @@ export function ResearchSettings({
 
     return <dialog ref={dialogRef} aria-labelledby={titleId} className="courtos-settings-dialog" onCancel={(event) => { event.preventDefault(); onClose(); }}>
         <header className="courtos-settings-header">
-            <h2 id={titleId}>Einstellungen</h2>
-            <button type="button" className="courtos-settings-close" onClick={onClose} aria-label="Einstellungen schliessen"><X size={18} aria-hidden="true" /></button>
+            <h2 id={titleId}>{t(m.settings)}</h2>
+            <button type="button" className="courtos-settings-close" onClick={onClose} aria-label={t(m.closeSettings)}><X size={18} aria-hidden="true" /></button>
         </header>
         <div className="courtos-settings-body">
+            <CourtOSLanguageSelect explain />
             <fieldset className="courtos-settings-models" disabled={!modelsAvailable || !userId || signingOut}>
-                <legend>KI-Modell</legend>
+                <legend>{t(m.aiModel)}</legend>
                 <label className="courtos-settings-model" data-processing-route="server"><input type="radio" name={modelName} value="gemma" checked={model === "gemma"} onChange={() => chooseModel("gemma")} /><ProcessingLocation service="gemma" /></label>
-                <label className="courtos-settings-model" data-processing-route="external"><input type="radio" name={modelName} value="claude-opus-5-5" checked={model === "claude-opus-5-5"} disabled={!externalAvailable} onChange={() => chooseModel("claude-opus-5-5")} /><ProcessingLocation service="anthropic">{!externalAvailable && "Derzeit nicht verfügbar"}</ProcessingLocation></label>
+                <label className="courtos-settings-model" data-processing-route="external"><input type="radio" name={modelName} value="claude-opus-5-5" checked={model === "claude-opus-5-5"} disabled={!externalAvailable} onChange={() => chooseModel("claude-opus-5-5")} /><ProcessingLocation service="anthropic">{!externalAvailable && t(m.unavailable)}</ProcessingLocation></label>
             </fieldset>
-            <p className="courtos-settings-note">{modelsAvailable ? "Für öffentliche Auszüge. Eigene Dokumente bleiben für KI-Aufträge bei Gemma. Der CourtOS-Server steht in Deutschland, nicht auf Ihrem Gerät." : "KI-Aufträge sind in dieser Word-Testfassung noch nicht verfügbar."}</p>
-            {modelsAvailable && storageNotice && <p role="status" className="courtos-settings-notice">Die Auswahl konnte nicht gespeichert werden. Gemma bleibt ausgewählt.</p>}
-            <div className="courtos-settings-facts"><p>Eigene Quellen: Suche ohne KI</p>{modelsAvailable && <p>Externe Aufträge: Vorschau vor dem Senden</p>}</div>
-            <section className="courtos-settings-account" aria-label="Konto">
+            <p className="courtos-settings-note">{t(modelsAvailable ? m.modelScope : m.wordModelsUnavailable)}</p>
+            {modelsAvailable && storageNotice && <p role="status" className="courtos-settings-notice">{t(m.modelNotSaved)}</p>}
+            <div className="courtos-settings-facts"><p>{t(m.localSearch)}</p>{modelsAvailable && <p>{t(m.externalPreview)}</p>}</div>
+            <section className="courtos-settings-account" aria-label={t(m.account)}>
                 {email && <p className="courtos-settings-email">{email}</p>}
-                <button type="button" className="courtos-settings-signout" onClick={() => void onSignOut()} disabled={signingOut}>{signingOut ? "Wird abgemeldet…" : "Abmelden"}</button>
+                <button type="button" className="courtos-settings-signout" onClick={() => void onSignOut()} disabled={signingOut}>{t(signingOut ? m.signingOut : m.signOut)}</button>
                 {signOutError && <p role="alert" className="courtos-settings-error">{signOutError}</p>}
             </section>
-            <details className="courtos-settings-help"><summary>Hilfe und Quellcode</summary><div><a href={COURTOS_GUIDE_PATH} target="_blank" rel="noopener noreferrer">Leitfaden</a><a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer">Quellcode · AGPL-3.0</a></div></details>
+            <details className="courtos-settings-help"><summary>{t(m.helpSource)}</summary><div><a href={`${COURTOS_GUIDE_PATH}${locale === "en" ? "de" : locale}.html`} target="_blank" rel="noopener noreferrer">{t(m.guide)}</a><a href={COURTOS_SOURCE_URL} target="_blank" rel="noopener noreferrer">{t(m.github)}</a></div></details>
         </div>
     </dialog>;
 }

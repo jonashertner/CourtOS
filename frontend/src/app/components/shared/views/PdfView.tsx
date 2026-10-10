@@ -16,6 +16,9 @@ import {
 import { orderTextItemLines, type TextItemGeometry } from "./pdfTextOrder";
 import { LIQUID_GLASS_TRANSLUCENT_CLASS } from "@/shared/ui/LiquidGlassUI";
 import { viewRoundingClass, type ViewRounding } from "./viewRounding";
+import { useCourtOSLocale } from "@/app/contexts/CourtOSLocaleContext";
+import { readerMessages as m } from "@/app/lib/courtosReaderMessages";
+import type { CourtOSText } from "@/app/lib/courtosLocale";
 
 interface Props {
     doc: { document_id: string; version_id?: string | null } | null;
@@ -245,10 +248,11 @@ export function PdfView({
     const [zoom, setZoom] = useState(1.0);
     const [currentPage, setCurrentPage] = useState(1);
     const [numPages, setNumPages] = useState(0);
-    const [quoteWarning, setQuoteWarning] = useState("");
+    const { t } = useCourtOSLocale();
+    const [quoteWarning, setQuoteWarning] = useState<CourtOSText | null>(null);
     const [pdfLoadError, setPdfLoadError] = useState<{
         result: DocResult;
-        message: string;
+        message: CourtOSText;
     } | null>(null);
 
     const { result, loading, error } = useFetchSingleDoc(
@@ -258,7 +262,7 @@ export function PdfView({
         refetchKey,
     );
     const documentError =
-        error ?? (pdfLoadError?.result === result ? pdfLoadError?.message : null);
+        error ? m.loadFailed : (pdfLoadError?.result === result ? pdfLoadError?.message : null);
 
     // Track container width via ResizeObserver so re-renders fire on resize
     useEffect(() => {
@@ -344,7 +348,7 @@ export function PdfView({
                     firstHitPage = hitPage;
                 }
             }
-            setQuoteWarning(missing ? "Der Wortlaut wurde auf der angegebenen PDF-Seite nicht gefunden. Bitte die Quelle prüfen." : "");
+            setQuoteWarning(missing ? m.quoteMissing : null);
             return firstHitPage;
         },
         [],
@@ -697,7 +701,7 @@ export function PdfView({
             setZoom(1.0);
             setNumPages(0);
             setPdfLoadError(null);
-            setQuoteWarning("");
+            setQuoteWarning(null);
         });
 
         (async () => {
@@ -712,14 +716,14 @@ export function PdfView({
             const pdfDoc = await loadingTask.promise;
             if (cancelled) return;
             if (initialPage !== undefined && (!Number.isSafeInteger(initialPage) || initialPage < 1 || initialPage > pdfDoc.numPages)) {
-                setPdfLoadError({ result, message: "Die angegebene PDF-Seite ist in dieser Dokumentversion nicht vorhanden." });
+                setPdfLoadError({ result, message: m.pageMissing });
                 return;
             }
             pdfDocRef.current = pdfDoc;
             await renderPDF(pdfDoc, list, initialPage);
         })().catch(() => {
             if (!cancelled)
-                setPdfLoadError({ result, message: "Failed to load document." });
+                setPdfLoadError({ result, message: m.loadFailed });
         });
         return () => {
             cancelled = true;
@@ -784,7 +788,7 @@ export function PdfView({
         <div
             className={`document-canvas relative flex flex-col flex-1 overflow-hidden ${viewRoundingClass(rounded)}`}
         >
-            {quoteWarning && <p role="status" className="px-3 pt-3 text-sm text-muted-foreground">{quoteWarning}</p>}
+            {quoteWarning && <p role="status" className="px-3 pt-3 text-sm text-muted-foreground">{t(quoteWarning)}</p>}
             <div
                 ref={scrollContainerRef}
                 data-document-scroll-viewport
@@ -797,7 +801,7 @@ export function PdfView({
                 )}
                 {documentError && (
                     <div className="flex h-full items-center justify-center">
-                        <p className="text-sm text-red-500">{documentError}</p>
+                        <p className="text-sm text-red-500">{t(documentError)}</p>
                     </div>
                 )}
                 <div ref={containerRef} />
@@ -819,7 +823,7 @@ export function PdfView({
                     >
                         <button
                             type="button"
-                            aria-label="Verkleinern"
+                            aria-label={t(m.zoomOut)}
                             onClick={handleZoomOut}
                             disabled={zoom <= ZOOM_MIN}
                             className="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 hover:bg-white/80 disabled:opacity-30 transition-colors"
@@ -831,7 +835,7 @@ export function PdfView({
                         </span>
                         <button
                             type="button"
-                            aria-label="Vergrössern"
+                            aria-label={t(m.zoomIn)}
                             onClick={handleZoomIn}
                             disabled={zoom >= ZOOM_MAX}
                             className="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 hover:bg-white/80 disabled:opacity-30 transition-colors"

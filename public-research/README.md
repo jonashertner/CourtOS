@@ -35,10 +35,19 @@ end-exclusive offsets. Missing provenance remains null; source warnings and
 estimated dates are preserved. Original URLs are links only. Unknown fields,
 generated rule statements and widget HTML are not forwarded.
 
-Transport: 25-second total deadline including streaming, two concurrent requests,
-300,000-byte search response cap, verified HTTPS, no environment proxy, redirects
-or persistent cookies. Native backend deadline: 26 seconds; authenticated owner
-checks, private-library boundaries and its 150,000-byte response cap remain.
+Transport: one 45-second search deadline including streaming; known-source detail
+retrieval retains 25 seconds. The service allows two concurrent requests
+and bounds search responses to 300,000 bytes. HTTPS is verified; environment
+proxies, redirects and persistent cookies are disabled. Native backend search deadline: 47 seconds; detail: 26 seconds.
+The browser bounds public-search waiting at 50 seconds and preserves explicit
+caller cancellation. No automatic retry or persistent search job is created.
+Leaving the research view or changing its language filter stops browser waiting;
+this does not guarantee
+that OpenCaseLaw has cancelled its underlying AI/retrieval work. The current
+generic API gateway does not forward browser cancellation to the backend.
+These deadlines allow more cold-query time; they are not proof that every broad
+query finishes. Authenticated owner checks, private-library boundaries and the
+backend’s 150,000-byte response cap remain.
 Remote failures expose fixed error codes, never raw service messages. Test the
 mode against the public service only with synthetic public terms before release;
 mocked tests alone do not establish live availability.

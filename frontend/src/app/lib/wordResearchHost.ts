@@ -9,6 +9,8 @@ export interface WordSourceCitation {
     sourceUrl?: string | null;
     pinpointUrl?: string | null;
     notes?: string[];
+    sourceLabel?: string;
+    pinpointLinkLabel?: string;
 }
 
 export interface WordResearchHost {
@@ -74,7 +76,7 @@ function citationHtml(citation: WordSourceCitation): string {
     checkText(citation.pinpoint, "empty_text");
     const notes = citation.notes ?? [];
     if (!Array.isArray(notes) || notes.some(note => typeof note !== "string")) throw new WordResearchHostError("empty_text");
-    checkText([citation.quote, citation.source, citation.pinpoint, ...notes, citation.sourceUrl ?? "", citation.pinpointUrl ?? ""].join("\n"), "empty_text");
+    checkText([citation.quote, citation.source, citation.pinpoint, ...notes, citation.sourceLabel ?? "", citation.pinpointLinkLabel ?? "", citation.sourceUrl ?? "", citation.pinpointUrl ?? ""].join("\n"), "empty_text");
     const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const text = (value: string) => escape(value).replace(/\r\n|\r|\n/g, "<br />");
     const link = (url: string | null | undefined, label: string) => {
@@ -86,10 +88,10 @@ function citationHtml(citation: WordSourceCitation): string {
             return `<a href="${escape(parsed.href)}">${text(label)}</a>`;
         } catch { throw new WordResearchHostError("insert_failed"); }
     };
-    const pinpointLink = citation.pinpointUrl ? ` · ${link(citation.pinpointUrl, "Textstelle suchen")}` : "";
+    const pinpointLink = citation.pinpointUrl ? ` · ${link(citation.pinpointUrl, citation.pinpointLinkLabel ?? "Textstelle suchen")}` : "";
     // Paragraph boundaries keep the current selection and its surrounding text intact.
     // No font or size override: the citation follows the user's document formatting.
-    return `<p><br /></p><p>${text(citation.quote)}</p><p>Quelle: ${link(citation.sourceUrl, citation.source)} · ${text(citation.pinpoint)}${pinpointLink}</p>${notes.length ? `<p>${notes.map(text).join("<br />")}</p>` : ""}<p><br /></p>`;
+    return `<p><br /></p><p>${text(citation.quote)}</p><p>${text(citation.sourceLabel ?? "Quelle")}: ${link(citation.sourceUrl, citation.source)} · ${text(citation.pinpoint)}${pinpointLink}</p>${notes.length ? `<p>${notes.map(text).join("<br />")}</p>` : ""}<p><br /></p>`;
 }
 
 /** Creation is inert. The UI must call each operation from its explicit action. */

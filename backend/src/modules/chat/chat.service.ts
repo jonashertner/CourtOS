@@ -76,3 +76,5 @@ export {
   WORD_EDIT_FORMATS,
   type WordEditApplyMode,
 } from "./engine/wordDocumentEdits";
+
+export { loadCaseReviewEvidence, createCaseReviewRecord, readCaseReviewRecord, writeCaseReviewRecord } from "./chat.caseReview";

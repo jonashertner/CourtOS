@@ -17,6 +17,12 @@ function fixture(text = "Nur die markierte Passage") {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("Word document-local reload scope", () => {
+    it("escapes translated citation labels without changing the quote, destination or document font", async()=>{
+        const f=fixture();const host=createWordResearchHost(f.runtime);
+        await host.insertCitationAfterSelection({quote:"Texte original <exact>",source:"Arrêt",pinpoint:"page 2",sourceUrl:"https://example.org/source#page=2",pinpointUrl:"https://example.org/source#:~:text=exact",sourceLabel:"Fonte <sic>",pinpointLinkLabel:"Cerca & verifica"});
+        const html=f.selection.insertHtml.mock.calls[0][0];
+        expect(html).toContain("Fonte &lt;sic&gt;");expect(html).toContain("Cerca &amp; verifica");expect(html).toContain("Texte original &lt;exact&gt;");expect(html).toContain("https://example.org/source#page=2");expect(f.selection.insertHtml).toHaveBeenCalledOnce();
+    });
     it("hashes saved-document metadata locally and never reads content or sends the path", async () => {
         const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);
         const env = (url: string): WordResearchEnvironment => ({ Office: { onReady: vi.fn(), context: { document: { url } } } });

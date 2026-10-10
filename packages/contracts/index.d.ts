@@ -490,3 +490,5 @@ export interface NativeConnectorTool {
     write: boolean;
     enabled: boolean;
 }
+
+export type { CaseReviewKind, CaseReviewRole, CaseReviewAssessment, CaseReviewInput, CaseReviewSource, CaseReviewRow, CaseReviewReport, CaseReviewStatus, CaseReviewRecord } from "./caseReview";

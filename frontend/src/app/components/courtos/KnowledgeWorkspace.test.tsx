@@ -2,6 +2,8 @@ import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getKnowledgeDraft } from "@/app/lib/knowledgeDraft";
+import { CourtOSLocaleProvider } from "@/app/contexts/CourtOSLocaleContext";
+import { setCourtOSLocale } from "@/app/lib/courtosLocale";
 import { KnowledgeWorkspace } from "./KnowledgeWorkspace";
 
 const api = vi.hoisted(() => ({ list: vi.fn(), local: vi.fn(), public: vi.fn(), detail: vi.fn(), push: vi.fn(), handoff: vi.fn(), research: vi.fn(), model: "gemma" as "gemma" | "claude-opus-5-5" }));
@@ -39,6 +41,17 @@ beforeEach(() => {
 });
 
 describe("personal knowledge workspace", () => {
+    it("keeps the searched terms and source text when the interface changes language",async()=>{
+        localStorage.clear();setCourtOSLocale("test-owner","de");
+        api.public.mockResolvedValue({results:[{decision_id:"case",court:"bger",docket_number:"1C_1/2026",title:"Titre original",snippet:"Le droit d’être entendu est garanti."}],query_mode:"literal_terms",database_generation:null});
+        const user=userEvent.setup();render(<CourtOSLocaleProvider ownerId="test-owner"><KnowledgeWorkspace/></CourtOSLocaleProvider>);
+        await user.type(screen.getByLabelText("Öffentliche Rechtsbegriffe"),"Gehör");await user.click(screen.getByRole("button",{name:"Suchen"}));
+        await screen.findByText("Le droit d’être entendu est garanti.");
+        for(const locale of ["fr","it","en"] as const)await act(async()=>{setCourtOSLocale("test-owner",locale);});
+        expect(screen.getByRole("textbox",{name:"Public legal terms"})).toHaveValue("Gehör");
+        expect(screen.getByText("Le droit d’être entendu est garanti.")).toBeVisible();
+        expect(api.public).toHaveBeenCalledOnce();expect(api.local).not.toHaveBeenCalled();expect(api.research).not.toHaveBeenCalled();expect(api.handoff).not.toHaveBeenCalled();
+    });
     it("keeps non-PDF library search available while blocking both grounded-analysis actions", async () => {
         const word = { ...document, filename: "Stellungnahme.docx", file_type: "docx", pdf_storage_path: "derived.pdf" };
         api.list.mockResolvedValue({ documents: [word], documentsHasMore: false });

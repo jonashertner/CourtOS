@@ -13,7 +13,10 @@ from remote import IDENTIFIER, RemotePublicResearch, RemoteUnavailable
 ORIGIN = "https://mcp.opencaselaw.ch/api"
 MCP_ORIGIN = "https://mcp.opencaselaw.ch/"
 RPC_ID = "courtos-public-search"
-TOTAL_TIMEOUT_SECONDS = 25
+# Public research can run several upstream retrieval/AI stages. Give a cold
+# query one bounded attempt; known-source retrieval keeps its shorter budget.
+SEARCH_TIMEOUT_SECONDS = 45
+DETAIL_TIMEOUT_SECONDS = 25
 SEARCH_MAX_BYTES = 300_000
 DECISION_MAX_BYTES = 2 * 1024 * 1024
 
@@ -45,6 +48,7 @@ class ExistingOpenCaseLaw(RemotePublicResearch):
         # Paths are constructed here, never accepted from the browser or a hit URL.
         maximum = SEARCH_MAX_BYTES if method == "POST" else DECISION_MAX_BYTES
         is_search = method == "POST"
+        deadline_seconds = SEARCH_TIMEOUT_SECONDS if is_search else DETAIL_TIMEOUT_SECONDS
         url = MCP_ORIGIN if is_search else ORIGIN + path
         payload = {"jsonrpc":"2.0", "id":RPC_ID, "method":"tools/call",
                    "params":{"name":"search_decisions", "arguments":body}} if is_search else None
@@ -54,9 +58,9 @@ class ExistingOpenCaseLaw(RemotePublicResearch):
         if not self.slots.acquire(blocking=False):
             raise RemoteUnavailable("public_research_busy")
         try:
-            async with asyncio.timeout(TOTAL_TIMEOUT_SECONDS):
+            async with asyncio.timeout(deadline_seconds):
                 async with httpx.AsyncClient(trust_env=False, follow_redirects=False,
-                                             timeout=TOTAL_TIMEOUT_SECONDS, transport=self.transport) as client:
+                                             timeout=deadline_seconds, transport=self.transport) as client:
                     async with client.stream(method, url, json=payload, headers=headers) as response:
                         if response.status_code == 404:
                             return None

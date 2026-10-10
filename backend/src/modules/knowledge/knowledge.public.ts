@@ -2,6 +2,9 @@ import { courtosKnowledgeEnabled } from "../../lib/courtosKnowledge";
 import { failure, ok, type ServiceResult } from "../../lib/serviceResult";
 
 const MAX_PUBLIC_RESPONSE_BYTES = 150_000;
+const PUBLIC_SEARCH_TIMEOUT_MS = 47_000; //45s sidecar budget plus loopback/response margin.
+const PUBLIC_DETAIL_TIMEOUT_MS = 26_000;
+const publicTimeout = () => failure("unavailable", "Die Suche hat zu lange gedauert. Bitte präzisere Begriffe verwenden oder die Sprache eingrenzen.", "public_research_timeout");
 async function readBoundedResponse(response: Response): Promise<string> {
   const announced = Number(response.headers.get("content-length"));
   if (announced > MAX_PUBLIC_RESPONSE_BYTES) {
@@ -43,8 +46,9 @@ export async function publicKnowledgeRequest(kind: "search" | "decision", input:
     if (!Number.isInteger(start) || start < 0 || start > 10_000_000 || !Number.isInteger(length) || length < 1 || length > 6000) return failure("validation", "Ungültiger Textabschnitt.");
     path = `/decisions/${encodeURIComponent(input.id)}?start=${start}&length=${length}`;
   }
+  const deadline = AbortSignal.timeout(kind === "search" ? PUBLIC_SEARCH_TIMEOUT_MS : PUBLIC_DETAIL_TIMEOUT_MS);
   try {
-    const response = await fetch("http://127.0.0.1:18184" + path, { method: body ? "POST" : "GET", body, headers: body ? { "Content-Type": "application/json" } : {}, redirect: "error", signal: AbortSignal.timeout(26000) });
+    const response = await fetch("http://127.0.0.1:18184" + path, { method: body ? "POST" : "GET", body, headers: body ? { "Content-Type": "application/json" } : {}, redirect: "error", signal: deadline });
     if (response.status === 404) return failure("not_found", "Entscheid im öffentlichen Quellenbestand nicht gefunden.");
     const text = await readBoundedResponse(response);
     if (!response.ok) {
@@ -53,9 +57,9 @@ export async function publicKnowledgeRequest(kind: "search" | "decision", input:
       try { code = (JSON.parse(text) as { code?: unknown })?.code; } catch { /* generic failure below */ }
       if (response.status === 422) return failure("validation", "Bitte ein bis acht kurze Suchbegriffe verwenden.", "public_research_invalid_query");
       if (response.status === 429 && code === "public_research_busy") return failure("unavailable", "Die öffentliche Suche ist ausgelastet. Bitte kurz warten.", "public_research_busy");
-      if (response.status === 503 && code === "public_research_timeout") return failure("unavailable", "Die Suche hat zu lange gedauert. Bitte präzisere Begriffe verwenden oder die Sprache eingrenzen.", "public_research_timeout");
+      if (response.status === 503 && code === "public_research_timeout") return publicTimeout();
       return failure("unavailable", "Die öffentliche Recherche ist gerade nicht verfügbar.", "public_research_unavailable");
     }
     return ok(JSON.parse(text));
-  } catch { return failure("unavailable", "Die öffentliche Recherche ist gerade nicht verfügbar.", "public_research_unavailable"); }
+  } catch { return deadline.aborted ? publicTimeout() : failure("unavailable", "Die öffentliche Recherche ist gerade nicht verfügbar.", "public_research_unavailable"); }
 }

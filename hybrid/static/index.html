@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="de-CH">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Frontier-Prüfung · CourtOS</title><link rel="stylesheet" href="static/style.css"><script src="static/app.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Frontier-Prüfung · CourtOS</title><link rel="stylesheet" href="static/style.css"><script src="static/i18n.js" defer></script><script src="static/app.js" defer></script></head>
 <body>
 <a class="skip-link" href="#main">Zum Inhalt</a>
-<header class="masthead"><a class="wordmark" href="/research">CourtOS</a><nav aria-label="Arbeitsbereiche"><a href="/research">Recherche</a><a href="/knowledge">Bibliothek</a><a href="/hybrid/" aria-current="page">Frontier-Prüfung</a><a href="/guide/de.html">Arbeitsbuch</a></nav><span class="edition">PILOT</span></header>
-<main id="main">
+<header class="masthead"><a class="wordmark" href="/research">CourtOS</a><nav aria-label="Arbeitsbereiche"><a href="/research">Recherche</a><a href="/knowledge">Bibliothek</a><a href="/hybrid/" aria-current="page">Frontier-Prüfung</a><a data-guide href="/guide/de.html">Arbeitsbuch</a></nav><label class="ui-language"><span>Sprache</span><select id="ui-language"><option value="de" lang="de">Deutsch</option><option value="fr" lang="fr">Français</option><option value="it" lang="it">Italiano</option><option value="en" lang="en">English</option></select></label></header>
+<main id="main"><p id="language-status" class="field-note" role="status" hidden></p>
 <header class="page-heading"><p class="eyebrow">Mit ausgewähltem Text arbeiten</p><h1>Frontier-Prüfung</h1><p class="lede">Eine Rechtsfrage oder Argumentation mit Claude Opus prüfen. Sie bestimmen Text und Kosten.</p></header>
 <div id="global-message" class="message" role="status" aria-live="polite" hidden></div>
 <div id="loading" class="loading" role="status">Arbeitsbereich wird geladen …</div>
@@ -50,6 +50,6 @@
 <div id="result" hidden><p id="result-meta" class="eyebrow"></p><p id="truncation" class="message" hidden>Das Ausgabelimit wurde erreicht. Die Antwort ist unvollständig.</p><article id="result-text" class="result-text"></article><div class="result-actions"><button class="button" type="button" id="return-local">Lokal weiterbearbeiten <span aria-hidden="true">→</span></button><button class="text-link" type="button" id="copy">Antwort kopieren</button><a class="text-link" id="export" href="#">Text herunterladen</a></div><p class="field-note">Die Übernahme öffnet einen bearbeitbaren Entwurf im lokalen Assistenten. Sie löst keinen weiteren Modellaufruf aus.</p><button class="text-link new-request" type="button" id="new-request">Neue Anfrage</button></div>
 </section>
 </div></div>
-</main><footer><span>CourtOS · Ein Arbeitsraum für richterliche Arbeit.</span><a href="/guide/de.html">Zum Arbeitsbuch</a></footer>
+</main><footer><span>CourtOS · Ein Arbeitsraum für richterliche Arbeit.</span><a data-guide href="/guide/de.html">Zum Arbeitsbuch</a></footer>
 <noscript><p>Für diesen Arbeitsbereich muss JavaScript aktiviert sein.</p></noscript>
 </body></html>

@@ -495,7 +495,7 @@ export async function streamAiSdk(
         }
       : {}),
   };
-  const rawStreamRecorder = createRawLlmStreamRecorder({
+  const rawStreamRecorder = params.courtosTask === "case-review" ? null : createRawLlmStreamRecorder({
     provider: config.provider,
     model: config.modelId,
   });
@@ -517,7 +517,8 @@ export async function streamAiSdk(
         ? { providerOptions }
         : {}),
       tools,
-      maxOutputTokens: maxOutputTokensFor(
+      ...(params.courtosTask === "case-review" ? { maxRetries: 0 } : {}),
+      maxOutputTokens: courtosPilotEnabled() && params.courtosTask === "case-review" ? 2048 : maxOutputTokensFor(
         config.provider,
         config.defaultMaxOutputTokens?.(params.reasoning),
       ),
@@ -562,6 +563,7 @@ export async function streamAiSdk(
           iteration += 1;
           break;
         case "raw":
+          if (params.courtosTask === "case-review") break;
           logRawLlmStream({
             provider: config.provider,
             model: config.modelId,

@@ -34,7 +34,7 @@ require no runtime font CDN; see `frontend/scripts/FONTS.md`. Text uses tabular
 numerals, balanced headings and readable line lengths. Legacy guide and assistant
 surfaces may retain Timeless Serif.
 
-- **Navigation:** Recherche, Bibliothek, Zitate; one settings button. Source
+- **Navigation:** Recherche, Eingaben prüfen, Bibliothek, Zitate; one settings button. Source
   choice is OpenCaseLaw or Eigene Quellen. No sample matters or dashboard tiles.
 - **Settings:** two model choices with explicit processing location, followed by
   account and sign-out. Help is collapsed. Preferences belong to the signed-in
@@ -48,8 +48,10 @@ surfaces may retain Timeless Serif.
   at startup. Insert source text only after a separate click. Host state travels
   in the library URL, not in an account-wide preference. This candidate disables
   AI handoffs until Word authentication and a suitable request surface are proven.
-  **Im Browser öffnen** provides more room without transferring document text or
-  pretending to synchronise the current task; the browser has its own session.
+  **Im Browser fortsetzen** transfers an explicit account-bound research snapshot.
+  **In Word fortsetzen** publishes the returned state; an unchanged pane restores it
+  automatically, local edits require a choice. It never inserts text automatically.
+  Word reload references are bound to the locally hashed document identity.
 - **Colour:** white `#ffffff`, ink `#191919`, secondary ink `#5e5e5e`, rules
   `#dedede`. Solid surfaces, black primary actions and restrained neutral states.
   Errors retain a semantic colour; keyboard focus remains clearly outlined.
@@ -57,6 +59,10 @@ surfaces may retain Timeless Serif.
   for header, body and library. Research has one scrolling content region; library
   management retains its bounded table. Narrow taskpanes stack source metadata,
   use 44px controls and wrap source titles and account identity without clipping.
+- **Interface language:** German, French, Italian and English are explicit per-account
+  choices. UI translation never translates quotations or silently changes search
+  filters or model prompts. Research has no duplicate page heading or permanent
+  promotional footer; source/licence access remains in settings.
 - **Trust:** concise pilot restriction stays visible. Search scope and detailed
   provenance are disclosed on demand. Source text, extraction limitations, copy
   fallbacks, authentication and explicit-send contracts remain intact.

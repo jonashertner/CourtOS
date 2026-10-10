@@ -48,6 +48,29 @@ function callback(h: ReturnType<typeof harness>, overrides: Record<string, unkno
 afterEach(() => { vi.useRealTimers(); document.head.innerHTML = ""; document.body.innerHTML = ""; });
 
 describe("CourtOS Word bootstrap authentication boundary", () => {
+    it("uses the Office UI hint and an explicit language choice without authenticating or reading the document", async () => {
+        const h = harness("index");
+        Object.assign(h.office.context, { displayLanguage: "fr-CH" });
+        h.start(); await flush();
+        expect(screen.getByRole("button", { name: "Se connecter" })).toBeEnabled();
+        fireEvent.change(screen.getByRole("combobox"), { target: { value: "en" } });
+        expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+        expect(document.documentElement.lang).toBe("en");
+        expect(h.fetch).not.toHaveBeenCalled(); expect(h.office.context.ui.displayDialogAsync).not.toHaveBeenCalled();
+        expect(h.window.location.replace).not.toHaveBeenCalled();
+    });
+    it("translates diagnostics while preserving their code and fixed authentication request", async () => {
+        const h = harness("complete", `?state=${state}`); h.start(); await flush();
+        h.fetch.mockResolvedValue(new Response("", { status: 403 }));
+        fireEvent.change(screen.getByRole("combobox"), { target: { value: "it" } });
+        fireEvent.click(screen.getByRole("button", { name: "Conferma l’accesso in Word" })); await flush();
+        expect(screen.getByRole("status")).toHaveTextContent("Codice di verifica D1-HTTP403");
+        expect(h.fetch).toHaveBeenCalledExactlyOnceWith(origin + "/api/auth/cloudflare", expect.objectContaining({ method: "POST", mode: "cors", redirect: "error" }));
+        expect(h.office.context.ui.messageParent).not.toHaveBeenCalled();
+        fireEvent.change(screen.getByRole("combobox"), { target: { value: "en" } });
+        expect(screen.getByRole("status")).toHaveTextContent("Diagnostic code D1-HTTP403");
+        expect(h.fetch).toHaveBeenCalledOnce();
+    });
     it("initializes Office before login, with no document, API, popup or navigation access on load", async () => {
         const h = harness("index"); h.start(); await flush();
         expect(h.office.onReady).toHaveBeenCalledTimes(1);

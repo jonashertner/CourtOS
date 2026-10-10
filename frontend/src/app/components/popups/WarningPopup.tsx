@@ -1,4 +1,7 @@
 "use client";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
+
 
 import { createPortal } from "react-dom";
 import { useEffect, type ReactNode } from "react";
@@ -46,6 +49,7 @@ export function WarningPopup({
     primaryAction,
     className,
 }: WarningPopupProps) {
+    const t = useLibraryText();
     useEffect(() => {
         if (!open) return;
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -68,7 +72,7 @@ export function WarningPopup({
                 message={message}
                 icon={icon}
                 onDismiss={onClose}
-                dismissLabel="Dismiss warning"
+                dismissLabel={t(L.dismissWarning)}
                 className={className}
                 actions={
                     primaryAction ? (

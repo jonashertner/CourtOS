@@ -50,6 +50,11 @@ export interface PublicDecisionDetail extends PublicDecision {
     passage: { start: number; end: number; text: string; total_chars: number; has_more: boolean };
 }
 
+export type KnowledgeApiErrorCode = "timeout" | "busy" | "query" | "session" | "changed" | "source" | "capacity" | "input" | "unavailable";
+export class KnowledgeApiError extends Error {
+    constructor(readonly code: KnowledgeApiErrorCode, message: string) { super(message); this.name = "KnowledgeApiError"; }
+}
+
 async function request<T>(path: string, init: RequestInit): Promise<T> {
     const response = await authenticatedFetch(`/api/knowledge${path}`, {
         cache: "no-store", ...init,
@@ -70,7 +75,12 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
             : response.status === 429 ? "Die Suche ist gerade ausgelastet. Bitte versuchen Sie es später erneut."
             : response.status === 400 || response.status === 422 ? "Bitte prüfen Sie Suchtext und Dokumentauswahl."
             : "Die Suche ist vorübergehend nicht verfügbar. Bitte versuchen Sie es erneut.";
-        throw new Error(publicMessage || message);
+        const safeCode: KnowledgeApiErrorCode = publicMessage
+            ? code === "public_research_timeout" ? "timeout" : code === "public_research_busy" ? "busy" : "query"
+            : response.status === 401 ? "session" : response.status === 409 ? "changed"
+            : response.status === 403 || response.status === 404 ? "source" : response.status === 429 ? "capacity"
+            : response.status === 400 || response.status === 422 ? "input" : "unavailable";
+        throw new KnowledgeApiError(safeCode, publicMessage || message);
     }
     return response.json() as Promise<T>;
 }
@@ -78,8 +88,24 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
 export function searchKnowledge(query: string, document_ids: string[], signal?: AbortSignal) {
     return request<KnowledgeSearch>("/search", { method: "POST", body: JSON.stringify({ query, document_ids, limit: 12 }), signal });
 }
-export function searchPublicKnowledge(query: string, language: string, signal?: AbortSignal) {
-    return request<PublicSearch>("/public/search", { method: "POST", body: JSON.stringify({ query, limit: 5, ...(language ? { language } : {}) }), signal });
+export async function searchPublicKnowledge(query: string, language: string, signal?: AbortSignal) {
+    // One bounded request:45s public adapter,47s backend,50s browser fallback.
+    // A local abort stops waiting; it cannot promise that upstream AI stopped.
+    if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
+    const controller = new AbortController();
+    let timedOut = false;
+    const abort = () => controller.abort(signal?.reason);
+    signal?.addEventListener("abort", abort, { once: true });
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 50_000);
+    try {
+        return await request<PublicSearch>("/public/search", { method: "POST", body: JSON.stringify({ query, limit: 5, ...(language ? { language } : {}) }), signal: controller.signal });
+    } catch (error) {
+        if (timedOut) throw new KnowledgeApiError("timeout", "Die Suche hat zu lange gedauert. Bitte präzisere Begriffe verwenden oder die Sprache eingrenzen.");
+        throw error;
+    } finally {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", abort);
+    }
 }
 export function getPublicDecision(id: string, start = 0, signal?: AbortSignal) {
     return request<PublicDecisionDetail>(`/public/decisions/${encodeURIComponent(id)}?start=${start}&length=4000`, { method: "GET", signal });

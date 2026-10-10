@@ -1,4 +1,7 @@
 "use client";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
+
 
 import React, { useSyncExternalStore } from "react";
 import { Settings2 } from "lucide-react";
@@ -53,6 +56,7 @@ export function TableToolbar<T extends string>({
     leading,
     actions,
 }: Props<T>) {
+    const t=useLibraryText();
     const hasItems = items.length > 0;
     const isDesktop = useSyncExternalStore(
         subscribeToDesktopQuery,
@@ -86,8 +90,8 @@ export function TableToolbar<T extends string>({
                     <DropdownTrigger asChild>
                         <button
                             type="button"
-                            title="Toolbar actions"
-                            aria-label="Toolbar actions"
+                            title={t(L.toolbarActions)}
+                            aria-label={t(L.toolbarActions)}
                             className={`ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-700 ${LIQUID_GLASS_SUBTLE_CLASS} ${LIQUID_GLASS_HOVER_CLASS} transition-colors hover:text-gray-900 active:scale-[0.98]`}
                         >
                             <Settings2 className="h-3.5 w-3.5" />

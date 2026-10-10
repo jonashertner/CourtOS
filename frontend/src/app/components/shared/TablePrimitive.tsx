@@ -1,4 +1,7 @@
 "use client";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
+
 
 import {
     useEffect,
@@ -235,12 +238,13 @@ export function TableSortFilter({
     widthClassName?: string;
     align?: "left" | "right";
 }) {
+    const t = useLibraryText();
     return (
         <TableFilters
             {...props}
-            allLabel={allLabel}
+            allLabel={allLabel === "Default Order" ? t(L.defaultOrder) : allLabel}
             widthClassName={widthClassName}
-            options={SORT_OPTIONS}
+            options={[{value:"asc",label:t(L.ascending)},{value:"desc",label:t(L.descending)}]}
         />
     );
 }

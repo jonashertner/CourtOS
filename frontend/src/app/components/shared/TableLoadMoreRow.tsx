@@ -1,4 +1,7 @@
 "use client";
+import { useLibraryText } from "@/app/hooks/useLibraryText";
+import { libraryMessages as L } from "@/app/lib/libraryMessages";
+
 
 import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
@@ -23,6 +26,7 @@ export function TableLoadMoreRow({
     onLoadMore: () => void;
     autoLoadOnVisible?: boolean;
 }) {
+    const t = useLibraryText();
     const rowRef = useRef<HTMLDivElement>(null);
     const requestedItemCountRef = useRef<number | null>(null);
 
@@ -72,10 +76,10 @@ export function TableLoadMoreRow({
             >
                 {loadingMore && <Loader2 className="h-3 w-3 animate-spin" />}
                 {loadingMore
-                    ? "Loading…"
+                    ? t(L.loadingMore)
                     : hasError
-                      ? "Retry loading"
-                      : "Load more"}
+                      ? t(L.retryLoad)
+                      : t(L.more)}
             </button>
         </div>
     );

@@ -1,6 +1,7 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
+  const ui = window.CourtOSWorkbenchUI, uiText = ui.text;
   const base = new URL('../', document.querySelector('script[src$="app.js"]').src);
   const outboundKey = 'courtos:frontier:outbound', returnKey = 'courtos:frontier:return', workingKey = 'courtos:frontier:working';
   const purchaseKey = 'courtos:frontier:purchase';
@@ -27,10 +28,10 @@
     const bill = state.billing;
     $('billing-balance').textContent = chf(bill?.available_micros);
     $('billing-held').hidden = !validMicros(bill?.held_micros) || bill.held_micros === 0;
-    $('billing-held').textContent = `${chf(bill?.held_micros)} für laufende Aufträge reserviert.`;
-    $('billing-status').textContent = state.billing?.blocked === true ? 'Ihr Guthaben wird nach einer Zahlungsänderung geprüft. Bitte wenden Sie sich an den Support.' : (billingReady() ? 'Aufladen über Stripe. Keine automatische Aufladung.' : 'Bezahlte Aufträge sind noch nicht verfügbar.');
+    uiText($('billing-held'), '{amount} für laufende Aufträge reserviert.', { amount: chf(bill?.held_micros) });
+    uiText($('billing-status'), state.billing?.blocked === true ? 'Ihr Guthaben wird nach einer Zahlungsänderung geprüft. Bitte wenden Sie sich an den Support.' : (billingReady() ? 'Aufladen über Stripe. Keine automatische Aufladung.' : 'Bezahlte Aufträge sind noch nicht verfügbar.'));
     const tariff = bill?.tariff;
-    $('billing-tariff').textContent = tariff?.vat_included === true ? `${chf(tariff.input_micros_per_million)} je Million Eingabetokens · ${chf(tariff.output_micros_per_million)} je Million Ausgabetokens. Preise inklusive MWST.` : '';
+    uiText($('billing-tariff'), tariff?.vat_included === true ? '{input} je Million Eingabetokens · {output} je Million Ausgabetokens. Preise inklusive MWST.' : '', { input: chf(tariff?.input_micros_per_million), output: chf(tariff?.output_micros_per_million) });
     refreshControls();
   }
   async function loadBilling() {
@@ -48,19 +49,19 @@
   async function loadQuote() {
     if (!billingRequired() || state.packet?.status !== 'prepared') return;
     const packet = state.packet;
-    clearQuote(); $('quote-section').hidden = false; $('quote-expires').textContent = 'Kosten werden lokal berechnet. Noch kein Modellaufruf.'; refreshControls();
+    clearQuote(); $('quote-section').hidden = false; uiText($('quote-expires'), 'Kosten werden lokal berechnet. Noch kein Modellaufruf.'); refreshControls();
     try {
       const quote = await api(`packets/${encodeURIComponent(packet.id)}/quote`, { method: 'POST', body: { hash: packet.hash } });
       if (state.packet !== packet) return;
       state.quote = quote;
       if (!validQuote()) throw new Error('invalid_quote');
       $('quote-amount').textContent = chf(quote.max_charge_micros);
-      $('quote-expires').textContent = `Inklusive MWST · gültig bis ${new Date(quote.expires_at).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })}.`;
+      uiText($('quote-expires'), 'Inklusive MWST · gültig bis {time}.', { time: new Date(quote.expires_at).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }) });
       $('quote-consent').disabled = false;
-      state.quoteTimer = setTimeout(() => { clearQuote(); $('quote-expires').textContent = 'Die Kostenfreigabe ist abgelaufen. Bitte neu berechnen.'; refreshControls(); }, Math.min(2147483647, Date.parse(quote.expires_at) - Date.now()));
+      state.quoteTimer = setTimeout(() => { clearQuote(); uiText($('quote-expires'), 'Die Kostenfreigabe ist abgelaufen. Bitte neu berechnen.'); refreshControls(); }, Math.min(2147483647, Date.parse(quote.expires_at) - Date.now()));
     } catch {
       if (state.packet !== packet) return;
-      clearQuote(); $('quote-expires').textContent = 'Die Kosten konnten nicht berechnet werden. Bitte erneut versuchen.';
+      clearQuote(); uiText($('quote-expires'), 'Die Kosten konnten nicht berechnet werden. Bitte erneut versuchen.');
     }
     refreshControls();
   }
@@ -85,7 +86,7 @@
     } catch { message('Die Zahlungsseite konnte nicht geöffnet werden. Erneut versuchen; dieselbe Bestellung wird wieder aufgenommen.', true); }
     finally { state.checkoutBusy = false; refreshControls(); }
   }
-  function message(text, error = false) { $('global-message').textContent = text; $('global-message').hidden = !text; $('global-message').classList.toggle('error', error); }
+  function message(text, error = false) { uiText($('global-message'), error ? ui.error(text) : text); $('global-message').hidden = !text; $('global-message').classList.toggle('error', error); }
   async function api(path, options = {}) {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 25000);
     try {
@@ -93,7 +94,7 @@
       let data; try { data = await response.json(); } catch { throw new Error('Die Serverantwort konnte nicht gelesen werden. Bitte erneut anmelden.'); }
       if (!response.ok) {
         if (response.status === 401) { clearTimeout(state.timer); $('workspace').hidden = true; $('login').hidden = false; }
-        throw Object.assign(new Error(typeof data.error === 'string' ? data.error : 'Die Anfrage konnte nicht ausgeführt werden.'), { status: response.status });
+        throw Object.assign(new Error(ui.httpError(response.status)), { status: response.status });
       }
       return data;
     } catch (error) { if (error.name === 'AbortError') throw new Error('Die Verbindung wurde unterbrochen. Ein angenommener Auftrag kann weiterlaufen; es erfolgt kein automatischer Neuversand.'); throw error; }
@@ -149,10 +150,10 @@
   function renderConfig() {
     const frontier = state.config.frontier;
     $('frontier-name').textContent = modelName(frontier.model);
-    $('model-status').textContent = frontier.ready ? 'Bereit für Ihre freigegebene Anfrage.' : 'Der externe Aufruf ist derzeit nicht verfügbar.';
+    uiText($('model-status'), frontier.ready ? 'Bereit für Ihre freigegebene Anfrage.' : 'Der externe Aufruf ist derzeit nicht verfügbar.');
     $('account-name').textContent = state.user.username;
     const limits = state.config.limits;
-    $('limits').textContent = `Testkontingent: ${limits.frontier_daily_user} externe Anfrage pro Person und UTC-Tag; ${limits.frontier_daily_global} insgesamt. Lokale Assistentenaufträge haben ein eigenes Kontingent.`;
+    uiText($('limits'), 'Testkontingent: {user} externe Anfrage pro Person und UTC-Tag; {global} insgesamt. Lokale Assistentenaufträge haben ein eigenes Kontingent.', { user: limits.frontier_daily_user, global: limits.frontier_daily_global });
     refreshControls();
   }
   function packetContent(packet) {
@@ -169,17 +170,17 @@
     $('preview-system').textContent = packet.payload.system;
     $('preview-json').textContent = JSON.stringify(packet.payload, null, 2);
     $('preview-model').textContent = `${packet.provider} · ${modelName(packet.model)}`;
-    $('preview-size').textContent = `${bytes(content.text).toLocaleString('de-CH')} Bytes Text · keine Anhänge`;
+    uiText($('preview-size'), '{size} Bytes Text · keine Anhänge', { size: bytes(content.text).toLocaleString('de-CH') });
     $('compose').hidden = true; $('preview').hidden = false;
     $('send').hidden = packet.status !== 'prepared';
     refreshControls();
   }
   function renderProcessingState() {
-    $('preview').querySelector('.processing-note').textContent = state.packet?.status === 'prepared'
+    uiText($('preview').querySelector('.processing-note'), state.packet?.status === 'prepared'
       ? 'Zur Freigabe · Noch nicht an Anthropic gesendet'
       : state.packet?.status === 'submitted'
         ? 'Freigegeben · Externer Auftrag beauftragt'
-        : 'Übermittlungsstatus wird geprüft';
+        : 'Übermittlungsstatus wird geprüft');
   }
   async function prepare(event) {
     event.preventDefault(); if ($('prepare').disabled) return;
@@ -211,15 +212,15 @@
     const job = state.job; if (!job) return;
     $('result-section').hidden = false;
     $('job-status').dataset.active = String(active(job));
-    $('job-status').textContent = ({ queued: 'Anfrage angenommen.', running: 'Anthropic verarbeitet Ihre Anfrage.', succeeded: 'Antwort eingegangen.', failed: 'Der externe Aufruf konnte nicht abgeschlossen werden. Es erfolgt keine automatische Wiederholung.' })[job.status] || 'Status wird geprüft.';
+    uiText($('job-status'), ({ queued: 'Anfrage angenommen.', running: 'Anthropic verarbeitet Ihre Anfrage.', succeeded: 'Antwort eingegangen.', failed: 'Der externe Aufruf konnte nicht abgeschlossen werden. Es erfolgt keine automatische Wiederholung.' })[job.status] || 'Status wird geprüft.');
     const seconds = Math.max(0, Math.floor((Date.now() - state.startedAt) / 1000));
-    $('elapsed').textContent = active(job) ? `${seconds} Sekunden seit Beginn der Statusanzeige.` : '';
+    uiText($('elapsed'), active(job) ? '{seconds} Sekunden seit Beginn der Statusanzeige.' : '', { seconds });
     $('result').hidden = job.status !== 'succeeded';
     const settlement = job.result?.billing || job.billing;
     $('billing-result').hidden = !billingRequired();
-    $('billing-result').textContent = settlement?.currency === 'chf' && settlement.vat_included === true && validMicros(settlement.charged_micros) && validMicros(settlement.released_micros) ? `${chf(settlement.charged_micros)} abgerechnet · ${chf(settlement.released_micros)} freigegeben. Inklusive MWST.` : (active(job) ? 'Der freigegebene Höchstbetrag ist reserviert.' : 'Die Abrechnung wird mit Ihrem Guthaben abgeglichen.');
+    uiText($('billing-result'), settlement?.currency === 'chf' && settlement.vat_included === true && validMicros(settlement.charged_micros) && validMicros(settlement.released_micros) ? '{charged} abgerechnet · {released} freigegeben. Inklusive MWST.' : (active(job) ? 'Der freigegebene Höchstbetrag ist reserviert.' : 'Die Abrechnung wird mit Ihrem Guthaben abgeglichen.'), { charged: chf(settlement?.charged_micros), released: chf(settlement?.released_micros) });
     if (job.status === 'succeeded' && job.result) {
-      $('result-meta').textContent = `ANTHROPIC · ${modelName(job.result.model || state.packet.model)} · KI-ANTWORT`;
+      uiText($('result-meta'), 'ANTHROPIC · {model} · KI-ANTWORT', { model: modelName(job.result.model || state.packet.model) });
       $('truncation').hidden = !job.result.truncated; renderProse($('result-text'), job.result.text);
       $('export').href = new URL(`api/export/${encodeURIComponent(job.id)}`, base).href;
     }
@@ -275,6 +276,7 @@
     try {
       const me = await api('me'); state.user = me.user; state.csrf = me.csrf;
       [state.config, state.nativeId] = await Promise.all([api('workbench'), nativeIdentity()]);
+      ui.setOwner(state.nativeId || `hybrid:${state.user.id}`);
       renderConfig(); $('workspace').hidden = false; await loadBilling();
       state.handoff = readHandoff(state.nativeId);
       if (state.handoff) { $('material').value = state.handoff.text; $('handoff-note').hidden = false; saveWorkingDraft(); try { sessionStorage.removeItem(outboundKey); } catch {} }
@@ -284,7 +286,7 @@
         else await loadQuote();
       }
       refreshControls();
-    } catch (error) { $('login').hidden = false; $('login-message').textContent = error.message; }
+    } catch (error) { $('login').hidden = false; uiText($('login-message'), ui.error(error.message)); }
     finally { $('loading').hidden = true; }
   }
   $('request-form').addEventListener('submit', prepare);

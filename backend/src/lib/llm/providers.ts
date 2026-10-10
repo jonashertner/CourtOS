@@ -1,3 +1,4 @@
+import { preflightCourtosReviewRequest } from "./courtosReviewPreflight";
 import { assertCourtosPilotModel, courtosPilotEnabled } from "../courtosPilot";
 import {
   aiSdkFetch,
@@ -484,6 +485,7 @@ function configuredModelOrThrow(id: string): ConfiguredModel {
 async function createConfiguredAdapter(
   id: string,
   apiKeys?: UserApiKeys,
+  courtosTask?: "case-review",
 ): Promise<AiSdkAdapterConfig> {
   const configured = configuredModelOrThrow(id);
   if (configured.apiKeyProvider && apiKeys?.disabledProviders?.includes(configured.apiKeyProvider)) {
@@ -491,10 +493,11 @@ async function createConfiguredAdapter(
   }
   const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
   const apiKey = apiKeyForConfiguredModel(configured, apiKeys);
+  const pilotCap = courtosTask === "case-review" ? 2048 : 768;
   const client = createOpenAICompatible({
     name: configured.id,
     baseURL: configured.baseUrl,
-    ...(courtosPilotEnabled() ? { transformRequestBody: (body: Record<string, unknown>) => ({ ...body, max_tokens: Math.min(typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : 768, 768), chat_template_kwargs: { enable_thinking: false } }) } : {}),
+    ...(courtosPilotEnabled() ? { transformRequestBody: (body: Record<string, unknown>) => ({ ...body, max_tokens: Math.min(typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : pilotCap, pilotCap), ...(courtosTask === "case-review" ? { response_format: { type: "json_object" } } : {}), chat_template_kwargs: { enable_thinking: false } }) } : {}),
     // Omit Authorization entirely for endpoints declared without auth.
     ...(apiKey ? { apiKey } : {}),
     ...(configured.maxTokensField === "max_completion_tokens"
@@ -507,7 +510,7 @@ async function createConfiguredAdapter(
           },
         }
       : {}),
-    fetch: aiSdkFetch,
+    fetch: courtosTask === "case-review" ? async (input, init) => { await preflightCourtosReviewRequest(input, init); return aiSdkFetch(input, init); } : aiSdkFetch,
   });
   const base = client(configured.apiModel ?? configured.id);
   const { wrapLanguageModel } = await import("ai");
@@ -551,6 +554,7 @@ export function ollamaAuthHeaders(): Record<string, string> {
 async function createProviderAdapter(
   model: string,
   apiKeys?: UserApiKeys,
+  courtosTask?: "case-review",
 ): Promise<AiSdkAdapterConfig> {
   assertCourtosPilotModel(model);
   const provider = providerForModel(model);
@@ -652,7 +656,7 @@ async function createProviderAdapter(
   }
 
   if (provider === "openai-compatible") {
-    return createConfiguredAdapter(model, apiKeys);
+    return createConfiguredAdapter(model, apiKeys, courtosTask);
   }
 
   const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
@@ -684,9 +688,10 @@ export async function streamWithProvider(
   try {
     return await streamAiSdk(
       normalizedParams,
-      await createProviderAdapter(params.model, params.apiKeys),
+      await createProviderAdapter(params.model, params.apiKeys, params.courtosTask),
     );
   } catch (error) {
+    if (params.courtosTask === "case-review") throw error;
     const retryReasoning = fallbackReasoningLevelFromProviderError(
       error,
       normalizedParams.reasoning,
@@ -694,7 +699,7 @@ export async function streamWithProvider(
     if (retryReasoning) {
       return streamAiSdk(
         { ...normalizedParams, reasoning: retryReasoning },
-        await createProviderAdapter(params.model, params.apiKeys),
+        await createProviderAdapter(params.model, params.apiKeys, params.courtosTask),
       );
     }
     if (
@@ -707,7 +712,7 @@ export async function streamWithProvider(
     ) {
       return streamAiSdk(
         { ...normalizedParams, tools: undefined, runTools: undefined },
-        await createProviderAdapter(params.model, params.apiKeys),
+        await createProviderAdapter(params.model, params.apiKeys, params.courtosTask),
       );
     }
     throw error;

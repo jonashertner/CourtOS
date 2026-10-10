@@ -2,6 +2,8 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DocResult } from "@/app/hooks/useFetchSingleDoc";
 import { PdfView } from "./PdfView";
+import { CourtOSLocaleProvider } from "@/app/contexts/CourtOSLocaleContext";
+import { setCourtOSLocale } from "@/app/lib/courtosLocale";
 
 const mocks = vi.hoisted(() => ({
     result: null as DocResult,
@@ -57,6 +59,15 @@ afterEach(() => {
 const view = () => <PdfView doc={{ document_id: "document-1" }} />;
 
 describe("PdfView loading", () => {
+    it("translates a visible error without reopening the PDF or altering its source", async () => {
+        setCourtOSLocale("pdf-locale-check", "de");
+        mocks.getDocument.mockImplementation(() => ({ promise: Promise.reject(new Error("PDF load failed")), destroy: vi.fn().mockResolvedValue(undefined) }));
+        render(<CourtOSLocaleProvider ownerId="pdf-locale-check">{view()}</CourtOSLocaleProvider>);
+        await screen.findByText("Das Dokument konnte nicht geladen werden.");
+        await act(async () => { setCourtOSLocale("pdf-locale-check", "fr"); });
+        expect(screen.getByText("Le document n’a pas pu être chargé.")).toBeVisible();
+        expect(mocks.getDocument).toHaveBeenCalledOnce();
+    });
     it("keeps fetched bytes attached when PDF.js transfers its buffer and loads the same bytes again", async () => {
         const source = Uint8Array.from([37, 80, 68, 70]).buffer;
         mocks.result = { type: "pdf", buffer: source };
@@ -87,7 +98,7 @@ describe("PdfView loading", () => {
         expect(transferred[1]).not.toBe(transferred[0]);
         expect(transferred[1].byteLength).toBe(0);
         expect(source.byteLength).toBe(4);
-        expect(screen.queryByText("Failed to load document.")).toBeNull();
+        expect(screen.queryByText("Das Dokument konnte nicht geladen werden.")).toBeNull();
         expect(destroy).toHaveBeenCalledTimes(1);
         unmount();
         expect(destroy).toHaveBeenCalledTimes(2);
@@ -100,12 +111,12 @@ describe("PdfView loading", () => {
         });
         const { rerender } = render(view());
         expect(
-            await screen.findByText("Failed to load document."),
+            await screen.findByText("Das Dokument konnte nicht geladen werden."),
         ).toBeVisible();
         expect(screen.queryByText("private worker exception")).toBeNull();
         mocks.result = null;
         rerender(<PdfView doc={{ document_id: "document-2" }} />);
-        expect(screen.queryByText("Failed to load document.")).toBeNull();
+        expect(screen.queryByText("Das Dokument konnte nicht geladen werden.")).toBeNull();
         mocks.getDocument.mockReturnValueOnce({
             promise: Promise.resolve(pdfDocument),
             destroy: vi.fn().mockResolvedValue(undefined),
@@ -113,7 +124,7 @@ describe("PdfView loading", () => {
         mocks.result = { type: "pdf", buffer: new ArrayBuffer(4) };
         rerender(<PdfView doc={{ document_id: "document-2" }} />);
         await waitFor(() => expect(mocks.getDocument).toHaveBeenCalledTimes(2));
-        expect(screen.queryByText("Failed to load document.")).toBeNull();
+        expect(screen.queryByText("Das Dokument konnte nicht geladen werden.")).toBeNull();
     });
 
     it("destroys a cancelled load and ignores its rejection after a new document has loaded", async () => {
@@ -138,6 +149,6 @@ describe("PdfView loading", () => {
         await act(async () => {
             rejectOld(new Error("Cancelled load"));
         });
-        expect(screen.queryByText("Failed to load document.")).toBeNull();
+        expect(screen.queryByText("Das Dokument konnte nicht geladen werden.")).toBeNull();
     });
 });

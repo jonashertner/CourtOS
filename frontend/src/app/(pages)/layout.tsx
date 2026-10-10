@@ -114,7 +114,7 @@ export default function MikeLayout({
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
             if (COURTOS_PILOT_MODE) capturePendingResearchHandoff();
-            const next = isWordResearchContext(pathname, new URLSearchParams(window.location.search).get("host"))
+            const next = pathname === "/review" ? safeCourtOSResearchNext(pathname + window.location.search, "") : isWordResearchContext(pathname, new URLSearchParams(window.location.search).get("host"))
                 ? "/word/research" : safeCourtOSResearchNext(pathname + window.location.search, "");
             router.push(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
         }
