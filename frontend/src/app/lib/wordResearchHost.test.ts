@@ -1,18 +1,37 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { connectWordResearchHost, createWordResearchHost, WORD_RESEARCH_TEXT_LIMIT, type WordResearchEnvironment, type WordResearchRuntime } from "./wordResearchHost";
+import { webcrypto } from "node:crypto";
+import { connectWordResearchHost, createWordResearchHost, getWordResearchDocumentScope, WORD_RESEARCH_TEXT_LIMIT, type WordResearchEnvironment, type WordResearchRuntime } from "./wordResearchHost";
 
 function fixture(text = "Nur die markierte Passage") {
-    const selection = { text, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn() };
+    const inserted = { font: { name: "Times New Roman", size: 11 } };
+    const selection = { text, font: { name: "Aptos", size: 12 }, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn((_html: string, _location: "End") => inserted) };
     const getSelection = vi.fn(() => selection);
     const bodyRead = vi.fn(() => { throw new Error("Whole document must never be accessed"); });
     const document = { getSelection, get body() { return bodyRead(); } };
     const sync = vi.fn(async () => {});
     const run = vi.fn(async <T>(work: Parameters<WordResearchRuntime["run"]>[0]) => work({ document, sync }) as Promise<T>);
     const runtime = { run } as WordResearchRuntime;
-    return { selection, getSelection, bodyRead, sync, run, runtime };
+    return { selection, inserted, getSelection, bodyRead, sync, run, runtime };
 }
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+describe("Word document-local reload scope", () => {
+    it("hashes saved-document metadata locally and never reads content or sends the path", async () => {
+        const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);
+        const env = (url: string): WordResearchEnvironment => ({ Office: { onReady: vi.fn(), context: { document: { url } } } });
+        const crypt = webcrypto as unknown as Crypto;
+        const one = await getWordResearchDocumentScope(env("file:///private/one.docx"), crypt);
+        expect(one).toMatch(/^[a-f0-9]{64}$/);
+        expect(await getWordResearchDocumentScope(env("file:///private/one.docx"), crypt)).toBe(one);
+        expect(await getWordResearchDocumentScope(env("file:///private/two.docx"), crypt)).not.toBe(one);
+        expect(fetch).not.toHaveBeenCalled();
+    });
+    it("does not invent a persistent scope for unsaved or unavailable documents", async () => {
+        expect(await getWordResearchDocumentScope({})).toBeNull();
+        expect(await getWordResearchDocumentScope({ Office: { onReady: vi.fn(), context: { document: { url: "" } } } })).toBeNull();
+    });
+});
 
 describe("CourtOS Word selection boundary", () => {
     it("does nothing on creation and reads exactly the selected text only when asked", async () => {
@@ -77,8 +96,16 @@ describe("CourtOS Word selection boundary", () => {
         expect(fragment.textContent).toContain('Position <nicht geprüft> & Original ansehen.');
         expect(fragment.textContent).not.toContain('https://');
         expect(f.selection.insertText).not.toHaveBeenCalled();
-        expect(f.selection.load).not.toHaveBeenCalled();
+        expect(f.selection.load).toHaveBeenCalledExactlyOnceWith("font/name,font/size");
+        expect(f.inserted.font).toEqual({ name: "Aptos", size: 12 });
+        expect(f.selection.font).toEqual({ name: "Aptos", size: 12 });
         expect(f.bodyRead).not.toHaveBeenCalled();
+    });
+
+    it("does not insert anything when the current font cannot be read", async () => {
+        const f = fixture(); f.sync.mockRejectedValue(new Error("private format context"));
+        await expect(createWordResearchHost(f.runtime).insertCitationAfterSelection({ quote: "Zitat", source: "Quelle", pinpoint: "Seite 1" })).rejects.toMatchObject({ code: "insert_failed" });
+        expect(f.selection.insertHtml).not.toHaveBeenCalled(); expect(f.selection.insertText).not.toHaveBeenCalled();
     });
 
     it("keeps quote line breaks and immutable private source/page URLs", async () => {
@@ -100,22 +127,24 @@ describe("CourtOS Word selection boundary", () => {
     it("uses the current selection on insertion, not a stale range from the earlier search", async () => {
         const f = fixture(); const host = createWordResearchHost(f.runtime);
         await host.readSelection();
-        const current = { text: 'Neue Auswahl', load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn() };
+        const current = { text: 'Neue Auswahl', font: { name: "Arial", size: 10 }, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn((_html: string, _location: "End") => f.inserted) };
         f.getSelection.mockReturnValue(current);
         await host.insertCitationAfterSelection({ quote: 'Zitat', source: 'Quelle', pinpoint: 'Seite 1' });
         expect(current.insertHtml).toHaveBeenCalledExactlyOnceWith(expect.any(String), 'End');
         expect(f.selection.insertHtml).not.toHaveBeenCalled();
-        expect(current.load).not.toHaveBeenCalled();
+        expect(current.load).toHaveBeenCalledExactlyOnceWith("font/name,font/size");
+        expect(f.inserted.font).toEqual({ name: "Arial", size: 10 });
     });
 
     it("never retries or falls back to plain text after an uncertain rich insertion", async () => {
         const f = fixture(); let reject!: (error: Error) => void;
-        f.sync.mockReturnValue(new Promise<void>((_, fail) => { reject = fail; }));
+        f.sync.mockResolvedValueOnce(undefined).mockReturnValue(new Promise<void>((_, fail) => { reject = fail; }));
         const host = createWordResearchHost(f.runtime);
         const citation = { quote: 'Zitat', source: 'Quelle', pinpoint: 'Seite 1' };
         const first = host.insertCitationAfterSelection(citation);
         const failed = expect(first).rejects.toMatchObject({ code: 'insert_failed', message: expect.not.stringContaining('sensitive') });
         await expect(host.insertCitationAfterSelection(citation)).rejects.toMatchObject({ code: 'busy' });
+        await Promise.resolve();
         reject(new Error('sensitive Office error')); await failed;
         expect(f.run).toHaveBeenCalledOnce();
         expect(f.selection.insertHtml).toHaveBeenCalledOnce();

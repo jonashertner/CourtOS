@@ -1,4 +1,5 @@
 import { parseLibrarySourcePath } from "./sourceLinks";
+import { parseResearchHandoffLocation } from "./researchHandoff";
 
 const AUTH_REDIRECT_PATHS = new Set([
     "/pilot",
@@ -12,7 +13,8 @@ const AUTH_REDIRECT_PATHS = new Set([
 
 /** Only exact research routes or validated immutable library references may return after login. */
 export function safeCourtOSResearchNext(candidate: string | null | undefined, fallback: string): string {
-    return candidate && (candidate === "/word/research" || candidate === "/research" || parseLibrarySourcePath(candidate)) ? candidate : fallback;
+    const handoff = candidate?.startsWith("/research?") && parseResearchHandoffLocation(candidate.slice("/research".length));
+    return candidate && (candidate === "/word/research" || candidate === "/research" || handoff || parseLibrarySourcePath(candidate)) ? candidate : fallback;
 }
 
 export function safeAuthNext(

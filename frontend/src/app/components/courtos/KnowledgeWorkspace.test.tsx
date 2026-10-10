@@ -445,7 +445,7 @@ describe("personal knowledge workspace", () => {
 
     it("inserts the selected public passage and its provenance only after an explicit Word action", async () => {
         const wordHost = { kind: "word" as const, readSelection: vi.fn(), insertTextAfterSelection: vi.fn(), insertCitationAfterSelection: vi.fn().mockResolvedValue(undefined) };
-        const decision = { decision_id: "WORD_CASE", title: "Geprüfte Quelle", snippet: "Öffentlicher Auszug", source_url: "https://example.org/word-case" };
+        const decision = { decision_id: "WORD_CASE", title: "Bundesgericht · BGE 137 I 195", court: "bger", docket_number: "BGE 137 I 195", decision_date: "2011-06-24", snippet: "Öffentlicher Auszug", source_url: "https://example.org/word-case" };
         api.public.mockResolvedValue({ results: [decision], query_mode: "literal_terms", database_generation: "test" });
         api.detail.mockResolvedValue({ ...decision, passage: { start: 0, end: 32, total_chars: 32, has_more: false, text: "Der genaue öffentliche Wortlaut." } });
         api.model = "claude-opus-5-5";
@@ -461,7 +461,7 @@ describe("personal knowledge workspace", () => {
         expect(within(dialog).queryByRole("button", { name: /Mit (Gemma|Opus) prüfen/ })).toBeNull();
         await user.click(within(dialog).getByRole("button", { name: "In Word einfügen" }));
         expect(wordHost.insertCitationAfterSelection).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-            quote: "Der genaue öffentliche Wortlaut.", source: "Geprüfte Quelle",
+            quote: "Der genaue öffentliche Wortlaut.", source: "Bundesgericht · BGE 137 I 195 · 2011-06-24",
             sourceUrl: "https://example.org/word-case",
             pinpointUrl: expect.stringContaining("#:~:text="),
             pinpoint: "Zeichen 0–32 von 32 im erfassten Text; keine amtlichen Randnummern",

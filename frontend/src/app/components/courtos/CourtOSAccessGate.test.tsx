@@ -110,6 +110,16 @@ describe("CourtOS Access entry", () => {
         await waitFor(() => expect(state.replace).toHaveBeenCalledWith("/word/research"));
         expect(state.bridge).not.toHaveBeenCalled();
     });
+    it.each([false, true])("retains an opaque browser handoff after the actual Access gate (already signed in: %s)", async (authenticated) => {
+        state.next = "/research?handoff=11111111-1111-4111-8111-111111111111";
+        state.authenticated = authenticated;
+        render(<CourtOSAccessGate />);
+        if (!authenticated) await userEvent.click(screen.getByRole("button", { name: "CourtOS öffnen" }));
+        await waitFor(() => expect(state.replace).toHaveBeenCalledWith(state.next));
+        expect(state.bridge).toHaveBeenCalledTimes(authenticated ? 0 : 1);
+        // State retrieval/ownership validation happens only after this gate, not through identity parameters.
+        if (!authenticated) expect(state.bridge).toHaveBeenCalledWith();
+    });
 
     it.each(["https://evil.example", "//evil.example", "/word/research?next=https://evil.example", "/word/research#other", "/library", "/word/research/../login"])("does not follow an unapproved return path %s", async (next) => {
         state.next = next; state.authenticated = true;

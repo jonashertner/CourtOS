@@ -1,13 +1,23 @@
 // @vitest-environment-options {"url":"https://court.example.org/word/research?selection=private&token=private#private"}
+import { useEffect } from "react";
+import { emptyResearchState, useResearchHandoff } from "./ResearchHandoffContext";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchShell } from "./ResearchShell";
-const state = vi.hoisted(() => ({ pathname: "/research", query: "", email: "very.long.but.realistically.named.reader@court.example.org", signOut: vi.fn(), replace: vi.fn() }));
+const handoffId = "11111111-1111-4111-8111-111111111111";
+const state = vi.hoisted(() => ({ create: vi.fn(), pathname: "/research", query: "", email: "very.long.but.realistically.named.reader@court.example.org", signOut: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({ usePathname: () => state.pathname, useSearchParams: () => new URLSearchParams(state.query), useRouter: () => ({ replace: state.replace }) }));
 vi.mock("@/app/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "shell-owner", email: state.email }, signOut: state.signOut }) }));
 vi.mock("@/app/lib/courtos", async (original) => ({ ...(await original<typeof import("@/app/lib/courtos")>()), COURTOS_CLOUDFLARE_AUTH: false }));
+vi.mock("@/app/lib/researchHandoff", async (original) => ({ ...(await original<typeof import("@/app/lib/researchHandoff")>()), createResearchHandoff: state.create }));
+function WorkspaceMarker() {
+    const handoff = useResearchHandoff(); const register = handoff?.register, bind = handoff?.bindWordDocument;
+    useEffect(() => register?.({ getState: emptyResearchState, applyState: () => {} }), [register]);
+    useEffect(() => { bind?.(null); }, [bind]);
+    return <p>Word research</p>;
+}
 beforeEach(() => {
-    state.pathname = "/research"; state.query = ""; state.signOut.mockReset().mockResolvedValue(undefined); state.replace.mockReset(); localStorage.clear();
+    state.pathname = "/research"; state.query = ""; state.signOut.mockReset().mockResolvedValue(undefined); state.replace.mockReset(); localStorage.clear(); sessionStorage.clear(); state.create.mockReset().mockResolvedValue({ id: handoffId, revision: 1, expires_at: new Date(Date.now() + 7200000).toISOString(), direction: "to_browser", acknowledged_revision: 0 });
     Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
     Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
 });
@@ -27,7 +37,7 @@ describe("compact research window", () => {
         expect(screen.getByText(state.email)).toBeVisible();
         expect(screen.getByRole("main")).toHaveTextContent("Source results");
         expect(screen.queryByRole("link", { name: /Projekte|Arbeitsabläufe|Assistent/ })).toBeNull();
-        expect(screen.queryByRole("link", { name: "Im Browser öffnen" })).toBeNull();
+        expect(screen.queryByRole("link", { name: "Im Browser fortsetzen" })).toBeNull();
     });
     it("keeps library navigation active inside a folder", () => {
         state.pathname = "/library/folders/one";
@@ -61,35 +71,33 @@ describe("compact research window", () => {
         expect(state.replace).not.toHaveBeenCalled();
         expect(screen.getByRole("button", { name: "Abmelden" })).toBeEnabled();
     });
-    it("opens only the fixed research URL through supported Office UI without reading a document", () => {
+    it("opens only an opaque research-handoff URL through supported Office UI without reading a document", async () => {
         state.pathname = "/word/research";
         const openBrowserWindow = vi.fn(); const readDocument = vi.fn(); const wordRun = vi.fn();
         const isSetSupported = vi.fn().mockReturnValue(true);
         vi.stubGlobal("Office", { context: { requirements: { isSetSupported }, ui: { openBrowserWindow }, document: { getSelectedDataAsync: readDocument } } });
         vi.stubGlobal("Word", { run: wordRun });
-        render(<ResearchShell>Word research</ResearchShell>);
+        render(<ResearchShell><WorkspaceMarker /></ResearchShell>);
         expect(openBrowserWindow).not.toHaveBeenCalled();
-        const link = screen.getByRole("link", { name: "Im Browser öffnen" });
-        const click = new MouseEvent("click", { bubbles: true, cancelable: true });
-        fireEvent(link, click);
+        const action = screen.getByRole("button", { name: "Im Browser fortsetzen" });
+        fireEvent.click(action);
+        await waitFor(() => expect(openBrowserWindow).toHaveBeenCalledOnce());
         expect(isSetSupported).toHaveBeenCalledWith("OpenBrowserWindowApi", "1.1");
-        expect(openBrowserWindow).toHaveBeenCalledExactlyOnceWith("https://court.example.org/research");
-        expect(click.defaultPrevented).toBe(true);
+        expect(openBrowserWindow).toHaveBeenCalledExactlyOnceWith(`https://court.example.org/research?handoff=${handoffId}`);
+        expect(state.create).toHaveBeenCalledExactlyOnceWith(emptyResearchState());
         expect(readDocument).not.toHaveBeenCalled(); expect(wordRun).not.toHaveBeenCalled();
         expect(state.replace).not.toHaveBeenCalled();
     });
-    it.each(["missing", "unsupported", "throws"])("keeps a fixed HTTPS new-tab fallback when Office is %s", (mode) => {
+    it.each(["missing", "unsupported", "throws"])("keeps an explicit opaque HTTPS new-tab fallback when Office is %s", async (mode) => {
         state.pathname = "/library"; state.query = "host=word&selection=private";
         const openBrowserWindow = vi.fn().mockImplementation(() => { if (mode === "throws") throw new Error("host unavailable"); });
         vi.stubGlobal("Office", mode === "missing" ? undefined : { context: { requirements: { isSetSupported: () => mode !== "unsupported" }, ui: { openBrowserWindow } } });
-        render(<ResearchShell>Word library</ResearchShell>);
-        const link = screen.getByRole("link", { name: "Im Browser öffnen" });
-        const click = new MouseEvent("click", { bubbles: true, cancelable: true });
-        fireEvent(link, click);
-        expect(link).toHaveAttribute("href", "https://court.example.org/research");
+        render(<ResearchShell><WorkspaceMarker /></ResearchShell>);
+        fireEvent.click(screen.getByRole("button", { name: "Im Browser fortsetzen" }));
+        const link = await screen.findByRole("link", { name: "Recherche im Browser öffnen" });
+        expect(link).toHaveAttribute("href", `https://court.example.org/research?handoff=${handoffId}`);
         expect(link).toHaveAttribute("target", "_blank");
         expect(link).toHaveAttribute("rel", "noopener noreferrer");
-        expect(click.defaultPrevented).toBe(false);
         if (mode !== "throws") expect(openBrowserWindow).not.toHaveBeenCalled();
     });
 });

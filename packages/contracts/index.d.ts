@@ -1,4 +1,11 @@
 // Authored wire contracts. No server, browser, UI or storage dependencies.
+export type {
+  ResearchHandoffPublicDecision, ResearchHandoffPublicResults,
+  ResearchHandoffPassage, ResearchHandoffPublicSource,
+  ResearchHandoffLibraryDocument, ResearchHandoffPrivateResult,
+  ResearchHandoffPrivateResults, ResearchHandoffState,
+  ResearchHandoffDirection, ResearchHandoffMetadata, ResearchHandoffRecord,
+} from "./researchHandoff";
 
 export type SourceDocumentType =
   | "docx"

@@ -37,6 +37,20 @@ describe("Word authentication return", () => {
         await waitFor(() => expect(state.push).toHaveBeenCalledWith(`/login?next=${encodeURIComponent(path)}`));
         expect(screen.queryByText("Private source")).toBeNull();
     });
+    it("preserves an opaque browser handoff through an expired application session", async () => {
+        state.pathname = "/research";
+        const next = "/research?handoff=11111111-1111-4111-8111-111111111111";
+        window.history.replaceState({}, "", next);
+        render(<MikeLayout>Transferred research</MikeLayout>);
+        await waitFor(() => expect(state.push).toHaveBeenCalledWith(`/login?next=${encodeURIComponent(next)}`));
+        expect(screen.queryByText("Transferred research")).toBeNull();
+    });
+    it("does not forward source text appended to a handoff URL into login", async () => {
+        state.pathname = "/research";
+        window.history.replaceState({}, "", "/research?handoff=11111111-1111-4111-8111-111111111111&query=private");
+        render(<MikeLayout>Transferred research</MikeLayout>);
+        await waitFor(() => expect(state.push).toHaveBeenCalledWith("/login"));
+    });
     it("waits for authentication to settle before redirecting", () => {
         state.loading = true;
         render(<MikeLayout>Private research</MikeLayout>);

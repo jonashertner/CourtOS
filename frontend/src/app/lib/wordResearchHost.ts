@@ -20,9 +20,10 @@ export interface WordResearchHost {
 
 interface SelectionRange {
     readonly text: string;
-    load(property: "text"): void;
+    readonly font: { name: string; size: number };
+    load(property: "text" | "font/name,font/size"): void;
     insertText(text: string, location: "End"): unknown;
-    insertHtml(html: string, location: "End"): unknown;
+    insertHtml(html: string, location: "End"): { font: { name: string; size: number } };
 }
 
 /** Only the Word capabilities this adapter needs; deliberately no body/settings API. */
@@ -36,7 +37,10 @@ export interface WordResearchRuntime {
 export interface WordResearchEnvironment {
     Office?: {
         onReady(): Promise<{ host?: string | null }>;
-        context?: { requirements?: { isSetSupported(name: string, version: string): boolean } };
+        context?: {
+            requirements?: { isSetSupported(name: string, version: string): boolean };
+            document?: { url?: string };
+        };
     };
     Word?: WordResearchRuntime;
 }
@@ -120,7 +124,14 @@ export function createWordResearchHost(runtime: WordResearchRuntime): WordResear
         insertCitationAfterSelection: (citation) => run(async () => {
             const html = citationHtml(citation);
             await runtime.run(async (context) => {
-                context.document.getSelection().insertHtml(html, "End");
+                const selection = context.document.getSelection();
+                selection.load("font/name,font/size");
+                await context.sync();
+                const inserted = selection.insertHtml(html, "End");
+                // Word's HTML importer can choose a different default font. Apply only
+                // the selection's explicit font to the new range; never reformat old text.
+                if (typeof selection.font.name === "string" && selection.font.name.trim()) inserted.font.name = selection.font.name;
+                if (Number.isFinite(selection.font.size) && selection.font.size > 0) inserted.font.size = selection.font.size;
                 await context.sync();
             });
         }, "insert_failed"),
@@ -145,4 +156,18 @@ export async function connectWordResearchHost(
     } catch {
         throw new WordResearchHostError("not_available");
     } finally { if (timeout !== undefined) clearTimeout(timeout); }
+}
+
+/** Local reload scope only. Never sends or stores the document's path or reads its content. */
+export async function getWordResearchDocumentScope(
+    environment: WordResearchEnvironment = typeof window === "undefined" ? {} : window as unknown as WordResearchEnvironment,
+    crypto: Pick<Crypto, "subtle"> | undefined = globalThis.crypto,
+): Promise<string | null> {
+    try {
+        const url = environment.Office?.context?.document?.url;
+        // Unsaved documents have no dependable identity: use only the live in-memory handoff.
+        if (typeof url !== "string" || !url.trim() || url.length > 8192 || url.includes("\0") || !crypto?.subtle) return null;
+        const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`courtos-word-document-v1\n${url}`));
+        return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, "0")).join("");
+    } catch { return null; }
 }
