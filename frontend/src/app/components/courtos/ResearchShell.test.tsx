@@ -4,6 +4,8 @@ import { emptyResearchState, useResearchHandoff } from "./ResearchHandoffContext
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchShell } from "./ResearchShell";
+import { CourtOSLocaleProvider } from "@/app/contexts/CourtOSLocaleContext";
+import { setCourtOSLocale } from "@/app/lib/courtosLocale";
 const handoffId = "11111111-1111-4111-8111-111111111111";
 const state = vi.hoisted(() => ({ create: vi.fn(), pathname: "/research", query: "", email: "very.long.but.realistically.named.reader@court.example.org", signOut: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({ usePathname: () => state.pathname, useSearchParams: () => new URLSearchParams(state.query), useRouter: () => ({ replace: state.replace }) }));
@@ -23,6 +25,21 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllGlobals(); });
 describe("compact research window", () => {
+    it.each([
+        ["de", "Browser", "Im Browser fortsetzen"],
+        ["fr", "Navigateur", "Continuer dans le navigateur"],
+        ["it", "Browser", "Continua nel browser"],
+        ["en", "Browser", "Continue in browser"],
+    ] as const)("keeps the %s Word header label short with the complete accessible action", (locale, visible, accessible) => {
+        state.pathname = "/word/research";
+        setCourtOSLocale("shell-owner", locale);
+        render(<CourtOSLocaleProvider ownerId="shell-owner"><ResearchShell><WorkspaceMarker /></ResearchShell></CourtOSLocaleProvider>);
+        const button = screen.getByRole("button", { name: accessible });
+        expect(button).toHaveTextContent(new RegExp(`^${visible}$`));
+        expect(button).toHaveAttribute("title", accessible);
+        expect(button).toHaveClass("courtos-word-browser-link--compact");
+        expect(state.create).not.toHaveBeenCalled();
+    });
     it("shows research and personal library, complete identity and source offer without workspace navigation", () => {
         render(<ResearchShell><p>Source results</p></ResearchShell>);
         expect(screen.getByRole("link", { name: "Recherche" })).toHaveAttribute("aria-current", "page");

@@ -34,9 +34,14 @@ function savedRecord(value: Record<string, unknown>, id: string): CaseReviewReco
 }
 
 async function persist(db: Db, userId: string, run: ReviewRun, record: CaseReviewRecord): Promise<boolean> {
+  const publishable = () => !(active.has(record.status) || record.status === "completed")
+    || (!run.signal.aborted && !run.finished);
+  if (!publishable()) return false;
   try {
     const saved = await writeCaseReviewRecord(db,userId,record.id,record as unknown as Record<string, unknown>);
-    if (!saved.ok) return false;
+    // The write may finish after Stop. Do not publish late progress or a
+    // completed draft; the caller then persists its cancellation terminal.
+    if (!saved.ok || !publishable()) return false;
     run.meta.record = record;
     run.write(`data: ${JSON.stringify({type:"review_status",id:record.id,status:record.status})}\n\n`);
     return true;
@@ -58,10 +63,15 @@ async function executeReview(db: Db, userId: string, run: ReviewRun, model: stri
     const result = await streamWithProvider({
       model, courtosTask:"case-review", systemPrompt:prompt.system,
       messages:[{role:"user",content:prompt.user}], maxIterations:1,
-      reasoning:"none", abortSignal:run.signal, callbacks:{onActivity:()=>run.touch(), onProviderState: async state => {
+      reasoning:"none", abortSignal:run.signal, callbacks:{onActivity:()=>run.touch(), onProviderState: state => {
         run.signal.throwIfAborted();
+        if (run.finished) throw new Error("review_interrupted");
         record = {...record,status:state === "queued" ? "queued" : "analysing"};
-        if (!await persist(db,userId,run,record)) throw new Error("review_storage");
+        // Ephemeral queue progress must not hold the scarce model slot on a
+        // database write. The durable reading state remains sufficient to
+        // identify an interrupted run after restart; live GET uses run.meta.
+        run.meta.record = record;
+        run.write(`data: ${JSON.stringify({type:"review_status",id:record.id,status:record.status})}\n\n`);
       }},
     });
     run.signal.throwIfAborted();

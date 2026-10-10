@@ -35,14 +35,32 @@ it("touches a waiting run without claiming inference, then removes its heartbeat
   expect(work).toHaveBeenCalledOnce(); expect(vi.getTimerCount()).toBe(0);
 });
 
-it("cleans a cancelled waiter even while its queued-status persistence is pending",async()=>{
-  const fifo=new LocalModelFifo(),held=deferred(),status=deferred(),abort=new AbortController(),work=vi.fn();
+it("removes a cancelled waiting ticket without waiting for its status store",async()=>{
+  const fifo=new LocalModelFifo(),held=deferred(),status=deferred(),abort=new AbortController(),work=vi.fn(),last=vi.fn();
   const first=fifo.run("model",new AbortController().signal,{},()=>held.promise);
   const second=fifo.run("model",abort.signal,{waiting:()=>status.promise},work);
   const cancelled=expect(second).rejects.toThrow("cancelled");
-  abort.abort(new Error("cancelled"));held.resolve();await first;status.resolve();await cancelled;
+  const third=fifo.run("model",new AbortController().signal,{},async()=>{last();});
+  abort.abort(new Error("cancelled"));await cancelled;
+  expect(last).not.toHaveBeenCalled(); // Cancellation cannot release the active job.
+  held.resolve();await Promise.all([first,third]);
   expect(work).not.toHaveBeenCalled();
-  await fifo.run("model",new AbortController().signal,{},async()=>{});
+  expect(last).toHaveBeenCalledOnce();
+  status.resolve();await Promise.resolve(); // A late status completion cannot run the cancelled work.
+  expect(work).not.toHaveBeenCalled();
+});
+
+it("releases an already granted slot when its queued status store never settles",async()=>{
+  const fifo=new LocalModelFifo(),held=deferred(),abort=new AbortController(),work=vi.fn(),last=vi.fn();
+  const first=fifo.run("model",new AbortController().signal,{},()=>held.promise);
+  const second=fifo.run("model",abort.signal,{waiting:()=>new Promise<void>(()=>{})},work);
+  const cancelled=expect(second).rejects.toThrow("cancelled");
+  const third=fifo.run("model",new AbortController().signal,{},async()=>{last();});
+  held.resolve();await first; // Slot two is granted, but its status write still hangs.
+  expect(work).not.toHaveBeenCalled();expect(last).not.toHaveBeenCalled();
+  abort.abort(new Error("cancelled"));await cancelled;await third;
+  expect(work).not.toHaveBeenCalled();expect(last).toHaveBeenCalledOnce();
+  await expect(fifo.run("model",new AbortController().signal,{},async()=>"available")).resolves.toBe("available");
 });
 
 it("releases a slot granted while a queued status write is failing",async()=>{

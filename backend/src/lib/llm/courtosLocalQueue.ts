@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { abortable } from "../abortable";
 import { courtosPilotModel } from "../courtosPilot";
 import { COURTOS_NATIVE_MAX_MS, currentCourtosQuota } from "../courtosQuota";
 import { UserFacingError } from "../userFacingError";
@@ -37,7 +38,12 @@ export class LocalModelFifo {
     }, LOCAL_QUEUE_HEARTBEAT_MS) : undefined;
     heartbeat?.unref?.();
     try {
-      if (queued) { callbacks.heartbeat?.(); await callbacks.waiting?.(); }
+      if (queued) {
+        callbacks.heartbeat?.();
+        // A status store may ignore cancellation. Stop waiting and release our
+        // ticket even then; this does not claim that the write itself ended.
+        await abortable(Promise.resolve(callbacks.waiting?.()), signal);
+      }
       await ticket;
       signal.throwIfAborted();
       return await work();

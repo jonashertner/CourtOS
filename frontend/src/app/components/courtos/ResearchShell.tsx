@@ -65,7 +65,7 @@ function ResearchShellFrame({ children }: { children: ReactNode }) {
                     <Link href={inWord ? "/library?host=word" : "/library"} aria-current={inLibrary ? "page" : undefined}>{t(M.library)}</Link>
                     <a href={COURTOS_CITECHECK_URL} target="_blank" rel="noopener noreferrer" aria-label={t(M.checkCitations)} title={t(M.openCitecheck)}>{t(M.citations)} <span aria-hidden="true">↗</span></a>
                 </nav>
-                <ResearchContinuation />
+                <ResearchContinuation compact />
                 <button type="button" className="courtos-settings-trigger" onClick={() => setSettingsOpen(true)} aria-label={t(M.settings)} title={t(M.settings)}><Settings2 size={19} aria-hidden="true" /></button>
             </div>
             <p className="courtos-research-context">{t(M.pilot)}</p>

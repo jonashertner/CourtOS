@@ -80,6 +80,12 @@ export const researchMessages = {
         "it": "Codice sorgente · AGPL-3.0",
         "en": "Source code · AGPL-3.0"
     },
+    "browserDestination": {
+        "de": "Browser",
+        "fr": "Navigateur",
+        "it": "Browser",
+        "en": "Browser"
+    },
     "continueBrowser": {
         "de": "Im Browser fortsetzen",
         "fr": "Continuer dans le navigateur",

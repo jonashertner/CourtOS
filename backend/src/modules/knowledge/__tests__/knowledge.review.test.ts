@@ -39,11 +39,14 @@ describe("server-owned durable case review",()=>{
     let complete!:(value:unknown)=>void;mocks.stream.mockReturnValue(new Promise(resolve=>{complete=resolve;}));
     const started=await startCaseReview(db,"owner",input);expect(started).toMatchObject({ok:true,data:{id,status:"queued",report:null}});
     await settle();expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"reading",report:null}});
-    await mocks.stream.mock.calls[0][0].callbacks.onProviderState("queued");
+    const writes=mocks.write.mock.calls.length;
+    expect(mocks.stream.mock.calls[0][0].callbacks.onProviderState("queued")).toBeUndefined();
     expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"queued",report:null}});
     expect(reservation.markModelStarted).not.toHaveBeenCalled();
-    await mocks.stream.mock.calls[0][0].callbacks.onProviderState("dispatching");
+    expect(mocks.stream.mock.calls[0][0].callbacks.onProviderState("dispatching")).toBeUndefined();
     expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"analysing",report:null}});
+    expect(mocks.write).toHaveBeenCalledTimes(writes);
+    expect(records.get(id)?.record.status).toBe("reading");
     expect(mocks.stream).toHaveBeenCalledWith(expect.objectContaining({courtosTask:"case-review",maxIterations:1,reasoning:"none"}));
     expect(mocks.stream.mock.calls[0][0]).not.toHaveProperty("tools");
     expect(mocks.stream.mock.calls[0][0].callbacks).not.toHaveProperty("onContentDelta");
@@ -104,6 +107,35 @@ describe("server-owned durable case review",()=>{
     await stopCaseReview(db,"owner",id);await settle();
     expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"cancelled",report:null}});expect(reservation.release).toHaveBeenCalledOnce();
     expect(console.warn).not.toHaveBeenCalled();
+  });
+  it("rejects late provider progress after Stop without a database write or state regression",async()=>{
+    mocks.stream.mockImplementation(({abortSignal})=>new Promise((_resolve,reject)=>abortSignal.addEventListener("abort",()=>reject(new Error("aborted")),{once:true})));
+    await startCaseReview(db,"owner",input);await settle();
+    const progress=mocks.stream.mock.calls[0][0].callbacks.onProviderState;
+    await stopCaseReview(db,"owner",id);await settle();
+    const writes=mocks.write.mock.calls.length;
+    expect(()=>progress("queued")).toThrow();expect(()=>progress("dispatching")).toThrow();
+    expect(mocks.write).toHaveBeenCalledTimes(writes);
+    expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"cancelled",report:null}});
+  });
+  it.each(["reading","completed"])("does not publish a %s write returning after Stop",async delayedStatus=>{
+    const originalWrite=mocks.write.getMockImplementation()!;
+    let release!:()=>void;
+    mocks.write.mockImplementation(async(...args)=>{
+      if(args[3].status===delayedStatus)await new Promise<void>(resolve=>{release=resolve;});
+      return originalWrite(...args);
+    });
+    await startCaseReview(db,"owner",input);await settle();
+    expect(release).toBeTypeOf("function");
+    const run=caseReviewRun(id,"owner")!,frames:string[]=[];
+    run.subscribe(run.seq+1,{write:line=>frames.push(line),end:()=>{}});
+    await stopCaseReview(db,"owner",id);release();await settle();
+    expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"cancelled",report:null}});
+    expect(records.get(id)?.record).toMatchObject({status:"cancelled",report:null});
+    expect(frames.some(line=>line.includes('"type":"review_result"'))).toBe(false);
+    expect(frames.some(line=>line.includes(`"status":"${delayedStatus}"`))).toBe(false);
+    if(delayedStatus==="reading")expect(mocks.stream).not.toHaveBeenCalled();
+    expect(reservation.release).toHaveBeenCalledOnce();
   });
   it("never publishes an otherwise valid result when durable final storage fails",async()=>{
     const write=mocks.write.getMockImplementation()!;

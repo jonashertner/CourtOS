@@ -22,15 +22,16 @@ function openResearchInBrowser(destination: string): boolean {
     return false;
 }
 
-export function ResearchContinuation() {
+export function ResearchContinuation({ compact = false }: { compact?: boolean }) {
     const { t } = useCourtOSLocale();
     const handoff = useResearchHandoff();
     if (!handoff || (!handoff.inWord && !handoff.linked)) return null;
     const inWord = handoff.inWord;
-    return <button type="button" className="courtos-word-browser-link" disabled={handoff.busy || !handoff.available || handoff.conflict} onClick={async () => {
+    const label = t(inWord ? M.continueBrowser : M.continueWord);
+    return <button type="button" className={`courtos-word-browser-link${compact ? " courtos-word-browser-link--compact" : ""}`} aria-label={label} title={label} disabled={handoff.busy || !handoff.available || handoff.conflict} onClick={async () => {
         const destination = await handoff.publish();
         if (destination && !openResearchInBrowser(destination)) handoff.setFallbackUrl(destination);
-    }}>{inWord ? t(M.continueBrowser) : t(M.continueWord)}{inWord && <ExternalLink size={14} aria-hidden="true" />}</button>;
+    }}>{compact ? (inWord ? t(M.browserDestination) : "Word") : label}{inWord && <ExternalLink size={14} aria-hidden="true" />}</button>;
 }
 
 export function ResearchContinuationStatus() {
@@ -39,7 +40,7 @@ export function ResearchContinuationStatus() {
     if (!handoff) return null;
     return <>
         {(handoff.status || handoff.error) && <p role={handoff.error ? "alert" : "status"} className="courtos-research-context">{handoff.error || handoff.status}</p>}
-        {handoff.fallbackUrl && <p className="courtos-research-context"><a className="courtos-link" href={handoff.fallbackUrl} target="_blank" rel="noopener noreferrer">Recherche im Browser öffnen <ExternalLink size={14} aria-hidden="true" /></a></p>}
+        {handoff.fallbackUrl && <p className="courtos-research-context"><a className="courtos-link" href={handoff.fallbackUrl} target="_blank" rel="noopener noreferrer">{t(M.openBrowser)} <ExternalLink size={14} aria-hidden="true" /></a></p>}
         {handoff.conflict && <div className="courtos-research-context flex flex-wrap gap-4"><button type="button" className="courtos-link" disabled={handoff.busy} onClick={() => { void handoff.acceptReturned(); }}>{t(M.acceptBrowser)}</button><button type="button" className="courtos-link" disabled={handoff.busy} onClick={() => { void handoff.keepLocal(); }}>{t(M.keepLocal)}</button></div>}
     </>;
 }
