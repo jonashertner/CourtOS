@@ -5,6 +5,7 @@ import type { Db } from "../../../lib/supabase";
 import { UserFacingError } from "../../../lib/userFacingError";
 import { ensureDocAccess } from "../../../lib/access";
 import type { DocIndex, DocStore } from "./types";
+import type { SourceGroundingDiagnostics } from "@mike/contracts";
 
 // These are admission limits, not truncation targets. The provider's separate
 // request-body budget remains enforced after schemas and history are added.
@@ -12,7 +13,7 @@ export const SOURCE_EVIDENCE_LIMITS = { documents: 5, pages: 40, textBytes: 10_0
 
 export class SourceGroundingError extends UserFacingError {
   readonly code = "source_grounding_failed" as const;
-  constructor(message = "Die Antwort wurde zurückgehalten: Nicht alle Quellenverweise konnten an der angegebenen Stelle der ausgewählten Fassung bestätigt werden. Öffnen Sie die Originalquellen und grenzen Sie den Auftrag ein.") {
+  constructor(message = "Die Antwort wurde zurückgehalten: Nicht alle Quellenverweise konnten an der angegebenen Stelle der ausgewählten Fassung bestätigt werden. Öffnen Sie die Originalquellen und grenzen Sie den Auftrag ein.", readonly diagnostics?: SourceGroundingDiagnostics) {
     super(message);
     this.name = "SourceGroundingError";
   }

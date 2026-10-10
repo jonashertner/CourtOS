@@ -780,12 +780,13 @@ describe("POST /chat — streaming endpoint", () => {
         const message = "Die Antwort wurde zurückgehalten: Quellenverweise nicht bestätigt.";
         const events: AssistantEvent[] = [
             { type: "doc_read", filename: "claims.pdf", document_id: "doc-a", version_id: "version-a", source_coverage: { kind: "complete_extracted_text", pages: 3, text_bytes: 400, pdf_sha256: "a".repeat(64), version_sha256: "a".repeat(64) } },
-            { type: "error", message, safe_to_display: true, code: "source_grounding_failed" },
+            { type: "error", message, safe_to_display: true, code: "source_grounding_failed", grounding_diagnostics: { reason: "unverified_citation", reference_count: 1, citation_count: 1, verified_count: 0, citation_block: "parsed", failures: [{ ref: 1, page: 2, reason: "quote_not_found_on_page" }] } },
         ];
         runLLMStream.mockRejectedValueOnce(new AssistantStreamError(message, "", events));
         const res = await request(app).post("/chat").set("Authorization", "Bearer test").send(VALID_BODY);
         expect(res.status).toBe(200);
         expect(res.text).toContain('"code":"source_grounding_failed"');
+        expect(res.text).toContain('"reason":"quote_not_found_on_page"');
         expect(res.text).toContain('"safe_to_display":true');
         expect(res.text).toContain("[DONE]");
         expect(res.text).not.toContain('"type":"content_delta"');

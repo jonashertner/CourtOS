@@ -53,9 +53,10 @@ import { verifyCitations } from "./verifyCitations";
 import { buildMemoryTurn } from "../../../lib/memory/prompt";
 import { prefetchSourceEvidence, sourceEvidencePrompt, SourceGroundingError, type DocumentEvidence } from "./sourceEvidence";
 import { spotlight } from "./contextBuilders";
+import { groundingDiagnostics } from "./groundingDiagnostics";
 
 export type { AssistantEvent } from "@mike/contracts";
-import type { AssistantEvent, AssistantErrorCode } from "@mike/contracts";
+import type { AssistantEvent, AssistantErrorCode, SourceGroundingDiagnostics } from "@mike/contracts";
 
 /**
  * Tools the model can call that execute outside this process — in the Word
@@ -104,9 +105,10 @@ export function assistantStreamErrorPayload(error: unknown): {
   message: string;
   safe_to_display?: true;
   code?: AssistantErrorCode;
+  grounding_diagnostics?: SourceGroundingDiagnostics;
 } {
   if (error instanceof SourceGroundingError) {
-    return { message: error.message, safe_to_display: true, code: error.code };
+    return { message: error.message, safe_to_display: true, code: error.code, ...(error.diagnostics ? { grounding_diagnostics: error.diagnostics } : {}) };
   }
   const safe =
     error instanceof AssistantStreamError
@@ -122,6 +124,7 @@ export function assistantStreamErrorPayload(error: unknown): {
     message: safe.message,
     safe_to_display: true,
     ...(safe.code ? { code: safe.code } : {}),
+    ...(safe.grounding_diagnostics ? { grounding_diagnostics: safe.grounding_diagnostics } : {}),
   };
 }
 
@@ -806,7 +809,9 @@ export async function runLLMStream(params: {
       const refs = [...visible.matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1]));
       const parsed = parseCitationsWithDiagnostics(draft);
       if (refs.some((ref) => !parsed.citations.some((c) => c.ref === ref))) {
-        throw new UserFacingError("Die Quellenverweise wurden nicht vollständig erzeugt. Nummern in diesem Entwurf sind keine geprüften Fundstellen. Bitte eine engere Teilfrage mit höchstens drei Belegen stellen und die Quellen selbst prüfen.");
+        const message = "Die Quellenverweise wurden nicht vollständig erzeugt. Nummern in diesem Entwurf sind keine geprüften Fundstellen. Bitte eine engere Teilfrage mit höchstens drei Belegen stellen und die Quellen selbst prüfen.";
+        if (requiresEvidence) throw new SourceGroundingError(message, groundingDiagnostics(refs, parsed.citations, parsed.diagnostics));
+        throw new UserFacingError(message);
       }
     }
   } catch (err) {
@@ -843,6 +848,7 @@ export async function runLLMStream(params: {
         type: "error",
         message,
         ...(safeToDisplay ? { safe_to_display: true } : {}),
+        ...(err instanceof SourceGroundingError && err.diagnostics ? { grounding_diagnostics: err.diagnostics } : {}),
         // A rejected key is worth naming: the client turns this into a prompt
         // to go fix the key rather than a suggestion to retry.
         ...(err instanceof InvalidApiKeyError
@@ -909,9 +915,11 @@ export async function runLLMStream(params: {
     const refs = [...visible.matchAll(/\[(\d+)\]/g)].map((match) => Number(match[1]));
     const verified = citations as { ref?: number; verified?: boolean }[];
     if (!refs.length || !verified.length || verified.some((citation) => citation.verified !== true) || refs.some((ref) => !verified.some((citation) => citation.ref === ref))) {
-      const failure = new SourceGroundingError();
+      const diagnostics = groundingDiagnostics(refs, citations, citationDiagnostics);
+      const failure = new SourceGroundingError(undefined, diagnostics);
+      console.warn("[chat/grounding] answer withheld", diagnostics);
       const safeEvents = events.filter((event) => !["content", "reasoning"].includes(event.type));
-      safeEvents.push({ type: "error", message: failure.message, safe_to_display: true, code: failure.code });
+      safeEvents.push({ type: "error", message: failure.message, safe_to_display: true, code: failure.code, grounding_diagnostics: diagnostics });
       throw new AssistantStreamError(failure.message, "", safeEvents.map(sanitizeAssistantEvent), { cause: failure });
     }
     evidenceReleased = true;

@@ -60,11 +60,11 @@ describe("ToastUI", () => {
             showToast({
                 tone: "error",
                 message: "Failed",
-                supportHref: "mailto:will@mikeoss.com?subject=x",
+                supportHref: "mailto:jh@jonashertner.com?subject=x",
             });
         });
         const link = screen.getByRole("link", { name: "Contact support" });
-        expect(link).toHaveAttribute("href", "mailto:will@mikeoss.com?subject=x");
+        expect(link).toHaveAttribute("href", "mailto:jh@jonashertner.com?subject=x");
     });
 
     it("keeps an error with actions until dismissed but auto-dismisses success", () => {

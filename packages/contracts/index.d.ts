@@ -296,6 +296,20 @@ export type McpToolEvent = {
   result?: string;
 };
 
+/** Text-free provenance diagnostics; never contains prompts, quotations or IDs. */
+export type SourceGroundingDiagnostics = {
+  reason: "no_references" | "no_citations" | "missing_reference" | "unverified_citation";
+  reference_count: number;
+  citation_count: number;
+  verified_count: number;
+  citation_block: "missing" | "invalid" | "parsed";
+  failures: {
+    ref: number | null;
+    page: number | string | null;
+    reason: "source_unavailable" | "version_mismatch" | "document_mismatch" | "invalid_page" | "page_range_mismatch" | "quote_not_found_on_page" | "unverified" | "missing_reference";
+  }[];
+};
+
 export type AssistantEvent =
   | { type: "reasoning"; text: string }
   | AskInputsEvent
@@ -398,6 +412,7 @@ export type AssistantEvent =
        * "invalid_api_key": the provider rejected the caller's key.
        */
       code?: AssistantErrorCode;
+      grounding_diagnostics?: SourceGroundingDiagnostics;
     };
 
 export type AssistantErrorCode = "invalid_api_key" | "source_grounding_failed";

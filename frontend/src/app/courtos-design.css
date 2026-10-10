@@ -310,6 +310,21 @@
 .courtos-web .courtos-settings-help summary { min-height: 44px; padding-block: 13px; cursor: pointer; }
 .courtos-web .courtos-settings-help div { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 .courtos-web .courtos-settings-help a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; }
+/* Optional first encounter in the browser; Word and source deep links bypass it. */
+.courtos-web .courtos-introduction { max-width: 800px; margin-inline: auto; padding-block: clamp(32px, 7vh, 72px); }
+.courtos-web .courtos-introduction h1 { font-size: 28px; line-height: 34px; font-weight: 700; text-wrap: balance; }
+.courtos-web .courtos-introduction-lede { max-width: 58ch; margin-top: 16px; font-size: 16px; line-height: 26px; color: var(--muted-foreground); }
+.courtos-web .courtos-introduction-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
+.courtos-web .courtos-introduction-models { display: grid; gap: 16px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 14px; line-height: 22px; }
+.courtos-web .courtos-introduction-models > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 16px; }
+.courtos-web .courtos-introduction-models dt { font-weight: 550; }
+.courtos-web .courtos-introduction-models dd { color: var(--muted-foreground); }
+.courtos-web .courtos-introduction-note { max-width: 65ch; margin-top: 24px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.courtos-web .courtos-introduction-content { min-width: 0; }
+@media (max-width: 480px) {
+    .courtos-web .courtos-introduction-models > div { grid-template-columns: 1fr; }
+    .courtos-web .courtos-introduction-actions > * { width: 100%; }
+}
 /* File management retains its table scroll owner. */
 .courtos-web .courtos-library-workspace { width: 100%; max-width: 1280px; margin-inline: auto; }
 .courtos-web .courtos-library-header > div { min-height: 88px; margin-inline: var(--research-gutter); padding-block: 24px 16px; gap: 12px; }

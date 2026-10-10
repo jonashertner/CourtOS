@@ -257,7 +257,7 @@ describe("buildSupportMailto", () => {
         const url = new URL(href);
         const params = new URLSearchParams(url.search);
         expect(params.get("subject")).toBe(
-            "Mike support: Couldn't save the document",
+            "CourtOS support: Couldn't save the document",
         );
         const body = params.get("body") ?? "";
         expect(body).toContain("Request ID: req-42");

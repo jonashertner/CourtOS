@@ -28,6 +28,7 @@ const UNREADABLE_SOURCES = new Set([
 type QuoteLocation = { start: number; end: number; excerpt: string };
 type QuoteVerificationResult = QuoteVerification & {
   needs_correction: boolean;
+  failure_reason?: "source_unavailable" | "version_mismatch" | "document_mismatch" | "invalid_page" | "page_range_mismatch" | "quote_not_found_on_page";
 };
 
 /**
@@ -396,20 +397,22 @@ function verifyPageQuote(source: string, quote: string): QuoteVerificationResult
 
 /** A page claim is a constraint, never a hint for a whole-document search. */
 function verifyQuoteAgainstPages(source: DocumentEvidence | null, annotation: Record<string, unknown>, entry: DocQuoteEntry): QuoteVerificationResult {
-  const failed = { verified: false, needs_correction: false };
-  if (!source || annotation.version_id !== source.version_id || annotation.document_id !== source.document_id) return failed;
+  const failed = (failure_reason: QuoteVerificationResult["failure_reason"]): QuoteVerificationResult => ({ verified: false, needs_correction: false, failure_reason });
+  if (!source) return failed("source_unavailable");
+  if (annotation.version_id !== source.version_id) return failed("version_mismatch");
+  if (annotation.document_id !== source.document_id) return failed("document_mismatch");
   const pageText = String(entry.page ?? "");
   const match = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(pageText);
-  if (!match) return failed;
+  if (!match) return failed("invalid_page");
   const first = Number(match[1]);
   const last = Number(match[2] ?? match[1]);
-  if (first < 1 || last < first || last > source.pages.length || last - first > 2) return failed;
+  if (first < 1 || last < first || last > source.pages.length || last - first > 2) return failed("invalid_page");
   const fragments = entry.quote.split(PAGE_BREAK_SENTINEL).map((part) => part.trim());
-  if (fragments.length !== last - first + 1 || fragments.some((part) => !part)) return failed;
+  if (fragments.length !== last - first + 1 || fragments.some((part) => !part)) return failed("page_range_mismatch");
   const pages = source.pages.slice(first - 1, last);
-  if (pages.some((page, i) => page.page !== first + i)) return failed;
+  if (pages.some((page, i) => page.page !== first + i)) return failed("invalid_page");
   const checks = fragments.map((fragment, i) => verifyPageQuote(pages[i].text, fragment));
-  if (checks.some((check) => !check.verified)) return failed;
+  if (checks.some((check) => !check.verified)) return failed("quote_not_found_on_page");
   return {
     verified: true,
     needs_correction: checks.some((check) => check.needs_correction),

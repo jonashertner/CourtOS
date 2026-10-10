@@ -94,11 +94,12 @@ describe("pilot source prefetch → model → page verification → release", ()
     expect(delivered).toContain('"status":"final"');
   });
   it.each([
-    ["wrong page", response(1)],
-    ["fabricated payment", response(1, "CHF 12000 paid on 20 August 2023")],
-    ["no citations", "A factual assertion without source links."],
-    ["uncited refusal", "I cannot answer."],
-  ])("withholds %s from SSE and persisted answer text", async (_name, text) => {
+    ["wrong page", response(1), "unverified_citation"],
+    ["fabricated payment", response(1, "CHF 12000 paid on 20 August 2023"), "unverified_citation"],
+    ["no citations", "A factual assertion without source links.", "no_references"],
+    ["uncited refusal", "I cannot answer.", "no_references"],
+    ["missing citation block", "An assertion [1].", "no_citations"],
+  ])("withholds %s from SSE and persisted answer text", async (_name, text, reason) => {
     emit(text);
     const params = makeParams();
     const error = await runLLMStream(params).catch((failure: unknown) => failure);
@@ -106,7 +107,9 @@ describe("pilot source prefetch → model → page verification → release", ()
     if (!(error instanceof AssistantStreamError)) throw error;
     expect(error.fullText).toBe("");
     expect(error.events.some((event) => event.type === "content" || event.type === "reasoning")).toBe(false);
-    expect(assistantStreamErrorPayload(error)).toMatchObject({ code: "source_grounding_failed", safe_to_display: true });
+    expect(assistantStreamErrorPayload(error)).toMatchObject({ code: "source_grounding_failed", safe_to_display: true, grounding_diagnostics: { reason } });
+    expect(error.events).toContainEqual(expect.objectContaining({ type: "error", grounding_diagnostics: expect.objectContaining({ reason }) }));
+    expect(JSON.stringify(assistantStreamErrorPayload(error).grounding_diagnostics)).not.toMatch(/CHF|Beilage|assertion|cannot answer/);
     expect(params.write.mock.calls.map(([chunk]) => chunk).join("")).not.toContain('"type":"content_delta"');
   });
   it("does not expose an incomplete stream when the provider hits its output limit", async () => {

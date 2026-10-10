@@ -12,7 +12,7 @@
  * framework-free and must not import from `frontend/src/app/`.
  */
 
-export const SUPPORT_EMAIL = "will@mikeoss.com";
+export const SUPPORT_EMAIL = "jh@jonashertner.com";
 
 export type UserErrorKind =
     | "offline"
@@ -399,7 +399,7 @@ export function buildSupportMailto(
 ): string {
     const when = context.when ?? new Date();
     const lines: string[] = [
-        "Hi Mike team,",
+        "Hello CourtOS,",
         "",
         "I ran into a problem and need help.",
         "",
@@ -421,7 +421,7 @@ export function buildSupportMailto(
     }
     lines.push("", "Thanks,");
 
-    const subject = `Mike support: ${error.title}`;
+    const subject = `CourtOS support: ${error.title}`;
     const params = new URLSearchParams({
         subject,
         body: lines.join("\n"),

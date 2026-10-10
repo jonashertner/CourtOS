@@ -57,6 +57,17 @@ describe("complete source admission and fixed-page verification", () => {
       [annotation(2, "CHF 1250"), null],
     ] as const) expect(await verifyDocumentCitationAnnotation(ann, async () => data)).toMatchObject({ verified: false });
   });
+  it("explains strict page failures with enums, never source text", async () => {
+    const source = (await load()).get("doc-0")!;
+    for (const [ann, data, reason] of [
+      [{ ...annotation(2, "CHF 1250"), version_id: "another-version" }, source, "version_mismatch"],
+      [{ ...annotation(2, "CHF 1250"), document_id: "another-document" }, source, "document_mismatch"],
+      [annotation(1, "CHF 1250."), source, "quote_not_found_on_page"],
+      [annotation(0, "CHF 1250"), source, "invalid_page"],
+      [annotation("1-2", "CHF 1250"), source, "page_range_mismatch"],
+      [annotation(2, "CHF 1250"), null, "source_unavailable"],
+    ] as const) expect(await verifyDocumentCitationAnnotation(ann, async () => data)).toMatchObject({ verified: false, quotes: [{ verification: { failure_reason: reason } }] });
+  });
   it("requires each cross-page fragment on the exact consecutive page", async () => {
     const source = (await load()).get("doc-0")!;
     expect(await verifyDocumentCitationAnnotation(annotation("1-2", "5 September 2026. [[PAGE_BREAK]] Beilage 1"), async () => source)).toMatchObject({ verified: true });
