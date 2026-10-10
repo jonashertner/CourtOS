@@ -92,28 +92,28 @@ export type { QuoteVerification } from "@mike/contracts";
 // ---------------------------------------------------------------------------
 
 export function resolveDoc(rawId: string, docIndex: DocIndex) {
-  return docIndex[rawId];
+  return Object.hasOwn(docIndex, rawId) ? docIndex[rawId] : undefined;
 }
 
 /**
  * Resolve whatever identifier the model passed (`doc-N` slug, filename, or
- * document UUID) back to a chat-local doc label.
+ * document UUID) back to a chat-local doc label. Aliases must identify exactly
+ * one selected source. Never choose the first of duplicate filenames/versions,
+ * and never resolve an index entry absent from the request's source store.
  */
 export function resolveDocLabel(
   rawId: string,
-  docStore: DocStore,
+  docStore: DocStore | undefined,
   docIndex?: DocIndex,
 ): string | null {
-  if (docStore.has(rawId)) return rawId;
-  for (const [label, info] of docStore.entries()) {
-    if (info.filename === rawId) return label;
-  }
-  if (docIndex) {
-    for (const [label, info] of Object.entries(docIndex)) {
-      if (info.document_id === rawId) return label;
-    }
-  }
-  return null;
+  const labels = docStore ? [...docStore.keys()] : Object.keys(docIndex ?? {});
+  if (labels.includes(rawId)) return rawId;
+  const matches = labels.filter((label) => {
+    const indexed = docIndex ? resolveDoc(label, docIndex) : undefined;
+    const filename = docStore?.get(label)?.filename ?? indexed?.filename;
+    return filename === rawId || indexed?.document_id === rawId;
+  });
+  return matches.length === 1 ? matches[0] : null;
 }
 
 // ---------------------------------------------------------------------------

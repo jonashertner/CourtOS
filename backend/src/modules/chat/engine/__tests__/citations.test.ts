@@ -348,6 +348,14 @@ describe("createCitation", () => {
         });
     });
 
+    it.each(["uuid-aaa", "contract.pdf"])("canonicalises the unique alias %s even without a separate source store", (alias) => {
+        const [parsed] = parseCitations(citationsBlock(JSON.stringify([{ ref: 1, doc_id: alias, page: 4, quote: "q" }])));
+        expect(createCitation(parsed, docIndex)).toMatchObject({ doc_id: "doc-1", document_id: "uuid-aaa", version_id: "ver-1" });
+    });
+    it("does not accept an explicit claim to a different immutable version", () => {
+        const [parsed] = parseCitations(citationsBlock(JSON.stringify([{ ref: 1, doc_id: "doc-1", version_id: "other-version", page: 4, quote: "q" }])));
+        expect(createCitation(parsed, docIndex)).toMatchObject({ version_id: "ver-1", citation_binding_error: "version_mismatch" });
+    });
     it("falls back to the raw doc_id as filename when unresolvable", () => {
         const [parsed] = parseCitations(
             citationsBlock('[{"ref": 1, "doc_id": "doc-9", "page": 1, "quote": "q"}]'),

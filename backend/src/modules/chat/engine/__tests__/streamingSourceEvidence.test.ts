@@ -51,6 +51,42 @@ function emit(text: string, finishReason?: string) {
 }
 
 describe("pilot source prefetch → model → page verification → release", () => {
+  it.each(["d", "claims.pdf"])("binds an exact unique selected-source alias %s to its server handle and immutable version", async (alias) => {
+    emit(response().replace('"doc_id":"doc-0"', `"doc_id":${JSON.stringify(alias)}`));
+    const result = await runLLMStream(makeParams());
+    expect(result.citations).toEqual([expect.objectContaining({ doc_id: "doc-0", document_id: "d", version_id: "v", verified: true })]);
+  });
+  it.each([
+    ["another document", { document_id: "unselected-document" }, "document_mismatch"],
+    ["another version", { version_id: "unselected-version" }, "version_mismatch"],
+    ["a version number instead of its identity", { version_id: 1 }, "version_mismatch"],
+  ])("rejects a model claim to %s instead of silently rebinding it", async (_name, identity, reason) => {
+    emit(`The exhibit is a draft [1].\n<CITATIONS>${JSON.stringify([{ ref: 1, doc_id: "doc-0", page: 2, quote: "CHF 1250.", ...identity }])}</CITATIONS>`);
+    const params = makeParams();
+    await expect(runLLMStream(params)).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ grounding_diagnostics: expect.objectContaining({ failures: [{ ref: 1, page: 2, reason }] }) })]) });
+    expect(params.write.mock.calls.map(([chunk]) => chunk).join("")).not.toContain('"type":"content_delta"');
+  });
+  it.each(["claims.pdf", "d"])("rejects ambiguous alias %s when two selected versions share it", async (alias) => {
+    const params = makeParams();
+    params.docStore.set("doc-1", { ...params.docStore.get("doc-0")! });
+    Object.assign(params.docIndex, { "doc-1": { ...params.docIndex["doc-0"], version_id: "v-older" } });
+    mocks.load.mockImplementation(async (_doc, _db, version) => ({ id: version, storage_path: "fixed.pdf", filename: "claims.pdf", file_type: "pdf", version_number: 1, content_sha256: contentSha256(pdfBytes()) }));
+    emit(response().replace('"doc_id":"doc-0"', `"doc_id":${JSON.stringify(alias)}`));
+    await expect(runLLMStream(params)).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ grounding_diagnostics: expect.objectContaining({ failures: [{ ref: 1, page: 2, reason: "source_unavailable" }] }) })]) });
+  });
+  it("does not bind an unknown alias to the only selected document", async () => {
+    emit(response().replace('"doc_id":"doc-0"', '"doc_id":"other-document"'));
+    await expect(runLLMStream(makeParams())).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ grounding_diagnostics: expect.objectContaining({ failures: [{ ref: 1, page: 2, reason: "source_unavailable" }] }) })]) });
+  });
+  it("rejects a binding changed after source read instead of switching to a newer version", async () => {
+    const params = makeParams();
+    mocks.stream.mockImplementationOnce(async (call) => {
+      params.docIndex["doc-0"].version_id = "v-new";
+      call.callbacks?.onContentDelta?.(response());
+      return { fullText: response() };
+    });
+    await expect(runLLMStream(params)).rejects.toMatchObject({ fullText: "", events: expect.arrayContaining([expect.objectContaining({ grounding_diagnostics: expect.objectContaining({ failures: [{ ref: 1, page: 2, reason: "version_mismatch" }] }) })]) });
+  });
   it("serialises the complete 3-page evidence plus actual system/tools below the real request-byte gate, offline", async () => {
     vi.stubEnv("COURTOS_KNOWLEDGE_ENABLED", "true");
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
@@ -80,7 +116,8 @@ describe("pilot source prefetch → model → page verification → release", ()
       expect(context).toContain("CHF 12500 paid on 5 September 2026");
       expect(context).toContain("CHF 1250.");
       expect(context).toContain("No receipt or bank confirmation");
-      expect(context).toContain('"version_id":"v"');
+      expect(context).toContain('"doc_id":"doc-0"');
+      expect(context).not.toContain('"version_id":"v"');
       expect(context).not.toContain("OLD FALSE CLAIM");
       call.callbacks?.onContentDelta?.(response());
       expect(params.write.mock.calls.map(([chunk]) => chunk).join("")).not.toContain("The exhibit is a draft");

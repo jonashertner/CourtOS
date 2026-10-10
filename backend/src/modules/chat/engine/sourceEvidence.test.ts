@@ -39,6 +39,10 @@ describe("complete source admission and fixed-page verification", () => {
     expect(source.pages.every((p) => /^[a-f0-9]{64}$/.test(p.sha256))).toBe(true);
     const prompt = JSON.parse(sourceEvidencePrompt(sources));
     expect(prompt.documents[0].pages).toHaveLength(3);
+    expect(prompt.documents[0].doc_id).toBe("doc-0");
+    expect(prompt.documents[0]).not.toHaveProperty("document_id");
+    expect(prompt.documents[0]).not.toHaveProperty("version_id");
+    expect(source.version_id).toBe("version-a");
     expect(prompt.coverage).toBe("complete_extracted_text_of_selected_versions");
     const result = await verifyDocumentCitationAnnotation(annotation(2, "CHF 1250"), async () => source) as { verified: boolean; quotes: { verification: object }[] };
     expect(result.verified).toBe(true);

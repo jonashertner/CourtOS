@@ -439,6 +439,11 @@ export async function verifyDocumentCitationAnnotation(
   if (!annotation || typeof annotation !== "object") return annotation;
   const a = annotation as Record<string, unknown>;
   if (a.kind === "case") return annotation;
+  // Set only by the server's citation builder. The model cannot override a
+  // selected document/version by adding an explicit contradictory identity.
+  const { citation_binding_error, ...publicAnnotation } = a;
+  const bindingError = citation_binding_error === "version_mismatch" || citation_binding_error === "document_mismatch"
+    ? citation_binding_error : null;
   const docId = typeof a.doc_id === "string" ? a.doc_id : null;
   if (!docId) return annotation;
 
@@ -451,13 +456,15 @@ export async function verifyDocumentCitationAnnotation(
 
   let source: string | DocumentEvidence | null;
   try {
-    source = await getSourceText(docId);
+    source = bindingError ? null : await getSourceText(docId);
   } catch {
     source = "";
   }
 
   const verifiedQuotes = entries.map((entry) => {
-    const result = typeof source === "string"
+    const result: QuoteVerificationResult = bindingError
+      ? { verified: false, needs_correction: false, failure_reason: bindingError }
+      : typeof source === "string"
       ? verifyQuoteAgainstSource(source, entry.quote)
       : verifyQuoteAgainstPages(source, a, entry);
     const { needs_correction, ...verification } = result;
@@ -478,7 +485,7 @@ export async function verifyDocumentCitationAnnotation(
   );
 
   return {
-    ...a,
+    ...publicAnnotation,
     quote: verifiedQuotes[0]?.quote ?? a.quote,
     quotes: verifiedQuotes,
     verified,

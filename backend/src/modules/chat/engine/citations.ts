@@ -1,4 +1,4 @@
-import { type DocIndex, type DocStore, resolveDoc } from "./types";
+import { type DocIndex, type DocStore, resolveDoc, resolveDocLabel } from "./types";
 import {
   normalizeCaseDocument,
   sourceDocumentType,
@@ -22,6 +22,10 @@ type ParsedDocumentCitation = {
   kind: "document";
   ref: number;
   doc_id: string;
+  // Identity is server-owned. Preserve unexpected explicit claims only so a
+  // contradictory claim is rejected, never silently rebound to another version.
+  claimed_document_id?: string | null;
+  claimed_version_id?: string | null;
   page: number | string;
   quote: string;
   sheet?: string;
@@ -92,6 +96,8 @@ function normalizeCitation(raw: unknown): ParsedCitation | null {
     kind: "document",
     ref,
     doc_id: c.doc_id,
+    ...(Object.hasOwn(c, "document_id") ? { claimed_document_id: typeof c.document_id === "string" ? c.document_id : null } : {}),
+    ...(Object.hasOwn(c, "version_id") ? { claimed_version_id: typeof c.version_id === "string" ? c.version_id : null } : {}),
     page: quotes[0].page,
     quote: quotes[0].quote,
     sheet: quotes[0].sheet,
@@ -309,8 +315,13 @@ export function createCitation(
     };
   }
 
-  const docInfo = resolveDoc(citation.doc_id, docIndex);
-  const requestScopedDocument = docStore?.get(citation.doc_id);
+  const label = resolveDocLabel(citation.doc_id, docStore, docIndex);
+  const docInfo = label ? resolveDoc(label, docIndex) : undefined;
+  const requestScopedDocument = label ? docStore?.get(label) : undefined;
+  const bindingError = citation.claimed_version_id !== undefined && citation.claimed_version_id !== docInfo?.version_id
+    ? "version_mismatch"
+    : citation.claimed_document_id !== undefined && citation.claimed_document_id !== docInfo?.document_id
+      ? "document_mismatch" : undefined;
   const documentId = docInfo?.document_id ?? citation.doc_id;
   const filename =
     docInfo?.filename ?? requestScopedDocument?.filename ?? citation.doc_id;
@@ -335,7 +346,8 @@ export function createCitation(
       version_id: docInfo?.version_id ?? null,
       version_number: docInfo?.version_number ?? null,
     },
-    doc_id: citation.doc_id,
+    doc_id: label ?? citation.doc_id,
+    ...(bindingError ? { citation_binding_error: bindingError } : {}),
     document_id: docInfo?.document_id,
     version_id: docInfo?.version_id ?? null,
     version_number: docInfo?.version_number ?? null,
