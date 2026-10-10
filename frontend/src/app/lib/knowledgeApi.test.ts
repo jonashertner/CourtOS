@@ -37,10 +37,14 @@ describe("explicit knowledge requests", () => {
         await getPublicDecision("CH/../../case?foo", 4000);
         expect(fetch.mock.calls[0][0]).toBe("/api/knowledge/public/decisions/CH%2F..%2F..%2Fcase%3Ffoo?start=4000&length=4000");
     });
-    it.each([401, 403, 404, 400, 422, 429, 503])("does not expose a raw error response (%s)", async (status) => {
+    it.each([401, 403, 404, 400, 409, 422, 429, 503])("does not expose a raw error response (%s)", async (status) => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("private raw backend details", { status })));
         await expect(searchKnowledge("term", ["doc"])).rejects.toThrow(/Sitzung|Quelle|prüfen|ausgelastet|verfügbar/);
         await expect(searchKnowledge("term", ["doc"])).rejects.not.toThrow("private raw backend details");
+    });
+    it("makes a changed document snapshot actionable without exposing internal details", async () => {
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: "private version identifiers" }), { status: 409 })));
+        await expect(searchKnowledge("Gehör", ["selected-document"])).rejects.toThrow("Bitte den Bestand aktualisieren und erneut suchen");
     });
     it("permits normal source URLs and rejects script and credential URLs", () => {
         expect(publicSourceUrl("https://example.org/decision")).toBe("https://example.org/decision");

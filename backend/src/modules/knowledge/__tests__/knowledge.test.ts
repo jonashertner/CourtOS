@@ -10,10 +10,12 @@ vi.mock("../../../lib/storage", () => storage);
 vi.mock("../../../lib/pdfText", () => pdf);
 const doc = "00000000-0000-4000-8000-000000000001", version = "00000000-0000-4000-8000-000000000002";
 const input = { query: "rechtliches Gehör", document_ids: [doc], limit: 3 };
-function fakeDb(documents: unknown[], versions: unknown[] = []) {
+function fakeDb(documents: unknown[], versions: unknown[] = [], after?: { documents?: unknown[]; versions?: unknown[] }) {
   const calls: unknown[][] = [];
+  let documentReads = 0, versionReads = 0;
   const from = vi.fn((table: string) => {
-    const builder: Record<string, unknown> = { then: (resolve: (x: unknown) => unknown) => Promise.resolve({ data: table === "documents" ? documents : versions, error: null }).then(resolve) };
+    const data = table === "documents" ? (++documentReads > 1 ? after?.documents ?? documents : documents) : (++versionReads > 1 ? after?.versions ?? versions : versions);
+    const builder: Record<string, unknown> = { then: (resolve: (x: unknown) => unknown) => Promise.resolve({ data, error: null }).then(resolve) };
     for (const method of ["select","eq","is","in"]) builder[method] = (...args: unknown[]) => { calls.push([table,method,...args]); return builder; };
     return builder;
   });
@@ -63,13 +65,38 @@ describe("selected private knowledge", () => {
     expect(rpc).toHaveBeenCalledWith("courtos_store_knowledge_index",expect.objectContaining({p_content_sha256:"hash",p_storage_path:"a.pdf",p_version_id:version}));
   });
   it("labels scanned/partial sources without pretending that no match proves absence", async () => {
-    const {db,rpc}=fakeDb([{id:doc,current_version_id:version}],[{...readyVersion,courtos_knowledge_index:null}]);
+    const partial = {index_status:"partial",indexed_pages:1,total_pages:2};
+    const {db,rpc}=fakeDb([{id:doc,current_version_id:version}],[{...readyVersion,courtos_knowledge_index:null}],{versions:[{...readyVersion,courtos_knowledge_index:partial}]});
     storage.headFile.mockResolvedValue({size:10}); storage.downloadFile.mockResolvedValue(new ArrayBuffer(10));
     pdf.readPdfPages.mockResolvedValue([{page:1,totalPages:2,text:"[Page 1]\nText",empty:false,truncated:true}]);
     rpc.mockResolvedValueOnce({data:{stored:true,metadata:{index_status:"partial",indexed_pages:1,total_pages:2}},error:null}).mockResolvedValueOnce({data:[],error:null});
     const result=await searchKnowledge(db,"owner",input);
     expect(result).toMatchObject({ok:true,data:{documents:[{index_status:"partial"}]}});
     if(result.ok) expect(result.data.notices.join(" ")).toContain("keine Abwesenheit");
+  });
+  it("refuses an incomplete selected version set before indexing or claiming empty results", async () => {
+    for (const [documents, versions] of [[[ {id:doc,current_version_id:null} ],[]],[[{id:doc,current_version_id:version}],[]]]) {
+      const {db,rpc}=fakeDb(documents,versions);
+      expect(await searchKnowledge(db,"owner",input)).toMatchObject({ok:false,kind:"conflict"});
+      expect(rpc).not.toHaveBeenCalled();expect(storage.downloadFile).not.toHaveBeenCalled();
+    }
+  });
+  it("rejects version swaps or document removal even when the search returns zero hits", async () => {
+    for (const documents of [[],[{id:doc,current_version_id:"00000000-0000-4000-8000-000000000003"}]]) {
+      const {db}=fakeDb([{id:doc,current_version_id:version}],[readyVersion],{documents});
+      expect(await searchKnowledge(db,"owner",input)).toMatchObject({ok:false,kind:"conflict"});
+    }
+  });
+  it("rejects hits from a newer version than the reported coverage snapshot", async () => {
+    const {db,rpc}=fakeDb([{id:doc,current_version_id:version}],[readyVersion]);
+    rpc.mockResolvedValue({data:[{document_id:doc,version_id:"different-version",quote:"New text"}],error:null});
+    expect(await searchKnowledge(db,"owner",input)).toMatchObject({ok:false,kind:"conflict"});
+  });
+  it("rejects replacement or index invalidation within the same version before returning an empty search", async () => {
+    for (const value of [{...readyVersion,content_sha256:"replaced"},{...readyVersion,courtos_knowledge_index:null}]) {
+      const {db}=fakeDb([{id:doc,current_version_id:version}],[readyVersion],{versions:[value]});
+      expect(await searchKnowledge(db,"owner",input)).toMatchObject({ok:false,kind:"conflict"});
+    }
   });
   it("returns exact page-local text and bounded overlapping passages", () => {
     const text="Rechtliches Gehör. "+"x".repeat(4000);

@@ -565,7 +565,9 @@ export async function runToolCalls(
       } else {
         const result = await searchKnowledge(db, userId, { query: args.query, document_ids: selected, limit: 3 }, true);
         if (!result.ok) content = JSON.stringify({ error: result.kind === "error" ? "The selected knowledge search is unavailable." : result.detail });
-        else {
+        else if (result.data.documents.some(source => !Object.values(docIndex ?? {}).some(attached => attached.document_id === source.document_id && attached.version_id === source.version_id))) {
+          content = JSON.stringify({ error: "A selected source version has changed. Refresh and reselect the Library files before searching. No search conclusion can be drawn from this attempt." });
+        } else {
           const passages = result.data.results.flatMap(hit => {
             const entry = Object.entries(docIndex ?? {}).find(([,d]) => d.document_id === hit.document_id && d.version_id === hit.version_id);
             if (!entry) return [];

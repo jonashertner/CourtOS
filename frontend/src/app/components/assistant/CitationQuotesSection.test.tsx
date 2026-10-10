@@ -26,7 +26,7 @@ describe("CitationQuotesSection", () => {
         expect(
             screen.getByText(/Unmatched model quote/).closest("button"),
         ).toBeNull();
-        expect(screen.getByText("Could not verify quote")).toBeInTheDocument();
+        expect(screen.getByText("Zitat nicht bestätigt")).toBeInTheDocument();
     });
 
     it("uses the View button to select a verified quote", () => {

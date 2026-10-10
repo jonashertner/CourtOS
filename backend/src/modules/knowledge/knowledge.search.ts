@@ -90,6 +90,7 @@ export async function searchKnowledge(db: Db, userId: string, input: KnowledgeIn
   const parsed = parseKnowledgeInput(input);
   if (!parsed) return failure("validation", "Bitte einen Suchtext bis 300 Zeichen und 1 bis 20 eigene Bibliotheksdateien auswählen.");
   try {
+    const changed = () => failure("conflict", "Die ausgewählten Quellen wurden während der Suche geändert oder sind noch nicht vollständig verfügbar. Bitte den Bestand aktualisieren und erneut suchen.");
     // Scope BEFORE loading version metadata, reading storage, indexing or ranking.
     const { data: documents, error } = await db.from("documents").select("id,current_version_id")
       .eq("user_id", userId).is("project_id", null).is("org_id", null).is("workflow_id", null)
@@ -104,6 +105,10 @@ export async function searchKnowledge(db: Db, userId: string, input: KnowledgeIn
       .in("id", ids).is("deleted_at", null);
     if (versionError) return internalFailure(versionError);
     const versions = (versionData ?? []) as Version[];
+    // Missing/currently unavailable versions must not become a successful empty
+    // search: the user selected these sources and expects their coverage.
+    if (ids.length !== docs.length || versions.length !== docs.length || docs.some(doc =>
+      !versions.some(version => version.id === doc.current_version_id && version.document_id === doc.id))) return changed();
     const statuses: KnowledgeSearch["documents"] = [];
     for (const version of versions) {
       if (!docs.some(d => d.id === version.document_id && d.current_version_id === version.id)) continue;
@@ -116,7 +121,29 @@ export async function searchKnowledge(db: Db, userId: string, input: KnowledgeIn
       p_user_id: userId, p_document_ids: docs.map(d => d.id), p_query: parsed.query, p_limit: parsed.limit,
     });
     if (searchError) return internalFailure(searchError);
-    return ok({ results: (data ?? []) as KnowledgeResult[], documents: statuses, notices: [
+    const results = (data ?? []) as KnowledgeResult[];
+    if (results.some(hit => !statuses.some(status => status.document_id === hit.document_id && status.version_id === hit.version_id))) return changed();
+    // The RPC ranks current versions, which may have changed after the first
+    // snapshot. Check even zero hits, so a replacement/removal cannot masquerade
+    // as proof that the previously selected text contains no matching passage.
+    const { data: currentDocs, error: currentDocsError } = await db.from("documents").select("id,current_version_id")
+      .eq("user_id", userId).is("project_id", null).is("org_id", null).is("workflow_id", null)
+      .eq("library_kind", "file").eq("status", "ready").in("id", docs.map(doc => doc.id));
+    if (currentDocsError) return internalFailure(currentDocsError);
+    const current = (currentDocs ?? []) as typeof docs;
+    if (current.length !== docs.length || docs.some(doc => !current.some(value => value.id === doc.id && value.current_version_id === doc.current_version_id))) return changed();
+    const { data: currentVersions, error: currentVersionsError } = await db.from("document_versions")
+      .select("id,document_id,storage_path,pdf_storage_path,content_sha256,file_type,filename,version_number,courtos_knowledge_index")
+      .in("id", ids).is("deleted_at", null);
+    if (currentVersionsError) return internalFailure(currentVersionsError);
+    const latest = (currentVersions ?? []) as Version[];
+    if (latest.length !== versions.length || versions.some(version => {
+      const fresh = latest.find(value => value.id === version.id && value.document_id === version.document_id);
+      const indexed = statuses.find(value => value.version_id === version.id);
+      return !fresh || !indexed || ["storage_path", "pdf_storage_path", "content_sha256", "file_type", "filename", "version_number"].some(key => fresh[key as keyof Version] !== version[key as keyof Version]) ||
+        !fresh.courtos_knowledge_index || ["index_status", "indexed_pages", "total_pages", "indexed_at"].some(key => fresh.courtos_knowledge_index?.[key as keyof IndexMetadata] !== indexed[key as keyof IndexMetadata]);
+    })) return changed();
+    return ok({ results, documents: statuses, notices: [
       "Lokale Wort-/Phrasensuche im ausgewählten Bestand; kein vollständiger Nachweis der Rechtslage.",
       ...(statuses.some(s => s.index_status !== "ready") ? ["Mindestens eine Datei ist nur teilweise oder nicht durchsuchbar (Scan, fehlende PDF-Fassung oder Pilotgrenze: 200 Seiten, 250000 Zeichen, 500000 Passagebytes je Datei; Indexbudget 8 MiB je Konto/64 MiB global). Fehlende Treffer belegen keine Abwesenheit."] : []),
     ] });

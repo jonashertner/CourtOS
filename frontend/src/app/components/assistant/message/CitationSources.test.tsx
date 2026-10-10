@@ -22,13 +22,13 @@ describe("CitationsBlock verification states", () => {
   it("marks unverified document citation buttons with the error colors", () => {
     render(
       <CitationsBlock
-        citations={[documentCitation(1, false), documentCitation(2)]}
+        citations={[documentCitation(1, false), documentCitation(2, true)]}
       />,
     );
 
     expect(
       screen.getByRole("button", {
-        name: "Citation 1. Could not verify quote",
+        name: "Citation 1. Zitat nicht bestätigt",
       }),
     ).toHaveClass(
       "!bg-red-100/85",
@@ -44,12 +44,12 @@ describe("CitationsBlock verification states", () => {
 
   it("includes only unverified warnings in citation tooltips", () => {
     expect(citationTooltip(documentCitation(3, false))).toContain(
-      "Quote could not be matched to the source text.",
+      "Der Wortlaut ist nicht durch einen Textabgleich mit der Quelle bestätigt.",
     );
-    expect(citationTooltip(documentCitation(3, true))).not.toContain("matched");
+    expect(citationTooltip(documentCitation(3, true))).not.toContain("Textabgleich");
   });
 
-  it("leaves case citations outside document verification styling", () => {
+  it("flags case citations without explicit source verification", () => {
     const citation: Citation = {
       type: "citation_data",
       kind: "case",
@@ -60,13 +60,13 @@ describe("CitationsBlock verification states", () => {
     };
     render(<CitationsBlock citations={[citation]} />);
 
-    const button = screen.getByRole("button", { name: "Citation 4" });
-    expect(button).toHaveClass("bg-gray-200/80", "text-gray-800");
+    const button = screen.getByRole("button", { name: "Citation 4. Zitat nicht bestätigt" });
+    expect(button).toHaveClass("!bg-red-100/85", "!text-red-800");
   });
 
   it("adds the selected quote background only to the active citation", () => {
-    const inactive = documentCitation(1);
-    const active = documentCitation(2);
+    const inactive = documentCitation(1, true);
+    const active = documentCitation(2, true);
 
     render(
       <CitationsBlock

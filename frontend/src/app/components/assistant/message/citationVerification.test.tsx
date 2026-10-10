@@ -7,6 +7,7 @@ import {
   citationVerificationAriaLabel,
   citationVerificationPillClassName,
   citationVerificationState,
+  quoteVerificationState,
   CitationVerificationBadge,
 } from "./citationVerification";
 
@@ -46,7 +47,7 @@ describe("citation verification presentation", () => {
     const citation = documentCitation(false);
     expect(citationVerificationState(citation)).toBe("unverified");
     expect(citationVerificationAriaLabel(citation)).toBe(
-      "Citation 1. Could not verify quote",
+      "Citation 1. Zitat nicht bestätigt",
     );
     expect(citationVerificationPillClassName(citation)).toContain(
       "!bg-red-100/85",
@@ -62,45 +63,38 @@ describe("citation verification presentation", () => {
     );
   });
 
-  it("leaves citations neutral while verification is not yet available", () => {
-    const citation = documentCitation();
-    expect(citationVerificationState(citation)).toBe("verified");
-    expect(citationVerificationAriaLabel(citation)).toBe("Citation 1");
-    expect(citationVerificationPillClassName(citation)).toBe("");
-  });
-
-  it("applies source verification semantics to case citations", () => {
-    expect(citationVerificationState(caseCitation)).toBe("verified");
-    expect(citationVerificationAriaLabel(caseCitation)).toBe("Citation 2");
-    expect(citationVerificationPillClassName(caseCitation)).toBe("");
-
-    const unverifiedCase = { ...caseCitation, verified: false };
-    expect(citationVerificationState(unverifiedCase)).toBe("unverified");
-    expect(citationVerificationAriaLabel(unverifiedCase)).toBe(
-      "Citation 2. Could not verify quote",
-    );
+  it("requires explicit confirmation for citations and individual quotes", () => {
+    for (const citation of [documentCitation(), documentCitation(false), caseCitation]) {
+      expect(citationVerificationState(citation)).toBe("unverified");
+      expect(citationVerificationAriaLabel(citation)).toContain("Zitat nicht bestätigt");
+      expect(citationVerificationPillClassName(citation)).toContain("!bg-red-100/85");
+    }
+    expect(citationVerificationState({ ...caseCitation, verified: true })).toBe("verified");
+    expect(quoteVerificationState({})).toBe("unverified");
+    expect(quoteVerificationState({ verification: { verified: false } })).toBe("unverified");
+    expect(quoteVerificationState({ verification: { verified: true } })).toBe("verified");
   });
 
   it("reveals an explanation from the white warning pill", async () => {
     const user = userEvent.setup();
     render(<CitationVerificationBadge state="unverified" />);
     const trigger = screen.getByRole("button", {
-      name: "Could not verify quote",
+      name: "Zitat nicht bestätigt",
     });
     expect(trigger).toHaveClass("liquid-glass-flat", "!text-red-600");
     expect(trigger).not.toHaveClass("bg-red-600/90");
     expect(
-      screen.queryByText("Quote not found in document"),
+      screen.queryByText("Wortlaut an der Quelle prüfen"),
     ).not.toBeInTheDocument();
 
     await user.click(trigger);
 
     expect(screen.getByRole("dialog")).toBeVisible();
-    expect(screen.getByText("Quote not found in document")).toBeVisible();
+    expect(screen.getByText("Wortlaut an der Quelle prüfen")).toBeVisible();
     expect(
-      screen.getByText(/Treat it as hallucinated/),
+      screen.getByText(/Für dieses Zitat fehlt ein bestätigter Textabgleich/),
     ).toHaveTextContent(
-      "double-check the related section of the assistant response",
+      "Auch ein Texttreffer bestätigt nur den Wortlaut, nicht die Richtigkeit",
     );
     expect(trigger).toHaveAttribute("aria-expanded", "true");
   });
@@ -129,7 +123,7 @@ describe("citation verification presentation", () => {
 
     expect(screen.getByLabelText("Citation 7")).toHaveTextContent("7");
     expect(screen.queryByText("Citation")).not.toBeInTheDocument();
-    expect(screen.getByText("Could not verify quote")).toBeVisible();
+    expect(screen.getByText("Zitat nicht bestätigt")).toBeVisible();
     expect(screen.getByRole("button", { name: "View" })).toBeDisabled();
     expect(screen.getByText(/Model supplied quote/)).not.toHaveClass(
       "citation-quote-selected",

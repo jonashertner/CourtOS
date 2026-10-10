@@ -65,6 +65,7 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
             : path.startsWith("/public/") && response.status === 400 && code === "public_research_invalid_query"
                 ? "Bitte ein bis acht kurze Suchbegriffe verwenden." : null;
         const message = response.status === 401 ? "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+            : response.status === 409 ? "Die ausgewählten Quellen wurden geändert oder werden gerade erfasst. Bitte den Bestand aktualisieren und erneut suchen."
             : response.status === 403 || response.status === 404 ? "Diese Quelle ist für Ihr Konto nicht verfügbar. Aktualisieren Sie die Auswahl."
             : response.status === 429 ? "Die Suche ist gerade ausgelastet. Bitte versuchen Sie es später erneut."
             : response.status === 400 || response.status === 422 ? "Bitte prüfen Sie Suchtext und Dokumentauswahl."

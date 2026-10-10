@@ -59,8 +59,8 @@ const citation: DocumentCitation = {
     page: 1,
     quote: "First clause",
     quotes: [
-        { page: 1, quote: "First clause" },
-        { page: 2, quote: "Second clause" },
+        { page: 1, quote: "First clause", verification: { verified: true } },
+        { page: 2, quote: "Second clause", verification: { verified: true } },
     ],
 };
 const edit: EditAnnotation = {
@@ -391,7 +391,7 @@ it("maps spreadsheet citation cells into the IDE viewer", () => {
     const sheetCitation = {
         ...citation,
         filename: "Budget.xlsx",
-        quotes: [{ page: 1, quote: "1250", sheet: "Summary", cell: "B7" }],
+        quotes: [{ page: 1, quote: "1250", sheet: "Summary", cell: "B7", verification: { verified: true } }],
     };
     render(
         <ProjectDocumentPanels
@@ -532,3 +532,11 @@ it.each(["assistant", "project"] as const)(
         expect(viewerProps().quotes).toBeUndefined();
     },
 );
+
+it("opens an unchecked citation source without treating its claimed page or quote as confirmed", () => {
+    const unchecked: DocumentCitation = { ...citation, filename: "Source.pdf", version_id: "exact-source-version", verified: undefined, quotes: [{ page: 9, quote: "Unchecked wording" }] };
+    render(content("assistant", { kind: "citation", citation: unchecked }, true, false));
+    expect(viewerProps().doc).toEqual({ document_id: "doc", version_id: "exact-source-version" });
+    expect(viewerProps().quotes).toEqual([]);
+    expect(screen.getByText("Zitat nicht bestätigt")).toBeVisible();
+});
