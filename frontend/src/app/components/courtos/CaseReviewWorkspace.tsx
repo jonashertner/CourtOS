@@ -19,7 +19,7 @@ import { ExampleMatters } from "./ExampleMatters";
 const roles: CaseReviewRole[] = ["claim", "response", "exhibit", "authority", "other"];
 const kinds: CaseReviewKind[] = ["facts", "legal", "chronology"];
 const guideLabel: CourtOSText = {de:"Anleitung",fr:"Guide",it:"Guida",en:"Guide"};
-const errorMessages: Record<CaseReviewError["code"], CourtOSText> = { unavailable: R.errorGeneric, source: R.errorSource, input: R.errorInput, quota: R.errorQuota, conflict: R.errorConflict, session: R.errorSession, grounding: R.errorGrounding, context: R.errorContext, missing: R.errorSource };
+const errorMessages: Record<CaseReviewError["code"], CourtOSText> = { unavailable: R.errorGeneric, source: R.errorSource, input: R.errorInput, quota: R.errorQuota, conflict: R.errorConflict, session: R.errorSession, grounding: R.errorGrounding, output: R.errorInvalidOutput, context: R.errorContext, missing: R.errorSource };
 const errorMessage = (error: unknown) => error instanceof CaseReviewError ? errorMessages[error.code] : R.errorGeneric;
 const originalPdf = (doc: Document) => doc.status === "ready" && !!doc.current_version_id && (/\.pdf$/i.test(doc.filename) || ["pdf", "application/pdf"].includes(doc.file_type?.toLowerCase() ?? ""));
 type Chosen = { document: Document; role: CaseReviewRole; party: string };
@@ -135,7 +135,7 @@ function CaseReviewContent({ owner }: { owner: string }) {
         {error && <p role="alert" className="courtos-review-error">{t(error)}</p>}
         {pollError && <div role="alert" className="courtos-review-error"><p>{t(pollError)}</p><button className="courtos-link" onClick={() => {setPollError(null);setPollRetry(value=>value+1);}}>{t(R.retryPoll)}</button>{missingJob && !active && <button className="courtos-link" onClick={reset}>{t(R.new)}</button>}</div>}
         {record && <section className="courtos-review-job" aria-live="polite"><h2>{t(R[record.status])}</h2>{active ? <><p>{t(R.wait)}</p><button className="courtos-link" disabled={busy} onClick={() => void stop()}>{t(busy ? R.stopping : R.stop)}</button></> : <button className="courtos-link" onClick={reset}>{t(R.new)}</button>}
-            {record.error && <p role="alert">{t(record.error.code === "review_context_unavailable" ? R.errorContext : record.error.code === "review_grounding_failed" ? R.errorGrounding : record.status === "interrupted" ? R.interrupted : R.errorGeneric)}</p>}
+            {record.error && <p role="alert">{t(record.error.code === "review_context_unavailable" ? R.errorContext : record.error.code === "review_grounding_failed" ? R.errorGrounding : record.error.code === "review_invalid_output" ? R.errorInvalidOutput : record.status === "interrupted" ? R.interrupted : R.errorGeneric)}</p>}
         </section>}
         {report && <section className="courtos-review-report">
             <header><h2>{t(R.partial)}</h2><p>{t(R.partialHelp)}</p>{report.coverage.more_claims_reported && <p>{t(R.moreClaims)}</p>}</header>

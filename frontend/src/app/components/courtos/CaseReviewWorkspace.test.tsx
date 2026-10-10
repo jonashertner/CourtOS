@@ -17,13 +17,28 @@ const pending=(input:CaseReviewInput):CaseReviewRecord=>({id:input.request_id,in
 const renderApp=()=>render(<CourtOSLocaleProvider ownerId={api.owner}><CaseReviewWorkspace/></CourtOSLocaleProvider>);
 beforeEach(()=>{vi.clearAllMocks();sessionStorage.clear();localStorage.clear();api.owner="owner";setCourtOSLocale("owner","de");api.list.mockResolvedValue({documents:[doc,{...doc,id:"other",filename:"Antwort.docx",file_type:"docx"}],documentsHasMore:false});api.start.mockImplementation(async input=>pending(input));api.get.mockImplementation(async()=>new Promise(()=>{}));});
 describe("submission review work flow",()=>{
+    it.each([
+        ["de","Das Modell hat keinen verwendbaren Prüfbericht erstellt. Es wurde kein Entwurf freigegeben. Ihre Quellen bleiben unverändert."],
+        ["fr","Le modèle n’a pas produit de rapport d’examen utilisable. Aucun projet n’a été publié. Vos sources restent inchangées."],
+        ["it","Il modello non ha prodotto un rapporto di esame utilizzabile. Nessuna bozza è stata rilasciata. Le vostre fonti restano invariate."],
+        ["en","The model did not produce a usable review report. No draft was released. Your sources remain unchanged."],
+    ] as const)("%s: explains unusable output separately from a source mismatch",async(locale,message)=>{
+        setCourtOSLocale("owner",locale);
+        const input:CaseReviewInput={request_id:"11111111-1111-4111-8111-111111111111",kind:"facts",language:"de",sources:[{document_id:doc.id,version_id:doc.current_version_id,role:"claim",party_label:null}]};
+        sessionStorage.setItem("courtos:review-reference:v1:owner",JSON.stringify({owner:"owner",id:input.request_id}));
+        api.get.mockResolvedValue({...pending(input),status:"failed",error:{code:"review_invalid_output",detail:"private provider detail"}});
+        renderApp();expect(await screen.findByRole("alert")).toHaveTextContent(message);
+        expect(screen.queryByText("private provider detail")).toBeNull();
+        expect(screen.queryByRole("table")).toBeNull();
+        expect(api.start).not.toHaveBeenCalled();expect(api.stop).not.toHaveBeenCalled();
+    });
     it("imports an optional matter into an empty selection, preserves ready versions and never starts analysis automatically",async()=>{
         let resolve!:(value:unknown)=>void;api.importExample.mockReturnValue(new Promise(r=>{resolve=r;}));
         const sources=(["claim","response","exhibit","exhibit"] as const).map((role,index)=>({document:{...doc,id:`example-${index}`,current_version_id:`version-${index}`,filename:`Example${index}.pdf`},role,party:index===0?"Creditore":index===1?"Debitrice":""}));
         renderApp();await screen.findByRole("checkbox",{name:/Eingabe.pdf/});fireEvent.click(screen.getByText("Beispieldossiers"));
-        fireEvent.change(screen.getByLabelText("Dossiersprache"),{target:{value:"IT-01"}});fireEvent.click(screen.getByRole("button",{name:"Vier PDFs übernehmen"}));
+        fireEvent.click(screen.getByRole("button",{name:"Vier PDFs übernehmen · CourtOS-UE-2026-003"}));
         expect(screen.getByRole("checkbox",{name:/Eingabe.pdf/})).toBeDisabled();
-        await act(async()=>resolve(sources));
+        await act(async()=>resolve({sources,folderId:"case-it",reusedCount:0,previousEditionCount:0}));
         expect(screen.getAllByLabelText("Dokumentrolle").map(element=>(element as HTMLSelectElement).value)).toEqual(["claim","response","exhibit","exhibit"]);
         expect(screen.getByLabelText("Sprache des Entwurfs")).toHaveValue("it");expect(api.start).not.toHaveBeenCalled();
         fireEvent.click(screen.getByRole("button",{name:"Teilanalyse starten"}));await screen.findByText("Entwurf wird erstellt");

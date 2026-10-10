@@ -11,12 +11,12 @@
 <section id="login" hidden><h2>Persönlicher Zugang</h2><p id="login-message">Ihre Sitzung ist abgelaufen.</p><a class="button" href="/hybrid/">Mit E-Mail-Code anmelden</a></section>
 <div id="workspace" class="workspace" hidden>
 <aside class="context-rail" aria-label="Verarbeitung und Arbeitsfluss">
-<section class="processing-local"><p class="eyebrow">Lokal auf dem CourtOS-Server</p><h2>Gemma 4</h2><p>Deutschland · nicht auf Ihrem Gerät</p><p class="rail-detail">Unterlagen erschliessen, Gedanken ordnen und mit Quellen arbeiten.</p><a href="/assistant" class="text-link">Zum lokalen Assistenten <span aria-hidden="true">↗</span></a></section>
+<section class="processing-local"><p class="eyebrow">Lokal auf dem CourtOS-Server</p><h2>Gemma 4</h2><p>CourtOS-Server · nicht auf Ihrem Gerät</p><p class="rail-detail">Unterlagen erschliessen, Gedanken ordnen und mit Quellen arbeiten.</p><a href="/assistant" class="text-link">Zum lokalen Assistenten <span aria-hidden="true">↗</span></a></section>
 <div class="flow-rule" aria-hidden="true">↓</div>
 <section class="current-route processing-cloud"><p class="eyebrow">Externes Cloud-Modell</p><h2 id="frontier-name">Claude Opus 5.5</h2><p>Anthropic · externe API</p><p class="rail-detail">Übermittelt werden nur der hier freigegebene Auftrag und Text. Anhänge und Chatverlauf bleiben ausserhalb dieser Anfrage.</p><p id="model-status" class="model-status" role="status"></p></section>
 <div class="flow-rule" aria-hidden="true">↓</div>
 <section><p class="eyebrow">Weiterarbeit</p><h2>Zurück zu Ihrem Entwurf</h2><p class="rail-detail">Die Antwort lässt sich in den lokalen Assistenten übernehmen und dort mit Ihren Quellen weiterbearbeiten.</p></section>
-<details class="operating-details"><summary>Betrieb und Kontingent</summary><p id="account-name"></p><p id="limits"></p><p>Der Pilot läuft über Cloudflare und einen VPS in Deutschland. Keine vertraulichen Akten.</p><button class="text-link" id="refresh" type="button">Status aktualisieren</button><button class="text-link" id="logout" type="button">Abmelden</button></details>
+<details class="operating-details"><summary>Betrieb und Kontingent</summary><p id="account-name"></p><p id="limits"></p><p>Der Pilot läuft über Cloudflare und den CourtOS-Server. Keine vertraulichen Akten.</p><button class="text-link" id="refresh" type="button">Status aktualisieren</button><button class="text-link" id="logout" type="button">Abmelden</button></details>
 </aside>
 <div class="working-column">
 <section id="billing-panel" class="billing-panel" aria-label="Guthaben für Opus" hidden>

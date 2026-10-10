@@ -2,36 +2,47 @@ import {act,fireEvent,render,screen} from "@testing-library/react";
 import {beforeEach,describe,expect,it,vi} from "vitest";
 import {CourtOSLocaleProvider} from "@/app/contexts/CourtOSLocaleContext";
 import {setCourtOSLocale} from "@/app/lib/courtosLocale";
-import {ExampleImportError,type ExampleSelection} from "@/app/lib/importExampleMatter";
+import {ExampleImportError,type ExampleSelection,type ExampleImportResult} from "@/app/lib/importExampleMatter";
 import {ExampleMatters} from "./ExampleMatters";
 const imports=vi.hoisted(()=>vi.fn());
 vi.mock("@/app/lib/importExampleMatter",async original=>({...await original<typeof import("@/app/lib/importExampleMatter")>(),importExampleMatter:imports}));
-const selected=[{document:{id:"doc",current_version_id:"version",filename:"CourtOS_DE-01_D01.pdf",status:"ready"},role:"claim",party:"Vermieterin"}] as ExampleSelection[];
+const selected=[{document:{id:"doc",current_version_id:"version",filename:"CourtOS_DE-01_D01.pdf",status:"ready"},role:"claim",party:"A.________ AG · Vermieterin"}] as ExampleSelection[];
+const result:ExampleImportResult={sources:selected,folderId:"case-folder",reusedCount:0,previousEditionCount:0};
 const show=(props:Partial<Parameters<typeof ExampleMatters>[0]>={})=>render(<CourtOSLocaleProvider ownerId="owner"><ExampleMatters disabled={false} inWord={false} onImported={vi.fn()} onImportingChange={vi.fn()} {...props}/></CourtOSLocaleProvider>);
+const open=()=>fireEvent.click(screen.getByText("Beispieldossiers"));
+const button=()=>screen.getByRole("button",{name:"Vier PDFs übernehmen · CourtOS-UE-2026-001"});
 beforeEach(()=>{vi.clearAllMocks();sessionStorage.clear();localStorage.clear();setCourtOSLocale("owner","de");});
 describe("optional sample matters",()=>{
-    it("stays optional and explains provenance before any upload; choosing a language does not import",()=>{
-        show();const summary=screen.getByText("Beispieldossiers");expect(summary.closest("details")).not.toHaveAttribute("open");fireEvent.click(summary);
-        expect(screen.getByText(/keine Originalakten/)).toBeVisible();expect(screen.getByRole("link",{name:/Originalurteil/})).toHaveAttribute("href",expect.stringContaining("search.bger.ch"));
-        fireEvent.change(screen.getByLabelText("Dossiersprache"),{target:{value:"FR-01"}});expect(imports).not.toHaveBeenCalled();expect(screen.getByRole("heading",{name:"Un versement pour acquérir une villa"})).toBeVisible();
+    it("shows all four numbered matters and source/party provenance without an import or language filter",()=>{
+        show();expect(screen.getByText("Beispieldossiers").closest("details")).not.toHaveAttribute("open");open();
+        expect(screen.getByText(/keine Originalakten/)).toBeVisible();expect(screen.getAllByRole("link",{name:/Originalurteil/})).toHaveLength(4);
+        for(const number of ["001","002","003","004"])expect(screen.getByText(new RegExp(`Fiktives Aktenzeichen · CourtOS-UE-2026-${number}`))).toBeVisible();
+        expect(screen.getByRole("heading",{name:"Un versement pour acquérir une villa"})).toBeVisible();expect(screen.queryByRole("combobox")).not.toBeInTheDocument();expect(imports).not.toHaveBeenCalled();
     });
-    it("imports once on explicit action, reports ready sources and locks the parent during the upload",async()=>{
-        const imported=vi.fn(),busy=vi.fn();let resolve!:(value:ExampleSelection[])=>void;imports.mockReturnValue(new Promise(r=>{resolve=r;}));
-        show({onImported:imported,onImportingChange:busy});fireEvent.click(screen.getByText("Beispieldossiers"));fireEvent.click(screen.getByRole("button",{name:"Vier PDFs übernehmen"}));
-        expect(busy).toHaveBeenCalledWith(true);expect(screen.getByLabelText("Dossiersprache")).toBeDisabled();expect(imports).toHaveBeenCalledOnce();
-        await act(async()=>resolve(selected));expect(imported).toHaveBeenCalledWith(selected,"de");expect(busy).toHaveBeenLastCalledWith(false);expect(screen.getByRole("status")).toHaveTextContent("Die Prüfung starten Sie selbst");
+    it("imports only the explicitly chosen matter and locks other actions until completion",async()=>{
+        const imported=vi.fn(),busy=vi.fn();let resolve!:(value:ExampleImportResult)=>void;imports.mockReturnValue(new Promise(r=>{resolve=r;}));
+        show({onImported:imported,onImportingChange:busy});open();fireEvent.click(button());expect(busy).toHaveBeenCalledWith(true);expect(imports).toHaveBeenCalledOnce();
+        expect(screen.getAllByRole("button").every(value=>(value as HTMLButtonElement).disabled)).toBe(true);
+        await act(async()=>resolve(result));expect(imported).toHaveBeenCalledWith(selected,"de");expect(busy).toHaveBeenLastCalledWith(false);expect(screen.getByRole("status")).toHaveTextContent("Die Prüfung starten Sie selbst");expect(screen.getByRole("link",{name:"Aktenordner öffnen"})).toHaveAttribute("href","/library/folders/case-folder");
     });
-    it("does not overwrite existing selected work",()=>{show({disabled:true});fireEvent.click(screen.getByText("Beispieldossiers"));expect(screen.getByRole("button",{name:"Vier PDFs übernehmen"})).toBeDisabled();expect(imports).not.toHaveBeenCalled();});
-    it("does not silently retry an ambiguous upload and preserves the Word library route",async()=>{
-        imports.mockRejectedValue(new ExampleImportError("upload",true));show({inWord:true});fireEvent.click(screen.getByText("Beispieldossiers"));fireEvent.click(screen.getByRole("button",{name:"Vier PDFs übernehmen"}));
-        expect(await screen.findByRole("alert")).toHaveTextContent("einzelne Dateien können bereits gespeichert sein");expect(screen.getByRole("button",{name:"Vier PDFs übernehmen"})).toBeDisabled();expect(screen.getByRole("link",{name:"Bibliothek öffnen"})).toHaveAttribute("href","/library?host=word");expect(imports).toHaveBeenCalledOnce();
+    it("does not overwrite selected work",()=>{show({disabled:true});open();expect(button()).toBeDisabled();expect(imports).not.toHaveBeenCalled();});
+    it("preserves Word navigation and explains reused old editions",async()=>{
+        imports.mockResolvedValue({...result,reusedCount:4,previousEditionCount:4});show({inWord:true});open();fireEvent.click(button());
+        expect(await screen.findByRole("status")).toHaveTextContent("4 vorhandene Übungsdateien");expect(screen.getByRole("status")).toHaveTextContent("ohne fiktives Aktenzeichen");expect(screen.getByRole("link",{name:"Aktenordner öffnen"})).toHaveAttribute("href","/library/folders/case-folder?host=word");
     });
-    it("aborts owner-scope unmount and ignores a late result",async()=>{
-        let resolve!:(value:ExampleSelection[])=>void;imports.mockReturnValue(new Promise(r=>{resolve=r;}));const imported=vi.fn();const view=show({onImported:imported});fireEvent.click(screen.getByText("Beispieldossiers"));fireEvent.click(screen.getByRole("button",{name:"Vier PDFs übernehmen"}));
-        const signal=imports.mock.calls[0][1] as AbortSignal;view.unmount();expect(signal.aborted).toBe(true);await act(async()=>resolve(selected));expect(imported).not.toHaveBeenCalled();
+    it("does not silently retry an ambiguous upload",async()=>{
+        imports.mockRejectedValue(new ExampleImportError("upload",true));show({inWord:true});open();fireEvent.click(button());
+        expect(await screen.findByRole("alert")).toHaveTextContent("einzelne Dateien können bereits gespeichert sein");expect(button()).toBeDisabled();expect(screen.getByRole("link",{name:"Bibliothek öffnen"})).toHaveAttribute("href","/library?host=word");expect(imports).toHaveBeenCalledOnce();
     });
-    it("localizes all four interfaces without changing file language or launching work",async()=>{
-        show();for(const [locale,title] of [["de","Beispieldossiers"],["fr","Dossiers d’exemple"],["it","Fascicoli di esempio"],["en","Example matters"]] as const){await act(async()=>setCourtOSLocale("owner",locale));expect(screen.getByText(title)).toBeVisible();}
-        expect(imports).not.toHaveBeenCalled();expect(screen.getByRole("combobox",{hidden:true})).toHaveValue("DE-01");
+    it("makes an existing-file conflict actionable without claiming a new upload",async()=>{
+        imports.mockRejectedValue(new ExampleImportError("existing",false));show();open();fireEvent.click(button());expect(await screen.findByRole("alert")).toHaveTextContent("keine weiteren PDFs hochgeladen");
+    });
+    it("aborts owner-scope unmount and ignores a late completion",async()=>{
+        let resolve!:(value:ExampleImportResult)=>void;imports.mockReturnValue(new Promise(r=>{resolve=r;}));const imported=vi.fn();const view=show({onImported:imported});open();fireEvent.click(button());
+        const signal=imports.mock.calls[0][1] as AbortSignal;view.unmount();expect(signal.aborted).toBe(true);await act(async()=>resolve(result));expect(imported).not.toHaveBeenCalled();
+    });
+    it("localizes chrome while keeping all four original-language matters",async()=>{
+        show();open();for(const [locale,title] of [["de","Beispieldossiers"],["fr","Dossiers d’exemple"],["it","Fascicoli di esempio"],["en","Example matters"]] as const){await act(async()=>setCourtOSLocale("owner",locale));expect(screen.getByText(title)).toBeVisible();expect(screen.getAllByRole("heading")).toHaveLength(4);}
+        expect(imports).not.toHaveBeenCalled();
     });
 });

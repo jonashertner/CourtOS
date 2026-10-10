@@ -2015,13 +2015,14 @@ export async function moveLibraryDocument(
     kind: LibraryKind,
     documentId: string,
     folderId: string | null,
+    expected?: {version_id: string; content_sha256: string; updated_at: string},
 ): Promise<Document> {
     return apiRequest<Document>(
         `/library/${kind}/documents/${documentId}/folder`,
         {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folder_id: folderId }),
+            body: JSON.stringify({ folder_id: folderId, ...(expected ? {expected} : {}) }),
         },
     );
 }

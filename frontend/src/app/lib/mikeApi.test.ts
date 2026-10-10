@@ -2163,6 +2163,16 @@ describe("query and payload defaults", () => {
         });
     });
 
+    it("sends optional source-version preconditions with a library filing request", async () => {
+        fetchMock.mockResolvedValue(jsonResponse({id:"d1"}));
+        const expected={version_id:"v1",content_sha256:"a".repeat(64),updated_at:"2026-10-10T14:00:00Z"};
+        await moveLibraryDocument("files","d1","folder-1",expected);
+        const call=lastFetchCall();
+        expect(call.url).toBe("/api/library/files/documents/d1/folder");
+        expect(call.init.method).toBe("PATCH");
+        expect(JSON.parse(call.init.body as string)).toEqual({folder_id:"folder-1",expected});
+    });
+
     it("resolves project and library upload paths with conflict choices", async () => {
         fetchMock.mockImplementation(() =>
             Promise.resolve(

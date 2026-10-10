@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { streamWithProvider } from "./providers";
 import { withCourtosQuota, type CourtosQuotaReservation } from "../courtosQuota";
+import { caseReviewResponseFormat } from "../courtosCaseReviewOutput";
 
 const response=()=>new Response([
   `data: ${JSON.stringify({id:"test",object:"chat.completion.chunk",created:1,model:"gemma-test",choices:[{index:0,delta:{role:"assistant",content:'{"rows":[],"more_claims":false}'},finish_reason:null}]})}\n\n`,
@@ -18,7 +19,11 @@ describe("task-scoped CourtOS review model boundary",()=>{
     expect(await run(true)).toMatchObject({finishReason:"stop"});await run(false);
     const requests=fetch.mock.calls.filter(call=>String(call[0]).endsWith("/chat/completions")).map(call=>({url:String(call[0]),body:JSON.parse(call[1].body),init:call[1]}));
     expect(requests[0].url).toBe("http://127.0.0.1:18181/v1/chat/completions");
-    expect(requests[0].body).toMatchObject({max_tokens:2048,response_format:{type:"json_object"},chat_template_kwargs:{enable_thinking:false}});
+    expect(requests[0].body).toMatchObject({max_tokens:2048,response_format:caseReviewResponseFormat(),chat_template_kwargs:{enable_thinking:false}});
+    expect(requests[0].body.response_format.type).toBe("json_schema");
+    expect(requests[0].body.response_format.json_schema.schema).toMatchObject({type:"object",additionalProperties:false,required:["rows","more_claims"]});
+    const tokenRequest=fetch.mock.calls.find(call=>String(call[0]).endsWith("/input_tokens"))!;
+    expect(JSON.parse(tokenRequest[1].body)).toEqual(requests[0].body);
     expect(requests[1].body.max_tokens).toBe(768);expect(requests[1].body).not.toHaveProperty("response_format");
     expect(requests.every(value=>value.init.redirect==="error")).toBe(true);
     expect(requests[0].body).not.toHaveProperty("tools");

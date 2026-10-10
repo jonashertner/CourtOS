@@ -48,6 +48,20 @@ function callback(h: ReturnType<typeof harness>, overrides: Record<string, unkno
 afterEach(() => { vi.useRealTimers(); document.head.innerHTML = ""; document.body.innerHTML = ""; });
 
 describe("CourtOS Word bootstrap authentication boundary", () => {
+    it("keeps the pilot notice country-free in all pages and languages without authenticating", async () => {
+        for (const page of ["index", "login", "complete"] as const) {
+            const h = harness(page, page === "index" ? "" : `?state=${state}`);
+            expect(document.getElementById("pilot-note")?.textContent).not.toMatch(/Deutschland|Germany|Allemagne|Germania/i);
+            h.start(); await flush();
+            for (const value of ["de", "fr", "it", "en"]) {
+                fireEvent.change(screen.getByRole("combobox"), { target: { value } });
+                expect(document.getElementById("pilot-note")?.textContent).toContain("CourtOS");
+                expect(document.getElementById("pilot-note")?.textContent).not.toMatch(/Deutschland|Germany|Allemagne|Germania/i);
+            }
+            expect(h.fetch).not.toHaveBeenCalled();
+            expect(h.office.context.ui.messageParent).not.toHaveBeenCalled();
+        }
+    });
     it("uses the Office UI hint and an explicit language choice without authenticating or reading the document", async () => {
         const h = harness("index");
         Object.assign(h.office.context, { displayLanguage: "fr-CH" });

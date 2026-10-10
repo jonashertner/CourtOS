@@ -161,7 +161,7 @@ describe("ChatInput model selection vs. a degraded profile", () => {
         const ref = createRef<ChatInputHandle>();
         const onSubmit = vi.fn();
         render(<ChatInput ref={ref} onSubmit={onSubmit} onCancel={vi.fn()} isLoading={false} />);
-        expect(screen.getByText("Gemma 4").closest("[data-processing-route]")).toHaveTextContent("CourtOS-Server · Deutschland");
+        expect(screen.getByText("Gemma 4").closest("[data-processing-route]")).toHaveTextContent("CourtOS-Server");
         expect(screen.queryByRole("button", { name: "Select test model" })).not.toBeInTheDocument();
         const field = screen.getByPlaceholderText("Ihre Frage oder Ihr Arbeitsauftrag…");
         let accepted: boolean | undefined;

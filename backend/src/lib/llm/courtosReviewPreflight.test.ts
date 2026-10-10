@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { preflightCourtosReviewRequest } from "./courtosReviewPreflight";
 import { withCourtosQuota, type CourtosQuotaReservation } from "../courtosQuota";
+import { caseReviewResponseFormat } from "../courtosCaseReviewOutput";
 
 const url="http://127.0.0.1:18181/v1/chat/completions";
-const body=JSON.stringify({model:"gemma-test",max_tokens:2048,response_format:{type:"json_object"},messages:[{role:"user",content:"Synthetic source \"é🧑\""}]});
+const body=JSON.stringify({model:"gemma-test",max_tokens:2048,response_format:caseReviewResponseFormat(),messages:[{role:"user",content:"Synthetic source \"é🧑\""}]});
 const reservation:CourtosQuotaReservation={userId:"synthetic",signal:new AbortController().signal,attachRun(){},hasRun:()=>true,markModelStarted:vi.fn(),release:async()=>{}};
 const init:RequestInit={method:"POST",headers:{Authorization:"Bearer must-not-forward",Cookie:"must-not-forward"},body};
 const check=(request=url,options=init)=>withCourtosQuota(reservation,()=>preflightCourtosReviewRequest(request,options));
@@ -40,6 +41,13 @@ describe("exact bounded local review token admission",()=>{
       const fetch=vi.fn().mockResolvedValueOnce(Response.json({default_generation_settings:{n_ctx:8192}})).mockResolvedValueOnce(response);vi.stubGlobal("fetch",fetch);
       await expect(check()).rejects.toMatchObject({code:"review_context_unavailable"});expect(fetch).toHaveBeenCalledTimes(2);
     }
+  });
+  it("refuses generic JSON mode, missing or weakened schema before any HTTP",async()=>{
+    const fetch=vi.fn();vi.stubGlobal("fetch",fetch);
+    for(const response_format of [undefined,{type:"json_object"},{type:"json_schema",json_schema:{schema:{type:"object"}}}]){
+      await expect(check(url,{...init,body:JSON.stringify({...JSON.parse(body),response_format})})).rejects.toMatchObject({code:"review_context_unavailable"});
+    }
+    expect(fetch).not.toHaveBeenCalled();expect(reservation.markModelStarted).not.toHaveBeenCalled();
   });
   it("cancels declared or streamed oversized responses before parsing",async()=>{
     for(const declared of [false,true]){

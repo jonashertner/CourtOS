@@ -18,6 +18,23 @@ def operator():
 
 
 class RendererTests(unittest.TestCase):
+    def test_nginx_runtime_owner_matches_service_identity_for_each_prefix(self):
+        for prefix in ('courtos-pilot', 'court-test'):
+            with self.subTest(prefix=prefix), tempfile.TemporaryDirectory() as root:
+                config = operator()
+                config['service_prefix'] = prefix
+                out = pathlib.Path(root) / 'rendered'
+                with contextlib.redirect_stdout(io.StringIO()):
+                    render(config, out)
+                nginx = (out / 'public/nginx.conf').read_text()
+                unit = (out / f'units/{prefix}-proxy.service').read_text()
+                self.assertTrue(nginx.startswith(f'user {prefix}-proxy {prefix}-proxy;\n'))
+                self.assertIn(f'User={prefix}-proxy\n', unit)
+                self.assertIn(f'Group={prefix}-proxy\n', unit)
+                self.assertIn(f'RuntimeDirectory={prefix}-proxy\n', unit)
+                for suffix in ('client', 'proxy'):
+                    self.assertIn(f'/run/{prefix}-proxy/{suffix};', nginx)
+
     def test_secret_scope_and_local_service_boundaries(self):
         with tempfile.TemporaryDirectory() as root:
             out = pathlib.Path(root) / 'rendered'

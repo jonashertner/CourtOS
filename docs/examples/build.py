@@ -30,11 +30,13 @@ def para(c,text,y,kind='body'):
  p=Paragraph(html.escape(text),styles[kind]);_,h=p.wrap(CW,1000);p.drawOn(c,M,y-h);return y-h
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 data=json.loads((ROOT/'content.json').read_text())
+filing=json.loads((ROOT/'filing.json').read_text())
 report={'checked_date':'2026-10-10','pdf_metadata':'Info dictionary and XMP removed','font_family':'Timeless Serif / Timeless Sans / Paper Mono','cases':[]}
 sourcekey={'version':1,'policy':data['source_policy'],'cases':[]}
 for case in data['cases']:
+ arrangement=next(value for value in filing['cases'] if value['id']==case['id'])
  loc=data['labels'][case['language']];target=ROOT/'output/pdf'/case['id'];target.mkdir(parents=True,exist_ok=True)
- case_report={'id':case['id'],'documents':[]}; source={'id':case['id'],'judgment':case['judgment'],'documents':[]}
+ case_report={'id':case['id'],'case_number':arrangement['caseNumber'],'documents':[]}; source={'id':case['id'],'fictitious_case_number':arrangement['caseNumber'],'parties':arrangement['parties'],'party_note':arrangement['partyNote'],'judgment':case['judgment'],'documents':[]}
  # Current primary full texts were read before authoring. Rendering never requires
  # network access. A later archive request encountered the court's anti-bot page;
  # do not hash that as if it were the judgment or claim an immutable HTML capture.
@@ -46,7 +48,11 @@ for case in data['cases']:
   c.setFillColor(INK);c.setFont('Serif',16);c.drawString(M,H-43,'CourtOS')
   c.setFillColor(MUTED);c.setFont('Mono',8);c.drawRightString(W-M,H-41,f"{case['id']} / {n:02d} / 04")
   c.setStrokeColor(RULE);c.setLineWidth(.55);c.line(M,H-58,W-M,H-58)
-  y=H-83;y=para(c,doc['title'],y,'title')-13;y=para(c,case['title'],y,'case')-17
+  y=H-80;y=para(c,arrangement['caseNumberLabel']+': '+arrangement['caseNumber'],y,'small')-10
+  y=para(c,doc['title'],y,'title')-10;y=para(c,case['title'],y,'case')-10
+  party=arrangement['parties'][n-1]['label'] if n<=2 else arrangement['sharedFolder']
+  y=para(c,party,y,'small')-12
+  if case['id']=='FR-01' and n==2:y=para(c,arrangement['partyNote'],y,'small')-8
   y=para(c,loc['notice'],y,'notice')-4;y=para(c,loc['sub'],y,'small')-27
   for p in doc['paragraphs']:
    c.setFillColor(MUTED);c.setFont('Mono',8);c.drawString(M,y,p['id']);y-=8
@@ -77,7 +83,8 @@ for case in data['cases']:
  report['cases'].append(case_report);sourcekey['cases'].append(source)
 sourcekey['editorial_changes']=[
  'New concise party-position texts, document titles, paragraph IDs and ordering are didactic reconstructions, not original pleadings.',
- 'Names remain generic party labels. No addresses, signatures, logos, personal birth dates or medical details were added.',
+ 'Fictitious CourtOS filing numbers and anonymised party names from the official judgments appear in headers and the filing manifest. The historical factual paragraphs are unchanged. No addresses, signatures, logos, personal birth dates or medical details were added.',
+ 'Party subfolders organise submissions; common reconstructed exhibits are not assigned to a party. FR distinguishes the original recipient Z.________ from her procedural successor A.Z.________.',
  'Exhibits are narrative extracts of the judgment account, not fabricated bank records, signed contracts or email screenshots.',
  'The EN case is an unofficial English reconstruction of a German judgment. Only the two marked short phrases in D03-P02 reproduce original English wording quoted by the judgment.',
  'Scope is deliberately narrower than the full cases: DE rent reduction; FR villa funding; IT first repayment instalment; EN authority. Procedural side disputes are omitted and the omission is not a claim that they did not occur.',

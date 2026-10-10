@@ -538,10 +538,35 @@ export async function moveLibraryDocument(
   kind: LibraryKind,
   documentId: string,
   folder_id: string | null,
+  expected?: unknown,
 ): Promise<ServiceResult<unknown>> {
+  let guard: { version_id: string; content_sha256: string; updated_at: string } | null = null;
+  if (expected !== undefined) {
+    if (!expected || typeof expected !== "object" || Array.isArray(expected)) return err(400, "Invalid move precondition");
+    const value = expected as Record<string, unknown>;
+    if (Object.keys(value).some(key => !["version_id", "content_sha256", "updated_at"].includes(key)) ||
+        typeof value.version_id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.version_id) ||
+        typeof value.content_sha256 !== "string" || !/^[0-9a-f]{64}$/.test(value.content_sha256) ||
+        typeof value.updated_at !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(value.updated_at) || !Number.isFinite(Date.parse(value.updated_at))) return err(400, "Invalid move precondition");
+    guard = {version_id:value.version_id, content_sha256:value.content_sha256, updated_at:value.updated_at};
+  }
   if (folder_id) {
     const folder = await loadLibraryFolder(db, userId, kind, folder_id);
     if (!folder) return err(404, "Folder not found");
+  }
+
+  if (guard) {
+    let owned = db.from("documents").select("id,current_version_id,updated_at,status")
+      .eq("id", documentId).eq("user_id", userId).is("project_id", null);
+    owned = kind === "file" ? owned.or("library_kind.eq.file,library_kind.is.null") : owned.eq("library_kind", kind);
+    const {data: document, error: documentError} = await owned.maybeSingle();
+    if (documentError) return internalErr(documentError);
+    if (!document) return err(404, "Document not found");
+    if (document.current_version_id !== guard.version_id || document.status !== "ready" || Date.parse(document.updated_at) !== Date.parse(guard.updated_at)) return err(409, "Document changed; reload before moving");
+    const {data: version, error: versionError} = await db.from("document_versions").select("id,content_sha256")
+      .eq("id", guard.version_id).eq("document_id", documentId).is("deleted_at", null).maybeSingle();
+    if (versionError) return internalErr(versionError);
+    if (!version || version.content_sha256 !== guard.content_sha256) return err(409, "Document changed; reload before moving");
   }
 
   let moveQuery = db
@@ -557,10 +582,15 @@ export async function moveLibraryDocument(
     kind === "file"
       ? moveQuery.or("library_kind.eq.file,library_kind.is.null")
       : moveQuery.eq("library_kind", kind);
+  // The parent version and metadata revision are guarded atomically by UPDATE.
+  // The separate version-hash check above is not a byte lock: this reversible
+  // folder operation never edits/replaces content, including concurrent edits.
+  if (guard) moveQuery = moveQuery.eq("current_version_id", guard.version_id)
+    .eq("updated_at", guard.updated_at).eq("status", "ready");
   const { data, error } = await moveQuery
     .select("*")
     .single();
-  if (error || !data) return err(404, "Document not found");
+  if (error || !data) return err(guard ? 409 : 404, guard ? "Document changed; reload before moving" : "Document not found");
   return ok(mapLibraryDocument(data));
 }
 

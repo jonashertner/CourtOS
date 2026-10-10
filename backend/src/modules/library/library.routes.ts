@@ -303,9 +303,9 @@ libraryRouter.patch(
     if (!kind) return void res.status(404).json({ detail: "Library not found" });
 
     const { documentId } = req.params;
-    const { folder_id } = req.body as { folder_id: string | null };
+    const { folder_id, expected } = req.body as { folder_id: string | null; expected?: unknown };
     const db = createServerSupabase();
-    const result = await moveLibraryDocument(db, userId, kind, documentId, folder_id);
+    const result = await moveLibraryDocument(db, userId, kind, documentId, folder_id, expected);
     if (!result.ok)
       return void sendServiceError(res, result);
     res.json(result.data);

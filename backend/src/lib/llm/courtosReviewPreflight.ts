@@ -1,6 +1,7 @@
 import { courtosPilotFetchInit, courtosPilotModel } from "../courtosPilot";
 import { currentCourtosQuota } from "../courtosQuota";
 import { UserFacingError } from "../userFacingError";
+import { caseReviewResponseFormat } from "../courtosCaseReviewOutput";
 
 export class ReviewContextError extends UserFacingError {
   readonly code = "review_context_unavailable";
@@ -31,6 +32,7 @@ export async function preflightCourtosReviewRequest(input: RequestInfo | URL, in
     courtosPilotFetchInit(input,init); // exact loopback inference URL/body boundary
     const body=JSON.parse(init.body) as Record<string,unknown>;
     if(body.max_tokens!==2048||body.model!==model.apiModel||body.tools!==undefined||body.tool_choice!==undefined)throw new ReviewContextError();
+    if(JSON.stringify(body.response_format)!==JSON.stringify(caseReviewResponseFormat()))throw new ReviewContextError();
     const base=new URL(model.baseUrl); const origin=base.origin;
     if(base.pathname!=="/v1")throw new ReviewContextError();
     const signal=AbortSignal.any([quota.signal,...(init.signal?[init.signal]:[]),AbortSignal.timeout(10_000)]);

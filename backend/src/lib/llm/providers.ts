@@ -1,4 +1,5 @@
 import { preflightCourtosReviewRequest } from "./courtosReviewPreflight";
+import { caseReviewResponseFormat } from "../courtosCaseReviewOutput";
 import { withCourtosLocalQueue } from "./courtosLocalQueue";
 import { assertCourtosPilotModel, courtosPilotEnabled } from "../courtosPilot";
 import {
@@ -498,7 +499,7 @@ async function createConfiguredAdapter(
   const client = createOpenAICompatible({
     name: configured.id,
     baseURL: configured.baseUrl,
-    ...(courtosPilotEnabled() ? { transformRequestBody: (body: Record<string, unknown>) => ({ ...body, max_tokens: Math.min(typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : pilotCap, pilotCap), ...(courtosTask === "case-review" ? { response_format: { type: "json_object" } } : {}), chat_template_kwargs: { enable_thinking: false } }) } : {}),
+    ...(courtosPilotEnabled() ? { transformRequestBody: (body: Record<string, unknown>) => ({ ...body, max_tokens: Math.min(typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : pilotCap, pilotCap), ...(courtosTask === "case-review" ? { response_format: caseReviewResponseFormat() } : {}), chat_template_kwargs: { enable_thinking: false } }) } : {}),
     // Omit Authorization entirely for endpoints declared without auth.
     ...(apiKey ? { apiKey } : {}),
     ...(configured.maxTokensField === "max_completion_tokens"

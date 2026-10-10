@@ -29,7 +29,7 @@ describe("library Word navigation", () => {
         await waitFor(() => expect(screen.getByText("Ready")).toBeVisible());
         const location = screen.getByText("Eigene Quellen").closest("[data-processing-route]");
         expect(location).toHaveAttribute("data-processing-route", "server");
-        expect(location).toHaveTextContent("CourtOS-Server · Deutschland");
+        expect(location).toHaveTextContent("CourtOS-Server");
         expect(location).toHaveTextContent("Uploads werden hier gespeichert");
         const query = host ? "?host=word" : "";
         fireEvent.click(screen.getByRole("button", { name: "Open folder" }));

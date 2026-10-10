@@ -5,7 +5,7 @@ const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-
 const statuses = new Set(["queued", "reading", "analysing", "checking", "completed", "failed", "cancelled", "interrupted"]);
 export const isReviewActive = (record: CaseReviewRecord | null) => !!record && ["queued", "reading", "analysing", "checking"].includes(record.status);
 export class CaseReviewError extends Error {
-    constructor(readonly code: "unavailable" | "source" | "input" | "quota" | "conflict" | "session" | "grounding" | "context" | "missing", readonly rejected = false) { super(code); this.name = "CaseReviewError"; }
+    constructor(readonly code: "unavailable" | "source" | "input" | "quota" | "conflict" | "session" | "grounding" | "output" | "context" | "missing", readonly rejected = false) { super(code); this.name = "CaseReviewError"; }
 }
 function validSource(source: CaseReviewSource, input: CaseReviewInput) {
     return source && source.source_match === "exact" && input.sources.some(item => item.document_id === source.document_id && item.version_id === source.version_id) &&
@@ -56,7 +56,7 @@ async function request(path: string, id: string, init: RequestInit): Promise<Cas
     catch { throw new CaseReviewError("unavailable"); }
     if (!response.ok) {
         let code = ""; try { const body = await response.json(); code = typeof body.code === "string" ? body.code : ""; } catch { /* Fixed safe fallback. */ }
-        throw new CaseReviewError(response.status === 401 ? "session" : response.status === 404 && init.method === "GET" ? "missing" : response.status === 403 || response.status === 404 ? "source" : response.status === 409 ? "conflict" : response.status === 429 ? "quota" : code === "review_context_unavailable" ? "context" : code === "review_grounding_failed" ? "grounding" : response.status === 400 || response.status === 422 ? "input" : "unavailable", response.status >= 400 && response.status < 500);
+        throw new CaseReviewError(response.status === 401 ? "session" : response.status === 404 && init.method === "GET" ? "missing" : response.status === 403 || response.status === 404 ? "source" : response.status === 409 ? "conflict" : response.status === 429 ? "quota" : code === "review_context_unavailable" ? "context" : code === "review_grounding_failed" ? "grounding" : code === "review_invalid_output" ? "output" : response.status === 400 || response.status === 422 ? "input" : "unavailable", response.status >= 400 && response.status < 500);
     }
     return parseCaseReviewRecord(await response.json(), id);
 }

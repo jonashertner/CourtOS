@@ -19,6 +19,7 @@ type ReviewRun = StreamRun<{ record: CaseReviewRecord }>;
 const errorResult = (code: string, detail: string) => ({ code, detail });
 const storageFailure = errorResult("review_storage_unavailable", "Der Prüfbericht konnte nicht sicher gespeichert werden. Es wurde kein Ergebnis freigegeben.");
 const genericFailure = errorResult("review_unavailable", "Die Teilanalyse konnte nicht abgeschlossen werden. Es wurde kein ungeprüfter Entwurf freigegeben. Ihre Quellen bleiben unverändert.");
+const invalidOutputFailure = errorResult("review_invalid_output", "Das Modell hat keinen verwendbaren Prüfbericht erstellt. Es wurde kein Entwurf freigegeben. Ihre Quellen bleiben unverändert.");
 const missing = () => failure("not_found", "Dieser Prüfbericht ist für das angemeldete Konto nicht verfügbar.", "review_not_found");
 export type StartCaseReviewResult = ServiceResult<CaseReviewRecord> | { ok: false; kind: "usage_limit"; status: 429 | 503; detail: string; retryAfter: number };
 
@@ -92,13 +93,14 @@ async function executeReview(db: Db, userId: string, run: ReviewRun, model: stri
   } catch (error) {
     const cancelled = run.stopped && run.stopReason === "user";
     const known = error instanceof ReviewGroundingError || (error instanceof Error && "code" in error && error.code === "source_grounding_failed");
+    const invalidOutput = error instanceof ReviewGroundingError && ["finish_length", "finish_other", "output_size", "json", "schema"].includes(error.diagnostic);
     // A closed diagnostic code plus the already validated opaque report ID.
     // Never include sources, model output, exception messages, stack or user ID.
     if (!cancelled) console.warn("[case-review/rejected]", {
       report_id: record.id,
       code: error instanceof ReviewGroundingError ? error.diagnostic : error instanceof ReviewContextError ? "context_unavailable" : known ? "source_admission" : safeError(error).category,
     });
-    record = {...record,report:null,status:cancelled?"cancelled":"failed",error:cancelled?null:error instanceof ReviewContextError?errorResult(error.code,error.message):known?errorResult("review_grounding_failed", "Die Teilanalyse wurde zurückgehalten: Quellenumfang oder Fundstellen konnten nicht vollständig bestätigt werden. Bitte die ausgewählten Originalfassungen prüfen und den Auftrag enger eingrenzen."):genericFailure};
+    record = {...record,report:null,status:cancelled?"cancelled":"failed",error:cancelled?null:error instanceof ReviewContextError?errorResult(error.code,error.message):invalidOutput?invalidOutputFailure:known?errorResult("review_grounding_failed", "Die Teilanalyse wurde zurückgehalten: Quellenumfang oder Fundstellen konnten nicht vollständig bestätigt werden. Bitte die ausgewählten Originalfassungen prüfen und den Auftrag enger eingrenzen."):genericFailure};
     if (!await persist(db,userId,run,record)) run.meta.record = {...record,error:storageFailure};
     run.write(`data: ${JSON.stringify({type:"review_error",id:record.id,status:record.status,error:run.meta.record.error})}\n\n`);
   } finally { run.write("data: [DONE]\n\n"); run.finish(); }

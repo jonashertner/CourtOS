@@ -41,6 +41,10 @@ describe("bounded personal review API",()=>{
         vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify({code:"review_context_unavailable",detail:"internal context details"}),{status:503})));
         await expect(startCaseReview(fixture().input)).rejects.toMatchObject({code:"context"});
     });
+    it.each([["review_invalid_output","output"],["review_grounding_failed","grounding"]])("keeps %s distinct without exposing provider detail",async(serverCode,clientCode)=>{
+        vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify({code:serverCode,detail:"private provider detail"}),{status:422})));
+        await expect(startCaseReview(fixture().input)).rejects.toMatchObject({code:clientCode,message:clientCode});
+    });
     it("rejects unordered chronology and retains an explicitly ambiguous date",()=>{
         const value=fixture();value.input.kind="chronology";value.report!.kind="chronology";
         const row=value.report!.rows[0];row.date=row.proposition;row.date_status="exact_day";row.date_sort="2026-09-07";

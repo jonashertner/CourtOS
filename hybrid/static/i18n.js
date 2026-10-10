@@ -108,10 +108,10 @@
     "Locally on the CourtOS server"
   ],
   [
-    "Deutschland · nicht auf Ihrem Gerät",
-    "Allemagne · pas sur votre appareil",
-    "Germania · non sul vostro dispositivo",
-    "Germany · not on your device"
+    "CourtOS-Server · nicht auf Ihrem Gerät",
+    "Serveur CourtOS · pas sur votre appareil",
+    "Server CourtOS · non sul vostro dispositivo",
+    "CourtOS server · not on your device"
   ],
   [
     "Unterlagen erschliessen, Gedanken ordnen und mit Quellen arbeiten.",
@@ -168,10 +168,10 @@
     "Service and allowance"
   ],
   [
-    "Der Pilot läuft über Cloudflare und einen VPS in Deutschland. Keine vertraulichen Akten.",
-    "Le pilote utilise Cloudflare et un VPS en Allemagne. Aucun dossier confidentiel.",
-    "Il pilota utilizza Cloudflare e un VPS in Germania. Nessun fascicolo riservato.",
-    "The pilot uses Cloudflare and a VPS in Germany. No confidential case files."
+    "Der Pilot läuft über Cloudflare und den CourtOS-Server. Keine vertraulichen Akten.",
+    "Le pilote utilise Cloudflare et le serveur CourtOS. Aucun dossier confidentiel.",
+    "Il pilota utilizza Cloudflare e il server CourtOS. Nessun fascicolo riservato.",
+    "The pilot uses Cloudflare and the CourtOS server. No confidential case files."
   ],
   [
     "Status aktualisieren",

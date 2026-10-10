@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { adoptSignInLanguage, courtOSLanguageHint, courtOSLocaleSnapshot, formatCourtOSText, normaliseCourtOSLocale, setCourtOSLocale } from "./courtosLocale";
 import { courtOSMessages } from "./courtosMessages";
 import { readerMessages } from "./courtosReaderMessages";
+import { reviewMessages } from "./reviewMessages";
 
 beforeEach(() => {
     localStorage.clear(); vi.restoreAllMocks();
@@ -9,6 +10,18 @@ beforeEach(() => {
     Object.defineProperty(window, "Office", { configurable: true, value: undefined });
 });
 describe("CourtOS interface language", () => {
+    it("names the processing service without a country label in every interface edition", () => {
+        for (const messages of [courtOSMessages, readerMessages, reviewMessages]) {
+            for (const message of Object.values(messages)) {
+                for (const text of Object.values(message)) expect(text).not.toMatch(/Deutschland|Germany|Allemagne|Germania/i);
+            }
+        }
+        for (const locale of ["de", "fr", "it", "en"] as const) {
+            expect(courtOSMessages.serverGermany[locale]).toContain("CourtOS");
+            expect(courtOSMessages.externalApi[locale]).toContain("Anthropic");
+            expect(readerMessages.server[locale]).toContain("CourtOS");
+        }
+    });
     it("uses supported regional browser and optional Office display-language hints", () => {
         Object.defineProperty(navigator, "languages", { configurable: true, value: ["pt-BR", "fr-CH", "it-IT"] });
         expect(courtOSLanguageHint()).toBe("fr");

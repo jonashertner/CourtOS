@@ -14,7 +14,7 @@ describe("compact research settings", () => {
     it("keeps model selection separate from sending and account actions", () => {
         const signOut = vi.fn(); const close = vi.fn(); const fetch = vi.spyOn(globalThis, "fetch");
         render(<ResearchSettings open onClose={close} userId="settings-owner" email="reader@example.org" onSignOut={signOut} />);
-        const server = screen.getByRole("radio", { name: /Gemma 4.*CourtOS-Server.*Deutschland/ });
+        const server = screen.getByRole("radio", { name: /Gemma 4.*CourtOS-Server/ });
         const external = screen.getByRole("radio", { name: /Claude Opus 5.5.*Anthropic.*externe API/ });
         expect(server).toBeChecked();
         expect(server.closest("label")).toHaveAttribute("data-processing-route", "server");

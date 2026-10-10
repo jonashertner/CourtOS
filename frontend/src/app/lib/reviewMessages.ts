@@ -163,10 +163,10 @@ export const reviewMessages = {
         "en": "New selection"
     },
     "quota": {
-        "de": "Gemma auf dem CourtOS-Server in Deutschland. Ein gestarteter Modellauftrag zählt zum Tageskontingent.",
-        "fr": "Gemma sur le serveur CourtOS en Allemagne. Une requête lancée compte dans le quota quotidien.",
-        "it": "Gemma sul server CourtOS in Germania. Una richiesta avviata conta nella quota giornaliera.",
-        "en": "Gemma on the CourtOS server in Germany. A started model request counts towards the daily allowance."
+        "de": "Gemma auf dem CourtOS-Server. Ein gestarteter Modellauftrag zählt zum Tageskontingent.",
+        "fr": "Gemma sur le serveur CourtOS. Une requête lancée compte dans le quota quotidien.",
+        "it": "Gemma sul server CourtOS. Una richiesta avviata conta nella quota giornaliera.",
+        "en": "Gemma on the CourtOS server. A started model request counts towards the daily allowance."
     },
     "queued": {
         "de": "Auftrag wartet auf Verarbeitung",
@@ -425,6 +425,12 @@ export const reviewMessages = {
         "fr": "La couverture ou les passages n’ont pas pu être confirmés intégralement. Vérifiez les originaux et réduisez la sélection.",
         "it": "Non è stato possibile confermare integralmente copertura o riscontri. Verificate gli originali e restringete la selezione.",
         "en": "Source coverage or passages could not be fully confirmed. Check the originals and narrow the selection."
+    },
+    "errorInvalidOutput": {
+        "de": "Das Modell hat keinen verwendbaren Prüfbericht erstellt. Es wurde kein Entwurf freigegeben. Ihre Quellen bleiben unverändert.",
+        "fr": "Le modèle n’a pas produit de rapport d’examen utilisable. Aucun projet n’a été publié. Vos sources restent inchangées.",
+        "it": "Il modello non ha prodotto un rapporto di esame utilizzabile. Nessuna bozza è stata rilasciata. Le vostre fonti restano invariate.",
+        "en": "The model did not produce a usable review report. No draft was released. Your sources remain unchanged."
     },
     "errorQuota": {
         "de": "Kontingent oder gemeinsame Kapazität erreicht. Ein erneuter Statusabruf startet keinen Modellauftrag.",

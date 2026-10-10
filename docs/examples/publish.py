@@ -11,23 +11,28 @@ REPO=ROOT.parents[1]
 PUBLIC=REPO/'frontend/public/examples'
 PUBLIC.mkdir(parents=True,exist_ok=True)
 data=json.loads((ROOT/'content.json').read_text())
+filing=json.loads((ROOT/'filing.json').read_text())
 report=json.loads((ROOT/'qa/build-report.json').read_text())
 cases=[]
 for case,result in zip(data['cases'],report['cases'],strict=True):
  assert case['id']==result['id'] and result['total_extracted_utf8_bytes']<=10000
  folder=PUBLIC/case['id'];folder.mkdir(exist_ok=True)
- output={'id':case['id'],'language':case['language'],'title':case['title'],'judgment':case['judgment'],'documents':[]}
+ arrangement=next(value for value in filing['cases'] if value['id']==case['id'])
+ output={'id':case['id'],'caseNumber':arrangement['caseNumber'],'caseNumberLabel':arrangement['caseNumberLabel'],'parties':arrangement['parties'],'sharedFolder':arrangement['sharedFolder'],'partyNote':arrangement['partyNote'],'language':case['language'],'title':case['title'],'judgment':case['judgment'],'documents':[]}
  for document,receipt in zip(case['documents'],result['documents'],strict=True):
   source=ROOT/receipt['file'];assert hashlib.sha256(source.read_bytes()).hexdigest()==receipt['sha256']
   filename=f"CourtOS_{case['id']}_{document['id']}.pdf"
   shutil.copy2(source,folder/filename)
-  output['documents'].append({'id':document['id'],'title':document['title'],'role':document['role'],'party':document['party_label'] or '', 'filename':filename,'path':f"/examples/{case['id']}/{filename}",'sha256':receipt['sha256'],'bytes':receipt['bytes']})
+  index=case['documents'].index(document)
+  party=arrangement['parties'][index]['label'] if index<2 else ''
+  relative=[arrangement['parties'][index]['label'],arrangement['parties'][index]['submissions']] if index<2 else [arrangement['sharedFolder']]
+  output['documents'].append({'id':document['id'],'title':document['title'],'role':document['role'],'party':party,'folders':relative,'previousEditions':arrangement['previousEditions'][document['id']], 'filename':filename,'path':f"/examples/{case['id']}/{filename}",'sha256':receipt['sha256'],'bytes':receipt['bytes']})
  output['textBytes']=result['total_extracted_utf8_bytes'];cases.append(output)
-for name in ('sourcekey.json','expected-findings.json'):shutil.copy2(ROOT/name,PUBLIC/name)
+for name in ('sourcekey.json','expected-findings.json','filing.json'):shutil.copy2(ROOT/name,PUBLIC/name)
 types='''import type { CaseReviewRole } from "@mike/contracts";
 import type { CourtOSLocale } from "./courtosLocale";
 
-export type ExampleMatter = { id: string; language: CourtOSLocale; title: string; judgment: {court:string;number:string;date:string;url:string;original_language:string;locators:readonly string[]}; documents: readonly {id:string;title:string;role:CaseReviewRole;party:string;filename:string;path:string;sha256:string;bytes:number}[];textBytes:number};
+export type ExampleMatter = { id: string; caseNumber:string; caseNumberLabel:string; parties:readonly {label:string;submissions:string;exhibits:string}[]; sharedFolder:string;partyNote:string;language: CourtOSLocale; title: string; judgment: {court:string;number:string;date:string;url:string;original_language:string;locators:readonly string[]}; documents: readonly {id:string;title:string;role:CaseReviewRole;party:string;folders:readonly string[];previousEditions:readonly {sha256:string;bytes:number}[];filename:string;path:string;sha256:string;bytes:number}[];textBytes:number};
 
 // Generated from the reviewed docs/examples sources. No answer key enters this catalog.
 '''

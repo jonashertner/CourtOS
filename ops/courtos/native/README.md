@@ -205,6 +205,19 @@ Review generated units and nginx syntax before starting. Release files and
 virtual-environment executables must be readable/executable by their service
 users. Keep the installed release immutable, owned by an administrator.
 
+Run nginx validation as the proxy's service user, not as root. Even `nginx -t`
+can create or change ownership of temporary directories. The generated `user`
+directive also names that same service account and group. For a fresh install,
+prepare the unit's dedicated runtime directory before checking the configuration:
+
+```sh
+sudo install -d -o courtos-pilot-proxy -g courtos-pilot-proxy -m 0755 /run/courtos-pilot-proxy
+sudo -u courtos-pilot-proxy /usr/sbin/nginx -t -c /etc/courtos-pilot/public/nginx.conf
+```
+
+Use the same service-user validation before every later reload. It should pass
+without repairing permissions as root after the check.
+
 ```sh
 sudo systemctl enable --now courtos-pilot-containers.service
 sudo python3 ops/courtos/native/datastore.py /etc/courtos-pilot start

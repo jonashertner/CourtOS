@@ -527,6 +527,18 @@ describe("frontier workbench explicit CHF billing contract", () => {
 });
 
 describe("frontier interface language isolation", () => {
+    it("identifies server and external provider without country labels in every language", async () => {
+        const app = await boot();
+        const calls = app.fetch.mock.calls.length;
+        for (const language of ["de", "fr", "it", "en"]) {
+            app.chooseLanguage(language);
+            expect(app.doc.body.textContent).not.toMatch(/Deutschland|Germany|Allemagne|Germania/i);
+            expect(app.doc.querySelector(".processing-local")?.textContent).toContain("CourtOS");
+            expect(app.doc.body.textContent).toContain("Anthropic");
+        }
+        expect(app.fetch).toHaveBeenCalledTimes(calls);
+        expect(app.posts()).toHaveLength(0);
+    });
     const preference = (ownerId: string, locale: string) => JSON.stringify({version:1,ownerId,locale});
     const key = (id: string) => `courtos:ui-language:v1:account:${encodeURIComponent(id)}`;
     it("uses only this native account preference, with safe browser-hint fallback", async () => {

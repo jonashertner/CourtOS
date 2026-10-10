@@ -74,7 +74,7 @@ describe("personal knowledge workspace", () => {
         await user.click(screen.getByRole("button", { name: "Eigene Quellen" }));
         const searchLocation = screen.getByText("Textsuche ohne KI · Verarbeitung auf dem Server").closest("[data-processing-route]");
         expect(searchLocation).toHaveAttribute("data-processing-route", "server");
-        expect(searchLocation).toHaveTextContent("CourtOS-Server · Deutschland");
+        expect(searchLocation).toHaveTextContent("CourtOS-Server");
         await user.click(screen.getByText("Mit Gemma weiterarbeiten"));
         const modelLocation = screen.getByText("Gemma 4").closest("[data-processing-route]");
         expect(modelLocation).toHaveAttribute("data-processing-route", "server");
@@ -316,7 +316,7 @@ describe("personal knowledge workspace", () => {
         expect(within(dialog).getByRole("button", { name: "Nächster Abschnitt" })).toBeDisabled();
         api.research.mockReturnValueOnce(true);
         expect(within(dialog).getByText("Gemma 4").closest("[data-processing-route]")).toHaveAttribute("data-processing-route", "server");
-        expect(within(dialog).getByText("Gemma 4").closest("[data-processing-route]")).toHaveTextContent("DeutschlandEntwurf · noch nicht gesendet");
+        expect(within(dialog).getByText("Gemma 4").closest("[data-processing-route]")).toHaveTextContent("CourtOS-ServerEntwurf · noch nicht gesendet");
         await user.click(within(dialog).getByRole("button", { name: "Mit Gemma prüfen" }));
         expect(api.research).toHaveBeenCalledWith("test-owner", expect.stringContaining("Der genaue Entscheidtext."));
         expect(api.research.mock.calls[0][1]).toContain("Position im Original nicht geprüft");

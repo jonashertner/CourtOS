@@ -73,7 +73,7 @@ describe("CourtOS Access entry", () => {
         render(<CourtOSAccessGate />);
         expect(screen.getByRole("heading", { name: "Recherche öffnen" })).toBeInTheDocument();
         expect(screen.getByText(/Beim ersten Öffnen erstellen wir Ihr Konto/)).toBeInTheDocument();
-        expect(screen.getByText(/Testbetrieb · Server in Deutschland. Keine vertraulichen Unterlagen/)).toBeInTheDocument();
+        expect(screen.getByText(/Testbetrieb · CourtOS-Server. Keine vertraulichen Unterlagen/)).toBeInTheDocument();
         const limits = screen.getByText("Nutzungsgrenzen");
         expect(limits.closest("details")).not.toHaveAttribute("open");
         await userEvent.click(limits);

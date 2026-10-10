@@ -4,6 +4,20 @@
   "cases": [
     {
       "id": "DE-01",
+      "fictitious_case_number": "CourtOS-UE-2026-001",
+      "parties": [
+        {
+          "label": "A.________ AG · Vermieterin",
+          "submissions": "Eingaben",
+          "exhibits": "Beilagen"
+        },
+        {
+          "label": "B.B.________ und C.B.________ · Mieter",
+          "submissions": "Eingaben",
+          "exhibits": "Beilagen"
+        }
+      ],
+      "party_note": "",
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "4A_252/2023",
@@ -108,6 +122,20 @@
     },
     {
       "id": "FR-01",
+      "fictitious_case_number": "CourtOS-UE-2026-002",
+      "parties": [
+        {
+          "label": "X.________ · Demandeur",
+          "submissions": "Écritures",
+          "exhibits": "Pièces"
+        },
+        {
+          "label": "A.Z.________ · Successeure de Z.________",
+          "submissions": "Écritures",
+          "exhibits": "Pièces"
+        }
+      ],
+      "party_note": "Z.________: destinataire initiale, décédée le 16.06.2009. A.Z.________: fille et successeure dans la procédure.",
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "4A_635/2016",
@@ -224,6 +252,20 @@
     },
     {
       "id": "IT-01",
+      "fictitious_case_number": "CourtOS-UE-2026-003",
+      "parties": [
+        {
+          "label": "B.________ · Creditore",
+          "submissions": "Atti",
+          "exhibits": "Allegati"
+        },
+        {
+          "label": "A.________ SA · Debitrice",
+          "submissions": "Atti",
+          "exhibits": "Allegati"
+        }
+      ],
+      "party_note": "",
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "5A_121/2021",
@@ -336,6 +378,20 @@
     },
     {
       "id": "EN-01",
+      "fictitious_case_number": "CourtOS-UE-2026-004",
+      "parties": [
+        {
+          "label": "A.________GmbH · Tenant",
+          "submissions": "Submissions",
+          "exhibits": "Exhibits"
+        },
+        {
+          "label": "B.________AG · Landlord",
+          "submissions": "Submissions",
+          "exhibits": "Exhibits"
+        }
+      ],
+      "party_note": "",
       "judgment": {
         "court": "Schweizerisches Bundesgericht",
         "number": "4A_421/2015",
@@ -444,7 +500,8 @@
   ],
   "editorial_changes": [
     "New concise party-position texts, document titles, paragraph IDs and ordering are didactic reconstructions, not original pleadings.",
-    "Names remain generic party labels. No addresses, signatures, logos, personal birth dates or medical details were added.",
+    "Fictitious CourtOS filing numbers and anonymised party names from the official judgments appear in headers and the filing manifest. The historical factual paragraphs are unchanged. No addresses, signatures, logos, personal birth dates or medical details were added.",
+    "Party subfolders organise submissions; common reconstructed exhibits are not assigned to a party. FR distinguishes the original recipient Z.________ from her procedural successor A.Z.________.",
     "Exhibits are narrative extracts of the judgment account, not fabricated bank records, signed contracts or email screenshots.",
     "The EN case is an unofficial English reconstruction of a German judgment. Only the two marked short phrases in D03-P02 reproduce original English wording quoted by the judgment.",
     "Scope is deliberately narrower than the full cases: DE rent reduction; FR villa funding; IT first repayment instalment; EN authority. Procedural side disputes are omitted and the omission is not a claim that they did not occur.",

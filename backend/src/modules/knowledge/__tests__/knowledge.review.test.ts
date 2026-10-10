@@ -95,10 +95,20 @@ describe("server-owned durable case review",()=>{
     if(mode==="wrong_quote")mocks.stream.mockResolvedValue({fullText:JSON.stringify({...output,rows:[{...output.rows[0],claim:{p:"p1",q:"Eine erfundene Zahlung von CHF 12000 im Jahr 2023."}}]}),finishReason:"stop"});
     if(mode==="changed_version")mocks.load.mockResolvedValueOnce(evidence).mockResolvedValueOnce([{...evidence[0],pdf_sha256:hash("changed")}]);
     await startCaseReview(db,"owner",input);await settle();
-    expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"failed",report:null}});
+    expect(await getCaseReview(db,"owner",id)).toMatchObject({ok:true,data:{status:"failed",report:null,error:{code:mode==="length"?"review_invalid_output":"review_grounding_failed"}}});
     expect(mocks.write.mock.calls.some(call=>call[3].status==="completed")).toBe(false);
     const code={length:"finish_length",wrong_quote:"quote_absent",changed_version:"source_changed_before_release"}[mode];
     expect(console.warn).toHaveBeenCalledExactlyOnceWith("[case-review/rejected]",{report_id:id,code});
+  });
+  it.each(["json","schema"])("explains unusable %s output without blaming the originals or disclosing model text",async diagnostic=>{
+    mocks.stream.mockResolvedValue({fullText:diagnostic==="json"?"PRIVATE invalid model text":JSON.stringify({PRIVATE:"invalid model structure"}),finishReason:"stop"});
+    await startCaseReview(db,"owner",input);await settle();
+    const result=await getCaseReview(db,"owner",id);
+    expect(result).toMatchObject({ok:true,data:{status:"failed",report:null,error:{code:"review_invalid_output",detail:"Das Modell hat keinen verwendbaren Prüfbericht erstellt. Es wurde kein Entwurf freigegeben. Ihre Quellen bleiben unverändert."}}});
+    expect(JSON.stringify(result)).not.toContain("PRIVATE");
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith("[case-review/rejected]",{report_id:id,code:diagnostic});
+    expect(mocks.stream).toHaveBeenCalledOnce();expect(mocks.load).toHaveBeenCalledOnce();
+    expect(mocks.write.mock.calls.some(call=>call[3].status==="completed")).toBe(false);
   });
   it("explicit stop aborts generation; a browser disconnect does not own the server job",async()=>{
     mocks.stream.mockImplementation(({abortSignal})=>new Promise((_resolve,reject)=>abortSignal.addEventListener("abort",()=>reject(new Error("aborted")),{once:true})));

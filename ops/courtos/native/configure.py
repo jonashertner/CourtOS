@@ -126,7 +126,8 @@ Persistent=true
 WantedBy=timers.target
 ''',0o644)
  domain=urlsplit(c['origin']).hostname
- write('public/nginx.conf',f'''pid /run/{prefix}-proxy/nginx.pid;
+ write('public/nginx.conf',f'''user {prefix}-proxy {prefix}-proxy;
+pid /run/{prefix}-proxy/nginx.pid;
 error_log stderr warn;
 worker_processes 1;
 events {{ worker_connections 512; }}
