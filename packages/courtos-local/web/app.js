@@ -832,8 +832,51 @@ function renderProcedure() {
 
 // --- Drawer ---------------------------------------------------------------------
 function openCitation(citation) {
-  S.drawer = { citation, mode: citation.kind === "authority" ? "authority" : citation.kind === "note" ? "note" : "text" };
+  const pdf = S.st.case.sources.find(s => s.id === citation.document)?.ext === ".pdf";
+  // A PDF opens on its page, with the passage marked; the text view is one click away.
+  S.drawer = { citation, mode: citation.kind === "authority" ? "authority" : citation.kind === "note" ? "note" : pdf ? (S.sourceMode ?? "page") : "text" };
   renderDrawer();
+}
+
+// pdf.js renders original pages in the browser; loaded on first use.
+let pdfjsLib = null;
+const pdfDocs = new Map();
+async function pdfDocument(id, sha) {
+  pdfjsLib ??= await import("/vendor/pdf.min.mjs").then(lib => { lib.GlobalWorkerOptions.workerSrc = "/vendor/pdf.worker.min.mjs"; return lib; });
+  const key = `${id}:${sha}`;
+  if (!pdfDocs.has(key)) {
+    pdfDocs.set(key, pdfjsLib.getDocument({ url: `/api/original/${id}`, isEvalSupported: false, standardFontDataUrl: "/vendor/standard_fonts/" }).promise);
+    pdfDocs.get(key).catch(() => pdfDocs.delete(key));
+  }
+  return pdfDocs.get(key);
+}
+
+/** The original page as an image, with the cited passages marked where their position is known. */
+async function renderPageView(body, citation, source, group) {
+  const width = Math.min(body.clientWidth - 44, 900);
+  const sheet = h("div.sheet", { style: { width: `${width}px` } });
+  const status = h("p.page-caption", {}, tr("Lädt die Seite …"));
+  body.replaceChildren(sheet, status);
+  const pdf = await pdfDocument(citation.document, source.sha256);
+  const page = await pdf.getPage(citation.page);
+  const base = page.getViewport({ scale: 1 });
+  const ratio = window.devicePixelRatio || 1;
+  const viewport = page.getViewport({ scale: (width / base.width) * ratio });
+  const canvas = h("canvas", { width: String(Math.floor(viewport.width)), height: String(Math.floor(viewport.height)), "aria-label": tr("{p} als Bild", { p: pg(citation.page_label) }), role: "img" });
+  canvas.style.width = `${width}px`;
+  sheet.style.height = `${(viewport.height / ratio).toFixed(0)}px`;
+  sheet.replaceChildren(canvas);
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+  const exact = group.filter(x => x.match === "exact");
+  const found = await Promise.all(exact.map(x => api(`/api/highlight/${x.document}/${x.page}?start=${x.original_start}&end=${x.original_end}&sha=${x.page_sha256}`).catch(() => ({ rects: [], reason: "error" }))));
+  const rects = found.flatMap(f => f.rects);
+  for (const r of rects) sheet.append(h("span.hl", { style: { left: `${r.x * 100}%`, top: `${r.y * 100}%`, width: `${r.w * 100}%`, height: `${r.h * 100}%` } }));
+  const ocr = found.some(f => f.source === "ocr");
+  status.textContent = !exact.length ? tr("Nicht verifiziert: keine Stelle markiert.")
+    : rects.length ? (ocr ? tr("Markiert nach der lokalen Texterkennung des Scans.") : tr("Markiert nach dem Text der PDF-Datei."))
+    : tr("Die Stelle lässt sich auf dem Bild nicht verorten. In der Textansicht ist sie markiert.");
+  status.classList.toggle("alert", Boolean(exact.length && !rects.length));
+  if (rects.length) body.scrollTo({ top: Math.max(0, rects[0].y * sheet.offsetHeight - body.clientHeight / 3), behavior: "smooth" });
 }
 
 function closeDrawer() {
@@ -893,13 +936,17 @@ async function renderDrawer() {
     h("div.bar", {},
       h("span", { class: citation.match === "exact" ? "local" : "alert" }, icon(citation.match === "exact" ? "check" : "cross"), citation.match === "exact" ? ` ${tr("Wörtlich an dieser Stelle gefunden")}` : ` ${tr("Nicht verifiziert")}`),
       h("span", { style: { flex: 1 } }),
-      source?.ext === ".pdf" ? h("button.btn.small", { type: "button", onclick: () => { S.drawer.mode = mode === "pdf" ? "text" : "pdf"; renderDrawer(); } }, mode === "pdf" ? tr("Text") : "PDF") : null,
+      source?.ext === ".pdf" ? h("div.seg", { role: "group", "aria-label": tr("Ansicht") }, [["page", tr("Seite")], ["text", tr("Text")]].map(([m, name]) =>
+        h("button", { type: "button", "aria-pressed": String(mode === m), onclick: () => { S.drawer.mode = S.sourceMode = m; renderDrawer(); } }, name))) : null,
       h("button.btn.small", { type: "button", onclick: () => attempt(() => api("/api/open-original", { method: "POST", body: { id: citation.document } })) }, icon("out"), tr("Original öffnen")),
     ),
     body,
   );
-  if (mode === "pdf") {
-    body.replaceChildren(h("iframe", { src: `/api/original/${citation.document}#page=${citation.page}`, title: tr("{l} als PDF", { l: citation.label }) }));
+  drawer.classList.toggle("wide", mode === "page");
+  if (mode === "page") {
+    const group = citation.group ?? [citation];
+    try { await renderPageView(body, citation, source, group); }
+    catch { body.replaceChildren(h("p.alert", {}, tr("Die Originalseite ist nicht verfügbar. Wurde die Datei verändert oder verschoben?"))); }
     return;
   }
   try {

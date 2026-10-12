@@ -9,7 +9,9 @@ import { createServer as createHttpServer } from "node:http";
 import { createServer as createHttpsServer } from "node:https";
 import { mkdir, readFile, stat, writeFile, chmod } from "node:fs/promises";
 import { homedir } from "node:os";
-import { extname, join } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, extname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { CaseStore } from "./caseStore.mjs";
 import { AgentRun } from "./agent/runner.mjs";
 import { AnthropicProvider, DEFAULT_MODEL } from "./agent/providers.mjs";
@@ -20,10 +22,14 @@ import { OpenCaseLaw } from "./opencaselaw.mjs";
 import { checkCitations } from "./citecheck.mjs";
 import { backupArchive } from "./backup.mjs";
 import { staleness } from "./verify.mjs";
+import { citationRects, pageLayouts } from "./layout.mjs";
 import { CourtosError, randomId, readJson, writeAtomic } from "./util.mjs";
 
 const WEB = new URL("../web/", import.meta.url);
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".xml": "application/xml" };
+// pdf.js for showing original pages in the browser, served from the installed package.
+const PDFJS = pathToFileURL(dirname(createRequire(import.meta.url).resolve("pdfjs-dist/package.json")) + "/");
+const VENDOR = { "vendor/pdf.min.mjs": "build/pdf.min.mjs", "vendor/pdf.worker.min.mjs": "build/pdf.worker.min.mjs" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".pfb": "application/octet-stream", ".ttf": "font/ttf", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".xml": "application/xml" };
 // Resolved at call time so HOME can be redirected (tests, managed installs).
 const CONFIG = () => join(homedir(), ".config", "courtos");
 const KEY = () => join(CONFIG(), "anthropic-key");
@@ -56,6 +62,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`]);
   const allowedOrigins = new Set([`${scheme}://localhost:${port}`, `${scheme}://127.0.0.1:${port}`]);
   const pairToken = randomId(24);
+  const layout = pageLayouts();
   const sessions = new Set();
   const codes = new Map(); // code → expiry
   const clients = new Set();
@@ -221,6 +228,14 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     if (!allowedHosts.has(req.headers.host ?? "")) return send(res, 421, { error: "host_rejected" });
 
     if (!path.startsWith("/api/")) {
+      const vendored = VENDOR[path.slice(1)] ?? (/^\/vendor\/standard_fonts\/[A-Za-z0-9_-]+\.(pfb|ttf)$/.test(path) ? `standard_fonts/${path.split("/").pop()}` : null);
+      if (vendored) {
+        try {
+          const data = await readFile(new URL(vendored, PDFJS));
+          res.writeHead(200, { "Content-Type": MIME[extname(vendored)] ?? "application/octet-stream", "Cache-Control": "max-age=86400" });
+          return res.end(data);
+        } catch { return send(res, 404, { error: "not_found" }); }
+      }
       const file = path === "/" ? "index.html" : path.slice(1);
       if (!/^[a-z0-9_-]+\.(html|js|css|svg|png|xml)$/i.test(file)) return send(res, 404, { error: "not_found" });
       try {
@@ -327,6 +342,10 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         if (source.ext !== ".pdf") throw new CourtosError("not_a_pdf");
         res.writeHead(200, { "Content-Type": "application/pdf", "Cache-Control": "no-store", "Content-Disposition": "inline" });
         return res.end(bytes);
+      }
+      if ((match = /^\/api\/highlight\/(D\d{1,4})\/(\d{1,4})$/.exec(path)) && req.method === "GET") {
+        const q = url.searchParams;
+        return send(res, 200, await citationRects(store, layout, { document: match[1], page: Number(match[2]), start: Number(q.get("start")), end: Number(q.get("end")), sha256: q.get("sha") }));
       }
       if (path === "/api/open-original" && req.method === "POST") {
         const { id } = await body(req);

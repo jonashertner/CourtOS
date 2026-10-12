@@ -82,3 +82,13 @@ export async function ocrPdfPages(path, pages) {
     await rm(dir, { recursive: true, force: true });
   }
 }
+
+/** Word boxes of one scanned page, for showing where a quotation is. Vision only; null elsewhere. */
+export async function ocrPageWords(path, n) {
+  const engine = await ocrEngine();
+  if (engine?.name !== "vision") return null;
+  const out = await run(engine.binary, ["--boxes", path, String(n)], { timeout: 60_000 });
+  const line = out.split("\n").find(Boolean);
+  const words = line ? JSON.parse(line).words : null;
+  return Array.isArray(words) ? words.map(w => ({ t: String(w.t), b: w.b.map(Number) })) : null;
+}

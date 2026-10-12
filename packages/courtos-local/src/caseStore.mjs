@@ -300,7 +300,7 @@ export class CaseStore extends EventEmitter {
     const path = await insideRoot(this.root, source.rel_path);
     const bytes = await readFile(path);
     if (sha256(bytes) !== source.sha256) throw new CourtosError("source_changed", undefined, 409);
-    return { bytes, source };
+    return { bytes, source, path };
   }
 
   /** Register with context snippets for review; local display only. */

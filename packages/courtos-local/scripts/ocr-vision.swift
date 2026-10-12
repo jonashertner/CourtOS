@@ -1,17 +1,21 @@
 // CourtOS OCR helper for macOS: renders PDF pages with PDFKit and recognises
 // text with the Vision framework, entirely on this computer.
-// Usage: ocr-vision <file.pdf> <page>[,<page>...]
+// Usage: ocr-vision [--boxes] <file.pdf> <page>[,<page>...]
 // Output: one JSON object per line: {"n":1,"text":"…","confidence":0.93}
+// With --boxes, each line also lists the words in reading order with their
+// boxes as fractions of the page, origin top left: "words":[{"t":"…","b":[x,y,w,h]}]
 import Foundation
 import PDFKit
 import Vision
 
-let args = CommandLine.arguments
-guard args.count >= 3, let document = PDFDocument(url: URL(fileURLWithPath: args[1])) else {
-    FileHandle.standardError.write("usage: ocr-vision file.pdf 1,2\n".data(using: .utf8)!)
+var args = Array(CommandLine.arguments.dropFirst())
+let boxes = args.first == "--boxes"
+if boxes { args.removeFirst() }
+guard args.count >= 2, let document = PDFDocument(url: URL(fileURLWithPath: args[0])) else {
+    FileHandle.standardError.write("usage: ocr-vision [--boxes] file.pdf 1,2\n".data(using: .utf8)!)
     exit(2)
 }
-let pages = args[2].split(separator: ",").compactMap { Int($0) }
+let pages = args[1].split(separator: ",").compactMap { Int($0) }
 
 func render(_ page: PDFPage, scale: CGFloat) -> CGImage? {
     let bounds = page.bounds(for: .mediaBox)
@@ -43,6 +47,7 @@ for number in pages {
         abs($0.boundingBox.midY - $1.boundingBox.midY) > 0.006 ? $0.boundingBox.midY > $1.boundingBox.midY : $0.boundingBox.minX < $1.boundingBox.minX
     }
     var lines: [String] = []
+    var words: [[String: Any]] = []
     var confidence: Float = 0
     var previousBottom: CGFloat? = nil
     for observation in observations {
@@ -50,10 +55,24 @@ for number in pages {
         // A larger vertical gap starts a new paragraph.
         if let bottom = previousBottom, bottom - observation.boundingBox.maxY > observation.boundingBox.height * 0.9 { lines.append("") }
         lines.append(candidate.string)
+        if boxes {
+            let text = candidate.string
+            var index = text.startIndex
+            while index < text.endIndex {
+                guard !text[index].isWhitespace else { index = text.index(after: index); continue }
+                var end = index
+                while end < text.endIndex && !text[end].isWhitespace { end = text.index(after: end) }
+                if let box = try? candidate.boundingBox(for: index..<end)?.boundingBox {
+                    words.append(["t": String(text[index..<end]), "b": [box.minX, 1 - box.maxY, box.width, box.height]])
+                }
+                index = end
+            }
+        }
         confidence += candidate.confidence
         previousBottom = observation.boundingBox.minY
     }
     let average = observations.isEmpty ? 0 : confidence / Float(observations.count)
-    let payload: [String: Any] = ["n": number, "text": lines.joined(separator: "\n"), "confidence": average]
+    var payload: [String: Any] = ["n": number, "text": lines.joined(separator: "\n"), "confidence": average]
+    if boxes { payload["words"] = words }
     if let data = try? JSONSerialization.data(withJSONObject: payload), let line = String(data: data, encoding: .utf8) { print(line) }
 }

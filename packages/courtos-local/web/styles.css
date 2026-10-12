@@ -262,7 +262,16 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 .drawer .body { overflow-y: auto; padding: 18px 22px 40px; }
 .drawer .page-text { border: 0; padding: 0; max-height: none; }
 .drawer mark { background: var(--mark); color: var(--ink); border-radius: 2px; box-shadow: 0 0 0 2px var(--mark); }
-.drawer iframe { width: 100%; height: calc(100vh - 120px); border: 0; }
+.drawer.wide { width: min(780px, 100vw); }
+.drawer .sheet { position: relative; margin: 0 auto; background: #fff; box-shadow: 0 1px 3px #19191926, 0 8px 28px #1919190f; }
+.drawer .sheet canvas { display: block; }
+.drawer .hl { position: absolute; background: #f2d24a; mix-blend-mode: multiply; opacity: .55; border-radius: 2px; pointer-events: none; outline: 2px solid #f2d24a; }
+.drawer .sheet + .page-caption { text-align: center; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
+.seg button { border: 0; background: none; padding: 0 10px; height: 26px; font: inherit; font-size: 12.5px; color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--wash); color: var(--ink); font-weight: 500; }
+.seg button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 .drawer .sent { margin-top: 16px; font-size: 13px; color: var(--muted); border-left: 2px solid var(--external); padding-left: 10px; }
 
 .modal-backdrop { position: fixed; inset: 0; background: #19191940; display: grid; place-items: center; z-index: 30; padding: 24px; }
