@@ -1,0 +1,4 @@
+#!/bin/sh
+# An update replaces a running CourtOS: end it first (its server ends with it).
+pkill -x CourtOS 2>/dev/null || true
+exit 0

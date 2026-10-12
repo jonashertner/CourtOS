@@ -710,7 +710,9 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   if (!tls) {
     // Word loads add-ins over https only; the browser works either way.
     log("Hinweis: Kein Entwicklerzertifikat für localhost gefunden. Der Browser funktioniert, Word nicht.");
-    log("Für Word einmal ausführen: npx office-addin-dev-certs install, dann CourtOS neu starten.");
+    log(process.env.COURTOS_APP
+      ? "Für Word im CourtOS-Menü „Zertifikat für Word einrichten …“ wählen."
+      : "Für Word einmal ausführen: npx office-addin-dev-certs install, dann CourtOS neu starten.");
   }
   if (openBrowser) openPath(pairUrl);
   /** A new one-time link for the menu-bar app; an unused earlier link stops working. */

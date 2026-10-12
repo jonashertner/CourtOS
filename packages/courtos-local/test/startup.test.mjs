@@ -28,6 +28,12 @@ test("without a localhost certificate the start says that Word will not work, an
   const said = lines.join("\n");
   assert.match(said, /Word nicht/);
   assert.match(said, /npx office-addin-dev-certs install/);
+  process.env.COURTOS_APP = "1";
+  const inApp = [];
+  const app2 = await startServer({ port: await freePort(), openBrowser: false, log: (l) => inApp.push(l), certDirs: certificateDirs({}, "linux") });
+  delete process.env.COURTOS_APP;
+  app2.close();
+  assert.match(inApp.join("\n"), /im CourtOS-Menü/, "the app's own menu sets the certificate up");
 });
 
 test("a busy port ends the start with a plain message, not a stack trace", async (t) => {
