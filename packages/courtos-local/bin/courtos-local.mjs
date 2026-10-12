@@ -42,6 +42,14 @@ await mkdir(join(tmpdir(), "courtos-demo"), { recursive: true });
 await cp(demoSource, demoFolder, { recursive: true, force: false, errorOnExist: false });
 if (flag("--demo")) folder = demoFolder;
 
-await startServer({ port, folder: folder ? resolve(folder) : null, openBrowser: !flag("--no-open"), demoFolder });
+try {
+  await startServer({ port, folder: folder ? resolve(folder) : null, openBrowser: !flag("--no-open"), demoFolder });
+} catch (error) {
+  if (error.code !== "port_in_use") throw error;
+  console.error(`Port ${port} ist belegt. Läuft CourtOS schon? Dann dort weiterarbeiten.`);
+  console.error(`Sonst auf einem anderen Port starten: courtos-local --port ${port + 10}`);
+  console.error(`(Für Word danach auch: courtos-local install-word --port ${port + 10})`);
+  process.exit(1);
+}
 
 function major() { return Number(process.versions.node.split(".")[0]); }

@@ -537,11 +537,19 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
 
   const server = tls ? createHttpsServer(tls, handle) : createHttpServer(handle);
   server.on("clientError", (_error, socket) => { try { socket.end("HTTP/1.1 400 Bad Request\r\n\r\n"); } catch { /* closed */ } });
-  await new Promise((resolve, reject) => { server.once("error", reject); server.listen(port, "127.0.0.1", resolve); });
+  await new Promise((resolve, reject) => {
+    server.once("error", (error) => reject(error.code === "EADDRINUSE" ? new CourtosError("port_in_use", { port }) : error));
+    server.listen(port, "127.0.0.1", resolve);
+  });
   if (folder) await openFolder(folder);
   const pairUrl = `${origin}/#pair=${pairToken}`;
   log(`CourtOS läuft auf ${origin}`);
   log(`Im Browser öffnen: ${pairUrl}`);
+  if (!tls) {
+    // Word loads add-ins over https only; the browser works either way.
+    log("Hinweis: Kein Entwicklerzertifikat für localhost gefunden. Der Browser funktioniert, Word nicht.");
+    log("Für Word einmal ausführen: npx office-addin-dev-certs install, dann CourtOS neu starten.");
+  }
   if (openBrowser && process.platform === "darwin") execFile("open", [pairUrl]);
   return { server, origin, pairUrl, close: () => { store?.close(); for (const c of clients) c.res.end(); server.close(); } };
 }
