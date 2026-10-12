@@ -64,7 +64,7 @@ Things we most want to hear about: a name or identifier that was not replaced; a
 | `<work folder>/Arbeitsprodukte/` | Each result as a Word and a Markdown file, **with real names**. The folder is named in the language of the proceedings (`Travaux`, `Lavori`, `Work products`). |
 | `<work folder>/.courtos/private/` | Extracted text, and the register that maps pseudonyms to **real names**. |
 | `<work folder>/.courtos/mirror/` | The pseudonymised pages that the model may read. |
-| `<work folder>/.courtos/runs/` | Each run, including every request sent to the model, stored verbatim. |
+| `<work folder>/.courtos/runs/` | Each run. `requests/` holds every request exactly as it was sent: pseudonymised. `run.json` and `result.json` hold the result for display here, **with real names restored**. |
 | `<work folder>/.courtos/memory/` | The case memory, **with real names**. |
 | `~/.config/courtos/` | Your API keys (plain text, readable only by your user), the list of cases, preferences. |
 | System temporary folder, `courtos-demo/` | The sample case files. |
