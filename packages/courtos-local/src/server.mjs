@@ -48,11 +48,10 @@ export function certificateDirs(env = process.env, platform = process.platform) 
   return [env.COURTOS_CERT_DIR, join(homedir(), ".office-addin-dev-certs"), installed].filter(Boolean);
 }
 
-/** A PEM pair (localhost.crt, localhost.key) or, as the Windows installer writes it, localhost.pfx. */
+/** The first folder with a PEM pair (localhost.crt, localhost.key). */
 export async function loadCertificates(dirs = certificateDirs()) {
   for (const dir of dirs) {
-    try { return { cert: await readFile(join(dir, "localhost.crt")), key: await readFile(join(dir, "localhost.key")) }; } catch { /* try the PFX */ }
-    try { return { pfx: await readFile(join(dir, "localhost.pfx")) }; } catch { /* next folder */ }
+    try { return { cert: await readFile(join(dir, "localhost.crt")), key: await readFile(join(dir, "localhost.key")) }; } catch { /* next folder */ }
   }
   return null;
 }

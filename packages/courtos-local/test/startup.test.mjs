@@ -85,13 +85,14 @@ test("started by the menu-bar app, CourtOS gives a fresh one-time link on reques
   assert.equal(await exited, 0, "CourtOS ends when the app that started it ends");
 });
 
-test("the certificate is looked for in the configured folder, the Office developer folder and the installer's folder; a PFX counts", async () => {
+test("the certificate is looked for in the configured folder, the Office developer folder and the installer's folder", async () => {
   assert.deepEqual(certificateDirs({ COURTOS_CERT_DIR: "/x" }, "darwin").filter(d => !d.endsWith(".office-addin-dev-certs")), ["/x", "/Library/Application Support/CourtOS/certs"]);
   assert.equal(certificateDirs({ ProgramData: "C:\\ProgramData" }, "win32").at(-1), join("C:\\ProgramData", "CourtOS", "certs"));
   const dir = await mkdtemp(join(tmpdir(), "courtos-cert-"));
   assert.equal(await loadCertificates([dir]), null);
-  await writeFile(join(dir, "localhost.pfx"), "pfx");
-  assert.equal(String((await loadCertificates([join(dir, "missing"), dir])).pfx), "pfx");
+  await writeFile(join(dir, "localhost.crt"), "crt");
+  await writeFile(join(dir, "localhost.key"), "key");
+  assert.equal(String((await loadCertificates([join(dir, "missing"), dir])).cert), "crt", "the first folder that has one");
 });
 
 test("on macOS the OCR helper the app ships is used, so no compiler is needed", { skip: process.platform !== "darwin" }, async () => {
