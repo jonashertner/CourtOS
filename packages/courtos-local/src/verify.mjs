@@ -117,14 +117,10 @@ export function bindResult(store, mirror, result, task, extra = []) {
 
 /**
  * Has a file changed since the result was produced? A document Claude read
- * that changed or disappeared makes the result stale, and each citation into
- * it is marked; documents added to the folder since are listed. Results from
- * before the per-run file list fall back to the files their citations name.
- */
-/**
- * Whether a result still matches the case folder. `changed` lists files that
- * changed or disappeared since the run, each with the cited pages whose text
- * is no longer the text that was checked; `added` lists files the run never saw.
+ * that changed or disappeared makes the result stale. Each entry lists the
+ * cited pages whose text is no longer the text that was checked; documents
+ * added to the folder since are listed. Results from before the per-run file
+ * list fall back to the files their citations name.
  */
 export function staleness(store, bound) {
   if (!bound) return null;
