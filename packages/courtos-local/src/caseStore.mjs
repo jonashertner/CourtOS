@@ -33,6 +33,8 @@ export class CaseStore extends EventEmitter {
     const info = await stat(root).catch(() => null);
     if (!info?.isDirectory()) throw new CourtosError("folder_not_found", undefined, 404);
     const store = new CaseStore();
+    store.ocr = { engine: ocrEngine, pdfPages: ocrPdfPages };
+    store.ocrFailed = new Set();
     const { realRoot } = await walk(root);
     store.root = realRoot;
     store.dir = join(realRoot, WORKSPACE_DIR);
@@ -134,11 +136,12 @@ export class CaseStore extends EventEmitter {
         await writeJson(cachePath, extracted);
       }
       // Pages without a text layer are recognised locally, once per file version.
-      const blank = extension === ".pdf" ? extracted.pages.filter(p => !p.has_text && !p.ocr_attempted) : [];
-      if (blank.length && (await ocrEngine())) {
+      // A failed recognition is retried when CourtOS next starts, not on every scan.
+      const blank = extension === ".pdf" && !this.ocrFailed.has(hash) ? extracted.pages.filter(p => !p.has_text && !p.ocr_attempted) : [];
+      if (blank.length && (await this.ocr.engine())) {
         progress({ phase: "ocr", index, total: files.length, id: source.id, pages: blank.length });
         try {
-          const recognised = await ocrPdfPages(file.absolute, blank.map(p => p.n));
+          const recognised = await this.ocr.pdfPages(file.absolute, blank.map(p => p.n));
           for (const page of blank) {
             const hit = recognised.find(r => r.n === page.n);
             page.ocr_attempted = OCR_VERSION;
@@ -148,10 +151,10 @@ export class CaseStore extends EventEmitter {
             page.has_text = hit.text.replace(/\s/g, "").length >= 20;
             page.ocr = { engine: hit.engine, confidence: hit.confidence };
           }
+          await writeJson(cachePath, extracted);
         } catch {
-          for (const page of blank) page.ocr_attempted = OCR_VERSION;
+          this.ocrFailed.add(hash);
         }
-        await writeJson(cachePath, extracted);
       }
       if (source.sha256 && source.sha256 !== hash) source.changed_at = now();
       if (source.sha256 !== hash) source.version++;

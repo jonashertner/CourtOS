@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { AgentRun } from "../src/agent/runner.mjs";
 import { demoProvider, DEMO_QUESTION } from "../src/agent/demo.mjs";
@@ -53,12 +53,37 @@ test("a scanned page is recognised locally, or reported as unread", async () => 
       const row = summary.result.rows.find(r => r.id === "R6");
       assert.equal(row.assessment, "inconclusive", "the recognised scan is used as evidence");
       assert.equal(scan.pages[0].ocr, true);
+      assert.match(store.documents.get(scan.id).pages[0].ocr.engine, /^(vision|tesseract)/, "the page records which engine read it");
       assert.doesNotMatch(scan.pages[0].text, /Keller|Bianchi|Bergfeld/, "OCR text is pseudonymised like any other page");
     } else {
       assert.equal(scan.pages[0].section, null);
       assert.equal(scan.pages[0].status, "no_text");
     }
   } finally { await cleanup(); }
+});
+
+test("a failed recognition leaves the page unread and is retried when CourtOS next starts", async () => {
+  const { CaseStore } = await import("../src/caseStore.mjs");
+  const { root, store, cleanup } = await freshCase();
+  let second;
+  try {
+    const source = store.sources.find(s => s.label === "BB 2");
+    await rm(join(store.dir, "private", "extract", `${source.sha256}.json`));
+    let calls = 0;
+    store.ocr = { engine: async () => "stub", pdfPages: async () => { calls++; throw new Error("helper crashed"); } };
+    await store.scan();
+    await store.scan();
+    assert.equal(calls, 1, "not retried on every scan");
+    assert.equal(store.mirror.documents.find(d => d.label === "BB 2").pages[0].section, null);
+    store.close();
+
+    second = await CaseStore.open(root);
+    second.ocr = { engine: async () => "stub", pdfPages: async (path, pages) => pages.map(n => ({ n, text: "Mängelrüge betreffend die Duschtassen im zweiten Stock.", engine: "stub", confidence: 0.9 })) };
+    await second.scan();
+    const page = second.mirror.documents.find(d => d.label === "BB 2").pages[0];
+    assert.ok(page.section, "the page is read after the restart");
+    assert.equal(second.documents.get(source.id).pages[0].ocr.engine, "stub");
+  } finally { second?.close(); await cleanup(); }
 });
 
 test("all three tasks run through the loop, the shared validator and the binder", async () => {
@@ -122,7 +147,6 @@ test("a run needs a valid release, and a new file in the folder revokes it", asy
 
 test("a result turns stale when a file it was made from changes or disappears; new files are listed", async () => {
   const { staleness } = await import("../src/verify.mjs");
-  const { rm } = await import("node:fs/promises");
   const { root, store, cleanup } = await freshCase();
   try {
     await store.release({ model: "demo", budgetChf: null });
