@@ -1,7 +1,8 @@
 // CourtOS in Word. The draft stays in Word; CourtOS reads only what you ask it
 // to (a selection, or the paragraphs for a citation check) and inserts only
 // what you choose, at the cursor.
-import { adoptLang, api, ApiError, chooseLang, claimPlain, claimText, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, parseDate, partyLabel, refsPlain, setLang, tr, traceText, trn, refLabel, inLanguage } from "./shared.js";
+import { adoptLang, api, ApiError, chooseLang, claimPlain, claimText, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, setLang, tr, traceText, trn, refLabel, inLanguage } from "./shared.js";
+import { BUILD, plainText, sources } from "./word-doc.js";
 
 const pane = document.getElementById("pane");
 const S = { st: null, tab: "evidence", selection: "", run: null, latest: new Map(), office: false, citecheck: null, citecheckBusy: false };
@@ -70,7 +71,7 @@ async function insertReference(citation) {
   if (!inOffice()) { await navigator.clipboard?.writeText(`${where}: «${quote}»`); return toast(tr("In die Zwischenablage kopiert.")); }
   await Word.run(async (context) => {
     const end = context.document.getSelection().getRange("End");
-    if (footnotes()) end.insertFootnote(`${where}: «${quote}»`);
+    if (footnotes()) end.insertFootnote(`${where}: «${quote}».`);
     else end.insertText(` (${where})`, "After");
     await context.sync();
   });
@@ -79,52 +80,126 @@ async function insertReference(citation) {
 
 /** One statement at the cursor, its sources as a footnote (or in parentheses). Strings are built before any await. */
 async function insertClaim(claim) {
-  const text = claimPlain(claim), refs = refsPlain(claim);
+  const text = claimPlain(claim), refs = sources(claim);
   if (!inOffice()) { await navigator.clipboard?.writeText(refs ? `${text} (${refs})` : text); return toast(tr("In die Zwischenablage kopiert.")); }
   await Word.run(async (context) => {
     const inserted = context.document.getSelection().getRange("End").insertText(text, "After");
-    if (refs) { if (footnotes()) inserted.getRange("End").insertFootnote(refs); else inserted.getRange("End").insertText(` (${refs})`, "After"); }
+    if (refs) { if (footnotes()) inserted.getRange("End").insertFootnote(`${refs}.`); else inserted.getRange("End").insertText(` (${refs})`, "After"); }
     inserted.getRange("End").select();
     await context.sync();
   });
   toast(tr("Aus dem Browser eingefügt."));
 }
 
-async function insertTable(header, rows) {
-  if (!inOffice()) {
-    await navigator.clipboard?.writeText([header, ...rows].map(r => r.join("\t")).join("\n"));
-    return toast(tr("Tabelle in die Zwischenablage kopiert."));
-  }
+const INK = "#1A1A1A", HAIRLINE = "#BFBFBF", MUTED = "#595959";
+const HANG = 21; // points: room for "10." before the text of a numbered paragraph
+
+/**
+ * A table set like a court document: the document's own font one point below
+ * the text, a rule above and below, a rule under the header (repeated on each
+ * page) and hairlines between rows; no vertical lines, cells aligned at the top.
+ */
+async function insertTable(spec) {
+  // A cell's second line (the posture under the party) goes in with the value
+  // and is styled afterwards; inserting it separately lands in the wrong cell on Mac.
+  const values = [spec.columns.map(c => c.head), ...spec.rows.map(r => r.map(c => c.sub ? `${c.text}\n${c.sub}` : c.text))];
+  if (!inOffice()) { await navigator.clipboard?.writeText(plainText(spec)); return toast(tr("Tabelle in die Zwischenablage kopiert.")); }
+  const done = tr("Tabelle eingefügt.");
   await Word.run(async (context) => {
-    const range = context.document.getSelection().getRange("End");
-    const table = range.insertTable(rows.length + 1, header.length, "After", [header, ...rows]);
+    const selection = context.document.getSelection();
+    const here = selection.paragraphs.getLast();
+    here.load("font/size");
+    await context.sync();
+    const size = typeof here.font.size === "number" ? Math.max(8, here.font.size - 1) : null;
+    const table = selection.getRange("End").insertTable(values.length, spec.columns.length, "After", values);
+    table.styleBuiltIn = Word.BuiltInStyleName?.tableGrid ?? "TableGrid";
     table.headerRowCount = 1;
-    table.styleBuiltIn = "GridTable1Light";
+    table.verticalAlignment = "Top";
+    table.alignment = "Left";
+    if (size) table.font.size = size;
+    const rule = (border, width, color) => { border.type = "Single"; border.width = width; border.color = color; };
+    for (const side of ["Left", "Right", "InsideVertical"]) table.getBorder(side).type = "None";
+    rule(table.getBorder("Top"), 1, INK);
+    rule(table.getBorder("Bottom"), 1, INK);
+    rule(table.getBorder("InsideHorizontal"), 0.5, HAIRLINE);
+    const header = table.rows.getFirst();
+    header.font.bold = true;
+    rule(header.getBorder("Bottom"), 0.75, INK);
+    table.setCellPadding("Top", 4); table.setCellPadding("Bottom", 4);
+    table.setCellPadding("Left", 0); table.setCellPadding("Right", 8);
+    const paragraphs = table.getRange("Whole").paragraphs;
+    paragraphs.load("items");
+    table.load("width");
+    await context.sync();
+    for (const p of paragraphs.items) {
+      p.spaceBefore = 0; p.spaceAfter = 0; p.firstLineIndent = 0; p.leftIndent = 0; p.alignment = "Left";
+      if (size) p.lineSpacing = Math.round(size * 1.2 * 2) / 2;
+    }
+    spec.columns.forEach((column, i) => { table.getCell(0, i).columnWidth = table.width * column.width; });
+    // The second line is set quieter than the first.
+    const subs = [];
+    spec.rows.forEach((row, r) => row.forEach((cell, i) => {
+      if (!cell.sub) return;
+      const found = table.getCell(r + 1, i).body.search(cell.sub, { matchCase: true });
+      found.load("items");
+      subs.push(found);
+    }));
+    await context.sync();
+    for (const found of subs) {
+      const line = found.items.at(-1);
+      if (!line) continue;
+      line.font.italic = true; line.font.bold = false; line.font.color = MUTED;
+    }
     await context.sync();
   });
-  toast(tr("Tabelle eingefügt."));
+  toast(done);
 }
 
-/** Paragraphs with headings; each claim's references become footnotes (or parentheses). */
-async function insertStructured(blocks) {
-  if (!inOffice()) {
-    await navigator.clipboard?.writeText(blocks.map(b => b.heading ? `\n${b.heading}\n` : `${b.text}${b.refs ? ` (${b.refs})` : ""}`).join("\n"));
-    return toast(tr("In die Zwischenablage kopiert."));
-  }
+/**
+ * Headings and paragraphs in the document's own styles. Headings keep with the
+ * next paragraph; each paragraph's sources become a footnote (or parentheses
+ * where Word has no footnotes), ending with a full stop as Swiss footnotes do.
+ */
+async function insertOutline(spec) {
+  if (!inOffice()) { await navigator.clipboard?.writeText(plainText(spec)); return toast(tr("In die Zwischenablage kopiert.")); }
+  const done = tr("In das Dokument eingefügt.");
   await Word.run(async (context) => {
+    // Every paragraph goes in as body text first; the headings are styled only
+    // afterwards. Word copies a paragraph's run formatting into the paragraph
+    // inserted after it, so a heading styled first would set the size of the
+    // text that follows it.
     let anchor = context.document.getSelection().getRange("End");
-    for (const block of blocks) {
-      const paragraph = anchor.insertParagraph(block.heading ?? block.text, "After");
-      paragraph.styleBuiltIn = block.heading ? Word.BuiltInStyleName?.heading3 ?? "Heading3" : Word.BuiltInStyleName?.normal ?? "Normal";
-      if (!block.heading && block.refs) {
-        const end = paragraph.getRange("End");
-        if (footnotes()) end.insertFootnote(block.refs); else end.insertText(` (${block.refs})`, "Before");
+    const headings = [];
+    for (const block of spec.blocks) {
+      const paragraph = anchor.insertParagraph("", "After");
+      paragraph.styleBuiltIn = Word.BuiltInStyleName?.normal ?? "Normal";
+      if (block.heading) {
+        paragraph.insertText(block.heading, "Start");
+        headings.push(paragraph);
+      } else {
+        if (block.number) paragraph.insertText(`${block.number}.\t`, "End");
+        // Numbered proposals hang their text at the tab; every other paragraph
+        // is reset, since Word carries indents into the paragraph after.
+        paragraph.leftIndent = block.number ? HANG : 0;
+        paragraph.firstLineIndent = block.number ? -HANG : 0;
+        if (block.lead) paragraph.insertText(`${block.lead}: `, "End").font.bold = true;
+        paragraph.insertText(block.text, "End").font.bold = false;
+        if (block.note) {
+          const end = paragraph.getRange("End");
+          if (footnotes()) end.insertFootnote(`${block.note}.`); else paragraph.insertText(` (${block.note})`, "End");
+        }
       }
       anchor = paragraph.getRange("End");
     }
     await context.sync();
+    for (const heading of headings) {
+      heading.styleBuiltIn = Word.BuiltInStyleName?.heading3 ?? "Heading3";
+      heading.font.color = INK;
+      heading.keepWithNext = true;
+    }
+    await context.sync();
   });
-  toast(tr("In das Dokument eingefügt."));
+  toast(done);
 }
 
 // --- Data ---------------------------------------------------------------------
@@ -145,68 +220,12 @@ const claimsOf = (run) => new Map(run.result.claims.map(c => [c.id, c]));
 /** Inserted text belongs to the court's document: it is written in the language of the proceedings. */
 const caseLang = () => S.st?.case?.language?.code ?? "de";
 
-const INSERTS = {
-  chronology: (run) => {
-    const claims = claimsOf(run);
-    const rows = run.result.rows
-      .map(row => ({ row, date: row.date ? parseDate(claims.get(row.date)?.text) : null }))
-      .sort((a, b) => (a.date && b.date) ? a.date - b.date : a.date ? -1 : b.date ? 1 : 0)
-      .map(({ row }) => [row.date ? claimPlain(claims.get(row.date)) : tr("ohne Datum"), `${partyLabel(S.st, row.party)}, ${label("posture", row.posture)}`, claimPlain(claims.get(row.event)), refsPlain(claims.get(row.event))]);
-    return insertTable([tr("Datum"), tr("Partei"), tr("Ereignis"), tr("Fundstelle")], rows);
-  },
-  facts_evidence: (run) => {
-    const claims = claimsOf(run);
-    return insertTable([tr("Behauptung"), tr("Partei"), tr("Einschätzung"), tr("Beweismittel"), tr("Fundstellen")], run.result.rows.map(row => [
-      claimPlain(claims.get(row.statement)), partyLabel(S.st, row.party), label("facts", row.assessment),
-      row.evidence.map(id => claimPlain(claims.get(id))).join(" ") || "–",
-      [row.statement, ...row.evidence, ...row.opposing, row.reasoning].map(id => refsPlain(claims.get(id))).filter(Boolean).join("; "),
-    ]));
-  },
-  party_comparison: (run) => {
-    const claims = claimsOf(run);
-    const parties = [...new Set(run.result.rows.flatMap(r => r.positions.map(p => p.party)).filter(Boolean))].sort();
-    return insertTable([tr("Thema"), ...parties.map(p => partyLabel(S.st, p)), tr("Einordnung")], run.result.rows.map(row => [
-      label("category", row.category),
-      ...parties.map(p => row.positions.filter(x => x.party === p).map(x => `${claimPlain(claims.get(x.claim))} (${refsPlain(claims.get(x.claim))})`).join("\n") || "–"),
-      claimPlain(claims.get(row.analysis)),
-    ]));
-  },
-  legal_claims: (run) => {
-    const claims = claimsOf(run);
-    return insertTable([tr("Rechtsargument"), tr("Partei"), tr("Einschätzung"), tr("Rechtsprechung"), tr("Würdigung")], run.result.rows.map(row => [
-      claimPlain(claims.get(row.statement)), partyLabel(S.st, row.party), label("legal", row.assessment),
-      row.authorities.map(id => `${claimPlain(claims.get(id))} (${refsPlain(claims.get(id))})`).join("\n") || "–",
-      claimPlain(claims.get(row.reasoning)),
-    ]));
-  },
-  fundamental_questions: (run) => {
-    const claims = claimsOf(run);
-    return insertStructured(run.result.rows.flatMap(row => [
-      { heading: claimPlain(claims.get(row.question)) },
-      { text: claimPlain(claims.get(row.analysis)), refs: refsPlain(claims.get(row.analysis)) },
-      ...row.contrary.map(id => ({ text: `${tr("Gegenargument")}: ${claimPlain(claims.get(id))}`, refs: refsPlain(claims.get(id)) })),
-    ]));
-  },
-  decision_draft: (run) => {
-    const claims = claimsOf(run);
-    const blocks = [];
-    for (const part of ["facts", "issue", "reasoning", "counterargument", "open_issue", "disposition"]) {
-      const rows = run.result.rows.filter(r => r.part === part);
-      if (!rows.length) continue;
-      blocks.push({ heading: label("part", part) });
-      rows.forEach((row, i) => blocks.push({ text: `${part === "disposition" ? `${i + 1}. ` : ""}${claimPlain(claims.get(row.claim))}`, refs: refsPlain(claims.get(row.claim)) }));
-    }
-    return insertStructured(blocks);
-  },
-  hypothetical_impact: (run) => {
-    const claims = claimsOf(run);
-    return insertStructured(run.result.rows.flatMap(row => [
-      { heading: tr("Ausgangslage") }, { text: claimPlain(claims.get(row.baseline)), refs: refsPlain(claims.get(row.baseline)) },
-      { heading: tr("Unter der Annahme (hypothetisch)") }, { text: claimPlain(claims.get(row.analysis)), refs: refsPlain(claims.get(row.analysis)) },
-      ...row.limitations.map(id => ({ text: `${tr("Grenze")}: ${claimPlain(claims.get(id))}`, refs: refsPlain(claims.get(id)) })),
-    ]));
-  },
-};
+const TABLES = new Set(["chronology", "facts_evidence", "party_comparison", "legal_claims"]);
+/** A work product goes in written in the language of the proceedings, typeset for the document. */
+function insertWork(task) {
+  const spec = inLanguage(caseLang(), () => BUILD[task](S.latest.get(task), S.st));
+  return spec.kind === "table" ? insertTable(spec) : insertOutline(spec);
+}
 
 async function ask(question) {
   const c = S.st.case;
@@ -243,21 +262,23 @@ function renderPairing() {
 
 function render() {
   const c = S.st.case;
-  const head = h("div.wp-head", {},
-    h("div.row", {}, h("img", { src: "icon.svg", alt: "", width: 18, height: 18 }), h("span.case", {}, c ? c.name : tr("Kein Fall geöffnet")),
-      h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { chooseLang(e.target.value); render(); } }, LANGUAGES.map(([code, name]) => h("option", { value: code, selected: code === LANG }, code.toUpperCase())))),
+  // The mark sits beside the case name; the status lines up under the name, not under the mark.
+  const head = h("header.wp-head", {},
+    h("img.mark", { src: "icon.svg", alt: "CourtOS", width: 20, height: 20 }),
+    h("span.case", {}, c ? c.name : tr("Kein Fall geöffnet")),
+    h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { chooseLang(e.target.value); render(); } }, LANGUAGES.map(([code]) => h("option", { value: code, selected: code === LANG }, code.toUpperCase()))),
     c ? h("div.state", {},
       h("span.local", {}, icon("lock"), trn(c.register.replace, "{n} Angabe lokal ersetzt", "{n} Angaben lokal ersetzt")),
       c.consent_valid ? h("span.external", {}, icon("out"), tr("freigegeben")) : h("span.alert", {}, tr("nicht freigegeben"))) : null,
     live,
   );
-  if (!c) return pane.replaceChildren(h("div.wp", {}, head, h("p.hint", {}, tr("Öffnen Sie den Fallordner im Browser. Dieser Bereich zeigt danach denselben Fall.")), openBrowserButton()));
+  if (!c) return pane.replaceChildren(h("div.wp", {}, head, h("div.wp-body", {}, h("p.hint", {}, tr("Öffnen Sie den Fallordner im Browser. Dieser Bereich zeigt danach denselben Fall."))), h("footer.wp-foot", {}, openBrowserButton())));
   const tabs = [["evidence", "Belegen"], ["citations", "Zitate"], ["insert", "Einfügen"], ["procedure", "Fristen"]];
   pane.replaceChildren(h("div.wp", {},
     head,
-    h("div.wp-tabs", { role: "tablist" }, tabs.map(([id, name]) => h("button", { type: "button", role: "tab", "aria-selected": S.tab === id ? "true" : "false", onclick: () => { S.tab = id; render(); } }, tr(name)))),
-    S.tab === "evidence" ? renderEvidence(c) : S.tab === "citations" ? renderCitations() : S.tab === "insert" ? renderInserts() : renderDeadlines(c),
-    openBrowserButton(),
+    h("nav.wp-tabs", { role: "tablist", "aria-label": tr("Bereiche") }, tabs.map(([id, name]) => h("button", { type: "button", role: "tab", "aria-selected": S.tab === id ? "true" : "false", onclick: () => { S.tab = id; render(); } }, tr(name)))),
+    h("div.wp-body", { role: "tabpanel" }, S.tab === "evidence" ? renderEvidence(c) : S.tab === "citations" ? renderCitations() : S.tab === "insert" ? renderInserts() : renderDeadlines(c)),
+    h("footer.wp-foot", {}, openBrowserButton()),
   ));
 }
 
@@ -323,14 +344,18 @@ function renderCitations() {
 }
 
 function renderInserts() {
-  const names = ["decision_draft", "chronology", "facts_evidence", "party_comparison", "legal_claims", "fundamental_questions", "hypothetical_impact"];
+  const names = Object.keys(BUILD).sort((a, b) => (a === "decision_draft" ? -1 : b === "decision_draft" ? 1 : 0));
   const available = names.filter(n => S.latest.has(n));
   const orders = S.st.case.procedure.orders;
   return h("div.block", {},
     h("h2", {}, tr("An der Cursorposition einfügen")),
-    available.length ? h("div.inserts", {}, available.map(n => h("button.btn", { type: "button", onclick: () => attempt(() => inLanguage(caseLang(), () => INSERTS[n](S.latest.get(n)))) }, label("task", n), h("span.faint", {}, trn(S.latest.get(n).result.rows.length, "{n} Zeile", "{n} Zeilen")))))
+    available.length ? h("ul.inserts", {}, available.map(n => h("li", {}, h("button", { type: "button", onclick: () => attempt(() => insertWork(n)) },
+        h("span.i-title", {}, label("task", n)),
+        h("span.i-meta", {}, TABLES.has(n) ? trn(S.latest.get(n).result.rows.length, "Tabelle · {n} Zeile", "Tabelle · {n} Zeilen") : tr("Text mit Überschriften und Fussnoten")),
+        icon("insert")))))
       : h("p.hint", {}, tr("Analysen erstellen Sie im Browser. Danach können Sie sie hier einfügen.")),
-    orders.length ? [h("h2", {}, tr("Verfügungen")), h("div.inserts", {}, orders.map(o => h("button.btn", { type: "button", onclick: () => attempt(() => insertStructured(o.text.split(/\n{2,}/).map(text => ({ text })))) }, o.title, h("span.faint", {}, o.status === "issued" ? tr("erlassen") : tr("Entwurf")))))] : null,
+    orders.length ? [h("h2", {}, tr("Verfügungen")), h("ul.inserts", {}, orders.map(o => h("li", {}, h("button", { type: "button", onclick: () => attempt(() => insertOutline({ kind: "outline", blocks: o.text.split(/\n{2,}/).map(text => ({ text })) })) },
+        h("span.i-title", {}, o.title), h("span.i-meta", {}, o.status === "issued" ? tr("erlassen") : tr("Entwurf")), icon("insert")))))] : null,
     h("p.hint", {}, tr("Eingefügt wird mit echten Namen; Fundstellen werden zu Fussnoten. Der Text bleibt in Ihrem Dokument; CourtOS speichert nichts darin.")),
   );
 }
@@ -351,7 +376,7 @@ function openBrowser() {
   if (inOffice() && Office.context.ui?.openBrowserWindow) Office.context.ui.openBrowserWindow(url); else window.open(url, "_blank", "noopener");
 }
 function openBrowserButton() {
-  return h("button.link", { type: "button", onclick: openBrowser }, tr("Im Browser öffnen"));
+  return h("button.link", { type: "button", onclick: openBrowser }, icon("out"), tr("Im Browser öffnen"));
 }
 
 /** The cited page opens in the browser, with the passage marked. Without an open browser window, one is opened. */

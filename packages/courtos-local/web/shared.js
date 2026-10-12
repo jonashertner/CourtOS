@@ -222,6 +222,9 @@ const ICONS = {
   plus: "M8 3v10M3 8h10",
   insert: "M8 2v8M4.5 6.5L8 10l3.5-3.5M2.5 13.5h11",
   arrow: "M3 8h10M9 4l4 4-4 4",
+  back: "M13 8H3M7 4L3 8l4 4",
+  up: "M4 10l4-4 4 4",
+  down: "M4 6l4 4 4-4",
   spark: "M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3M3.4 3.4l2.1 2.1M10.5 10.5l2.1 2.1M3.4 12.6l2.1-2.1M10.5 5.5l2.1-2.1",
 };
 export function icon(name, labelText = null) {

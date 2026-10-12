@@ -1,40 +1,70 @@
-/* Word task pane: 320–450 px wide, the draft decision is the main surface. */
-body.word { font-size: 13.5px; }
-.wp { padding: 14px 14px 40px; display: grid; gap: 16px; }
-.wp-head { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
-.wp-head .row { display: flex; align-items: center; gap: 8px; }
-.wp-head .case { font-weight: 600; overflow-wrap: anywhere; }
-.wp-head .state { font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+/* Word task pane, 320–450 px wide. Light, quiet, with room: the document in Word is the main surface. */
+body.word { font-size: 13.5px; line-height: 1.5; background: var(--paper); }
+.wp { display: grid; grid-template-rows: auto auto 1fr auto; min-height: 100vh; }
+
+/* Head: mark and case name on one line, the status aligned under the name. */
+.wp-head { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 4px; align-items: center; padding: 18px 20px 14px; }
+.wp-head .mark { display: block; width: 20px; height: 20px; }
+.wp-head .case { font-weight: 600; font-size: 15px; line-height: 1.3; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.wp-head .lang { font-size: 12px; padding: 2px 4px; border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper); color: var(--muted); }
+.wp-head .state, .wp-head .live { grid-column: 2 / -1; }
+.wp-head .state { font-size: 12px; color: var(--muted); display: flex; gap: 4px 12px; flex-wrap: wrap; }
 .wp-head .state span { display: inline-flex; gap: 5px; align-items: center; }
-.wp h2 { font-size: 14px; margin-bottom: 6px; }
-.wp .hint { color: var(--muted); font-size: 12.5px; }
-.wp .selection { font-family: var(--text); font-size: 14px; border-left: 2px solid var(--rule); padding: 2px 0 2px 10px; color: var(--ink); max-height: 120px; overflow: auto; }
-.wp textarea { width: 100%; min-height: 64px; border: 1px solid var(--rule); border-radius: var(--r); padding: 8px; background: var(--paper); resize: vertical; }
+.wp-head .state .icon { width: 13px; height: 13px; }
+.wp .live { font-size: 12px; color: var(--external); display: flex; gap: 8px; align-items: center; }
+.wp .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--external); animation: pulse 1.1s ease-in-out infinite; flex: none; }
+.wp .live[hidden] { display: none; }
+
+/* Tabs: text-aligned with the content, the underline exactly under the word. */
+.wp-tabs { display: flex; gap: 20px; padding: 0 20px; border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--paper); z-index: 1; }
+.wp-tabs button { background: none; border: 0; padding: 10px 0 9px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; font-size: 13px; }
+.wp-tabs button:hover { color: var(--ink); }
+.wp-tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+
+.wp-body { padding: 22px 20px 28px; display: grid; gap: 26px; align-content: start; }
+.wp-foot { padding: 14px 20px 20px; border-top: 1px solid var(--rule); }
+.wp-foot .link { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); text-decoration: none; font-size: 12.5px; }
+.wp-foot .link:hover { color: var(--ink); }
+
+.wp h2 { font-size: 14px; margin: 0 0 4px; }
+.wp .hint { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.block { display: grid; gap: 10px; }
+.wp .selection { font-family: var(--text); font-size: 14.5px; line-height: 1.5; border-left: 2px solid var(--rule); padding: 2px 0 2px 12px; max-height: 140px; overflow: auto; }
+.wp textarea { width: 100%; min-height: 76px; border: 1px solid var(--rule); border-radius: var(--r); padding: 9px 10px; background: var(--paper); resize: vertical; line-height: 1.45; }
+.wp textarea:focus { border-color: var(--ink); outline: none; }
 .wp .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .wp .btn { height: 32px; }
+.wp .warning { margin: 0; font-size: 12.5px; }
+
 .code-input { font-size: 28px; letter-spacing: .25em; width: 100%; text-align: center; padding: 10px; border: 1px solid var(--rule); border-radius: var(--r); font-variant-numeric: tabular-nums; background: var(--paper); }
-.finding { border-top: 1px solid var(--rule); padding: 12px 0 4px; display: grid; gap: 8px; }
-.finding .claim-text { font-size: 14.5px; }
-.finding .src { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: start; font-size: 12.5px; }
-.finding .src q { font-family: var(--text); color: var(--muted); quotes: "«" "»"; }
-.finding .src .where { color: var(--local); display: inline-flex; gap: 4px; align-items: center; font-family: var(--ui); }
+.wp > .wordmark { padding: 22px 20px 0; }
+.wp > .block { padding: 0 20px; }
+
+/* Findings: the claim, then each source with its quotation beneath. */
+.finding { border-top: 1px solid var(--rule); padding: 14px 0 6px; display: grid; gap: 10px; }
+.finding .claim-text { font-size: 14px; line-height: 1.5; }
+.finding .src { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: start; font-size: 12.5px; }
+.finding .src q { font-family: var(--text); color: var(--muted); quotes: "«" "»"; font-size: 13.5px; line-height: 1.45; }
+.finding .src .where { color: var(--local); display: inline-flex; gap: 4px; align-items: center; font-family: var(--ui); margin-right: 4px; }
+.finding .src-actions { display: grid; gap: 6px; justify-items: end; }
 .progress-text { font-size: 12.5px; color: var(--external); display: flex; gap: 8px; align-items: center; }
-.progress-text::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--external); animation: pulse 1.1s ease-in-out infinite; flex: none; }
-@media (prefers-reduced-motion: reduce) { .progress-text::before { animation: none; } }
-.block { display: grid; gap: 8px; }
-.inserts { display: grid; gap: 6px; }
-.inserts button { justify-content: space-between; width: 100%; }
-.wp-head .row .lang { margin-left: auto; font-size: 12px; padding: 2px 4px; }
-.wp-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--rule); }
-.wp-tabs button { background: none; border: 0; padding: 6px 8px 8px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
-.wp-tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
-.wp .citecheck li { font-size: 13px; }
-.wp .citecheck .link { text-decoration: none; text-align: left; }
-.wp .deadlines li { gap: 8px; font-size: 13px; }
-.wp .d-date { min-width: 110px; }
-.wp .live { font-size: 12.5px; color: var(--external); display: flex; gap: 8px; align-items: center; margin-top: 4px; }
-.wp .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--external); animation: pulse 1.1s ease-in-out infinite; flex: none; }
-.wp .live[hidden] { display: none; }
-@media (prefers-reduced-motion: reduce) { .wp .live::before { animation: none; } }
-.finding .src-actions { display: grid; gap: 4px; justify-items: end; }
+.progress-text::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--external); animation: pulse 1.1s ease-in-out infinite; flex: none; }
+
+/* Inserts: one row per work product, saying what it becomes in the document. */
+ul.inserts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+ul.inserts li { border-bottom: 1px solid var(--rule); }
+ul.inserts button { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title icon" "meta icon"; gap: 1px 10px; align-items: center; width: 100%; text-align: left; background: none; border: 0; padding: 10px 6px 10px 0; cursor: pointer; }
+ul.inserts button:hover { background: var(--wash); }
+ul.inserts .i-title { grid-area: title; font-weight: 500; }
+ul.inserts .i-meta { grid-area: meta; color: var(--muted); font-size: 12px; }
+ul.inserts .icon { grid-area: icon; color: var(--muted); }
+ul.inserts button:hover .icon { color: var(--ink); }
+
+.wp .citecheck { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.wp .citecheck li { font-size: 13px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.wp .citecheck .link { text-decoration: none; text-align: left; display: grid; gap: 2px; }
+.wp .deadlines { border-top: 1px solid var(--rule); }
+.wp .deadlines li { gap: 4px 12px; font-size: 13px; padding: 10px 0; }
+.wp .d-date { min-width: 104px; font-variant-numeric: tabular-nums; }
 .toast .link { margin-left: 10px; color: inherit; }
+@media (prefers-reduced-motion: reduce) { .wp .live::before, .progress-text::before { animation: none; } }

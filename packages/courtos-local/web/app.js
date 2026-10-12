@@ -9,6 +9,7 @@ const S = {
   run: null, showTrace: true, drawer: null, scan: null, busy: false,
   selectedNotes: new Set(), research: { query: "", results: null, busy: false, citecheck: null, citecheckBusy: false },
   noteFilter: "all", orderDraft: null,
+  reader: null,
 };
 
 const KIND_GROUPS = [
@@ -139,8 +140,14 @@ function renderScanProgress() {
   document.querySelector(".scan-label").textContent = text;
 }
 
+/** Where the user is: a re-render in the same place keeps the scroll position, a new place starts at the top. */
+let lastPlace = null;
+const place = () => [S.view, S.view === "read" ? S.reader?.doc : "", S.view === "work" ? S.run?.id ?? "" : ""].join("|");
+
 function render() {
-  const scroll = document.querySelector(".main")?.scrollTop ?? 0;
+  const here = place();
+  const scroll = here === lastPlace ? document.querySelector(".main")?.scrollTop ?? 0 : 0;
+  lastPlace = here;
   if (!S.st.case) app.replaceChildren(renderWelcome());
   else app.replaceChildren(renderShell());
   const main = document.querySelector(".main");
@@ -183,13 +190,14 @@ function renderShell() {
   return h("div.shell", {},
     h("header.topbar", {},
       wordmark(),
+      h("div.case-head", {},
       h("span.case-name", {}, c.name),
       h("div.status", {},
         h("span.local", {}, icon("lock"), trn(c.register.replace, "{n} Angabe wird lokal ersetzt", "{n} Angaben werden lokal ersetzt")),
         consent,
         S.st.current ? h("button.external.live-dot", { type: "button", title: tr("Laufenden Auftrag ansehen"), onclick: () => openRun(S.st.current, { follow: true }) }, tr("Das Modell arbeitet")) : null,
         c.sync ? h("span.alert", {}, tr("Ordner wird mit einem Cloud-Dienst synchronisiert")) : null,
-      ),
+      )),
       h("span.spacer"),
       langSelect(),
       S.st.clients?.word ? h("span.word-on", { title: tr("Word folgt diesem Fenster: Belege öffnen sich hier, Aussagen lassen sich in Word einfügen.") }, icon("check"), tr("Word verbunden"))
@@ -199,7 +207,7 @@ function renderShell() {
     renderRail(),
     h("main.main", {},
       renderTabs(),
-      ({ docs: renderDocs, privacy: renderPrivacy, work: renderWork, research: renderResearch, notes: renderNotes, procedure: renderProcedure }[S.view] ?? renderWork)(),
+      ({ docs: renderDocs, privacy: renderPrivacy, work: renderWork, research: renderResearch, notes: renderNotes, procedure: renderProcedure, read: renderReader }[S.view] ?? renderWork)(),
     ),
   );
 }
@@ -218,8 +226,8 @@ function renderRail() {
       const docs = c.sources.filter(s => roles.includes(s.role));
       if (!docs.length) return null;
       return [h("h2", {}, tr(title)), docs.map(s => h("button.doc-row", {
-        type: "button", class: s.include ? null : "excluded", "aria-current": S.preview.doc === s.id && S.view === "privacy" ? "true" : null,
-        onclick: async () => { S.view = "privacy"; S.preview = { ...S.preview, doc: s.id, page: 1 }; S.register ??= (await api("/api/register")).entities; render(); },
+        type: "button", class: s.include ? null : "excluded", "aria-current": S.view === "read" && S.reader?.doc === s.id ? "true" : null,
+        onclick: () => openReader(s.id),
       },
         h("span.label", {}, s.label ?? s.name),
         h("span.pages", {}, s.pages ? pg(`${s.pages} S.`) : ""),
@@ -244,7 +252,7 @@ function renderTabs() {
     ["procedure", "Verfahren", c.procedure.deadlines.filter(d => d.status === "open").length ? String(c.procedure.deadlines.filter(d => d.status === "open").length) : null],
   ];
   return h("div.steps", { role: "tablist" }, tabs.map(([id, name, badge]) => h("button", {
-    type: "button", role: "tab", "aria-selected": S.view === id ? "true" : "false",
+    type: "button", role: "tab", "aria-selected": (S.view === "read" ? "docs" : S.view) === id ? "true" : "false",
     onclick: async () => { S.view = id; if (id === "privacy") S.register = (await api("/api/register")).entities; render(); },
   }, tr(name), badge ? h("span.n", { class: badge === "✓" ? "done" : null }, badge) : null)));
 }
@@ -262,7 +270,7 @@ function renderDocs() {
     h("table.docs", {},
       h("thead", {}, h("tr", {}, [tr("Bezeichnung"), tr("Rolle"), tr("Partei"), tr("Seiten"), tr("Einbeziehen")].map(x => h("th", {}, x)))),
       h("tbody", {}, c.sources.map(s => h("tr", {},
-        h("td", {}, h("b", {}, s.label ?? "–"), h("div.file", {}, s.rel_path)),
+        h("td", {}, s.status === "ok" ? h("button.link.doc-open", { type: "button", onclick: () => openReader(s.id) }, s.label ?? s.name) : h("b", {}, s.label ?? "–"), h("div.file", {}, s.rel_path)),
         h("td", {}, h("select", { "aria-label": tr("Rolle von {l}", { l: s.label }), disabled: s.status !== "ok", onchange: (e) => change(s.id, { role: e.target.value }) },
           roles.map(r => h("option", { value: r, selected: s.role === r }, label("role", r))))),
         h("td", {}, h("select", { "aria-label": tr("Partei von {l}", { l: s.label }), disabled: s.status !== "ok", onchange: (e) => change(s.id, { party: e.target.value || null }) },
@@ -1016,7 +1024,7 @@ async function renderPageView(body, citation, source, group) {
   const sheet = h("div.sheet", { style: { width: `${width}px` } });
   const status = h("p.page-caption", {}, tr("Lädt die Seite …"));
   body.replaceChildren(sheet, status);
-  const pdf = await pdfDocument(citation.document, source.sha256);
+  const pdf = await pdfDocument(citation.document, source.version);
   const page = await pdf.getPage(citation.page);
   const base = page.getViewport({ scale: 1 });
   const ratio = window.devicePixelRatio || 1;
@@ -1097,7 +1105,7 @@ async function renderDrawer() {
       h("span", { style: { flex: 1 } }),
       source?.ext === ".pdf" ? h("div.seg", { role: "group", "aria-label": tr("Ansicht") }, [["page", tr("Seite")], ["text", tr("Text")]].map(([m, name]) =>
         h("button", { type: "button", "aria-pressed": String(mode === m), onclick: () => { S.drawer.mode = S.sourceMode = m; renderDrawer(); } }, name))) : null,
-      h("button.btn.small", { type: "button", onclick: () => attempt(() => api("/api/open-original", { method: "POST", body: { id: citation.document } })) }, icon("out"), tr("Original öffnen")),
+      source?.status === "ok" ? h("button.btn.small", { type: "button", onclick: () => openReader(citation.document, { page: citation.page, marks: citation.group ?? [citation] }) }, icon("doc"), tr("Im Dokument lesen")) : null,
     ),
     body,
   );
@@ -1131,6 +1139,136 @@ async function renderDrawer() {
     body.querySelector("mark")?.scrollIntoView({ block: "center" });
   } catch {
     body.replaceChildren(h("p.alert", {}, tr("Die Originalseite ist nicht verfügbar. Wurde die Datei verändert oder verschoben?")));
+  }
+}
+
+// --- Lesen ----------------------------------------------------------------------
+// The originals are the source of truth: every page at reading width, in the main area.
+const READ_WIDTH = 860;
+const pageSizes = new Map();
+const pageCanvases = new Map();
+
+/** Opens a document in the reader; with `at`, on a cited page with the passages marked. */
+function openReader(doc, at = null) {
+  const back = S.view === "read" ? S.reader?.back : S.view;
+  S.reader = { doc, page: at?.page ?? 1, marks: at?.marks ?? [], mode: S.reader?.mode ?? null, zoom: S.reader?.zoom ?? 1, back, jump: true, focus: Boolean(at?.marks?.length) };
+  S.view = "read";
+  if (S.drawer) closeDrawer();
+  render();
+}
+
+function renderReader() {
+  const c = S.st.case;
+  const doc = c.sources.find(s => s.id === S.reader?.doc);
+  if (!doc) { S.view = "docs"; return renderDocs(); }
+  const pdf = doc.ext === ".pdf" && doc.status === "ok";
+  const mode = pdf ? S.reader.mode ?? "page" : "text";
+  const count = doc.pages || 1;
+  const counter = h("span.reader-count", { "aria-live": "polite" }, tr("Seite {p} von {n}", { p: S.reader.page, n: count }));
+  const pages = h("div.reader-pages", { class: mode === "text" ? "as-text" : null });
+  const goTo = (n, smooth = true) => {
+    const target = pages.querySelector(`[data-page="${Math.min(Math.max(n, 1), count)}"]`);
+    const main = document.querySelector(".main");
+    if (!target || !main) return;
+    const top = main.getBoundingClientRect().top, covered = (main.querySelector(".reader-bar")?.getBoundingClientRect().bottom ?? top) - top;
+    main.scrollTo({ top: main.scrollTop + target.getBoundingClientRect().top - top - covered - 20, behavior: smooth ? "smooth" : "auto" });
+  };
+  const zoomTo = (z) => { S.reader.zoom = Math.min(Math.max(Math.round(z * 100) / 100, 0.6), 2); S.reader.jump = true; render(); };
+  const back = S.reader.back && S.reader.back !== "read" ? S.reader.back : "docs";
+  const section = h("section.reader", { "aria-label": tr("{d} lesen", { d: doc.label ?? doc.name }) },
+    h("header.reader-bar", {},
+      h("button.btn.small.quiet", { type: "button", onclick: () => { S.view = back; render(); }, "aria-label": tr("Zurück") }, icon("back")),
+      h("div.reader-title", {}, h("h1", {}, doc.label ?? doc.name), h("span", {}, doc.name)),
+      h("div.reader-nav", { role: "group", "aria-label": tr("Seiten") },
+        h("button.btn.small.quiet", { type: "button", "aria-label": tr("Vorherige Seite"), onclick: () => goTo(S.reader.page - 1) }, icon("up")),
+        counter,
+        h("button.btn.small.quiet", { type: "button", "aria-label": tr("Nächste Seite"), onclick: () => goTo(S.reader.page + 1) }, icon("down"))),
+      pdf ? h("div.seg", { role: "group", "aria-label": tr("Ansicht") }, [["page", tr("Seite")], ["text", tr("Text")]].map(([m, name]) =>
+        h("button", { type: "button", "aria-pressed": String(mode === m), onclick: () => { S.reader.mode = m; S.reader.jump = true; render(); } }, name))) : null,
+      mode === "page" ? h("div.reader-zoom", { role: "group", "aria-label": tr("Grösse") },
+        h("button.btn.small.quiet", { type: "button", "aria-label": tr("Verkleinern"), disabled: S.reader.zoom <= 0.6, onclick: () => zoomTo(S.reader.zoom - 0.2) }, icon("dash")),
+        h("button.reader-pct", { type: "button", title: tr("Lesebreite"), onclick: () => zoomTo(1) }, `${Math.round(S.reader.zoom * 100)} %`),
+        h("button.btn.small.quiet", { type: "button", "aria-label": tr("Vergrössern"), disabled: S.reader.zoom >= 2, onclick: () => zoomTo(S.reader.zoom + 0.2) }, icon("plus"))) : null,
+      h("span.spacer"),
+      doc.include && doc.status === "ok" ? h("button.btn.small.quiet", { type: "button", onclick: async () => { S.view = "privacy"; S.preview = { ...S.preview, doc: doc.id, page: S.reader.page, mode: "mirror" }; S.register = (await api("/api/register")).entities; render(); } }, icon("eye"), tr("Was das Modell liest")) : null,
+      h("button.btn.small", { type: "button", onclick: () => attempt(() => api("/api/open-original", { method: "POST", body: { id: doc.id } })) }, icon("out"), tr("Original öffnen")),
+    ),
+    doc.status !== "ok" ? h("p.page-text.empty", {}, doc.status === "unsupported" ? tr("Format nicht unterstützt") : tr("Nicht lesbar")) : pages,
+  );
+  if (doc.status !== "ok") return section;
+
+  // Which page is in view: the one whose top last passed the upper third of the window.
+  const observer = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) {
+      S.reader.page = Number(e.target.dataset.page);
+      counter.textContent = tr("Seite {p} von {n}", { p: S.reader.page, n: count });
+    }
+  }, { rootMargin: "-30% 0px -65% 0px" });
+  const jump = () => { if (S.reader.jump) { S.reader.jump = false; requestAnimationFrame(() => goTo(S.reader.page, false)); } };
+  /** Once a cited page is drawn, its first marked passage is brought to the middle of the window. */
+  const focusMark = (mark) => { if (!mark || !S.reader.focus) return; S.reader.focus = false; requestAnimationFrame(() => mark.scrollIntoView({ block: "center", behavior: "smooth" })); };
+
+  if (mode === "page") {
+    const main = document.querySelector(".main");
+    const room = (main?.clientWidth ?? 1100) - 96;
+    const width = Math.round(Math.min(READ_WIDTH, room) * S.reader.zoom);
+    const lazy = new IntersectionObserver((entries) => {
+      for (const e of entries) if (e.isIntersecting) { lazy.unobserve(e.target); drawPage(e.target, doc, Number(e.target.dataset.page), width); }
+    }, { rootMargin: "800px 0px" });
+    for (let n = 1; n <= count; n++) {
+      const size = pageSizes.get(`${doc.id}:${doc.version}:${n}`) ?? pageSizes.get(`${doc.id}:${doc.version}:1`);
+      const sheet = h("div.sheet", { dataset: { page: String(n) }, style: { width: `${width}px`, height: `${Math.round(width * (size ?? 1.414))}px` } }, h("span.sheet-loading", {}, tr("Lädt die Seite …")));
+      pages.append(h("figure.reader-page", {}, sheet, h("figcaption", {}, pg(`S. ${n}`))));
+      lazy.observe(sheet); observer.observe(sheet);
+      if (n === S.reader.page) sheet.addEventListener("marked", () => focusMark(sheet.querySelector(".hl")), { once: true });
+    }
+    jump();
+    return section;
+  }
+  viewFor(doc.id).then(view => {
+    for (const page of view.pages) {
+      const marks = S.reader.marks.filter(m => m.page === page.n && m.page_sha256 === page.sha256 && m.match === "exact").map(m => [m.original_start, m.original_end]).sort((a, b) => a[0] - b[0]);
+      const chars = Array.from(page.original ?? "");
+      const text = h("div.reader-text", { dataset: { page: String(page.n) } });
+      let cursor = 0;
+      for (const [from, to] of marks) { if (from < cursor) continue; text.append(chars.slice(cursor, from).join(""), h("mark", {}, chars.slice(from, to).join(""))); cursor = to; }
+      text.append(chars.slice(cursor).join(""));
+      if (!page.has_text) text.replaceChildren(h("span.alert", {}, tr("Diese Seite hat keinen lesbaren Text.")));
+      pages.append(h("figure.reader-page", {}, text, h("figcaption", {}, pg(`S. ${page.n}`), page.mirror?.ocr ? ` · ${tr("Text per Texterkennung aus dem Scan; mit dem Original vergleichen.")}` : "")));
+      observer.observe(text);
+    }
+    jump();
+    focusMark(pages.querySelector("mark"));
+  }).catch(() => pages.replaceChildren(h("p.page-text.empty", {}, tr("Die Seite konnte nicht geladen werden."))));
+  return section;
+}
+
+/** One original page as an image, drawn once per width and kept, with any marked passages on it. */
+async function drawPage(sheet, doc, n, width) {
+  const key = `${doc.id}:${doc.version}:${n}:${width}`;
+  try {
+    let canvas = pageCanvases.get(key);
+    if (!canvas) {
+      const pdf = await pdfDocument(doc.id, doc.version);
+      const page = await pdf.getPage(n);
+      const base = page.getViewport({ scale: 1 });
+      pageSizes.set(`${doc.id}:${doc.version}:${n}`, base.height / base.width);
+      const ratio = window.devicePixelRatio || 1;
+      const viewport = page.getViewport({ scale: (width / base.width) * ratio });
+      canvas = h("canvas", { width: String(Math.floor(viewport.width)), height: String(Math.floor(viewport.height)), role: "img", "aria-label": tr("{p} als Bild", { p: pg(`S. ${n}`) }) });
+      canvas.style.width = `${width}px`;
+      await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+      if (pageCanvases.size > 60) pageCanvases.delete(pageCanvases.keys().next().value);
+      pageCanvases.set(key, canvas);
+    }
+    sheet.style.height = `${Math.round(canvas.height / (canvas.width / width))}px`;
+    sheet.replaceChildren(canvas);
+    const marks = (S.reader?.doc === doc.id ? S.reader.marks : []).filter(m => m.page === n && m.match === "exact");
+    const found = await Promise.all(marks.map(m => api(`/api/highlight/${m.document}/${m.page}?start=${m.original_start}&end=${m.original_end}&sha=${m.page_sha256}`).catch(() => ({ rects: [] }))));
+    for (const r of found.flatMap(f => f.rects)) sheet.append(h("span.hl", { style: { left: `${r.x * 100}%`, top: `${r.y * 100}%`, width: `${r.w * 100}%`, height: `${r.h * 100}%` } }));
+    if (found.length) sheet.dispatchEvent(new Event("marked"));
+  } catch {
+    sheet.replaceChildren(h("p.page-text.empty", {}, tr("Die Originalseite ist nicht verfügbar. Wurde die Datei verändert oder verschoben?")));
   }
 }
 
