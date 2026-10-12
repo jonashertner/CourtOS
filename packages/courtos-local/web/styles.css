@@ -21,6 +21,9 @@
   --mark: #f3e6ad;
   --p1: #2d5f93;
   --p2: #ad5d17;
+  --p3: #3b7d4f;
+  --p4: #75509c;
+  --p5: #1f767c;
   --focus: #353535;
   --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   --text: Charter, "Iowan Old Style", "Source Serif 4", Georgia, serif;
@@ -33,7 +36,7 @@
 :root[data-theme="dark"] {
   --paper: #141414; --ink: #ececea; --muted: #a9a9a6; --faint: #7d7d7a; --rule: #2c2c2b; --wash: #1c1c1b;
   --local: #7cc0a0; --local-wash: #16251e; --external: #b4a2d6; --external-wash: #211c2b;
-  --alert: #e0918a; --alert-wash: #2c1a18; --amber: #d8b65c; --mark: #5a4c16; --p1: #8db5e2; --p2: #e6a362; --focus: #d0d0d0;
+  --alert: #e0918a; --alert-wash: #2c1a18; --amber: #d8b65c; --mark: #5a4c16; --p1: #8db5e2; --p2: #e6a362; --p3: #8fcfa0; --p4: #c3a5e3; --p5: #7fcbd0; --focus: #d0d0d0;
   color-scheme: dark;
 }
 :root[data-theme="dark"] .modal-backdrop { background: #000000a0; }
@@ -405,6 +408,9 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 .pty { --pc: var(--faint); }
 .pty.P1 { --pc: var(--p1); }
 .pty.P2 { --pc: var(--p2); }
+.pty.P3 { --pc: var(--p3); }
+.pty.P4 { --pc: var(--p4); }
+.pty.P5 { --pc: var(--p5); }
 .party-name { display: inline-flex; align-items: center; gap: 7px; font-weight: 550; color: var(--ink); }
 .party-name i { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); flex: none; }
 .timeline .marker i { background: var(--pc); border-color: var(--pc); }

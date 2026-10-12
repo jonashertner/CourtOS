@@ -38,10 +38,11 @@ test("the overview counts each value in order and leaves out what does not occur
   assert.deepEqual(tally([], ["a"]), []);
 });
 
-test("only the claimant and the respondent carry a party colour", () => {
+test("the first five parties carry their own colour, so an appeal's authorities are told apart", () => {
   assert.equal(partyClass("P1"), "pty P1");
   assert.equal(partyClass("P2"), "pty P2");
-  assert.equal(partyClass("P3"), "pty");
+  assert.equal(partyClass("P5"), "pty P5");
+  assert.equal(partyClass("P6"), "pty");
   assert.equal(partyClass(null), "pty");
 });
 

@@ -141,7 +141,7 @@ const LEGAL_ORDER = ["contrary", "insufficient", "not_found_in_selected_sources"
 const STATUS_ORDER = ["disputed", "one_sided", "open", "both"];
 
 /** P1 and P2 have their own colour; any other or missing party stays neutral. */
-export const partyClass = (p) => (p === "P1" || p === "P2" ? `pty ${p}` : "pty");
+export const partyClass = (p) => (/^P[1-5]$/.test(p ?? "") ? `pty ${p}` : "pty");
 
 /**
  * Where a point of the comparison stands, read off the parties' postures only:
