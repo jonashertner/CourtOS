@@ -1,5 +1,5 @@
 /** Shared projection contract. Every field outside outbound_json is private. */
-export type ReviewedTerm = { entity_id: string; revision: number; aliases: string[]; replacement: string; reviewed: boolean };
+export type ReviewedTerm = { entity_id: string; revision: number; aliases: string[]; replacement: string; reviewed: boolean; reading?: true };
 export type PrivateTransformationSpan = {
     entity_id: string; original_start: number; original_end: number;
     derivative_start: number; derivative_end: number; original: string; replacement: string;

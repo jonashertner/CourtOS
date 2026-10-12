@@ -99,7 +99,7 @@ test("a damaged OCR word can be read as its repaired form after review, never as
   const { rehydrator } = await import("../src/verify.mjs");
   const { buildMirror } = await import("../src/mirror.mjs");
   const text = "Schreiben vom 14. Mai 2025.\n\nWir halten fest, dass die Ruge aus unserer Sicht verspätet ist.";
-  const documents = [{ id: "D1", label: "BB 2", role: "exhibit", party: null, sha256: "x", kind: "pdf", pages: [{ n: 1, has_text: true, ocr: { engine: "test" }, text, sha256: "p" }] }];
+  const documents = [{ id: "D1", label: "BB 2", role: "exhibit", party: null, sha256: "x", kind: "pdf", pages: [{ n: 1, has_text: true, ocr: { engine: "test" }, text, sha256: "p" }, { n: 2, has_text: true, text: "Die Rüge erfolgte am 3. April 2025.", sha256: "q" }] }];
   let register = mergeDetections(emptyRegister(), suggestAnonymisation(documents).candidates, text);
   const ruge = register.entities.find(e => e.aliases.includes("Ruge"));
   assert.ok(ruge?.notes.includes("ocr_word"), "the damaged word is flagged");
@@ -112,8 +112,11 @@ test("a damaged OCR word can be read as its repaired form after review, never as
   const rev = register.rev;
   register = applyChange(register, { op: "read_as_word", id: ruge.id, reading: "rüge" }, text);
   assert.ok(register.rev > rev, "the change revokes an earlier release");
-  const mirror = buildMirror(register, documents).mirror;
+  // The correctly spelled word elsewhere in the file is the same word, not another identity.
+  const { mirror, issues } = buildMirror(register, documents);
+  assert.deepEqual(issues, []);
   assert.match(mirror.documents[0].pages[0].text, /dass die Rüge aus unserer Sicht/);
+  assert.match(mirror.documents[0].pages[1].text, /^Die Rüge erfolgte/);
   assert.doesNotMatch(mirror.documents[0].pages[0].text, /Ruge/);
   assert.equal(rehydrator(register)("Die Rüge war verspätet.").text, "Die Rüge war verspätet.", "a result keeps the word");
 

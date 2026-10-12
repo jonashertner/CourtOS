@@ -43,7 +43,8 @@ function validateTerms(terms) {
         if (!term.entity_id || entities.has(term.entity_id) || !Number.isSafeInteger(term.revision) || term.revision < 1
             || !term.aliases.length || term.aliases.length > 100 || count(term.replacement) < 2
             || count(term.replacement) > 80 || term.replacement !== term.replacement.trim()
-            || /[\r\n]/u.test(term.replacement) || forbidden.test(term.replacement) || invalidUnicode.test(term.replacement)) {
+            || /[\r\n]/u.test(term.replacement) || forbidden.test(term.replacement) || invalidUnicode.test(term.replacement)
+            || (term.reading !== undefined && term.reading !== true)) {
             throw new PseudonymisationError("invalid_mapping");
         }
         entities.add(term.entity_id);
@@ -101,7 +102,9 @@ function compileTextTransformation(terms) {
     const canonical = validateTerms(terms);
     const mapJson = JSON.stringify(canonical);
     const patterns = canonical.flatMap(term => term.aliases.map(alias => ({ term, pattern: expression(alias) })));
-    const replacementPatterns = canonical.map(term => expression(term.replacement));
+    // A reading replaces a damaged word with the ordinary word it was reviewed to be;
+    // that word elsewhere in the text is the same word, not another identity.
+    const replacementPatterns = canonical.filter(term => !term.reading).map(term => expression(term.replacement));
     for (const term of canonical)
         for (const { pattern } of patterns) {
             pattern.lastIndex = 0;

@@ -228,5 +228,5 @@ export function applyChange(register, change, corpus, lang = "de") {
 export function reviewedTerms(register, kinds = null) {
   return register.entities
     .filter(e => e.decision === "replace" && (!kinds || kinds.has(e.kind)))
-    .map(e => ({ entity_id: e.id, revision: e.revision, aliases: [...new Set(e.aliases.filter(a => Array.from(a).length >= 2))], replacement: e.replacement, reviewed: true }));
+    .map(e => ({ entity_id: e.id, revision: e.revision, aliases: [...new Set(e.aliases.filter(a => Array.from(a).length >= 2))], replacement: e.replacement, reviewed: true, ...(e.read_as && e.read_as === e.replacement ? { reading: true } : {}) }));
 }
