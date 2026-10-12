@@ -41,7 +41,9 @@ const canonical = value => value === null || typeof value !== "object" ? JSON.st
   : `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
 const citationKey = citation => canonical(citation);
 const sameCitations = (one, two) => sameSet(one.map(citationKey), two.map(citationKey));
-function checkQuotes(claim, sections) {
+/** `unverified` holds claim-scoped citation keys whose quotation the caller
+ * will show as unverified; only their quotation is not required to match. */
+function checkQuotes(claim, sections, unverified = new Set()) {
   for (const [citations, context] of [[claim.citations, false], [claim.context_references ?? [], true]]) {
     const seen = new Set();
     for (const citation of citations) {
@@ -49,6 +51,7 @@ function checkQuotes(claim, sections) {
       if (!section || (context ? !["working_note", "conversation_excerpt"].includes(section.kind) : section.kind !== "source")) fail("source_kind");
       const key = citationKey(citation);
       if (seen.has(key)) fail("duplicate_citation"); seen.add(key);
+      if (unverified.has(`${claim.id}|${key}`)) continue;
       const start = section.text.indexOf(citation.exact_quote);
       if (!citation.exact_quote.trim() || start < 0) fail("quote_absent");
       if (section.text.indexOf(citation.exact_quote, start + 1) !== -1) fail("quote_ambiguous");
@@ -141,7 +144,8 @@ function validateWorkflowResult(value, input) {
   if (sources.some(section => !record(section.source) || typeof section.source.role !== "string" || typeof section.source.document !== "string" || typeof section.source.version !== "string" || section.source.party !== null && typeof section.source.party !== "string")) fail("input");
   const claims = new Map(result.claims.map(claim => [claim.id, claim]));
   if (claims.size !== result.claims.length || new Set(result.rows.map(row => row.id)).size !== result.rows.length) fail("duplicate_id");
-  for (const claim of result.claims) checkQuotes(claim,sections);
+  const unverified = new Set((input.unverified_citations ?? []).map(u => `${u.claim}|${citationKey({ section_id: u.section_id, exact_quote: u.exact_quote })}`));
+  for (const claim of result.claims) checkQuotes(claim,sections,unverified);
   const targets = input.assessment_targets === undefined ? null : validateAssessmentTargets(input.assessment_targets,input);
   const targetIds = new Set();
   for (const row of result.rows) {

@@ -609,7 +609,7 @@ function renderRun(run) {
   const running = run.status === "running";
   const lines = (run.events ?? []).map(e => ({ e, text: traceText(e) })).filter(x => x.text && !(x.e.type === "status" && x.e.status === "running"));
   const trace = h("ol.trace", {}, lines.map(({ e, text }) => h("li", {
-    class: e.type === "rejected" || (e.type === "status" && e.status !== "succeeded") ? "bad" : ["validated", "bound"].includes(e.type) || e.status === "succeeded" ? "ok" : e.type === "note" ? "note" : e.type.startsWith("caselaw") ? "law" : null,
+    class: e.type === "rejected" || e.type === "needs_review" || (e.type === "status" && e.status !== "succeeded") ? "bad" : ["validated", "bound"].includes(e.type) || e.status === "succeeded" ? "ok" : e.type === "note" ? "note" : e.type.startsWith("caselaw") ? "law" : null,
   }, text)), running ? h("li.live", {}, tr("Claude arbeitet …")) : null);
   const demo = run.model === "demo-replay";
   return h("section.run", {},

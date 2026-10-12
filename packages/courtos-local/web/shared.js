@@ -256,6 +256,7 @@ export function traceText(event) {
     case "caselaw_read": return event.error ? tr("Entscheid nicht verfügbar: {l}", { l: event.label }) : tr("Liest {l}", { l: event.label });
     case "caselaw_error": return tr("OpenCaseLaw vorübergehend nicht erreichbar");
     case "rejected": return tr("Prüfung nicht bestanden: {r} Claude korrigiert.", { r: humanReject(event.reason) });
+    case "needs_review": return trn(event.claims, "{n} Aussage bleibt nach der Korrektur unbelegt und ist zum Prüfen markiert", "{n} Aussagen bleiben nach der Korrektur unbelegt und sind zum Prüfen markiert");
     case "validated": return tr("{c} Aussagen in {r} Zeilen bestehen die Zitatprüfung", { c: event.claims, r: event.rows });
     case "bound": return tr("{v} von {c} Aussagen an Originalstellen gebunden", { v: event.verified, c: event.claims });
     case "note": return event.text;
@@ -265,7 +266,7 @@ export function traceText(event) {
 
 function humanReject(reason = "") {
   const code = reason.split(":")[0];
-  const text = { quote_ambiguous: "Ein Zitat ist auf der Seite nicht eindeutig.", quote_absent: "Ein Zitat steht so nicht in der Quelle.", read_before_quoting: "Zitat aus einer ungelesenen Seite.", party_attribution: "Aussage der falschen Partei zugeordnet.", date_quote: "Datum nicht wörtlich belegt.", source_role: "Beleg aus der falschen Quellenart.", relief_source: "Rechtsbegehren nicht wörtlich übernommen." }[code];
+  const text = { quotation: "Zitate stehen so nicht oder nicht eindeutig in der Quelle.", quote_ambiguous: "Ein Zitat ist auf der Seite nicht eindeutig.", quote_absent: "Ein Zitat steht so nicht in der Quelle.", read_before_quoting: "Zitat aus einer ungelesenen Seite.", party_attribution: "Aussage der falschen Partei zugeordnet.", date_quote: "Datum nicht wörtlich belegt.", source_role: "Beleg aus der falschen Quellenart.", relief_source: "Rechtsbegehren nicht wörtlich übernommen." }[code];
   return tr(text ?? "Struktur unvollständig.");
 }
 

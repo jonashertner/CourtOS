@@ -36,4 +36,4 @@ export function workflowReadingDependencies(result:WorkflowResult,claimId:string
 export type WorkflowSection = { id: string; kind: string; text: string; source?: { role: string; party: string | null; document: string; version: string }; attribution?: { author?: string; speaker?: string; status?: string } };
 export class WorkflowResultError extends Error { readonly code: string; }
 /** Checks exact quotations, row references, parties, source roles and reported coverage. Never proves semantic entailment. */
-export function validateWorkflowResult(value: unknown, input: { task: WorkflowTask; sections: readonly WorkflowSection[]; assessment_targets?: readonly WorkflowAssessmentTarget[] }): WorkflowResult;
+export function validateWorkflowResult(value: unknown, input: { task: WorkflowTask; sections: readonly WorkflowSection[]; assessment_targets?: readonly WorkflowAssessmentTarget[]; unverified_citations?: readonly { claim: string; section_id: string; exact_quote: string }[] }): WorkflowResult;

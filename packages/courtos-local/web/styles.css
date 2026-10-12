@@ -414,3 +414,8 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
 .stale p { margin: 2px 0; }
 .cite.is-stale { border-color: var(--amber); border-style: dashed; }
 .stale-mark { color: var(--amber); font-size: 12px; }
+
+/* A claim whose quotation could not be verified after one correction. */
+.claim.needs-review .claim-text { background: linear-gradient(transparent 60%, var(--alert-wash) 60%); }
+.review-mark { font: 600 11px/1 var(--ui); color: var(--alert); letter-spacing: .02em; margin-right: 6px; vertical-align: 1px; }
+.review-note { color: var(--alert); margin: -4px 0 14px; }

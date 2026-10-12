@@ -99,7 +99,7 @@ test("the chronology demo exercises one rejected submission and its repair", asy
     const { summary } = await runTask(store, "chronology");
     const rejected = summary.events.filter(e => e.type === "rejected");
     assert.equal(rejected.length, 1);
-    assert.match(rejected[0].reason, /^quote_ambiguous/);
+    assert.match(rejected[0].reason, /^quotation: these quotations occur more than once/);
     assert.equal(summary.status, "succeeded");
   } finally { await cleanup(); }
 });

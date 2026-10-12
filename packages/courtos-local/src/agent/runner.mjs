@@ -49,6 +49,7 @@ export class AgentRun extends EventEmitter {
     this.events = [];
     this.usage = { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
     this.read = new Set();
+    this.corrected = new Set(); // claim ids whose quotations were already sent back once
     this.requests = [];
     this.extra = [];            // working notes and public decision passages, as sections
     this.decisions = new Map(); // canonical id → { meta, sections: [ids] }
@@ -244,12 +245,26 @@ export class AgentRun extends EventEmitter {
     for (const claim of input.claims ?? []) for (const cite of [...(claim.citations ?? []), ...(claim.context_references ?? [])]) if (!this.read.has(cite.section_id)) unread.add(cite.section_id);
     if (unread.size) return { ok: false, error: `read_before_quoting: read these sections before quoting them: ${[...unread].slice(0, 20).join(", ")}` };
     const result = this.assemble(input);
+    // Each claim gets one correction of its quotations. A quotation that still
+    // does not match after that is kept and shown as unverified, so one bad
+    // quotation neither fails the run nor loops; its claim needs review.
+    const failures = quoteFailures(result, this.sections());
+    const unverified = failures.filter(f => this.corrected.has(f.claim));
+    // A result in which no claim is verified has nothing to stand on.
+    if (unverified.length && result.claims.every(c => unverified.some(f => f.claim === c.id))) {
+      return { ok: false, error: `quotation: no claim has a quotation found verbatim in its section (${failures.slice(0, 12).map(f => `${f.claim} → ${f.section_id}`).join("; ")}). Copy the exact characters from the read text; a result needs at least one supported claim.` };
+    }
     try {
-      validateWorkflowResult(result, { task: this.task, sections: this.sections() });
+      validateWorkflowResult(result, { task: this.task, sections: this.sections(), unverified_citations: unverified });
     } catch (error) {
+      if (["quote_absent", "quote_ambiguous"].includes(error.code)) {
+        const named = failures.filter(f => !this.corrected.has(f.claim)).slice(0, 40);
+        for (const f of named) this.corrected.add(f.claim);
+        return { ok: false, error: `quotation: ${quoteMessage(named)}` };
+      }
       return { ok: false, error: `${error.code ?? "invalid"}: ${explain(error.code, result, this.sections())}` };
     }
-    return { ok: true, result };
+    return { ok: true, result, unverified };
   }
 
   // --- loop ----------------------------------------------------------------
@@ -359,6 +374,7 @@ export class AgentRun extends EventEmitter {
               const out = this.toolSubmit(call.input ?? {});
               if (out.ok) {
                 this.trace("validated", { claims: out.result.claims.length, rows: out.result.rows.length });
+                if (out.unverified.length) this.trace("needs_review", { claims: new Set(out.unverified.map(f => f.claim)).size });
                 this.result = out.result;
                 this.bound = bindResult(this.store, this.mirror, out.result, this.task, this.extra);
                 this.trace("bound", { verified: this.bound.claims.filter(c => c.citations.every(x => x.match === "exact")).length, claims: this.bound.claims.length });
@@ -406,6 +422,32 @@ function withCacheBreakpoint(messages) {
 }
 
 /** Short, actionable validation messages for the model (no original text). */
+/** Citations whose quotation is not found once, verbatim, in a section of the right kind. */
+function quoteFailures(result, sections) {
+  const byId = new Map(sections.map(s => [s.id, s]));
+  const failures = [];
+  for (const claim of result.claims) {
+    for (const [list, context] of [[claim.citations ?? [], false], [claim.context_references ?? [], true]]) for (const cite of list) {
+      const section = byId.get(cite.section_id);
+      if (!section || (context ? !["working_note", "conversation_excerpt"].includes(section.kind) : section.kind !== "source")) continue;
+      const quote = String(cite.exact_quote ?? ""), at = section.text.indexOf(quote);
+      const reason = !quote.trim() || at < 0 ? "absent" : section.text.indexOf(quote, at + 1) >= 0 ? "ambiguous" : null;
+      if (reason) failures.push({ claim: claim.id, section_id: cite.section_id, exact_quote: quote, reason });
+    }
+  }
+  return failures;
+}
+
+function quoteMessage(failures) {
+  const list = (reason) => failures.filter(f => f.reason === reason).map(f => `${f.claim} → ${f.section_id}`).join("; ");
+  const absent = list("absent"), ambiguous = list("ambiguous");
+  return [
+    absent ? `these quotations are not found verbatim in the cited section: ${absent}. Copy the exact characters from the read text.` : null,
+    ambiguous ? `these quotations occur more than once in their section: ${ambiguous}. Extend each until it is unique.` : null,
+    "If the file does not support a claim, drop the claim. This is the one correction for these claims: a quotation that still fails is shown to the judge as unverified.",
+  ].filter(Boolean).join(" ");
+}
+
 function explain(code, result, sections) {
   const byId = new Map(sections.map(s => [s.id, s]));
   switch (code) {

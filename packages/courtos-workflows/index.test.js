@@ -52,6 +52,15 @@ test("does not accept quote normalisation, overlapping ambiguity or note-as-evid
   assert.throws(() => run(value, [{ ...sections[0], text: "aaa" }, ...sections.slice(1)]), { code: "quote_ambiguous" });
   rejects("source_chat", value => { value.claims[0].citations[0] = { section_id: "S5", exact_quote: sections[4].text }; }, "source_kind");
 });
+test("a quotation the caller marks unverified is exempt only from the quotation match", () => {
+  const value = fixture("source_chat"); value.claims[0].citations[0].exact_quote = "the claimant alleges payment";
+  const unverified_citations = [{ claim: "C1", section_id: "S1", exact_quote: "the claimant alleges payment" }];
+  assert.deepEqual(validateWorkflowResult(value, { task: "source_chat", sections, unverified_citations }), value);
+  // The exemption is scoped to one claim and one citation: anything else is still checked.
+  assert.throws(() => validateWorkflowResult(value, { task: "source_chat", sections, unverified_citations: [{ ...unverified_citations[0], claim: "C2" }] }), { code: "quote_absent" });
+  const note = fixture("source_chat"); note.claims[0].citations[0] = { section_id: "S5", exact_quote: "not in the note" };
+  assert.throws(() => validateWorkflowResult(note, { task: "source_chat", sections, unverified_citations: [{ claim: "C1", section_id: "S5", exact_quote: "not in the note" }] }), { code: "source_kind" });
+});
 test("rejects missing/free-floating/duplicate claims and duplicate references", () => {
   rejects("source_chat", value => { value.rows[0].answer = "C99"; }, "claim_reference");
   rejects("source_chat", value => { value.claims.push({ ...value.claims[0], id: "C2" }); }, "unused_claim");

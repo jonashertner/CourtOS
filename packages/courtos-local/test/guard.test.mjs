@@ -106,7 +106,7 @@ test("quotations from unread pages and invented quotations are rejected", async 
     await run.run();
     const reasons = run.events.filter(e => e.type === "rejected").map(e => e.reason.split(":")[0]);
     assert.equal(reasons[0], "read_before_quoting");
-    assert.ok(reasons.slice(1).every(r => r === "quote_absent"));
+    assert.ok(reasons.slice(1).every(r => r === "quotation"), "a result whose only claim is invented is never kept, even after its correction");
     assert.equal(run.status, "failed");
     assert.equal(run.error.code, "result_failed_validation");
     assert.equal(run.bound, undefined, "nothing is kept from a failed run");

@@ -224,3 +224,43 @@ test("effort is fixed per task, Claude's progress notes reach the trace with nam
     assert.equal(extraction.provider.calls[0].output_config.effort, "medium");
   } finally { await cleanup(); }
 });
+
+test("a quotation gets one correction; if it still fails, the claim is kept as unverified and needs review", async () => {
+  const { bindResult } = await import("../src/verify.mjs");
+  const { store, cleanup } = await freshCase();
+  try {
+    await store.release({ model: "demo", budgetChf: null });
+    const run = new AgentRun({ store, provider: new ScriptedProvider([]), task: "source_chat", question: "Was ist streitig?", model: "demo" });
+    run.mirror = structuredClone(store.mirror);
+    const claim = run.sections().find(s => s.source?.role === "claim");
+    for (const s of run.sections()) run.read.add(s.id);
+    const good = claim.text.split("\n").find(line => line.trim().length > 20 && claim.text.indexOf(line) === claim.text.lastIndexOf(line)).trim();
+    const submit = (claims) => run.toolSubmit({ claims, rows: claims.map((c, i) => ({ id: `R${i + 1}`, answer: c.id })), more_claims_reported: false });
+
+    const first = submit([{ id: "C1", text: "Belegt", citations: [cite(claim.id, good)] }, { id: "C2", text: "Erfunden", citations: [cite(claim.id, "Diese Stelle steht nirgends in der Klage.")] }]);
+    assert.equal(first.ok, false);
+    assert.match(first.error, /^quotation: these quotations are not found verbatim in the cited section: C2 → S\d+\./);
+    assert.match(first.error, /one correction/);
+
+    // A claim that has not had its correction yet is sent back, not accepted.
+    const second = submit([
+      { id: "C1", text: "Belegt", citations: [cite(claim.id, good)] },
+      { id: "C2", text: "Erfunden", citations: [cite(claim.id, "Auch diese Stelle steht nirgends.")] },
+      { id: "C3", text: "Neu", citations: [cite(claim.id, "Eine neue erfundene Stelle.")] },
+    ]);
+    assert.equal(second.ok, false);
+    assert.match(second.error, /C3 → /);
+    assert.doesNotMatch(second.error, /C2 → /);
+
+    const third = submit([
+      { id: "C1", text: "Belegt", citations: [cite(claim.id, good)] },
+      { id: "C2", text: "Erfunden", citations: [cite(claim.id, "Auch diese Stelle steht nirgends.")] },
+      { id: "C3", text: "Neu", citations: [cite(claim.id, "Immer noch erfunden.")] },
+    ]);
+    assert.equal(third.ok, true, third.error);
+    assert.deepEqual(third.unverified.map(f => [f.claim, f.reason]), [["C2", "absent"], ["C3", "absent"]]);
+    const bound = bindResult(store, run.mirror, third.result, "source_chat", run.extra);
+    assert.deepEqual(bound.claims.map(c => c.citations[0].match), ["exact", "absent", "absent"], "an unverified quotation is never bound to the original");
+    assert.equal(bound.claims[1].citations[0].quote_original, undefined);
+  } finally { await cleanup(); }
+});
