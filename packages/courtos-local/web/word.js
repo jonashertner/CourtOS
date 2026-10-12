@@ -314,7 +314,7 @@ function render() {
   const tabs = [["evidence", "Belegen"], ["citations", "Zitate"], ["insert", "Einfügen"], ["files", "Dateien"], ["procedure", "Fristen"]];
   pane.replaceChildren(h("div.wp", {},
     head,
-    h("nav.wp-tabs", { role: "tablist", "aria-label": tr("Bereiche") }, tabs.map(([id, name]) => h("button", { type: "button", role: "tab", "aria-selected": S.tab === id ? "true" : "false", onclick: () => { S.tab = id; render(); } }, tr(name)))),
+    h("nav.wp-tabs", { role: "tablist", "aria-label": tr("Bereiche") }, tabs.map(([id, name]) => h("button", { type: "button", role: "tab", "aria-selected": S.tab === id ? "true" : "false", onclick: () => { S.tab = id; render(); if (id === "files") attempt(async () => { await loadProducts(); render(); }); } }, tr(name)))),
     h("div.wp-body", { role: "tabpanel" }, documentNotice(), S.tab === "evidence" ? renderEvidence(c) : S.tab === "citations" ? renderCitations() : S.tab === "insert" ? renderInserts() : S.tab === "files" ? renderFiles(c) : renderDeadlines(c)),
     h("footer.wp-foot", {}, openBrowserButton()),
   ));
@@ -372,6 +372,7 @@ function renderFiles(c) {
       h("span.f-meta", {}, whenOf(g.modified)),
       h("span.f-actions", {}, g.files.sort((a, b) => order(a) - order(b)).map(file => h("button.btn.small", { type: "button", "aria-label": tr("{f} öffnen: {n}", { f: file.format ?? tr("Datei"), n: file.name }), onclick: () => attempt(() => api("/api/products/open", { method: "POST", body: { name: file.name } })) }, file.format ?? file.name)))))
     ) : h("p.hint", {}, tr("Noch keine. Jede Analyse legt hier eine Word- und eine Markdown-Datei ab.")),
+    c.products_failed ? h("p.alert", {}, tr("Die Word- und Markdown-Dateien konnten nicht in den Ordner der Arbeitsprodukte geschrieben werden. Die Ergebnisse bleiben in CourtOS. Ist der Ordner schreibgeschützt oder das Laufwerk voll?"), " ", h("button.link", { type: "button", onclick: () => attempt(async () => { await api("/api/products/retry", { method: "POST" }); await refresh(); }) }, tr("Erneut versuchen"))) : null,
     h("p.hint", {}, tr("Die Dateien gehören Ihnen: Sie können sie umbenennen, ändern oder löschen. CourtOS überschreibt sie nicht.")),
     h("div.actions", {}, h("button.link", { type: "button", onclick: () => attempt(() => api("/api/cases/reveal", { method: "POST", body: { id: c.id, place: "products" } })) }, icon("folder"), tr("Ordner zeigen"))),
   );

@@ -1,4 +1,4 @@
-import { adoptLang, api, ApiError, chooseLang, consentLost, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, themeToggle, tr, traceText, trn, pg, refLabel } from "./shared.js";
+import { adoptLang, api, ApiError, chooseLang, consentLost, citationChip, claimPlain, errorText, events, formatDate, h, icon, issuePlaces, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, themeToggle, tr, traceText, trn, pg, refLabel } from "./shared.js";
 import { renderResult } from "./results.js";
 import { COUNTERPART, PARTY_ROLES, partyTerm, partyTermLabel } from "./party-roles.js";
 
@@ -254,7 +254,8 @@ function renderPlaces() {
         h("button.link", { type: "button", onclick: () => reveal("work") }, tr("Zeigen")),
         c.sample ? null : h("button.link", { type: "button", onclick: move }, tr("Verschieben …"))),
       h("dt", {}, tr("Arbeitsprodukte")), h("dd", {}, c.products ? h("span.path", {}, c.products) : h("span.muted", {}, tr("entstehen mit der ersten Analyse")),
-        h("button.link", { type: "button", onclick: () => reveal("products") }, tr("Zeigen")))),
+        h("button.link", { type: "button", onclick: () => reveal("products") }, tr("Zeigen")),
+        c.products_failed ? h("p.alert", {}, tr("Die Word- und Markdown-Dateien konnten nicht in den Ordner der Arbeitsprodukte geschrieben werden. Die Ergebnisse bleiben in CourtOS. Ist der Ordner schreibgeschützt oder das Laufwerk voll?"), " ", h("button.link", { type: "button", onclick: () => attempt(async () => { await api("/api/products/retry", { method: "POST" }); await refresh(); }) }, tr("Erneut versuchen"))) : null)),
     h("p.note", {}, tr("Jede Analyse wird als Markdown-Datei abgelegt, die Würdigung zusätzlich als Word-Dokument mit Fussnoten; die Dateien enthalten die echten Namen. Register, Fallgedächtnis und Notizen liegen im Unterordner .courtos. Word zeigt denselben Fall wie dieses Fenster.")));
 }
 
@@ -274,6 +275,7 @@ function renderShell() {
         consent,
         S.st.current ? h("button.external.live-dot", { type: "button", title: tr("Laufenden Auftrag ansehen"), onclick: () => openRun(S.st.current, { follow: true }) }, tr("Das Modell arbeitet")) : null,
         c.sync ? h("span.alert", {}, tr("Ordner wird mit einem Cloud-Dienst synchronisiert")) : null,
+        c.products_failed ? h("button.link.alert", { type: "button", onclick: () => { S.view = "docs"; render(); } }, tr("Dateien nicht gespeichert")) : null,
       )),
       h("span.spacer"),
       prefs(),
@@ -589,6 +591,7 @@ function renderRelease(c, replaced) {
     h("label", {}, tr("Modellname"), modelInput),
     h("p.note", {}, tr("Mit einer Adresse auf diesem Computer (Ollama, LM Studio, vLLM) verlässt die anonymisierte Fassung den Computer nicht; hinaus gehen nur Suchbegriffe an OpenCaseLaw. Lokale Modelle brauchen ein Kontextfenster von mindestens 64 000 Tokens und Werkzeugaufrufe.")));
   const issues = c.issues ?? [];
+  const blocked = issuePlaces(issues);
   const mem = c.memory?.findings || c.memory?.notes ? c.memory : null;
   const carry = h("input", { type: "checkbox", checked: !c.consent?.memory_off });
   const ocrWords = (S.register ?? []).filter(e => e.decision === "replace" && !e.read_as && e.readings?.length);
@@ -611,7 +614,8 @@ function renderRelease(c, replaced) {
         h("li", {}, tr("Ihre Notizen, Fristen und Verfügungen")),
         mem ? h("li", {}, tr("Das Fallgedächtnis mit echten Namen (.courtos/memory)")) : null))),
     c.sync ? h("p.warning", {}, tr("Dieser Ordner liegt in einem synchronisierten Cloud-Ordner. Das Register in .courtos/private wird damit ebenfalls synchronisiert.")) : null,
-    issues.length ? h("p.warning", {}, trn(issues.length, "Freigabe nicht möglich: Auf {n} Seite liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.", "Freigabe nicht möglich: Auf {n} Seiten liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.")) : null,
+    blocked.pages ? h("p.warning", {}, trn(blocked.pages, "Freigabe nicht möglich: Auf {n} Seite liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.", "Freigabe nicht möglich: Auf {n} Seiten liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.")) : null,
+    blocked.labels ? h("p.warning", {}, trn(blocked.labels, "Freigabe nicht möglich: In {n} Bezeichnung eines Dokuments oder einer Partei steht noch eine registrierte Angabe.", "Freigabe nicht möglich: In {n} Bezeichnungen von Dokumenten oder Parteien stehen noch registrierte Angaben.")) : null,
     h("div.controls", {},
       h("label", {}, tr("Modell"), h("select", { onchange: (e) => { model = e.target.value; other.hidden = model !== "other"; if (model === "other") endpointInput.focus(); } },
         h("optgroup", { label: "Anthropic" }, MODELS.map(([id, name]) => h("option", { value: id, selected: id === model }, name))),

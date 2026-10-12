@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { request } from "node:http";
-import { cp, mkdir, mkdtemp, readdir, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, mkdtemp, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -198,6 +198,84 @@ test("the Word pane learns which case its document belongs to, and opens only li
   for (const name of ["../.courtos/case.json", "/etc/passwd", null]) assert.equal((await write("/api/products/open", { name })).status, 404);
   assert.equal((await write("/api/cases/reveal", { id: state.case.id, place: "products" })).status, 200);
   assert.deepEqual(shown, [join(work, "Arbeitsprodukte")], "nothing else was opened");
+});
+
+test("a work-products folder that cannot be written is reported until a retry succeeds", async (t) => {
+  const { home, source, cleanup } = await setup();
+  const port = await freePort();
+  const app = await startServer({ port, folder: source, openBrowser: false, log: () => {} });
+  const products = join(home, "CourtOS", "HG.2026.57 Alpenblick", "Arbeitsprodukte");
+  t.after(async () => { await chmod(products, 0o755).catch(() => {}); app.close(); await cleanup(); });
+  const origin = `http://localhost:${port}`;
+  const token = new URL(app.pairUrl).hash.slice("#pair=".length);
+  const cookie = (await call(port, "/api/pair", { method: "POST", headers: { Origin: origin, "X-CourtOS": "1" }, body: { token } })).headers["set-cookie"][0].split(";")[0];
+  const write = async (path, body) => { const r = await call(port, path, { method: "POST", headers: { Cookie: cookie, Origin: origin, "X-CourtOS": "1" }, body }); return { status: r.status, body: JSON.parse(r.body) }; };
+  const get = async (path) => JSON.parse((await call(port, path, { headers: { Cookie: cookie } })).body);
+  const finish = async (task) => {
+    const { id } = (await write("/api/runs", { task, demo: true })).body;
+    for (let i = 0; i < 200 && (await get(`/api/runs/${id}`)).status === "running"; i++) await new Promise(r => setTimeout(r, 100));
+    return (await get(`/api/runs/${id}`)).status;
+  };
+
+  assert.equal((await write("/api/release", { model: "claude-opus-5-5" })).status, 200);
+  assert.equal(await finish("chronology"), "succeeded");
+  assert.equal((await get("/api/state")).case.products_failed, false);
+  await chmod(products, 0o555);
+  assert.equal(await finish("facts_evidence"), "succeeded", "the result stays in CourtOS");
+  assert.equal((await get("/api/state")).case.products_failed, true);
+  assert.deepEqual((await write("/api/products/retry")).body, { ok: false });
+  await chmod(products, 0o755);
+  assert.deepEqual((await write("/api/products/retry")).body, { ok: true });
+  assert.equal((await get("/api/state")).case.products_failed, false);
+  assert.equal((await get("/api/products")).files.length, 4, "both results, as Word and Markdown");
+});
+
+test("a case whose originals' folder went away and came back can be opened again", async (t) => {
+  const { source, cleanup } = await setup();
+  const port = await freePort();
+  const app = await startServer({ port, folder: source, openBrowser: false, log: () => {} });
+  t.after(async () => { app.close(); await cleanup(); });
+  const origin = `http://localhost:${port}`;
+  const token = new URL(app.pairUrl).hash.slice("#pair=".length);
+  const cookie = (await call(port, "/api/pair", { method: "POST", headers: { Origin: origin, "X-CourtOS": "1" }, body: { token } })).headers["set-cookie"][0].split(";")[0];
+  const listed = async () => JSON.parse((await call(port, "/api/state", { headers: { Cookie: cookie } })).body).cases[0].source_available;
+  await call(port, "/api/cases/close", { method: "POST", headers: { Cookie: cookie, Origin: origin, "X-CourtOS": "1" } });
+  assert.equal(await listed(), true);
+  await rename(source, `${source} weg`);
+  assert.equal(await listed(), false);
+  await rename(`${source} weg`, source);
+  assert.equal(await listed(), true, "no stale summary");
+});
+
+test("a run is on disk once its launch is acknowledged, and one cut off by quitting is listed as interrupted", async (t) => {
+  const { home, source, cleanup } = await setup();
+  const port = await freePort();
+  const app = await startServer({ port, folder: source, openBrowser: false, log: () => {} });
+  t.after(async () => { app.close(); await cleanup(); });
+  const origin = `http://localhost:${port}`;
+  const token = new URL(app.pairUrl).hash.slice("#pair=".length);
+  const cookie = (await call(port, "/api/pair", { method: "POST", headers: { Origin: origin, "X-CourtOS": "1" }, body: { token } })).headers["set-cookie"][0].split(";")[0];
+  const write = async (path, body) => { const r = await call(port, path, { method: "POST", headers: { Cookie: cookie, Origin: origin, "X-CourtOS": "1" }, body }); return { status: r.status, body: JSON.parse(r.body) }; };
+  const state = async () => JSON.parse((await call(port, "/api/state", { headers: { Cookie: cookie } })).body);
+  const runs = join(home, "CourtOS", "HG.2026.57 Alpenblick", ".courtos", "runs");
+
+  assert.equal((await write("/api/release", { model: "claude-opus-5-5" })).status, 200);
+  const { id } = (await write("/api/runs", { task: "chronology", demo: true })).body;
+  assert.ok(await exists(join(runs, id, "run.json")), "recorded before the reply");
+  for (let i = 0; i < 200 && (await state()).current; i++) await new Promise(r => setTimeout(r, 100));
+
+  // What a run looks like on disk when CourtOS stopped while it was working.
+  const cut = "2026-10-12-facts_evidence-AbCdEf";
+  await mkdir(join(runs, cut), { recursive: true });
+  await writeFile(join(runs, cut, "run.json"), JSON.stringify({ id: cut, task: "facts_evidence", status: "running", started: "2026-10-12T09:00:00.000Z", finished: null, events: [], requests: [] }));
+  const caseId = (await state()).case.id;
+  await write("/api/cases/close");
+  await write("/api/cases/open", { id: caseId });
+  const listed = (await state()).runs;
+  assert.equal(listed.find(r => r.id === cut)?.status, "failed");
+  assert.equal(listed.find(r => r.id === id)?.status, "succeeded");
+  assert.deepEqual((await call(port, `/api/runs/${cut}`, { headers: { Cookie: cookie } })).status, 200);
+  assert.equal(JSON.parse((await call(port, `/api/runs/${cut}`, { headers: { Cookie: cookie } })).body).error.code, "interrupted");
 });
 
 test("adding a case through the page: the originals' folder, then the work folder, then the case", async (t) => {

@@ -13,7 +13,7 @@ function fakeElement() {
 }
 globalThis.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {} };
 globalThis.document ??= { documentElement: { dataset: {} }, createElement: () => fakeElement() };
-const { consentLost, h } = await import("../web/shared.js");
+const { consentLost, h, issuePlaces } = await import("../web/shared.js");
 const { comparisonStatus, partyClass, tally } = await import("../web/results.js");
 
 test("a custom property in a style reaches the element, so the comparison gets its columns", () => {
@@ -51,4 +51,13 @@ test("closing a released case or switching cases does not report a lost release"
   assert.equal(consentLost(open, null), false, "the case was closed");
   assert.equal(consentLost(open, { id: "b", consent_valid: false }), false, "another case was opened");
   assert.equal(consentLost({ id: "a", consent_valid: false }, { id: "a", consent_valid: false }), false);
+});
+
+test("the release warning counts pages and labels, not the entries that name them", () => {
+  const issues = [
+    { document: "D1", page: 3, code: "registered_term_remains" }, { document: "D1", page: 3, code: "mirror_guard" },
+    { document: "D2", page: 3, code: "mirror_guard" }, { document: "D2", page: null, code: "mirror_guard" }, { party: "P1", code: "mirror_guard" },
+  ];
+  assert.deepEqual(issuePlaces(issues), { pages: 2, labels: 2 });
+  assert.deepEqual(issuePlaces([]), { pages: 0, labels: 0 });
 });

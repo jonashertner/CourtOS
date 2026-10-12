@@ -129,6 +129,16 @@ export const labelIn = (lang, group, value) => {
 };
 export const TASK_ORDER = ["chronology", "facts_evidence", "party_comparison", "legal_claims", "fundamental_questions", "decision_draft", "hypothetical_impact", "source_chat"];
 
+/** What blocks a release, counted as places: a page once, however many entries name it, and each document or party label on its own. */
+export function issuePlaces(issues = []) {
+  const pages = new Set(), labels = new Set();
+  for (const issue of issues) {
+    if (issue.page != null) pages.add(`${issue.document}:${issue.page}`);
+    else labels.add(issue.party ? `party:${issue.party}` : `document:${issue.document}`);
+  }
+  return { pages: pages.size, labels: labels.size };
+}
+
 export function partyLabel(state, party) {
   if (!party) return tr("ohne Partei");
   const entry = state?.case?.parties?.find(p => p.id === party);
@@ -156,6 +166,7 @@ const ERRORS = {
   demo_not_available: "Diese Aufgabe braucht einen API-Schlüssel; die Demo umfasst Chronologie, Behauptungen und Beweise sowie die vorbereitete Frage.",
   invalid_key: "Das sieht nicht wie ein Anthropic-API-Schlüssel aus (sk-ant-…).",
   result_failed_validation: "Das Modell konnte kein Ergebnis liefern, das alle Zitatprüfungen besteht. Nichts wurde übernommen.",
+  interrupted: "Der Auftrag wurde unterbrochen, weil CourtOS beendet wurde. Nichts wurde übernommen.",
   token_limit_reached: "Das Tokenlimit für diesen Auftrag ist erreicht. Nichts wurde übernommen.",
   output_limit_reached: "Die Antwort wurde zu lang. Wählen Sie weniger Dokumente oder eine engere Frage.",
   model_refused: "Das Modell hat diesen Auftrag abgelehnt. Nichts wurde übernommen. Eine enger gefasste Frage oder eine andere Auswahl der Akten kann helfen.",

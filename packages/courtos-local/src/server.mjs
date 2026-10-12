@@ -134,7 +134,12 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     return Number.isInteger(index) && index >= 0 && index < all.length ? { claim, citation: all[index] } : { claim, citation: null };
   };
 
-  const cases = async () => (caseList ??= await Promise.all((await loadCases()).map(caseSummary)));
+  async function cases() {
+    // A drive or share comes and goes without telling CourtOS: whether each folder is there is checked on every request.
+    const reachable = (c) => Promise.all([stat(c.source).then(() => true, () => false), stat(join(c.work, WORKSPACE_DIR)).then(() => true, () => false)]);
+    if (caseList && (await Promise.all(caseList.map(reachable))).some(([source, work], i) => source !== caseList[i].source_available || work !== caseList[i].started)) caseList = null;
+    return (caseList ??= await Promise.all((await loadCases()).map(caseSummary)));
+  }
   const casesChanged = () => { caseList = null; };
 
   async function openCase(entry) {
@@ -157,16 +162,26 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   }
 
   /** The work products of finished runs, as files in the work folder. A folder that cannot be written (a read-only share) leaves the results in CourtOS only. */
+  // The failure stays visible, with a retry, until a write succeeds.
+  let productsFailed = false;
   async function saveProducts(list) {
-    try { if ((await writeProducts(store, list, { case: { parties: store.partiesView() } })).length) { casesChanged(); broadcast("products", {}); } }
-    catch (error) { log(`Arbeitsprodukte nicht geschrieben (${error.code ?? "Fehler"})`); }
+    const before = productsFailed;
+    try {
+      const written = (await writeProducts(store, list, { case: { parties: store.partiesView() } })).length;
+      productsFailed = false;
+      if (written || before) { casesChanged(); broadcast("products", {}); }
+    } catch (error) {
+      log(`Arbeitsprodukte nicht geschrieben (${error.code ?? "Fehler"})`);
+      productsFailed = true;
+      broadcast("products", {});
+    }
   }
 
   function closeCase() {
     if (busy()) throw new CourtosError("run_in_progress", undefined, 409);
     queue.length = 0;
     store?.close();
-    store = null; current = null;
+    store = null; current = null; productsFailed = false;
     runs.clear();
     casesChanged();
     broadcast("case", { kind: "closed" });
@@ -214,7 +229,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       ...base,
       case: {
         id: current.id, sample: Boolean(current.sample), name: basename(store.root), root: store.root, work: store.work, same_folder: store.work === store.root,
-        sync: store.case.sync, consent: store.case.consent, products: store.case.products_dir ? join(store.work, store.case.products_dir) : null,
+        sync: store.case.sync, consent: store.case.consent, products: store.case.products_dir ? join(store.work, store.case.products_dir) : null, products_failed: productsFailed,
         consent_valid: store.consentValid(), provider_ready: await providerReady(store.case.consent), issues: store.issues, demo: isDemoFolder(store.mirror),
         mirror: { sha256: store.mirror?.sha256, sections: store.mirror?.sections.length ?? 0, register_rev: store.register.rev },
         register: { total: register.length, replace: register.filter(e => e.decision === "replace").length },
@@ -273,7 +288,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       broadcast("case", { kind: "queue" });
     });
     run.run();
-    return { id: run.id };
+    return { id: run.id, recorded: run.recorded };
   }
 
   async function startRuns(request) {
@@ -293,7 +308,9 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     const [first, ...rest] = steps.map(task => ({ task, question: typeof request.question === "string" ? request.question : "", language, demo: Boolean(request.demo), notes }));
     queue.length = 0;
     queue.push(...rest);
-    return launch(first);
+    const { id, recorded } = launch(first);
+    await recorded;
+    return { id };
   }
 
   async function body(req, limit = 64 * 1024) {
@@ -493,6 +510,11 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         if (!store) throw new CourtosError("case_unknown", undefined, 404);
         return send(res, 200, await listProducts(store));
       }
+      if (path === "/api/products/retry" && req.method === "POST") {
+        if (!store) throw new CourtosError("case_unknown", undefined, 404);
+        await saveProducts([...runs.values()]);
+        return send(res, 200, { ok: !productsFailed });
+      }
       if (path === "/api/products/open" && req.method === "POST") {
         if (!store) throw new CourtosError("case_unknown", undefined, 404);
         show(await productPath(store, (await body(req)).name));
@@ -691,7 +713,8 @@ async function listRuns(store) {
     for (const entry of await readdir(join(store.dir, "runs"), { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
       const run = await readJson(join(store.dir, "runs", entry.name, "run.json"), null).catch(() => null);
-      if (run) out.push(run);
+      // A run still marked as running was cut off when CourtOS stopped; none runs while a case is being opened.
+      if (run) out.push(["queued", "running"].includes(run.status) ? { ...run, status: "failed", error: { code: "interrupted", detail: null } } : run);
     }
   } catch { /* none yet */ }
   return out;

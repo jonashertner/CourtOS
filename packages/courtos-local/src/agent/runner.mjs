@@ -86,6 +86,7 @@ export class AgentRun extends EventEmitter {
     this.error = error;
     this.finished = now();
     this.trace("status", { status, error });
+    await this.recorded; // the first record must not land after the last
     await writeJson(join(this.dir, "run.json"), this.summary()).catch(() => {});
     this.emit("done", this.summary());
   }
@@ -274,6 +275,9 @@ export class AgentRun extends EventEmitter {
     this.started = now();
     this.status = "running";
     this.trace("status", { status: "running" });
+    // On disk before the launch is acknowledged: a run cut off by quitting CourtOS is listed as interrupted, not lost.
+    this.recorded = writeJson(join(this.dir, "run.json"), this.summary()).catch(() => {});
+    await this.recorded;
     try {
       if (!this.store.consentValid()) throw new CourtosError("consent_required");
       this.mirror = structuredClone(this.store.mirror);
