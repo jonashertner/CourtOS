@@ -1,0 +1,9 @@
+{
+  "name": "@courtos/projection",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "AGPL-3.0-only"
+}

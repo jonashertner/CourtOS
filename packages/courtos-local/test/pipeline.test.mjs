@@ -1,0 +1,119 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { AgentRun } from "../src/agent/runner.mjs";
+import { demoProvider, DEMO_QUESTION } from "../src/agent/demo.mjs";
+import { freshCase, ORIGINAL_IDENTIFIERS, originalHashes, PUBLIC_DETAILS } from "./helpers.mjs";
+import { ocrEngine } from "../src/ocr.mjs";
+
+async function runTask(store, task, question = "") {
+  const provider = demoProvider(store, task);
+  provider.delayMs = 0;
+  const run = new AgentRun({ store, provider, task, question, model: "demo" });
+  await run.run();
+  return { run, provider, summary: run.summary() };
+}
+
+test("the mirror contains none of the dossier's identifying details", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    assert.deepEqual(store.issues, []);
+    const mirror = JSON.stringify(store.mirror);
+    for (const identifier of ORIGINAL_IDENTIFIERS) assert.equal(mirror.includes(identifier), false, `mirror leaks ${identifier}`);
+    assert.deepEqual(store.issues, []);
+    // Public office holders and company registry data are listed, kept, and can be switched.
+    for (const detail of PUBLIC_DETAILS) {
+      const entity = store.register.entities.find(e => e.aliases.includes(detail));
+      assert.ok(entity, `${detail} is listed in the register`);
+      assert.equal(entity.decision, "keep");
+    }
+    // The register is citecheck's: its people come first and carry the engine's name.
+    assert.ok(store.register.entities.some(e => e.source === "citecheck" && e.aliases.includes("Anna Keller")));
+    assert.equal(store.anonymisationReport.engine, "citecheck");
+    // Neutral labels only: no original file name reaches the mirror.
+    for (const source of store.sources) assert.equal(mirror.includes(source.name), false);
+  } finally { await cleanup(); }
+});
+
+test("a scanned page is recognised locally, or reported as unread", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    const scan = store.mirror.documents.find(d => d.label === "BB 2");
+    assert.equal(scan.pages.length, 1);
+    if (await ocrEngine()) {
+      assert.ok(scan.pages[0].section, "OCR text becomes a readable section");
+      // A word damaged by OCR ("Ruge") is flagged but still replaced: it could be a surname.
+      for (const entity of store.register.entities.filter(e => e.notes?.includes("ocr_word"))) assert.equal(entity.decision, "replace");
+      await store.release({ model: "demo", budgetChf: null });
+      const { summary } = await runTask(store, "facts_evidence");
+      assert.equal(summary.status, "succeeded", JSON.stringify(summary.error));
+      const row = summary.result.rows.find(r => r.id === "R6");
+      assert.equal(row.assessment, "inconclusive", "the recognised scan is used as evidence");
+      assert.equal(scan.pages[0].ocr, true);
+      assert.doesNotMatch(scan.pages[0].text, /Keller|Bianchi|Bergfeld/, "OCR text is pseudonymised like any other page");
+    } else {
+      assert.equal(scan.pages[0].section, null);
+      assert.equal(scan.pages[0].status, "no_text");
+    }
+  } finally { await cleanup(); }
+});
+
+test("all three tasks run through the loop, the shared validator and the binder", async () => {
+  const { root, store, cleanup } = await freshCase();
+  try {
+    const before = await originalHashes(root);
+    await store.release({ model: "demo", budgetChf: null });
+    for (const task of ["chronology", "facts_evidence", "source_chat"]) {
+      const { summary, provider } = await runTask(store, task, DEMO_QUESTION);
+      assert.equal(summary.status, "succeeded", `${task}: ${JSON.stringify(summary.error)}`);
+      const claims = summary.result.claims;
+      assert.ok(claims.length > 0);
+      for (const claim of claims) for (const citation of claim.citations) {
+        assert.equal(citation.match, "exact", `${task} ${claim.id}`);
+        assert.ok(citation.quote_original.length > 0);
+      }
+      // Every stored request is exactly what the provider received, and clean.
+      const dir = join(store.dir, "runs", summary.id, "requests");
+      const files = (await readdir(dir)).sort();
+      assert.equal(files.length, provider.calls.length);
+      for (const [i, file] of files.entries()) {
+        const text = await readFile(join(dir, file), "utf8");
+        assert.equal(text, JSON.stringify(provider.calls[i]));
+        for (const identifier of ORIGINAL_IDENTIFIERS) assert.equal(text.includes(identifier), false, `${task} request leaks ${identifier}`);
+      }
+    }
+    // Names are restored locally for display.
+    const { summary } = await runTask(store, "source_chat", DEMO_QUESTION);
+    assert.match(JSON.stringify(summary.result.claims.map(c => c.citations.map(x => x.quote_original))), /Haustechniker/);
+    assert.deepEqual(await originalHashes(root), before, "originals must never change");
+  } finally { await cleanup(); }
+});
+
+test("the chronology demo exercises one rejected submission and its repair", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    await store.release({ model: "demo", budgetChf: null });
+    const { summary } = await runTask(store, "chronology");
+    const rejected = summary.events.filter(e => e.type === "rejected");
+    assert.equal(rejected.length, 1);
+    assert.match(rejected[0].reason, /^quote_ambiguous/);
+    assert.equal(summary.status, "succeeded");
+  } finally { await cleanup(); }
+});
+
+test("a run needs a valid release, and a new file in the folder revokes it", async () => {
+  const { root, store, cleanup } = await freshCase();
+  try {
+    const { summary } = await runTask(store, "source_chat", DEMO_QUESTION);
+    assert.equal(summary.status, "failed");
+    assert.equal(summary.error.code, "consent_required");
+    await store.release({ model: "demo", budgetChf: null });
+    assert.equal(store.consentValid(), true);
+    await store.scan();
+    assert.equal(store.consentValid(), true, "an unchanged rescan keeps the release");
+    await writeFile(join(root, "Beilagen", "KB 5 Nachtrag.md"), "Nachtrag: Herr Marco Bianchi bestätigte die Besichtigung vom 10. Februar 2025.\n");
+    await store.scan();
+    assert.equal(store.consentValid(), false, "changed content revokes the release");
+  } finally { await cleanup(); }
+});

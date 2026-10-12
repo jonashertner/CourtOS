@@ -1,0 +1,25 @@
+{
+  "name": "@courtos/local",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CourtOS case-folder companion: a sanitised mirror of one local case folder, a frontier-model agent confined to that mirror, and verified results in the browser and in Word.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "bin": {
+    "courtos-local": "bin/courtos-local.mjs"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "start": "node bin/courtos-local.mjs",
+    "demo": "node bin/courtos-local.mjs --demo",
+    "fixture": "python3 fixtures/build_dossier.py \"fixtures/HG.2026.57 Alpenblick\"",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "fflate": "0.8.3",
+    "pdfjs-dist": "6.4.299"
+  }
+}
