@@ -23,7 +23,7 @@ test("the tester's tarball installs on its own: siblings bundled, every import d
   const { bundled, files } = await packed();
   const pkg = JSON.parse(await readFile(new URL("package.json", here), "utf8"));
   assert.deepEqual(bundled.sort(), ["@courtos/projection", "@courtos/workflows"], "the repository siblings travel inside the tarball");
-  for (const need of ["bin/courtos-local.mjs", "src/server.mjs", "web/index.html", "web/theme.js", "word/manifest.xml", "README.md"]) {
+  for (const need of ["bin/courtos-local.mjs", "src/server.mjs", "web/index.html", "web/theme.js", "word/manifest.xml", "README.md", "TESTING.md"]) {
     assert.ok(files.includes(need), `${need} is packed`);
   }
   assert.ok(files.some(f => f.startsWith("fixtures/HG.2026.57 Alpenblick/")), "the demo case is packed");

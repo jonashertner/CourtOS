@@ -16,6 +16,7 @@
     "scripts/ocr-vision.swift",
     "fixtures/HG.2026.57 Alpenblick/",
     "README.md",
+    "TESTING.md",
     "LICENSE"
   ],
   "engines": {

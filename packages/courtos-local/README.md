@@ -33,7 +33,7 @@ browser workspace and Word task pane on https://localhost:4311
 
 ## Run it
 
-Node.js 22 or newer.
+Node.js 22 or newer. Testers who receive a packaged build (`npm run pack:tester` writes it to `dist/`) follow [TESTING.md](TESTING.md) instead.
 
 ```sh
 cd packages/courtos-local
