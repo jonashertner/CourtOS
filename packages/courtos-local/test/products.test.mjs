@@ -8,7 +8,7 @@ import { AgentRun } from "../src/agent/runner.mjs";
 import { demoProvider } from "../src/agent/demo.mjs";
 import { ScriptedProvider } from "../src/agent/providers.mjs";
 import { CaseStore } from "../src/caseStore.mjs";
-import { outlineDocx, resultMarkdown, writeProducts } from "../src/products.mjs";
+import { resultDocx, resultMarkdown, wordDocument, writeProducts } from "../src/products.mjs";
 import { BUILD } from "../web/word-doc.js";
 import { FIXTURE, freshCase, originalHashes } from "./helpers.mjs";
 
@@ -47,7 +47,7 @@ test("each verified run becomes a file in the work folder, once, with its quotat
 
   const written = await writeProducts(store, [run], view(store));
   const day = new Date(run.finished).toLocaleDateString("sv-SE");
-  assert.deepEqual(written, [`${day} Chronologie.md`]);
+  assert.deepEqual(written, [`${day} Chronologie.md`, `${day} Chronologie.docx`]);
   const markdown = await readFile(join(work, "Arbeitsprodukte", written[0]), "utf8");
   assert.match(markdown, /^# Chronologie\n/);
   assert.match(markdown, /> «.+» — Klage, S\. \d/, "each statement keeps the quotation it rests on");
@@ -55,7 +55,7 @@ test("each verified run becomes a file in the work folder, once, with its quotat
   assert.deepEqual(await originalHashes(source), before, "nothing is written next to the originals");
 
   assert.deepEqual(await writeProducts(store, [run], view(store)), [], "a run is written once");
-  await rm(join(work, "Arbeitsprodukte", written[0]));
+  for (const name of written) await rm(join(work, "Arbeitsprodukte", name));
   assert.deepEqual(await writeProducts(store, [run], view(store)), [], "a file the judge deleted is not brought back");
 
   const french = resultMarkdown({ ...run, language: "fr" }, view(store), "fr");
@@ -86,11 +86,51 @@ test("the assessment also becomes a Word document: headings, numbered proposals,
 });
 
 test("text that would break the document is escaped", () => {
-  const parts = unzipSync(outlineDocx({ blocks: [{ heading: "A & B <C>" }, { text: "«x» \u0001 & y", note: "KB 1, S. 2" }] }, { title: "T", subtitle: null, lang: "fr" }));
+  const parts = unzipSync(wordDocument({ kind: "outline", blocks: [{ heading: "A & B <C>" }, { text: "«x» \u0001 & y", note: "KB 1, S. 2" }] }, { title: "T", subtitle: null, lang: "fr" }));
   const document = strFromU8(parts["word/document.xml"]);
   assert.ok(document.includes("A &amp; B &lt;C&gt;"));
   assert.ok(!document.includes("\u0001"), "control characters are dropped");
   assert.match(strFromU8(parts["word/styles.xml"]), /fr-CH/);
+});
+
+const xmlOf = (bytes, part = "word/document.xml") => strFromU8(unzipSync(bytes)[part]);
+
+test("a table result becomes a Word table: a header row that repeats, one row per entry, landscape for wide tables", async (t) => {
+  const { store, cleanup } = await freshCase();
+  t.after(cleanup);
+  const run = await chronologyRun(store);
+  const document = xmlOf(resultDocx(run, view(store), "de"));
+  assert.equal((document.match(/<w:tr>/g) ?? []).length, run.result.rows.length + 1, "a header row and one row per event");
+  assert.equal((document.match(/<w:cantSplit\/>/g) ?? []).length, run.result.rows.length + 1, "no row breaks across a page");
+  assert.equal((document.match(/<w:tblHeader\/>/g) ?? []).length, 1, "the header row repeats on each page");
+  assert.match(document, /<w:pStyle w:val="TableHeading"\/><\/w:pPr><w:r><w:t xml:space="preserve">Datum</);
+  assert.match(document, /<w:pgSz w:w="11906" w:h="16838"\/>/, "four columns with one main column fit an upright page");
+  const comparison = { kind: "table", columns: [0.15, 0.3, 0.3, 0.25].map((width, i) => ({ head: `H${i}`, width })), rows: [] };
+  assert.match(xmlOf(wordDocument(comparison, { title: "T", lang: "de" })), /w:orient="landscape"/, "text in several columns gets the wide page");
+  assert.match(document, /Gelesen: \d+ von \d+ Aktenseiten\./, "what was read closes the document");
+  assert.match(document, /Prüfsumme des Ergebnisses: [0-9a-f]{64}<\/w:t><\/w:r><\/w:p><w:sectPr>/, "and the body ends with a paragraph, after the table");
+
+  const wide = xmlOf(wordDocument({ kind: "table", columns: [0.2, 0.2, 0.2, 0.2, 0.2].map((width, i) => ({ head: `H${i}`, width })), rows: [[{ text: "a\nb", sub: "s" }, { text: "" }, { text: "c" }, { text: "d" }, { text: "e" }]] }, { title: "T", lang: "de" }));
+  assert.match(wide, /<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"\/>/);
+  assert.equal((wide.match(/<w:gridCol w:w="2800"\/>/g) ?? []).length, 5, "the column shares divide the landscape text width");
+  assert.match(wide, /<w:t xml:space="preserve">a<\/w:t><\/w:r><\/w:p><w:p><w:pPr><w:pStyle w:val="TableText"\/><\/w:pPr><w:r><w:t xml:space="preserve">b</, "a line break in a cell is a new paragraph");
+  assert.match(wide, /TableNote"\/><\/w:pPr><w:r><w:t xml:space="preserve">s</);
+
+  const doubtful = structuredClone(run);
+  doubtful.result.claims.find(c => c.id === run.result.rows[0].event).citations[0].match = "unresolved";
+  assert.match(xmlOf(resultDocx(doubtful, view(store), "de")), /\[prüfen\] /, "a statement not verified at its source says so");
+  assert.ok(!xmlOf(resultDocx(run, view(store), "de")).includes("[prüfen]"));
+});
+
+test("a question to the files becomes a document with the question and the sourced answers", async (t) => {
+  const { store, cleanup } = await freshCase();
+  t.after(cleanup);
+  const chat = { ...(await chronologyRun(store)), task: "source_chat", question: "Wann wurde der Mangel gerügt?" };
+  chat.result = { ...chat.result, rows: chat.result.claims.slice(0, 2).map((c, i) => ({ id: `A${i + 1}`, answer: c.id })) };
+  const parts = unzipSync(resultDocx(chat, view(store), "de"));
+  const document = strFromU8(parts["word/document.xml"]);
+  assert.match(document, /Heading1"\/><\/w:pPr><w:r><w:t xml:space="preserve">«Wann wurde der Mangel gerügt\?»/);
+  assert.equal((document.match(/<w:footnoteReference /g) ?? []).length, 2);
 });
 
 test("in the originals' folder, the work products are never read as case documents, and a folder of that name stays the case's own", async (t) => {
@@ -107,6 +147,13 @@ test("in the originals' folder, the work products are never read as case documen
   await store.scan();
   assert.equal(store.sources.filter(s => !s.missing).length, documents, "the products are not read back as documents");
   assert.ok(store.sources.some(s => s.rel_path === "Arbeitsprodukte/Notiz.md"), "the folder that was there is still read");
+});
+
+test("the facts table names each place once", () => {
+  const ref = (page) => ({ label: "Klage", page_label: `S. ${page}`, match: "exact" });
+  const claims = [["S", [ref(1)]], ["E", [ref(1), ref(2)]], ["O", [ref(2)]], ["W", []]].map(([id, citations]) => ({ id, text: id, citations }));
+  const spec = BUILD.facts_evidence({ result: { claims, rows: [{ party: null, statement: "S", evidence: ["E"], opposing: ["O"], reasoning: "W", assessment: "supported" }] } }, { case: { parties: [] } });
+  assert.equal(spec.rows[0][4].text, "Klage, S.\u00a01; Klage, S.\u00a02");
 });
 
 test("the Word pane and the document mark a disputed fact in the assessment", async () => {

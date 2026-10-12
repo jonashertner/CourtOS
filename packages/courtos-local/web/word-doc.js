@@ -53,7 +53,8 @@ function factsEvidence(run, state) {
     { text: text(claims.get(row.statement)) },
     { text: row.evidence.map(id => text(claims.get(id))).join("\n") || "–" },
     { text: cap(label("facts", row.assessment)) },
-    { text: [row.statement, ...row.evidence, ...row.opposing, row.reasoning].map(id => sources(claims.get(id))).filter(Boolean).join("; ") || "–" },
+    // Each place once, though several statements rest on it.
+    { text: [...new Set([row.statement, ...row.evidence, ...row.opposing, row.reasoning].flatMap(id => sources(claims.get(id)).split("; ")).filter(Boolean))].join("; ") || "–" },
   ]) };
 }
 

@@ -651,7 +651,6 @@ export const TRANSLATIONS = {
     "Arbeitsentwurf von CourtOS vom {d}, Modell {m}. {v} von {t} Aussagen sind wörtlich an ihren Quellen geprüft; ob eine Stelle die Aussage trägt, prüfen Sie.": "Projet de travail de CourtOS du {d}, modèle {m}. {v} affirmations sur {t} sont vérifiées mot pour mot à leur source ; à vous de vérifier si le passage porte l'affirmation.",
     "Frage": "Question",
     "Prüfsumme des Ergebnisses: {s}": "Somme de contrôle du résultat : {s}",
-    "Arbeitsentwurf von CourtOS vom {d}. Die Fundstellen stehen in den Fussnoten; ob eine Stelle die Aussage trägt, prüfen Sie.": "Projet de travail de CourtOS du {d}. Les références figurent dans les notes de bas de page ; à vous de vérifier si le passage porte l'affirmation.",
   },
   it: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Compare solo a inizio frase o è molto breve, ed è una parola comune, non un cognome noto. Resta leggibile finché non lo sostituisce.",
@@ -1305,7 +1304,6 @@ export const TRANSLATIONS = {
     "Arbeitsentwurf von CourtOS vom {d}, Modell {m}. {v} von {t} Aussagen sind wörtlich an ihren Quellen geprüft; ob eine Stelle die Aussage trägt, prüfen Sie.": "Bozza di lavoro di CourtOS del {d}, modello {m}. {v} affermazioni su {t} sono verificate parola per parola alla fonte; se il passo sostiene l'affermazione, lo verifichi Lei.",
     "Frage": "Domanda",
     "Prüfsumme des Ergebnisses: {s}": "Somma di controllo del risultato: {s}",
-    "Arbeitsentwurf von CourtOS vom {d}. Die Fundstellen stehen in den Fussnoten; ob eine Stelle die Aussage trägt, prüfen Sie.": "Bozza di lavoro di CourtOS del {d}. I riferimenti sono nelle note a piè di pagina; se il passo sostiene l'affermazione, lo verifichi Lei.",
   },
   en: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Appears only at the start of a sentence or is very short, and is an ordinary word, not a known surname. Stays readable until you replace it.",
@@ -1957,6 +1955,5 @@ export const TRANSLATIONS = {
     "Arbeitsentwurf von CourtOS vom {d}, Modell {m}. {v} von {t} Aussagen sind wörtlich an ihren Quellen geprüft; ob eine Stelle die Aussage trägt, prüfen Sie.": "Working draft by CourtOS of {d}, model {m}. {v} of {t} statements are checked word for word against their sources; whether a passage carries the statement is for you to check.",
     "Frage": "Question",
     "Prüfsumme des Ergebnisses: {s}": "Checksum of the result: {s}",
-    "Arbeitsentwurf von CourtOS vom {d}. Die Fundstellen stehen in den Fussnoten; ob eine Stelle die Aussage trägt, prüfen Sie.": "Working draft by CourtOS of {d}. The sources are in the footnotes; whether a passage carries the statement is for you to check.",
   },
 };
