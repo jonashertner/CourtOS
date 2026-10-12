@@ -248,6 +248,7 @@ export class AgentRun extends EventEmitter {
     for (const claim of input.claims ?? []) for (const cite of [...(claim.citations ?? []), ...(claim.context_references ?? [])]) if (!this.read.has(cite.section_id)) unread.add(cite.section_id);
     if (unread.size) return { ok: false, error: `read_before_quoting: read these sections before quoting them: ${[...unread].slice(0, 20).join(", ")}` };
     const result = this.assemble(input);
+    if (!result.claims.length || !result.rows.length) return { ok: false, error: "empty_result: a result needs at least one row and the claims it rests on." };
     // Each claim gets one correction of its quotations. A quotation that still
     // does not match after that is kept and shown as unverified, so one bad
     // quotation neither fails the run nor loops; its claim needs review.
@@ -360,6 +361,15 @@ export class AgentRun extends EventEmitter {
           if (nudged) throw new CourtosError("no_result_submitted");
           nudged = true;
           messages.push({ role: "user", content: "Continue the task with the tools and finish by calling submit_result." });
+          continue;
+        }
+        // A reply cut off at the output limit ends inside its last call, whose input
+        // is then incomplete (a submission of 0 claims). Nothing in it is run.
+        if (response.stop_reason === "max_tokens") {
+          this.trace("rejected", { reason: "output_limit_reached" });
+          if (calls.some(call => call.name === "submit_result") && ++submits >= this.limits.maxSubmits) throw new CourtosError("output_limit_reached");
+          messages.push({ role: "user", content: calls.map(call => ({ type: "tool_result", tool_use_id: call.id, is_error: true,
+            content: "Your reply reached the output limit and this call was cut off; it was not run. Call it again, shorter: in submit_result, short claims, one per statement, and only the rows the task needs." })) });
           continue;
         }
         const results = [];

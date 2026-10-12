@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AgentRun } from "../src/agent/runner.mjs";
 import { demoProvider } from "../src/agent/demo.mjs";
-import { OpenAICompatibleProvider, normaliseEndpoint } from "../src/agent/providers.mjs";
+import { OpenAICompatibleProvider, ScriptedProvider, normaliseEndpoint, toolUse } from "../src/agent/providers.mjs";
 import { startServer } from "../src/server.mjs";
 import { freePort, freshCase, ORIGINAL_IDENTIFIERS } from "./helpers.mjs";
 
@@ -23,6 +23,29 @@ function fakeService(turns) {
   };
   return { calls, fetchImpl };
 }
+
+test("a reply cut off at the output limit runs nothing, and an empty submission is no result", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    await store.release({ model: "claude-opus-5-5", budgetChf: null });
+    const turns = demoProvider(store, "chronology").turns;
+    const first = turns.findIndex(turn => JSON.stringify(turn).includes('"submit_result"'));
+    // What a cut-off submission looks like: the call is there, its input incomplete.
+    const cut = { content: [toolUse("cut", "submit_result", {})], stop_reason: "max_tokens" };
+    const empty = [toolUse("empty", "submit_result", { claims: [], rows: [] })];
+    const provider = new ScriptedProvider([...turns.slice(0, first), cut, empty, ...turns.slice(first)]);
+    const run = new AgentRun({ store, provider, task: "chronology", model: "claude-opus-5-5" });
+    const summary = await new Promise(resolve => { run.on("done", resolve); run.run(); });
+    assert.equal(summary.status, "succeeded");
+    assert.ok(summary.result.claims.length > 0);
+    const rejected = summary.events.filter(e => e.type === "rejected").map(e => e.reason);
+    assert.equal(rejected[0], "output_limit_reached");
+    assert.match(rejected[1], /^empty_result/);
+    const answer = provider.calls[first + 1].messages.at(-1).content[0];
+    assert.equal(answer.tool_use_id, "cut");
+    assert.equal(answer.is_error, true, "the cut-off call is answered, not run");
+  } finally { await cleanup(); }
+});
 
 test("only https, or http on this computer, is accepted as a model address", () => {
   assert.equal(normaliseEndpoint("http://localhost:11434/v1/"), "http://localhost:11434/v1");
