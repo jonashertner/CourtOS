@@ -269,6 +269,7 @@ export function traceText(event) {
   switch (event.type) {
     case "status": return event.status === "running" ? tr("Auftrag gestartet") : event.status === "succeeded" ? tr("Fertig") : event.status === "cancelled" ? tr("Abgebrochen") : errorText(event.error?.code ?? event.status);
     case "thinking": return null;
+    case "memory": return trn(event.findings, "Liest das Fallgedächtnis: {n} geprüfter Befund aus früheren Läufen", "Liest das Fallgedächtnis: {n} geprüfte Befunde aus früheren Läufen");
     case "list": return trn(event.documents, "Überblick über {n} Dokument", "Überblick über {n} Dokumente");
     case "read": return event.count ? tr("Liest {pages}", { pages: compactPages(event.pages) }) : tr("Liest – keine lesbaren Seiten");
     case "search": return tr("Sucht «{q}» in den Akten – {n} Treffer", { q: event.query, n: event.hits });

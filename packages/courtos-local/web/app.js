@@ -487,6 +487,7 @@ function renderRelease(c, replaced) {
     return h("div.release.done", {},
       h("h2", {}, icon("check"), tr("Freigegeben für {m}", { m: modelLabel(c.consent) })),
       h("p", {}, tr("Seit {d}. Ändern sich Akten oder Register, wird die Freigabe automatisch aufgehoben.", { d: new Date(c.consent.at).toLocaleString(`${LANG}-CH`) })),
+      memoryLine(c),
       h("div", { style: { marginTop: "12px", display: "flex", gap: "8px" } },
         h("button.btn.primary", { type: "button", onclick: () => { S.view = "work"; render(); } }, tr("Zur Analyse")),
         h("button.btn", { type: "button", onclick: () => attempt(async () => { await api("/api/revoke", { method: "POST" }); await refresh(); }) }, tr("Freigabe widerrufen"))),
@@ -502,6 +503,8 @@ function renderRelease(c, replaced) {
     h("label", {}, tr("Modellname"), modelInput),
     h("p.note", {}, tr("Mit einer Adresse auf diesem Computer (Ollama, LM Studio, vLLM) verlässt die anonymisierte Fassung den Computer nicht; hinaus gehen nur Suchbegriffe an OpenCaseLaw. Lokale Modelle brauchen ein Kontextfenster von mindestens 64 000 Tokens und Werkzeugaufrufe.")));
   const issues = c.issues ?? [];
+  const mem = c.memory?.findings || c.memory?.notes ? c.memory : null;
+  const carry = h("input", { type: "checkbox", checked: !c.consent?.memory_off });
   const ocrWords = (S.register ?? []).filter(e => e.decision === "replace" && !e.read_as && e.readings?.length);
   const showEntity = (entity) => { S.expanded.add(entity.id); render(); document.getElementById(`ocr-${entity.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }); };
   return h("div.release", {},
@@ -514,11 +517,13 @@ function renderRelease(c, replaced) {
       h("div", {}, h("h3.external", {}, icon("out"), tr("Das Modell darf lesen")), h("ul", {},
         h("li", {}, trn(c.mirror.sections, "{n} Seite der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)", "{n} Seiten der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)")),
         h("li", {}, tr("Ihre Fragen und ausgewählten Notizen, ebenfalls anonymisiert")),
+        mem ? h("li", {}, memorySummary(c.memory), " ", h("button.link", { type: "button", onclick: () => openMemory("model") }, tr("Ansehen"))) : null,
         h("li", {}, tr("Für Rechtsfragen: Suchbegriffe an OpenCaseLaw und veröffentlichte Entscheide")))),
       h("div", {}, h("h3.local", {}, icon("lock"), tr("Bleibt auf diesem Computer")), h("ul", {},
         h("li", {}, trn(replaced, "Das Register mit {n} echten Angabe", "Das Register mit {n} echten Angaben")),
         h("li", {}, tr("Originaldateien, Dateinamen, Pfade und Scans")),
-        h("li", {}, tr("Ihre Notizen, Fristen und Verfügungen"))))),
+        h("li", {}, tr("Ihre Notizen, Fristen und Verfügungen")),
+        mem ? h("li", {}, tr("Das Fallgedächtnis mit echten Namen (.courtos/memory)")) : null))),
     c.sync ? h("p.warning", {}, tr("Dieser Ordner liegt in einem synchronisierten Cloud-Ordner. Das Register in .courtos/private wird damit ebenfalls synchronisiert.")) : null,
     issues.length ? h("p.warning", {}, trn(issues.length, "Freigabe nicht möglich: Auf {n} Seite liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.", "Freigabe nicht möglich: Auf {n} Seiten liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.")) : null,
     h("div.controls", {},
@@ -527,9 +532,10 @@ function renderRelease(c, replaced) {
         h("option", { value: "other", selected: model === "other" }, tr("Anderes Modell, Cloud oder lokal …")))),
       h("label", {}, tr("Höchstens Tokens je Auftrag"), h("select", { onchange: (e) => { limit = Number(e.target.value); } }, [[1000000, "1 Mio."], [3000000, "3 Mio."], [8000000, "8 Mio."]].map(([v, l]) => h("option", { value: v, selected: v === limit }, l)))),
       other,
+      mem ? h("label.carry", {}, carry, h("span", {}, tr("Fallgedächtnis mitgeben"), h("small", {}, tr("Das gewählte Modell setzt dort fort, wo frühere Läufe stehen, und prüft jede Stelle selbst an den Akten.")))) : null,
       h("button.btn.release", { type: "button", disabled: issues.length > 0 || !c.mirror.sections, onclick: () => attempt(async () => {
         const choice = model === "other" ? { provider: "openai", endpoint: endpointInput.value.trim(), model: modelInput.value.trim() } : { provider: "anthropic", model };
-        await api("/api/release", { method: "POST", body: { ...choice, token_limit: limit } });
+        await api("/api/release", { method: "POST", body: { ...choice, token_limit: limit, memory: mem ? carry.checked : true } });
         toast(tr("Freigegeben. {m} kann jetzt die anonymisierte Fassung lesen.", { m: modelLabel({ model: choice.model, endpoint: choice.endpoint ?? null }) }));
         S.view = "work";
         await refresh();
@@ -537,6 +543,91 @@ function renderRelease(c, replaced) {
     ),
     h("p.note", { style: { marginTop: "12px" } }, tr("Mit der Freigabe wird noch nichts gesendet. Gesendet wird erst, wenn Sie eine Analyse starten, und jede Anfrage wird vorher automatisch auf registrierte Originalangaben geprüft.")),
   );
+}
+
+// --- Fallgedächtnis ---------------------------------------------------------------
+function memorySummary(m) {
+  const models = [...new Set(m.runs.map(r => modelLabel(r)))];
+  return [
+    m.findings ? trn(m.findings, "Das Fallgedächtnis: {n} geprüfter Befund aus früheren Läufen", "Das Fallgedächtnis: {n} geprüfte Befunde aus früheren Läufen") : tr("Das Fallgedächtnis"),
+    models.length ? ` (${models.join(", ")})` : "",
+    m.notes ? trn(m.notes, ", dazu {n} übernommene Notiz", ", dazu {n} übernommene Notizen") : "",
+    tr(", anonymisiert"),
+  ].join("");
+}
+
+function memoryLine(c) {
+  const m = c.memory;
+  if (c.consent?.memory) {
+    const findings = c.consent.memory.groups.reduce((n, g) => n + g.findings, 0);
+    return h("p.memory-line", {}, icon("note"), trn(findings, "Mit Fallgedächtnis: {n} Befund.", "Mit Fallgedächtnis: {n} Befunde."), " ",
+      h("button.link", { type: "button", onclick: () => openMemory("model") }, tr("Ansehen")),
+      m?.pending ? [" · ", tr("Neue Ergebnisse sind noch nicht dabei."), " ", h("button.link", { type: "button", onclick: rerelease }, tr("Nachführen"))] : null);
+  }
+  if (m?.findings || m?.notes) return h("p.memory-line", {}, icon("note"), c.consent?.memory_off ? tr("Ohne Fallgedächtnis freigegeben.") : tr("Noch ohne Fallgedächtnis."), " ", h("button.link", { type: "button", onclick: rerelease }, tr("Mitgeben")));
+  return null;
+}
+
+/** Release again for the same model, so the next run reads the current memory. */
+function rerelease() {
+  return attempt(async () => {
+    const c = S.st.case.consent;
+    await api("/api/release", { method: "POST", body: { provider: c.provider ?? "anthropic", ...(c.endpoint ? { endpoint: c.endpoint } : {}), model: c.model, token_limit: c.token_limit, memory: true } });
+    await refresh();
+    const findings = S.st.case.consent?.memory?.groups.reduce((n, g) => n + g.findings, 0) ?? 0;
+    toast(trn(findings, "Fallgedächtnis nachgeführt: Es enthält jetzt {n} geprüften Befund.", "Fallgedächtnis nachgeführt: Es enthält jetzt {n} geprüfte Befunde."));
+  });
+}
+
+/** memory.md as a page to read: headings, findings with their evidence beneath, the file references set back. */
+function memoryDoc(markdown) {
+  const inline = (text) => {
+    const ref = text.match(/^(.*\S)\s(\([^()]*\))$/);
+    const parts = (ref ? ref[1] : text).split(/\*\*(.+?)\*\*/).map((t, i) => (i % 2 ? h("strong", {}, t) : t));
+    return ref ? [...parts, " ", h("span.where", {}, ref[2])] : parts;
+  };
+  const doc = h("div.memory-doc", {});
+  let list = null;
+  for (const line of markdown.split("\n")) {
+    if (!line.trim()) continue;
+    if (line.startsWith("# ")) { list = null; continue; }
+    if (line.startsWith("## ")) { doc.append(h("h3", {}, line.slice(3))); list = null; continue; }
+    const sub = line.match(/^\s+- (.*)$/);
+    if (sub && list?.lastElementChild) {
+      const item = list.lastElementChild;
+      const nested = item.querySelector("ul") ?? item.appendChild(h("ul", {}));
+      nested.append(h("li", {}, inline(sub[1])));
+      continue;
+    }
+    const top = line.match(/^- (.*)$/);
+    if (top) { if (!list) doc.append(list = h("ul", {})); list.append(h("li", {}, inline(top[1]))); continue; }
+    list = null;
+    doc.append(h(/^(Lauf |Nicht aufgenommen|Mitgegeben|Noch nicht mitgegeben)/.test(line) ? "p.meta" : "p", {}, inline(line)));
+  }
+  return doc;
+}
+
+/** The memory twice: for the judge with real names, and exactly as a model reads it. */
+async function openMemory(mode = "local") {
+  const data = await api("/api/memory");
+  const backdrop = h("div.modal-backdrop", { onclick: (e) => { if (e.target === backdrop) backdrop.remove(); } });
+  const pre = h("div.memory-body", {});
+  const model = data.released ?? data.preview;
+  const show = (m) => {
+    pre.replaceChildren(m === "local" ? memoryDoc(data.markdown) : h("pre.memory-text", {}, model ? model.groups.map(g => g.text).join("\n\n") : tr("Noch nichts, was ein Modell lesen würde.")));
+    pre.scrollTop = 0;
+    backdrop.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m ? "true" : "false"));
+  };
+  backdrop.append(h("div.modal.memory", { role: "dialog", "aria-label": tr("Fallgedächtnis") },
+    h("header", {}, h("h2", {}, tr("Fallgedächtnis")), h("button.btn.small.quiet", { type: "button", onclick: () => backdrop.remove(), "aria-label": tr("Schliessen") }, icon("cross"))),
+    h("p.note", {}, tr("Nur Aussagen, deren Zitate wörtlich an unveränderten Seiten geprüft sind, und Ihre übernommenen oder bestrittenen Notizen. Ein Modell erhält das Gedächtnis als Wegweiser zu den Akten, nie als Beleg: Es liest jede Stelle selbst und zitiert die Akte.")),
+    h("div.tabs", {},
+      h("button.btn.small", { type: "button", dataset: { m: "local" }, onclick: () => show("local") }, tr("Für Sie, mit Namen")),
+      h("button.btn.small", { type: "button", dataset: { m: "model" }, onclick: () => show("model") }, data.released ? tr("Was das Modell liest") : tr("Was ein Modell lesen würde"))),
+    model?.withheld ? h("p.note", {}, trn(model.withheld, "{n} Zeile zurückgehalten, weil die Prüfung darin eine echte Angabe fand.", "{n} Zeilen zurückgehalten, weil die Prüfung darin echte Angaben fand.")) : null,
+    pre));
+  document.body.append(backdrop);
+  show(mode);
 }
 
 // --- Analyse --------------------------------------------------------------------
@@ -561,6 +652,7 @@ function renderWork() {
   return h("section.pane", {},
     h("header", {}, h("h1", {}, tr("Analyse")), h("p", {}, tr("Das freigegebene Modell liest die anonymisierte Fassung über Werkzeuge: Überblick, Lesen, Suchen, OpenCaseLaw. CourtOS prüft jedes Zitat wörtlich, bevor ein Ergebnis erscheint."))),
     blocked ? h("p.warning", {}, c.consent?.stale ? tr("Die Freigabe ist aufgehoben, weil sich Akten oder Register geändert haben. Prüfen Sie den Schutz und geben Sie erneut frei.") : tr("Noch nicht freigegeben. Prüfen Sie zuerst den Schutz."), " ", h("button.link", { type: "button", onclick: async () => { S.view = "privacy"; S.register = (await api("/api/register")).entities; render(); } }, tr("Zum Schutz"))) : null,
+    !blocked && c.memory?.pending ? h("p.memory-pending", {}, icon("note"), tr("Neue Ergebnisse seit der Freigabe sind noch nicht im Fallgedächtnis des Modells."), " ", h("button.link", { type: "button", onclick: rerelease }, tr("Nachführen"))) : null,
     !hasKey && (c.consent || c.demo) ? h("div.keybox", {},
       h("b", {}, c.demo ? tr("Ohne API-Schlüssel läuft das Beispieldossier als Demo.") : endpoint ? tr("Für {m} ist ein API-Schlüssel nötig.", { m: modelLabel(c.consent) }) : tr("Für Claude ist ein Anthropic-API-Schlüssel nötig.")),
       h("p.muted", {}, c.demo ? tr("Die Demo spielt aufgezeichnete Werkzeugaufrufe für drei Aufgaben ab, durch dieselbe Prüfung und Bindung an die Originale. Sie ist kein Modell.") : tr("Der Schlüssel wird nur auf diesem Computer gespeichert (~/.config/courtos).")),

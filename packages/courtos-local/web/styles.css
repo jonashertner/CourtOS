@@ -462,3 +462,27 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
 button.live-dot { border: 0; background: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .run-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .outline a[aria-current="true"] { color: var(--ink); font-weight: 500; }
+
+/* Fallgedächtnis */
+.release .carry { flex-basis: 100%; display: flex; gap: 10px; align-items: flex-start; max-width: 68ch; cursor: pointer; }
+.release .carry input { margin-top: 3px; padding: 0; border: 0; }
+.release .carry span { display: grid; gap: 2px; }
+.release .carry small { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.memory-line, .memory-pending { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; color: var(--muted); font-size: 13px; margin: 10px 0 0; max-width: 72ch; }
+.memory-line svg, .memory-pending svg { align-self: center; flex: none; }
+.memory-pending { margin: 0 0 18px; }
+.modal.memory { display: flex; flex-direction: column; }
+.modal.memory > .note { padding: 12px 18px 0; margin: 0; max-width: 78ch; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.modal.memory .tabs .btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.modal.memory .memory-body { flex: 1; min-height: 0; overflow: auto; }
+.modal.memory pre.memory-text { padding: 20px 28px 28px; font-family: inherit; font-size: 13px; line-height: 1.65; max-width: 96ch; }
+.memory-doc { padding: 8px 28px 36px; max-width: 76ch; font-size: 14px; line-height: 1.6; }
+.memory-doc h3 { font-size: 15px; font-weight: 600; margin: 30px 0 4px; }
+.memory-doc p { margin: 10px 0; }
+.memory-doc p.meta { color: var(--muted); font-size: 12.5px; margin: 2px 0 10px; }
+.memory-doc ul { list-style: none; margin: 0; padding: 0; }
+.memory-doc > ul > li { padding: 10px 0; border-top: 1px solid var(--rule); }
+.memory-doc > ul > li:first-child { border-top: 0; }
+.memory-doc li ul { margin: 6px 0 0 16px; padding-left: 12px; border-left: 2px solid var(--rule); }
+.memory-doc li li { margin: 4px 0; font-size: 13.5px; }
+.memory-doc .where { color: var(--muted); font-size: 12.5px; }

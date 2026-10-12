@@ -11,6 +11,7 @@ import { bindResult, rehydrator } from "../verify.mjs";
 import { decisionPassages } from "../opencaselaw.mjs";
 import { lookupId } from "../citecheck.mjs";
 import { noteLabel } from "../language.mjs";
+import { memoryPrompt } from "../memory.mjs";
 import { parseReference } from "../vendor/citecheck/parser.mjs";
 import { CourtosError, now, randomId, sha256, writeAtomic, writeJson } from "../util.mjs";
 import { systemPrompt, TASKS, tools, validateWorkflowResult } from "./tasks.mjs";
@@ -64,7 +65,7 @@ export class AgentRun extends EventEmitter {
       id: this.id, task: this.task, question: this.question, question_sent: this.questionSent ?? null, notes: this.noteIds, language: this.language, model: this.model, endpoint: this.endpoint,
       status: this.status, error: this.error ?? null, started: this.started ?? null, finished: this.finished ?? null,
       usage: this.usage, events: this.events, requests: this.requests.map(({ n, sha256, bytes }) => ({ n, sha256, bytes })),
-      read_sections: [...this.read], result: this.bound ?? null,
+      read_sections: [...this.read], memory: this.memoryUsed ?? null, result: this.bound ?? null,
     };
   }
 
@@ -291,6 +292,13 @@ export class AgentRun extends EventEmitter {
         this.extra.push(section);
         this.read.add(section.id);
       }
+      // The case memory, exactly as the release approved it: a map to the
+      // sources from earlier runs, never a section, never evidence.
+      const memory = memoryPrompt(await this.store.releasedMemory(), this.task);
+      if (memory) {
+        this.memoryUsed = { sha256: this.store.case.consent.memory.sha256, groups: memory.groups, findings: memory.findings };
+        this.trace("memory", { findings: memory.findings, runs: memory.groups.filter(g => !["notes", "open"].includes(g.key)).length });
+      }
       if (this.question) this.questionSent = this.store.pseudonymise(this.question);
       const system = systemPrompt(this.task, this.language, this.store.lang);
       const toolDefs = tools(this.task);
@@ -299,6 +307,7 @@ export class AgentRun extends EventEmitter {
         this.task === "source_chat" ? `Question: ${this.questionSent}` : `Prepare the ${this.task} working draft for this case folder.`,
         this.task === "decision_draft" && this.questionSent ? `Drafting direction from the judge (not evidence): ${this.questionSent}` : null,
         noteBlock ? `Selected working notes (context only, never evidence):\n\n${noteBlock}` : null,
+        memory?.text ?? null,
         "Start with list_documents.",
       ].filter(Boolean).join("\n\n");
       const messages = [{ role: "user", content: opening }];

@@ -14,6 +14,7 @@ import { applyChange, emptyRegister, mergeDetections, ocrReadings, relabelReplac
 import { buildMirror, compilePageTransform } from "./mirror.mjs";
 import { ocrEngine, ocrPdfPages, OCR_VERSION } from "./ocr.mjs";
 import { compileGuard } from "./guard.mjs";
+import { memorySha } from "./memory.mjs";
 import { canonicalText, CourtosError, now, randomId, readJson, sha256, writeAtomic, writeJson } from "./util.mjs";
 import { extname } from "node:path";
 
@@ -40,11 +41,11 @@ export class CaseStore extends EventEmitter {
     store.dir = join(realRoot, WORKSPACE_DIR);
     // The workspace must be real directories inside the case folder. A planted
     // symlink (e.g. from an unpacked archive) would redirect writes elsewhere.
-    for (const part of ["", "private", "private/extract", "mirror", "runs", "wiki", "public"]) {
+    for (const part of ["", "private", "private/extract", "mirror", "runs", "wiki", "memory", "memory/released", "public"]) {
       const path = join(store.dir, ...part.split("/").filter(Boolean));
       const info = await lstat(path).catch(() => null);
       if (info && (info.isSymbolicLink() || !info.isDirectory())) throw new CourtosError("workspace_unsafe", undefined, 409);
-      if (!info) await mkdir(path, { mode: part.startsWith("private") ? 0o700 : 0o755 });
+      if (!info) await mkdir(path, { mode: /^(private|memory)/.test(part) ? 0o700 : 0o755 });
       const real = await realpath(path);
       if (real !== path || !real.startsWith(realRoot + sep)) throw new CourtosError("workspace_unsafe", undefined, 409);
     }
@@ -55,6 +56,7 @@ export class CaseStore extends EventEmitter {
       "mirror/   the sanitised text the model may read after you release it\n" +
       "runs/     every model run with its exact outgoing requests and results\n" +
       "wiki/     readable working notes produced from verified results\n" +
+      "memory/   the case memory: memory.md to read, released/ what a model may read\n" +
       "public/   cached published decisions from OpenCaseLaw\n");
     store.case = await readJson(join(store.dir, "case.json"), null) ?? {
       schema: 1, case_id: randomId(9), created: now(), consent: null,
@@ -266,12 +268,21 @@ export class CaseStore extends EventEmitter {
   }
 
   /** The user's consent to let the model read this exact mirror. */
-  async release({ model, budgetChf, provider = "anthropic", endpoint = null }) {
+  async release({ model, budgetChf, provider = "anthropic", endpoint = null, memory = null }) {
     if (!this.mirror?.sections.length) throw new CourtosError("nothing_to_release");
     if (this.issues.length) throw new CourtosError("mirror_has_issues", { issues: this.issues });
+    // The case memory goes out only as this snapshot: the release names its hash.
+    if (memory) {
+      if (memory.mirror_sha256 !== this.mirror.sha256 || memory.register_rev !== this.register.rev || memorySha(memory) !== memory.sha256) throw new CourtosError("memory_outdated", undefined, 409);
+      await writeJson(join(this.dir, "memory", "released", `${memory.sha256}.json`), memory);
+    }
     this.case.consent = {
       at: now(), register_rev: this.register.rev, mirror_sha256: this.mirror.sha256, provider, endpoint, model,
       budget_chf: budgetChf, stale: false,
+      memory: memory ? {
+        sha256: memory.sha256, created: memory.created, basis: memory.basis, withheld: memory.withheld,
+        groups: memory.groups.map(({ key, task, model, findings, notes }) => ({ key, task, model, findings, ...(notes ? { notes } : {}) })),
+      } : null,
     };
     await this.save();
     this.emit("change", { kind: "consent" });
@@ -282,6 +293,16 @@ export class CaseStore extends EventEmitter {
     this.case.consent = null;
     await this.save();
     this.emit("change", { kind: "consent" });
+  }
+
+  /** The memory snapshot the release names, exactly as approved; anything else voids the release. */
+  async releasedMemory() {
+    const ref = this.case.consent?.memory;
+    if (!ref) return null;
+    const snapshot = await readJson(join(this.dir, "memory", "released", `${ref.sha256}.json`), null).catch(() => null);
+    if (!snapshot || memorySha(snapshot) !== ref.sha256 || snapshot.sha256 !== ref.sha256
+      || snapshot.mirror_sha256 !== this.mirror?.sha256 || snapshot.register_rev !== this.register.rev) throw new CourtosError("consent_required");
+    return snapshot;
   }
 
   consentValid() {

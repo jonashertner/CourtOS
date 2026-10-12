@@ -18,6 +18,7 @@ import { AnthropicProvider, DEFAULT_MODEL, OpenAICompatibleProvider, isLocalEndp
 import { DEMO_QUESTION, demoProvider, isDemoFolder } from "./agent/demo.mjs";
 import { TASKS } from "./agent/tasks.mjs";
 import { wikiMarkdown } from "./wiki.mjs";
+import { collectMemory, memoryMarkdown, memorySnapshot } from "./memory.mjs";
 import { OpenCaseLaw } from "./opencaselaw.mjs";
 import { checkCitations } from "./citecheck.mjs";
 import { backupArchive } from "./backup.mjs";
@@ -110,7 +111,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     if (currentRun?.status === "running") throw new CourtosError("run_in_progress", undefined, 409);
     store?.close();
     store = await CaseStore.open(path);
-    store.on("change", (change) => broadcast("case", change));
+    store.on("change", (change) => { broadcast("case", change); if (["notes", "consent"].includes(change.kind)) writeMemory(); });
     broadcast("case", { kind: "opening" });
     await store.ensureLoaded();
     await store.scan({ progress: (p) => broadcast("scan", p) });
@@ -123,6 +124,25 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       await writeFile(RECENT(), JSON.stringify([store.root, ...recent].slice(0, 6)));
     } catch { /* recent list is a convenience */ }
     broadcast("case", { kind: "opened" });
+  }
+
+  // The case memory: collected from the runs on this computer, readable in
+  // .courtos/memory/memory.md; a model reads only the snapshot a release names.
+  const liveMemory = () => collectMemory(store, [...runs.values()]);
+  async function writeMemory() {
+    try { await writeAtomic(join(store.dir, "memory", "memory.md"), memoryMarkdown(liveMemory(), store, store.case.consent?.memory ?? null)); } catch { /* derived */ }
+  }
+  function memoryState() {
+    const live = liveMemory();
+    const consent = store.case.consent;
+    const released = consent?.memory ?? null;
+    return {
+      findings: live.findings, notes: live.notes.length,
+      runs: live.groups.filter(g => g.findings).map(g => ({ task: g.task, model: g.model, endpoint: g.endpoint, findings: g.findings, finished: g.finished })),
+      released,
+      // Results or notes the current release does not carry yet.
+      pending: Boolean(consent && !consent.memory_off && (live.findings || live.notes.length) && JSON.stringify(live.basis) !== JSON.stringify(released?.basis ?? [])),
+    };
   }
 
   const queue = [];   // pending pipeline steps: { task, question, notes, language, demo }
@@ -148,6 +168,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         missing: store.sources.filter(s => s.missing).map(s => ({ id: s.id, name: s.name })),
         notes: store.notes,
         procedure: store.procedure,
+        memory: memoryState(),
       },
       queue: queue.map(q => q.task),
       current: currentRun?.status === "running" ? currentRun.id : null,
@@ -179,6 +200,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       broadcast("run_done", { id: run.id, status: summary.status });
       if (summary.status === "succeeded") {
         try { await writeAtomic(join(store.dir, "wiki", `${task}.md`), wikiMarkdown(summary, store)); } catch { /* wiki is derived */ }
+        await writeMemory();
       }
       // The pipeline continues only after a success; a failure stops it visibly.
       const next = queue.shift();
@@ -400,13 +422,16 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         return send(res, 200, { ok: true });
       }
       if (path === "/api/release" && req.method === "POST") {
-        const { model, token_limit, provider, endpoint } = await body(req);
+        const { model, token_limit, provider, endpoint, memory } = await body(req);
         // Anthropic, or any model behind an OpenAI-compatible endpoint (a cloud
         // service or a model on this computer). The release names both.
         const release = provider === "openai"
           ? { provider: "openai", endpoint: normaliseEndpoint(endpoint), model: typeof model === "string" && /^[A-Za-z0-9._:\/@-]{1,120}$/.test(model) ? model : (() => { throw new CourtosError("invalid_model"); })() }
           : { provider: "anthropic", endpoint: null, model: typeof model === "string" && /^[a-z0-9.-]{3,60}$/.test(model) ? model : DEFAULT_MODEL };
-        const consent = await store.release({ ...release, budgetChf: null });
+        // The case memory goes with the release unless the user leaves it out.
+        const snapshot = memory === false ? null : memorySnapshot(store, liveMemory());
+        const consent = await store.release({ ...release, budgetChf: null, memory: snapshot });
+        if (memory === false) consent.memory_off = true;
         consent.token_limit = Math.min(Math.max(Number(token_limit) || 1_500_000, 100_000), 10_000_000);
         await store.save();
         return send(res, 200, { ok: true, consent });
@@ -487,6 +512,15 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         const data = await readFile(file).catch(() => { throw new CourtosError("request_unknown", undefined, 404); });
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
         return res.end(data);
+      }
+      if (path === "/api/memory" && req.method === "GET") {
+        // What a model reads: the released snapshot, and what a new release would carry.
+        const live = liveMemory();
+        let released = null;
+        try { released = await store.releasedMemory(); } catch { /* void release: shown as none */ }
+        let preview = null;
+        try { preview = memorySnapshot(store, live); } catch { /* nothing to carry */ }
+        return send(res, 200, { markdown: memoryMarkdown(live, store, store.case.consent?.memory ?? null), released, preview });
       }
       if ((match = /^\/api\/runs\/([\w-]{8,80})\/markdown$/.exec(path)) && req.method === "GET") {
         const run = runs.get(match[1]);
