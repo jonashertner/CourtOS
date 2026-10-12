@@ -2,6 +2,7 @@
 // organisation or identifier in this case folder. Stored only in
 // .courtos/private/. It never leaves the machine and never enters a model call.
 import { createHash } from "node:crypto";
+import { citecheckVocabulary, ocrRepairs } from "./anonymise.mjs";
 import { PREFIX, STRUCTURED_KINDS } from "./detect.mjs";
 import { caseLanguage, REPLACEMENT_PREFIX } from "./language.mjs";
 import { aliasExpression, CourtosError } from "./util.mjs";
@@ -108,6 +109,15 @@ const escapeForRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const signature = (register) => JSON.stringify(register.entities.map(e => [e.id, e.decision, e.replacement, [...e.aliases].sort()]));
 
+/** Repaired readings the user may choose for a damaged OCR word, capitalised like the word. */
+export function ocrReadings(entity) {
+  if (!entity.notes?.includes("ocr_word") || entity.aliases.some(a => /\s/.test(a))) return [];
+  const vocab = citecheckVocabulary();
+  const common = entity.aliases.map(a => ocrRepairs(a).filter(r => vocab.has(r))).reduce((a, b) => a.filter(r => b.includes(r)));
+  const upper = Array.from(entity.aliases[0])[0] !== Array.from(entity.aliases[0])[0].toLocaleLowerCase("de");
+  return common.map(r => upper ? r.charAt(0).toLocaleUpperCase("de") + r.slice(1) : r);
+}
+
 const KINDS = new Set(Object.keys(PREFIX));
 
 /** Apply one reviewed change from the user. Every change bumps the revision. */
@@ -135,6 +145,37 @@ export function applyChange(register, change, corpus, lang = "de") {
       if (replacementTaken(next, value, corpus, entity)) throw new CourtosError("replacement_taken");
       if ([entity.label, ...entity.aliases].some(a => aliasExpression(a, "iu").test(value))) throw new CourtosError("replacement_contains_original");
       entity.replacement = value;
+      delete entity.read_as;
+      entity.revision++;
+      break;
+    }
+    case "read_as_word": {
+      // A word text recognition damaged ("Ruge" for "Rüge") that the detector took for a
+      // name. After review the user may let Claude read the repaired word instead of a
+      // letter. Only a repair of this one word that the vocabulary knows is accepted; the
+      // damaged form itself stays registered, so it can never reach a request.
+      const entity = find(change.id);
+      if (change.reading === null) {
+        if (!entity.read_as) throw new CourtosError("invalid_reading");
+        delete entity.read_as;
+        entity.replacement = "";
+        entity.replacement = nextReplacement(next, entity.kind, corpus, "letter", lang);
+        entity.revision++;
+        break;
+      }
+      const reading = typeof change.reading === "string" ? change.reading.normalize("NFC").trim() : "";
+      const vocab = citecheckVocabulary();
+      const word = reading.toLocaleLowerCase("de");
+      const repairs = entity.aliases.map(a => ocrRepairs(a));
+      if (!entity.notes?.includes("ocr_word") || entity.aliases.some(a => /\s/.test(a)) || !vocab.has(word)
+        || !repairs.every(list => list.includes(word))) throw new CourtosError("invalid_reading");
+      if (next.entities.some(e => e !== entity && normal(e.replacement) === word)) throw new CourtosError("replacement_taken");
+      // Keep the capitalisation of the damaged form: "Ruge" reads as "Rüge".
+      const first = Array.from(entity.aliases[0])[0];
+      entity.replacement = (first === first.toLocaleUpperCase("de") ? word.charAt(0).toLocaleUpperCase("de") : word.charAt(0)) + word.slice(1);
+      entity.read_as = entity.replacement;
+      entity.decision = "replace";
+      entity.reviewed = true;
       entity.revision++;
       break;
     }

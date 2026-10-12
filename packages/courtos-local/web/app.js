@@ -19,11 +19,11 @@ const KIND_GROUPS = [
 ];
 const NOTES = {
   check_word: "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.",
-  ocr_word: "Nur auf texterkannten Seiten; mit Umlaut ein gewöhnliches Wort (z. B. «Ruge» für «Rüge»). Vorsorglich ersetzt, weil es auch ein Nachname sein kann. Wählen Sie es ab, wenn es keiner ist.",
+  ocr_word: "Nur auf texterkannten Seiten; mit Umlaut ein gewöhnliches Wort. Vorsorglich ersetzt, weil es auch ein Nachname sein kann.",
   ahv_checksum: "AHV-Nummer mit ungültiger Prüfziffer. Vorsorglich ersetzt: eine AHV-Nummer gehört immer zu einer Person.",
   ambiguous: "Passt zu mehreren Personen. Prüfen Sie die Stellen einzeln.",
-  public_office: "Von citecheck als öffentliches Amt erkannt (Gericht, Anwältin, Behörde). Bleibt lesbar, bis Sie es ersetzen.",
-  public_identifier: "Von citecheck einem Unternehmen oder Amt zugeordnet. Bleibt lesbar, bis Sie es ersetzen.",
+  public_office: "Von citecheck als öffentliches Amt erkannt (Gericht, Anwältin, Behörde). Vorsorglich ersetzt; abwählen, wenn es lesbar bleiben soll.",
+  public_identifier: "Von citecheck einem Unternehmen oder Amt zugeordnet. Vorsorglich ersetzt, weil auch die Kennung einer Firma die Partei erkennbar macht.",
   company_name: "Unterscheidungskraft eines Parteinamens (Firma). Von CourtOS ergänzt.",
   surname_alone: "Der Nachname allein wird ebenfalls ersetzt.",
   alias_conflict: "Eine Schreibweise gehört zu mehreren Angaben. Prüfen.",
@@ -363,6 +363,7 @@ function renderEntity(entity) {
         h("span.orig", {}, entity.label, h("small", {}, `${entity.count}×`), entity.source === "courtos" ? h("small.src", {}, tr("ergänzt")) : null)),
       h("input.pseudo-input", { value: entity.replacement, "aria-label": tr("Ersatz für {l}", { l: entity.label }), onchange: (e) => registerChange({ op: "replacement", id: entity.id, replacement: e.target.value }) }),
     ),
+    renderOcrReading(entity),
     open ? h("div.entity-more", {},
       (entity.notes ?? []).filter(n => NOTES[n]).map(n => h("p.note.amber", {}, tr(NOTES[n]))),
       h("div.aliases", {}, entity.aliases.map(alias => h("span.alias", {}, alias, entity.aliases.length > 1 ? h("button", { type: "button", "aria-label": tr("Schreibweise {a} entfernen", { a: alias }), onclick: () => registerChange({ op: "remove_alias", id: entity.id, alias }) }, "×") : null))),
@@ -384,6 +385,23 @@ function renderEntity(entity) {
       ) : null,
     ) : null,
   );
+}
+
+// A word text recognition damaged ("Ruge" for "Rüge"): after looking at the
+// passage, the user may let Claude read the repaired word instead of a letter.
+function renderOcrReading(entity) {
+  if (entity.decision !== "replace" || (!entity.read_as && !entity.readings?.length)) return null;
+  const sample = entity.samples?.[0];
+  const passage = sample ? h("span.ctx", {}, sample.before.slice(-40), h("mark", {}, sample.match), sample.after.slice(0, 40)) : null;
+  if (entity.read_as) {
+    return h("div.ocr-fix.done", {},
+      h("p", {}, icon("check"), " ", tr("Claude liest hier das Wort «{w}».", { w: entity.read_as })),
+      h("button.link", { type: "button", onclick: () => registerChange({ op: "read_as_word", id: entity.id, reading: null }) }, tr("Doch als Name ersetzen")));
+  }
+  return h("div.ocr-fix", { id: `ocr-${entity.id}` },
+    passage ? h("p", {}, passage) : null,
+    h("p.note", {}, tr("Texterkennung? Mit Umlaut steht hier ein gewöhnliches Wort.")),
+    h("div.inline-form", {}, entity.readings.map(word => h("button.btn.small", { type: "button", onclick: () => registerChange({ op: "read_as_word", id: entity.id, reading: word }) }, tr("Als «{w}» lesen", { w: word })))));
 }
 
 function renderAddEntity() {
@@ -464,8 +482,13 @@ function renderRelease(c, replaced) {
   }
   let model = c.consent?.model ?? MODELS[0][0], limit = 3000000;
   const issues = c.issues ?? [];
+  const ocrWords = (S.register ?? []).filter(e => e.decision === "replace" && !e.read_as && e.readings?.length);
+  const showEntity = (entity) => { S.expanded.add(entity.id); render(); document.getElementById(`ocr-${entity.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }); };
   return h("div.release", {},
     h("h2", {}, icon("out"), tr("Für Claude freigeben")),
+    ocrWords.length ? h("div.review-first", {},
+      h("p", {}, trn(ocrWords.length, "Vorher ansehen: {n} Wort aus der Texterkennung ist vorsorglich ersetzt und fehlt Claude sonst im Text.", "Vorher ansehen: {n} Wörter aus der Texterkennung sind vorsorglich ersetzt und fehlen Claude sonst im Text.")),
+      h("ul", {}, ocrWords.map(e => h("li", {}, h("button.link", { type: "button", onclick: () => showEntity(e) }, `${e.label} → ${e.readings.join(", ")}?`))))) : null,
     h("div.split", {},
       h("div", {}, h("h3.external", {}, icon("out"), tr("Claude darf lesen")), h("ul", {},
         h("li", {}, trn(c.mirror.sections, "{n} Seite der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)", "{n} Seiten der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)")),

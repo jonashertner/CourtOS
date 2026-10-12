@@ -7,7 +7,9 @@ import { aliasExpression, codepoints, sha256, toCodepointIndex, toUnitIndex } fr
 
 /** Replace neutral labels with the real names, for local display. */
 export function rehydrator(register) {
-  const entries = register.entities.filter(e => e.decision === "replace" && e.replacement)
+  // A damaged OCR word read as its repaired form ("Rüge") is not a name: "Rüge" in a
+  // result stays "Rüge" rather than turning back into the damaged "Ruge".
+  const entries = register.entities.filter(e => e.decision === "replace" && e.replacement && !e.read_as)
     .sort((a, b) => b.replacement.length - a.replacement.length)
     .map(e => ({ pattern: aliasExpression(e.replacement, "gu"), label: e.label, replacement: e.replacement }));
   return (text) => {

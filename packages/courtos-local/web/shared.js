@@ -101,6 +101,7 @@ const ERRORS = {
   outbound_blocked: "Gestoppt: Die Anfrage hätte eine registrierte Originalangabe enthalten. Nichts wurde gesendet.",
   folder_changed_during_run: "Der Ordner hat sich während des Auftrags geändert. Bitte erneut freigeben und starten.",
   replacement_taken: "Diese Ersatzbezeichnung ist schon vergeben oder kommt im Text vor.",
+  invalid_reading: "Diese Lesart passt nicht zu dem Wort aus der Texterkennung.",
   replacement_contains_original: "Die Ersatzbezeichnung enthält den Originalnamen.",
   alias_taken: "Diese Schreibweise gehört bereits zu einer anderen Angabe.",
   text_not_found: "Dieser Text kommt in den einbezogenen Akten nicht vor.",

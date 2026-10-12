@@ -10,7 +10,7 @@ import { sampleContext } from "./detect.mjs";
 import { suggestAnonymisation } from "./anonymise.mjs";
 import { CASE_LANGUAGES, caseLanguage, detectLanguage } from "./language.mjs";
 import { PARTY_ROLES, partyTerm } from "../web/party-roles.js";
-import { applyChange, emptyRegister, mergeDetections, relabelReplacements } from "./register.mjs";
+import { applyChange, emptyRegister, mergeDetections, ocrReadings, relabelReplacements } from "./register.mjs";
 import { buildMirror, compilePageTransform } from "./mirror.mjs";
 import { ocrEngine, ocrPdfPages, OCR_VERSION } from "./ocr.mjs";
 import { compileGuard } from "./guard.mjs";
@@ -307,6 +307,7 @@ export class CaseStore extends EventEmitter {
   registerView() {
     return this.register.entities.map(entity => ({
       ...entity,
+      readings: ocrReadings(entity),
       samples: (entity.samples ?? []).slice(0, 4).map(sample => {
         try {
           const page = this.originalPage(sample.doc, sample.page);

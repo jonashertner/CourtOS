@@ -127,6 +127,14 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 .pseudo-input:hover, .pseudo-input:focus { border-color: var(--external); }
 .entity.keep .pseudo-input { background: none; color: var(--faint); text-decoration: line-through; }
 .entity-more { padding: 2px 0 12px 30px; font-size: 13px; }
+.ocr-fix { margin: 0 0 10px 30px; padding: 10px 12px; border-left: 2px solid var(--amber); background: var(--wash); border-radius: 0 var(--r) var(--r) 0; font-size: 13px; }
+.ocr-fix .ctx { font-family: var(--text); font-size: 14.5px; color: var(--muted); }
+.ocr-fix .ctx mark { background: var(--mark); color: var(--ink); padding: 0 1px; }
+.ocr-fix .note { margin: 4px 0 8px; }
+.ocr-fix.done { border-left-color: var(--local); display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
+.ocr-fix.done .icon { color: var(--local); vertical-align: -3px; }
+.review-first { margin: 0 0 14px; padding: 10px 12px; background: var(--paper); border-radius: var(--r); font-size: 13.5px; }
+.review-first ul { margin: 6px 0 0 18px; }
 .entity-more .ctx { font-family: var(--text); font-size: 14px; color: var(--muted); padding: 3px 0; }
 .entity-more .ctx mark { background: var(--mark); color: var(--ink); padding: 0 1px; }
 .entity-more .ctx .where { font-family: var(--ui); font-size: 12px; color: var(--faint); margin-right: 6px; }

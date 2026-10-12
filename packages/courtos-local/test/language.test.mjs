@@ -92,3 +92,36 @@ test("anonymisation fails safe on OCR words, sentence openers and later evidence
   register = mergeDetections(register, [{ kind: "person", label: "Gross", aliases: ["Gross"], count: 2, samples: [], notes: [], decision: "replace" }], "Gross ist das Haus. Zeuge Peter Gross.");
   assert.equal(register.entities[0].decision, "replace");
 });
+
+test("a damaged OCR word can be read as its repaired form after review, never as anything else", async () => {
+  const { suggestAnonymisation } = await import("../src/anonymise.mjs");
+  const { applyChange, emptyRegister, mergeDetections, ocrReadings } = await import("../src/register.mjs");
+  const { rehydrator } = await import("../src/verify.mjs");
+  const { buildMirror } = await import("../src/mirror.mjs");
+  const text = "Schreiben vom 14. Mai 2025.\n\nWir halten fest, dass die Ruge aus unserer Sicht verspätet ist.";
+  const documents = [{ id: "D1", label: "BB 2", role: "exhibit", party: null, sha256: "x", kind: "pdf", pages: [{ n: 1, has_text: true, ocr: { engine: "test" }, text, sha256: "p" }] }];
+  let register = mergeDetections(emptyRegister(), suggestAnonymisation(documents).candidates, text);
+  const ruge = register.entities.find(e => e.aliases.includes("Ruge"));
+  assert.ok(ruge?.notes.includes("ocr_word"), "the damaged word is flagged");
+  assert.equal(ruge.decision, "replace", "and replaced until someone looks at it");
+  assert.deepEqual(ocrReadings(ruge), ["Rüge"]);
+
+  for (const reading of ["Rage", "Ruge", "Reuge", "Bürge", ""]) {
+    assert.throws(() => applyChange(register, { op: "read_as_word", id: ruge.id, reading }, text), { code: "invalid_reading" }, reading);
+  }
+  const rev = register.rev;
+  register = applyChange(register, { op: "read_as_word", id: ruge.id, reading: "rüge" }, text);
+  assert.ok(register.rev > rev, "the change revokes an earlier release");
+  const mirror = buildMirror(register, documents).mirror;
+  assert.match(mirror.documents[0].pages[0].text, /dass die Rüge aus unserer Sicht/);
+  assert.doesNotMatch(mirror.documents[0].pages[0].text, /Ruge/);
+  assert.equal(rehydrator(register)("Die Rüge war verspätet.").text, "Die Rüge war verspätet.", "a result keeps the word");
+
+  // Undo restores a letter.
+  register = applyChange(register, { op: "read_as_word", id: ruge.id, reading: null }, text);
+  assert.match(register.entities.find(e => e.id === ruge.id).replacement, /^[A-Z]\.________$/);
+
+  // A name not flagged as a damaged OCR word cannot take a word as its replacement this way.
+  const plain = mergeDetections(emptyRegister(), [{ kind: "person", label: "Muller", aliases: ["Muller"], count: 1, samples: [], notes: [], decision: "replace" }], "Herr Muller kam.");
+  assert.throws(() => applyChange(plain, { op: "read_as_word", id: plain.entities[0].id, reading: "Müller" }, "Herr Muller kam."), { code: "invalid_reading" });
+});
