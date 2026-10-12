@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { capitalisedForms, compileTextTransformation } from "@courtos/projection";
-import { consolidatePersons, suggestAnonymisation, surnamesAlone } from "../src/anonymise.mjs";
+import { consolidatePersons, initialsAlone, suggestAnonymisation, surnamesAlone } from "../src/anonymise.mjs";
 import { detectCandidates } from "../src/detect.mjs";
 import { compileGuard } from "../src/guard.mjs";
 import { compilePageTransform } from "../src/mirror.mjs";
@@ -93,6 +93,21 @@ test("one person's entries join; a surname standing alone joins its person or, i
   const candidates = surnamesAlone([person(["Delphine Chatelain"]), person(["Thierry Baudin"]), person(["Anne Baudin"])], pages);
   assert.ok(candidates[0].aliases.includes("Chatelain"));
   assert.ok(candidates.some(c => c.notes.includes("shared_surname") && c.aliases[0] === "Baudin"));
+});
+
+test("initials in capitals join their person; initials that are a word or an abbreviation are shown and kept", () => {
+  const person = (aliases) => ({ kind: "person", label: aliases[0], aliases, count: 1, samples: [], notes: [], decision: "replace" });
+  const pages = [{ doc: "D1", page: 1, text: "Notiz FC. TB sagt, ab Januar gelte Art. 97 OR. JPR war dabei. Nadja Frei protokolliert; NF schreibt nur Zahlen. TS und TS." }];
+  const candidates = initialsAlone([person(["Herr Thomas Burkhard"]), person(["Flurin Caduff"]), person(["Otto Rossi"]), person(["Anna Brunner"]), person(["Jean-Pierre Rochat"]),
+    person(["Nadja"]), person(["Frei"]), person(["Tanja Sutter"]), person(["Tobias Senn"])], pages);
+  const has = (alias) => candidates.find(c => c.aliases.includes(alias));
+  assert.equal(has("TB").label, "Herr Thomas Burkhard", "a title is no initial");
+  assert.equal(has("FC").label, "Flurin Caduff");
+  assert.equal(has("JPR").label, "Jean-Pierre Rochat", "each part of a double first name counts");
+  assert.deepEqual([has("NF").decision, has("NF").notes], ["replace", ["initials"]], "a first name and a surname held as two entries");
+  assert.deepEqual([has("TS").decision, has("TS").notes], ["replace", ["shared_initials"]]);
+  assert.deepEqual([has("OR").decision, has("OR").notes, has("OR").match], ["keep", ["initials_word"], "capitalised"], "Art. 97 OR stays");
+  assert.equal(has("AB"), undefined, "\"ab\" in lower case is a word, not initials");
 });
 
 test("the guard lets a replacement label pass, and an ordinary word only where the model wrote it", () => {

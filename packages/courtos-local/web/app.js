@@ -27,6 +27,9 @@ const NOTES = {
   public_identifier: "Von citecheck einem Unternehmen oder Amt zugeordnet. Vorsorglich ersetzt, weil auch die Kennung einer Firma die Partei erkennbar macht.",
   company_name: "Unterscheidungskraft eines Parteinamens (Firma). Von CourtOS ergänzt.",
   surname_alone: "Der Nachname allein wird ebenfalls ersetzt.",
+  initials: "Die Initialen in Grossbuchstaben (etwa «TB») werden ebenfalls ersetzt.",
+  shared_initials: "Initialen, die zu mehreren Personen passen oder zu einem Vornamen und Nachnamen, die getrennt erfasst sind. Ersetzt.",
+  initials_word: "Initialen, die auch ein Wort oder eine Abkürzung sind («OR», «AB»). Bleiben lesbar, bis Sie sie ersetzen.",
   alias_conflict: "Eine Schreibweise gehört zu mehreren Angaben. Prüfen.",
 };
 const ROLE_GROUPS = [["Rechtsschriften", ["claim", "response", "submission"]], ["Beilagen", ["exhibit"]], ["Literatur und Entscheide", ["literature", "authority"]], ["Interne Notizen", ["internal_note"]], ["Weitere", ["other"]]];

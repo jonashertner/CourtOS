@@ -154,6 +154,73 @@ export function surnamesAlone(candidates, pages, vocab = citecheckVocabulary()) 
   return candidates;
 }
 
+// Abbreviations of two to four capitals a Swiss case file uses for laws, courts, cantons,
+// currencies and company forms. Initials that read as one of them are not replaced unasked.
+const ABBREVIATIONS = new Set(("OR ZGB ZPO SCHKG STPO STGB BV BGG VWVG VG RPG USG LSV LPE OPB LTF LAT CC CO CPC CP CST PA "
+  + "LP LTAF BGE ATF DTF SR RS HG OG KG BG TF TC CDAP BGER AG SA GMBH SARL SAGL KB BB GB EB CHF EUR USD MWST TVA IVA UID AHV AVS IV AI "
+  + "ZH BE LU UR SZ OW NW GL ZG FR SO BS BL SH AR SG GR TG TI VD VS NE GE JU CH EU UN USA UK EG UE PDF CC BCC PS NB RZ NR ").split(" ").filter(Boolean));
+// Short words of the four languages that capitals could spell. The vocabulary cannot tell them
+// from initials: it holds nearly every pair of letters ("tb", "fc") that decisions contain.
+const SHORT_WORDS = new Set([...FUNCTION_WORDS, ..."ab am an ob so da es er wo wie was wer wir ihr sie nur bis ja nie mal je ne ni si se ce ma me te tu on va vu ai as eu ou ca sa mi ti ci vi ho ha is it be do go he my no of oh ok or up us we if as non oui qui que sur mai già più".split(" ")]);
+
+/**
+ * Initials stand for a person in notes, chats and e-mails ("TB sagt …", "FC macht sich diese
+ * Notiz"). Initials written as capitals alone (TB, JPR) that belong to one person whose name the
+ * register replaces join that person; initials several persons share become an entry of their own.
+ * Initials that are also a word or an abbreviation ("OR", "AB", "TI") are shown for review and kept,
+ * as a capitalised ordinary word is: replacing them would rewrite "Art. 97 OR" and "ab Januar".
+ */
+export function initialsAlone(candidates, pages) {
+  const persons = candidates.filter(c => c.kind === "person" && c.decision === "replace");
+  const taken = new Set(candidates.flatMap(c => c.aliases.map(normal)));
+  const owners = new Map();
+  for (const person of persons) for (const alias of person.aliases) {
+    const tokens = alias.split(/\s+/).filter(t => !NOT_NAME.has(t.toLocaleLowerCase("de")) && !HEADER_WORDS.has(t.replace(/:$/u, "").toLocaleLowerCase("de")));
+    if (tokens.length < 2 || !tokens.every(t => /^\p{Lu}[\p{L}'’.-]*$/u.test(t)) || tokens.some(t => LEGAL_FORM.test(t))) continue;
+    const first = (t) => t.split("-").map(part => Array.from(part)[0]).join("").toLocaleUpperCase("de");
+    const forms = new Set([first(tokens[0]) + first(tokens.at(-1)), tokens.map(first).join("")]);
+    for (const form of forms) {
+      if (!/^\p{Lu}{2,4}$/u.test(form)) continue;
+      if (!owners.has(form)) owners.set(form, new Set());
+      owners.get(form).add(person);
+    }
+  }
+  // A first name and a surname the register holds as two entries ("Nadja" and "Frei", an ordinary
+  // word) are one person where they stand side by side.
+  const single = new Map();
+  for (const person of persons) for (const alias of person.aliases) if (!/\s/.test(alias) && /^\p{Lu}/u.test(alias)) single.set(alias, person);
+  const split = new Set();
+  for (const page of pages) for (const m of page.text.matchAll(/(?<![\p{L}\p{N}])(\p{Lu}[\p{L}'’-]+)[ \t]+(\p{Lu}[\p{L}'’-]+)(?![\p{L}\p{N}])/gu)) {
+    const [one, two] = [single.get(m[1]), single.get(m[2])];
+    if (!one || !two || one === two) continue;
+    const form = (Array.from(m[1])[0] + Array.from(m[2])[0]).toLocaleUpperCase("de");
+    if (!owners.has(form)) owners.set(form, new Set());
+    owners.get(form).add(one).add(two);
+    split.add(form);
+  }
+  for (const [form, people] of owners) {
+    if (taken.has(normal(form))) continue;
+    // Only the capitals count as initials: "ab" in lower case is a word, not A. B.
+    const expression = aliasExpression(form, "gu");
+    const samples = pages.flatMap(page => [...page.text.matchAll(expression)].map(m => ({ doc: page.doc, page: page.page, start: m.index, length: m[0].length })));
+    if (!samples.length) continue;
+    const lower = form.toLocaleLowerCase("de");
+    if (ABBREVIATIONS.has(form) || SHORT_WORDS.has(lower)) {
+      candidates.push({ key: `person:${normal(form)}`, kind: "person", label: form, aliases: [form], count: samples.length, samples: samples.slice(0, 8), notes: ["initials_word"], decision: "keep", source: "courtos", style: "letter", match: "capitalised" });
+    } else if (people.size === 1) {
+      const [person] = people;
+      person.aliases = [...person.aliases, form].sort((a, b) => b.length - a.length);
+      person.count += samples.length;
+      person.samples = [...person.samples, ...samples].slice(0, 8);
+      person.notes = [...new Set([...person.notes, "initials"])];
+    } else {
+      candidates.push({ key: `person:${normal(form)}`, kind: "person", label: form, aliases: [form], count: samples.length, samples: samples.slice(0, 8), notes: [split.has(form) && people.size === 2 ? "initials" : "shared_initials"], decision: "replace", source: "courtos", style: "letter" });
+    }
+    taken.add(normal(form));
+  }
+  return candidates;
+}
+
 /** Plausible readings of a word that text recognition may have damaged, lower-case. */
 export function ocrRepairs(word) {
   const lower = word.toLocaleLowerCase("de");
@@ -320,6 +387,7 @@ export function suggestAnonymisation(documents) {
   }
   consolidatePersons(candidates);
   surnamesAlone(candidates, where, vocab);
+  initialsAlone(candidates, where);
 
   return {
     candidates,
