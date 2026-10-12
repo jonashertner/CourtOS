@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { readFile, readdir } from "node:fs/promises";
 import { builtinModules } from "node:module";
 import { promisify } from "node:util";
+import { SAMPLES } from "../src/samples.mjs";
 
 const here = new URL("..", import.meta.url);
 
@@ -26,7 +27,8 @@ test("the tester's tarball installs on its own: siblings bundled, every import d
   for (const need of ["bin/courtos-local.mjs", "src/server.mjs", "web/index.html", "web/theme.js", "word/manifest.xml", "README.md", "TESTING.md"]) {
     assert.ok(files.includes(need), `${need} is packed`);
   }
-  assert.ok(files.some(f => f.startsWith("fixtures/HG.2026.57 Alpenblick/")), "the demo case is packed");
+  for (const sample of SAMPLES) assert.ok(files.some(f => f.startsWith(`fixtures/${sample.folder}/`)), `the sample ${sample.id} is packed`);
+  assert.equal(files.some(f => f.startsWith("fixtures/samples/") || f.endsWith(".py")), false, "the sample sources and generators stay in the repository");
   assert.ok(files.includes("node_modules/@courtos/workflows/system.txt"), "the model contract is packed");
 
   // Nothing private: no case memory, no runs, no keys, no environment files.

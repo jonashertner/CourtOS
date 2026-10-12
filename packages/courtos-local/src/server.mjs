@@ -75,7 +75,7 @@ function chooseFolderMac() {
   });
 }
 
-export async function startServer({ port = 4311, folder = null, openBrowser = true, demoFolder = null, log = console.log } = {}) {
+export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log } = {}) {
   const tls = await loadCertificates();
   const scheme = tls ? "https" : "http";
   const origin = `${scheme}://localhost:${port}`;
@@ -152,7 +152,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     const key = Boolean(await apiKey());
     const prefs = await readJson(PREFS(), {}).catch(() => ({}));
     const base = { origin, settings: { has_key: key, model: DEFAULT_MODEL, language: UI_LANGUAGES.includes(prefs.language) ? prefs.language : null }, clients: connected(), tasks: Object.keys(TASKS), demo_question: DEMO_QUESTION };
-    if (!store) return { ...base, case: null, recent: await readJson(RECENT(), []).catch(() => []) };
+    if (!store) return { ...base, case: null, recent: await readJson(RECENT(), []).catch(() => []), samples: samples.map(({ id, language, court, matter, offline }) => ({ id, language, court, matter, offline: Boolean(offline) })) };
     const register = store.register.entities;
     return {
       ...base,
@@ -355,10 +355,12 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         return send(res, 200, { ok: true });
       }
       if (path === "/api/folder" && req.method === "POST") {
-        const { path: folderPath, demo } = await body(req);
-        if (demo) {
-          if (!demoFolder) throw new CourtosError("demo_not_available");
-          await openFolder(demoFolder);
+        const { path: folderPath, demo, sample: sampleId } = await body(req);
+        if (demo || sampleId) {
+          // A sample is opened by its id only; its path is never taken from the page.
+          const sample = samples.find(s => (demo ? s.offline : s.id === sampleId));
+          if (!sample) throw new CourtosError("demo_not_available");
+          await openFolder(sample.path);
         } else {
           const recent = await readJson(RECENT(), []).catch(() => []);
           // Only a folder chosen natively, given on the command line or listed

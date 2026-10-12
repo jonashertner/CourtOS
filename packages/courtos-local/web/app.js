@@ -158,6 +158,8 @@ function render() {
   if (S.drawer) renderDrawer();
 }
 
+const LANGUAGE_NAME = Object.fromEntries(LANGUAGES);
+
 function renderWelcome() {
   const open = (fn) => async () => {
     S.busy = true; render();
@@ -166,13 +168,13 @@ function renderWelcome() {
     await refresh();
   };
   const recent = (S.st.recent ?? []).filter(Boolean);
+  const samples = S.st.samples ?? [];
   return h("div.gate", {}, h("div.gate-inner.welcome", {},
     h("div.gate-top", {}, wordmark(), prefs()),
     h("h1", {}, tr("Ein Fall, ein Ordner.")),
     h("p.lede", {}, tr("Wählen Sie den Ordner mit Rechtsschriften, Beilagen und Literatur. CourtOS anonymisiert ihn auf diesem Computer mit citecheck. Ein Sprachmodell Ihrer Wahl arbeitet danach mit der anonymisierten Fassung, ein Frontiermodell oder ein Modell auf diesem Computer, und jede Aussage führt zurück zur Originalstelle.")),
     h("div.actions", {},
       h("button.btn.primary", { type: "button", onclick: open(() => api("/api/folder/choose", { method: "POST" })), disabled: S.busy }, icon("folder"), tr("Fallordner wählen")),
-      h("button.btn", { type: "button", onclick: open(() => api("/api/folder", { method: "POST", body: { demo: true } })), disabled: S.busy }, tr("Beispieldossier öffnen")),
     ),
     S.busy ? h("div", {}, h("div.progress-line.scan-progress", {}, h("span", { style: { width: "4%" } })), h("p.scan-label.muted", { style: { marginTop: "8px", fontSize: "13px" } }, tr("Ordner wird geöffnet"))) : null,
     h("ul.promises", {},
@@ -180,6 +182,15 @@ function renderWelcome() {
       h("li", { class: "local" }, icon("lock"), h("span", {}, h("b", {}, tr("Anonymisiert wird hier, mit citecheck. ")), h("span.muted", {}, tr("Das Register mit den echten Namen verlässt diesen Computer nie.")))),
       h("li", { class: "external" }, icon("out"), h("span", {}, h("b", {}, tr("Das Modell liest erst nach Ihrer Freigabe. ")), h("span.muted", {}, tr("Und nur die anonymisierte Fassung. Jede gesendete Anfrage können Sie nachlesen.")))),
     ),
+    samples.length ? h("section.samples", { "aria-labelledby": "samples-title" },
+      h("h2", { id: "samples-title" }, tr("Beispieldossiers")),
+      h("p.muted", {}, tr("Erfundene Fälle mit Rechtsschriften und Beilagen, an verschiedenen Gerichten und in den Sprachen der Verfahren. Alle Namen, Firmen und Zahlen sind fiktiv.")),
+      h("ul.sample-list", {}, samples.map(sample => h("li", {},
+        h("button.sample", { type: "button", disabled: S.busy, onclick: open(() => api("/api/folder", { method: "POST", body: { sample: sample.id } })) },
+          h("span.sample-court", { lang: sample.language }, sample.court),
+          h("span.sample-matter", { lang: sample.language }, sample.matter),
+          h("span.sample-meta", {}, h("span", { lang: sample.language }, LANGUAGE_NAME[sample.language] ?? sample.language), sample.offline ? ` · ${tr("kurzer Fall, läuft auch ohne Modell")}` : ""),
+        ))))) : null,
     recent.length ? h("div.recent", {}, h("h2", {}, tr("Zuletzt geöffnet")), recent.map(path => h("button.link", { type: "button", onclick: open(() => api("/api/folder", { method: "POST", body: { path } })) }, path))) : null,
   ));
 }

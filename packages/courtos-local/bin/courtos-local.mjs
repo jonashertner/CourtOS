@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// courtos-local [folder] [--port 4311] [--no-open] [--demo]
+// courtos-local [folder] [--port 4311] [--no-open] [--demo | --sample <id>]
 // courtos-local install-word   writes the Word add-in manifest and sideloads it on macOS
-import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { prepareSamples, SAMPLES } from "../src/samples.mjs";
 import { startServer } from "../src/server.mjs";
 
 const args = process.argv.slice(2);
@@ -33,17 +34,22 @@ if (args[0] === "install-word") {
   process.exit(0);
 }
 
-let folder = args.find(a => !a.startsWith("--") && a !== String(port)) ?? null;
-let demoFolder = null;
-// A fresh copy of the synthetic dossier, so the demo never writes into the package.
-const demoSource = new URL("../fixtures/HG.2026.57 Alpenblick/", import.meta.url);
-demoFolder = join(tmpdir(), "courtos-demo", "HG.2026.57 Alpenblick");
-await mkdir(join(tmpdir(), "courtos-demo"), { recursive: true });
-await cp(demoSource, demoFolder, { recursive: true, force: false, errorOnExist: false });
-if (flag("--demo")) folder = demoFolder;
+const optionValues = new Set(["--port", "--sample"].map(o => args.indexOf(o)).filter(i => i >= 0).map(i => i + 1));
+let folder = args.find((a, i) => !a.startsWith("--") && !optionValues.has(i)) ?? null;
+// Working copies of the sample dossiers, so a sample never writes into the package.
+const samples = await prepareSamples(join(tmpdir(), "courtos-demo"));
+const sampleId = flag("--demo") ? "alpenblick" : option("--sample", null);
+if (sampleId) {
+  const sample = samples.find(s => s.id === sampleId);
+  if (!sample) {
+    console.error(`Unbekanntes Beispieldossier: ${sampleId}. Vorhanden: ${SAMPLES.map(s => s.id).join(", ")}`);
+    process.exit(1);
+  }
+  folder = sample.path;
+}
 
 try {
-  await startServer({ port, folder: folder ? resolve(folder) : null, openBrowser: !flag("--no-open"), demoFolder });
+  await startServer({ port, folder: folder ? resolve(folder) : null, openBrowser: !flag("--no-open"), samples });
 } catch (error) {
   if (error.code !== "port_in_use") throw error;
   console.error(`Port ${port} ist belegt. Läuft CourtOS schon? Dann dort weiterarbeiten.`);
