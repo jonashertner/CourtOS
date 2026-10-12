@@ -10,10 +10,19 @@ import { startServer } from "../src/server.mjs";
 
 const cli = fileURLToPath(new URL("../bin/courtos-local.mjs", import.meta.url));
 
+/** A port nothing listens on, so the test never collides with a running CourtOS. */
+async function freePort() {
+  const probe = createServer();
+  await new Promise(resolve => probe.listen(0, "127.0.0.1", resolve));
+  const { port } = probe.address();
+  await new Promise(resolve => probe.close(resolve));
+  return port;
+}
+
 test("without a localhost certificate the start says that Word will not work, and how to fix it", async (t) => {
   process.env.HOME = await mkdtemp(join(tmpdir(), "courtos-home-"));
   const lines = [];
-  const app = await startServer({ port: 4300 + Math.floor(Math.random() * 400), openBrowser: false, log: (l) => lines.push(l) });
+  const app = await startServer({ port: await freePort(), openBrowser: false, log: (l) => lines.push(l) });
   t.after(() => app.close());
   assert.match(app.origin, /^http:/);
   const said = lines.join("\n");
