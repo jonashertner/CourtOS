@@ -18,7 +18,6 @@ import { systemPrompt, TASKS, tools, validateWorkflowResult } from "./tasks.mjs"
 const MAX_READ_CHARS = 60_000;
 const MAX_DECISION_CHARS = 24_000;
 const ROLE_NAMES = { claim: "Klage/claim", response: "Antwort/response", submission: "Eingabe/submission", exhibit: "Beilage/exhibit", literature: "Literatur/literature", authority: "Entscheid/authority", other: "Sonstiges/other" };
-const PARTY_ROLES = { claimant: "claimant (Klägerin/Kläger)", respondent: "respondent (Beklagte/r)", appellant: "appellant", appeal_respondent: "appeal respondent", applicant: "applicant", authority: "authority", intervenor: "intervenor", other: "other" };
 const ID = /^[A-Za-z0-9_.\-]{3,120}$/;
 
 export class AgentRun extends EventEmitter {
@@ -97,11 +96,14 @@ export class AgentRun extends EventEmitter {
 
   // --- tools -------------------------------------------------------------
   toolListDocuments() {
-    const roles = new Map((this.store.case.parties ?? []).map(p => [p.id, PARTY_ROLES[p.role] ?? p.role]));
-    const parties = [...new Set([...roles.keys(), ...this.mirror.documents.map(d => d.party).filter(Boolean)])].sort();
+    // The procedural role in the language of the proceedings ("Klägerin", "Gesuchsgegnerin")
+    // and the party's name as it appears in the pseudonymised text.
+    const known = new Map((this.mirror.parties ?? []).map(p => [p.id, p]));
+    const parties = [...new Set([...known.keys(), ...this.mirror.documents.map(d => d.party).filter(Boolean)])].sort();
     return JSON.stringify({
       parties: Object.fromEntries(parties.map(p => [p, {
-        role: roles.get(p) ?? "unspecified",
+        role: known.has(p) ? `${known.get(p).term} (${known.get(p).role})` : "unspecified",
+        ...(known.get(p)?.name_in_text ? { name_in_text: known.get(p).name_in_text } : {}),
         pleadings: this.mirror.documents.filter(d => d.party === p && ["claim", "response", "submission"].includes(d.role)).map(d => d.label),
       }])),
       documents: this.mirror.documents.map(document => ({

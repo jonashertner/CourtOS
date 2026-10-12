@@ -122,7 +122,7 @@ export const resolveDerivativeSpan = kernel.resolveDerivativeSpan;
  * Build the mirror for released documents.
  * @returns {{ mirror, maps, issues }} mirror is model-visible; maps is private.
  */
-export function buildMirror(register, documents, lang = "de") {
+export function buildMirror(register, documents, lang = "de", parties = []) {
   const transform = compilePageTransform(register);
   // Occurrence decisions are bound to the exact page version they were made on.
   const exceptions = new Map();
@@ -131,7 +131,8 @@ export function buildMirror(register, documents, lang = "de") {
     if (!exceptions.has(key)) exceptions.set(key, new Set());
     exceptions.get(key).add(ex.start);
   }
-  const mirror = { schema: 1, language: lang, register_rev: register.rev, documents: [], sections: [], kept: [] };
+  // The parties as the model sees them: id, procedural role and the name as it appears in the text.
+  const mirror = { schema: 1, language: lang, register_rev: register.rev, parties, documents: [], sections: [], kept: [] };
   const maps = {};
   const issues = [];
   let sectionNumber = 0;
@@ -163,8 +164,8 @@ export function buildMirror(register, documents, lang = "de") {
     mirror.documents.push(out);
   }
   if (sectionNumber > 9999) throw new CourtosError("folder_too_large");
-  // The language is part of what is released, even when no label happens to change.
-  mirror.sha256 = sha256(JSON.stringify({ language: mirror.language, documents: mirror.documents }));
+  // The language and the parties are part of what is released, even when no page text changes.
+  mirror.sha256 = sha256(JSON.stringify({ language: mirror.language, parties: mirror.parties, documents: mirror.documents }));
   mirror.kept = [...new Set(mirror.kept)];
   return { mirror, maps, issues };
 }

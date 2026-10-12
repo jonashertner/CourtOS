@@ -9,6 +9,7 @@ import { extractFile, EXTRACTOR, SUPPORTED } from "./extract.mjs";
 import { sampleContext } from "./detect.mjs";
 import { suggestAnonymisation } from "./anonymise.mjs";
 import { CASE_LANGUAGES, caseLanguage, detectLanguage } from "./language.mjs";
+import { PARTY_ROLES, partyTerm } from "../web/party-roles.js";
 import { applyChange, emptyRegister, mergeDetections, relabelReplacements } from "./register.mjs";
 import { buildMirror, compilePageTransform } from "./mirror.mjs";
 import { ocrEngine, ocrPdfPages, OCR_VERSION } from "./ocr.mjs";
@@ -18,7 +19,6 @@ import { extname } from "node:path";
 
 const NOTE_STATUS = new Set(["proposed", "adopted", "disputed", "done"]);
 const NOTE_KIND = new Set(["note", "question", "assumption", "contradiction"]);
-const PARTY_ROLES = new Set(["claimant", "respondent", "appellant", "appeal_respondent", "applicant", "authority", "intervenor", "other"]);
 const cleanText = (value, max) => {
   if (typeof value !== "string") throw new CourtosError("invalid_text");
   const text = canonicalText(value);
@@ -212,12 +212,17 @@ export class CaseStore extends EventEmitter {
 
   /** Rebuild the mirror. Any change to its content invalidates an earlier release. */
   async rebuild() {
-    const { mirror, maps, issues } = buildMirror(this.register, this.includedDocuments(), this.lang);
+    const parties = this.partiesView().map(({ id, role, term, pseudonym }) => ({ id, role, term, name_in_text: pseudonym }));
+    const { mirror, maps, issues } = buildMirror(this.register, this.includedDocuments(), this.lang, parties);
     this.issues = issues;
     const guard = compileGuard({ register: this.register, realRoot: this.root, relPaths: this.sources.map(s => s.rel_path), allowCorpus: mirror.kept });
     for (const document of mirror.documents) for (const page of [{ text: document.label }, ...document.pages]) {
       const hits = guard.scan(page.text);
       if (hits.length) this.issues.push({ code: "mirror_guard", document: document.id, page: page.n ?? null, hits });
+    }
+    for (const party of parties) {
+      const hits = guard.scan(`${party.term} ${party.name_in_text ?? ""}`);
+      if (hits.length) this.issues.push({ code: "mirror_guard", party: party.id, hits });
     }
     const changed = this.mirror?.sha256 !== mirror.sha256;
     this.mirror = mirror;
@@ -376,13 +381,55 @@ export class CaseStore extends EventEmitter {
     const ids = new Set();
     this.case.parties = parties.map((party, i) => {
       const id = `P${i + 1}`;
-      if (!PARTY_ROLES.has(party.role)) throw new CourtosError("invalid_role");
+      if (!PARTY_ROLES.includes(party.role)) throw new CourtosError("invalid_role");
       if (party.entity !== null && party.entity !== undefined && !this.register.entities.some(e => e.id === party.entity)) throw new CourtosError("entity_unknown");
+      if (![undefined, null, "f", "m"].includes(party.gender)) throw new CourtosError("invalid_party");
       ids.add(id);
-      return { id, role: party.role, entity: party.entity ?? null };
+      return { id, role: party.role, entity: party.entity ?? null, gender: party.gender ?? null };
     });
     for (const source of this.sources) if (source.party && !ids.has(source.party)) { source.party = null; source.overrides.party = null; }
     await this.rebuild();
+  }
+
+  /** Grammatical gender for the role term: the user's choice; else feminine for a
+   *  company (die AG); else from a title before the person's name; else unknown. */
+  partyGender(party) {
+    if (party.gender) return party.gender;
+    const entity = this.register.entities.find(e => e.id === party.entity);
+    if (!entity) return null;
+    if (entity.kind === "organisation" || this.companyName(entity)) return "f";
+    if (entity.kind !== "person") return null;
+    const names = entity.aliases.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+    const title = (words) => new RegExp(`(?<![\\p{L}])(?:${words})\\s+(?:(?:Dr|Prof|lic|iur|med|Me|avv|dott)\\.\\s*)*(?:${names})(?![\\p{L}])`, "u");
+    const text = this.corpus();
+    const female = title("Frau|Madame|Mme|Signora|Sig\\.ra|Ms\\.?|Mrs\\.?").test(text);
+    const male = title("Herrn?|Monsieur|M\\.|Signor|Sig\\.|Mr\\.?").test(text);
+    return female === male ? null : female ? "f" : "m";
+  }
+
+  /** The full company name when the file writes this name with a legal form
+   *  ("Bergfeld" → "Bergfeld Bau GmbH"), else null. */
+  companyName(entity) {
+    if (entity.kind === "organisation") return entity.label;
+    const names = entity.aliases.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+    const pattern = new RegExp(`(?<![\\p{L}])(?:${names})(?:\\s+\\p{Lu}[\\p{L}&-]*){0,3}\\s+(?:AG|GmbH|SA|Sàrl|Sagl|Srl|Ltd|LLC|KG|KlG|Genossenschaft|Stiftung)(?![\\p{L}])`, "u");
+    return pattern.exec(this.corpus())?.[0].replace(/\s+/gu, " ") ?? null;
+  }
+
+  /**
+   * The parties with their procedural role in the language of the proceedings.
+   * `pseudonym` is the name as Claude reads it; `name` is the original and is
+   * for local display only.
+   */
+  partiesView() {
+    return (this.case.parties ?? []).map(party => {
+      const entity = this.register.entities.find(e => e.id === party.entity) ?? null;
+      const gender = this.partyGender(party);
+      let pseudonym = null;
+      const name = entity ? (this.companyName(entity) ?? entity.label) : null;
+      if (name) { try { pseudonym = this.pseudonymise(name); } catch { pseudonym = entity.replacement || null; } }
+      return { ...party, gender_used: gender, term: partyTerm(this.lang, party.role, gender), name, pseudonym };
+    });
   }
 
   // --- working notes -----------------------------------------------------

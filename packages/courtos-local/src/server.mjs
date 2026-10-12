@@ -103,7 +103,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         mirror: { sha256: store.mirror?.sha256, sections: store.mirror?.sections.length ?? 0, register_rev: store.register.rev },
         register: { total: register.length, replace: register.filter(e => e.decision === "replace").length },
         anonymisation: store.anonymisationReport ?? null,
-        parties: store.case.parties,
+        parties: store.partiesView(),
         language: { code: store.lang, source: store.case.language?.source ?? "default" },
         sources: store.sources.filter(s => !s.missing).map(({ id, rel_path, name, ext, label, role, party, pages, text_pages, ocr_pages, status, include, version, guess }) => ({ id, rel_path, name, ext, label, role, party, pages, text_pages, ocr_pages, status, include, version, guess })),
         missing: store.sources.filter(s => s.missing).map(s => ({ id: s.id, name: s.name })),

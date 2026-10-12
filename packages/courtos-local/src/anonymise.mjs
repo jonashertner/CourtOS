@@ -6,19 +6,26 @@
 // reads anything.
 //
 // Citecheck is built for publishing rulings, where only natural persons are
-// anonymised and the bench, counsel and company details are public. For a case
-// folder CourtOS adds three things around it, each labelled in the register:
+// anonymised and the bench, counsel and company details are public. A case
+// folder goes to a model provider before any ruling exists, so CourtOS fails
+// safe around it and replaces by default; the user can keep an entry after
+// review. Each addition is labelled in the register:
 //   - the distinctive name of a company party ("Alpenblick" in "Alpenblick
 //     Hotel AG"), which citecheck can treat as a common word;
-//   - people citecheck explains as public office holders (judges, counsel),
-//     listed as kept, so the user sees them and can replace them too;
+//   - people citecheck explains as public office holders (judges, counsel):
+//     replaced, noted as public office;
 //   - identifiers citecheck explains as a company's or an office's (IBAN,
-//     phone, address), listed as kept for the same reason.
+//     phone, address, UID, land register entry): replaced, noted as public
+//     identifier, because a company's UID or IBAN names the party;
+//   - towns given with a postcode (except large cities), and people the
+//     second detector finds but citecheck does not report.
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { check } from "./vendor/citecheck/anon.mjs";
 import { Vocabulary } from "./vendor/citecheck/vocabulary.mjs";
 import { detectCandidates } from "./detect.mjs";
+import { PASSES } from "./mirror.mjs";
+import { aliasExpression } from "./util.mjs";
 
 const DATA = new URL("./vendor/citecheck/data/", import.meta.url);
 let vocabulary = null;
@@ -108,30 +115,53 @@ export function suggestAnonymisation(documents) {
   // CourtOS additions around the citecheck result.
   const publicTokens = new Set([...result.explained.court, ...result.explained.counsel, ...result.explained.official].map(normal));
   const supplement = detectCandidates(documents);
+  // The projection kernel refuses two identities overlapping in one pass. A
+  // second spelling of an identifier already listed ("Seestrasse 41" inside
+  // "Seestrasse 41, 6354 Vitznau", "4711" inside the land register entry)
+  // joins that entry instead of becoming a rival one.
+  const pass = (kind) => PASSES.findIndex(kinds => kinds.has(kind));
+  const contains = (a, b) => aliasExpression(b, "iu").test(a);
+  const overlapping = (c) => candidates.find(e => pass(e.kind) === pass(c.kind) && e.kind !== "person" && e.kind !== "organisation"
+    && e.aliases.some(x => c.aliases.some(y => contains(x, y) || contains(y, x))));
   for (const c of supplement) {
     if (c.aliases.some(a => covered.has(normal(a)))) continue;
     if (c.kind === "organisation") {
       // Replace the distinctive part of a company name; keep the legal form ("A.________ AG").
-      const cores = c.label.split(/\s+/).filter(t => /^\p{Lu}/u.test(t) && t.length >= 4 && !LEGAL_FORM.test(t) && !GENERIC.has(t.toLocaleLowerCase("de")) && !covered.has(normal(t)) && !publicTokens.has(normal(t)));
+      const words = c.label.split(/\s+/).filter(t => !LEGAL_FORM.test(t));
+      const cores = words.filter(t => /^\p{Lu}/u.test(t) && t.length >= 4 && !GENERIC.has(t.toLocaleLowerCase("de")) && !covered.has(normal(t)));
       if (!cores.length) continue;
-      const alias = cores.join(" ");
+      // A firm named after a person ("Weber Legal AG" of counsel "Thomas Weber"):
+      // the core alone would overlap the person's name, so the whole name
+      // without its legal form is replaced.
+      const shared = cores.some(t => [...covered].some(a => a.split(" ").includes(normal(t))));
+      const alias = shared ? words.join(" ") : cores.join(" ");
+      if (covered.has(normal(alias))) continue;
       covered.add(normal(alias));
       candidates.push({ key: `organisation:${normal(alias)}`, kind: "organisation", label: c.label, aliases: [alias], count: c.count, samples: c.samples, notes: ["company_name"], decision: "replace", source: "courtos", style: "letter" });
     } else if (c.kind === "person") {
       const tokens = c.label.split(/\s+/).map(normal);
-      if (tokens.every(t => publicTokens.has(t))) {
-        c.aliases.forEach(a => covered.add(normal(a)));
-        candidates.push({ ...c, notes: ["public_office"], decision: "keep", source: "courtos", style: "letter" });
-      }
+      c.aliases.forEach(a => covered.add(normal(a)));
+      const office = tokens.every(t => publicTokens.has(t));
+      candidates.push({ ...c, notes: [...c.notes, office ? "public_office" : "second_detector"], decision: "replace", source: "courtos", style: "letter" });
     } else if (c.kind === "ahv") {
       // An AHV/AVS number always belongs to a natural person. citecheck skips numbers
       // whose check digit fails; in a case file that is more likely a typo than a
       // harmless number, so CourtOS replaces it anyway.
       c.aliases.forEach(a => covered.add(normal(a)));
       candidates.push({ ...c, notes: ["ahv_checksum"], decision: "replace", source: "courtos", style: "label" });
-    } else if (["iban", "phone", "email", "address", "uid", "parcel"].includes(c.kind)) {
+    } else if (["iban", "phone", "email", "address", "uid", "parcel", "url"].includes(c.kind)) {
       c.aliases.forEach(a => covered.add(normal(a)));
-      candidates.push({ ...c, notes: ["public_identifier"], decision: "keep", source: "courtos", style: "label" });
+      const existing = overlapping(c);
+      if (existing) {
+        existing.aliases = [...new Set([...existing.aliases, ...c.aliases])].sort((a, b) => b.length - a.length);
+        existing.count += c.count;
+        existing.decision = "replace";
+        continue;
+      }
+      candidates.push({ ...c, notes: ["public_identifier"], decision: "replace", source: "courtos", style: "label" });
+    } else if (c.kind === "place") {
+      c.aliases.forEach(a => covered.add(normal(a)));
+      candidates.push({ ...c, notes: [...c.notes, "place"], decision: "replace", source: "courtos", style: "label" });
     }
   }
 

@@ -22,11 +22,13 @@ test("the mirror contains none of the dossier's identifying details", async () =
     const mirror = JSON.stringify(store.mirror);
     for (const identifier of ORIGINAL_IDENTIFIERS) assert.equal(mirror.includes(identifier), false, `mirror leaks ${identifier}`);
     assert.deepEqual(store.issues, []);
-    // Public office holders and company registry data are listed, kept, and can be switched.
+    // Public office holders and company registry data are listed and replaced by default;
+    // the note tells the user why they may choose to keep them.
     for (const detail of PUBLIC_DETAILS) {
       const entity = store.register.entities.find(e => e.aliases.includes(detail));
       assert.ok(entity, `${detail} is listed in the register`);
-      assert.equal(entity.decision, "keep");
+      assert.equal(entity.decision, "replace", `${detail} is replaced by default`);
+      assert.ok(entity.source === "citecheck" || entity.notes.some(n => ["public_office", "public_identifier"].includes(n)), `${detail} carries its reason`);
     }
     // The register is citecheck's: its people come first and carry the engine's name.
     assert.ok(store.register.entities.some(e => e.source === "citecheck" && e.aliases.includes("Anna Keller")));

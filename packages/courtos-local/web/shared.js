@@ -1,6 +1,7 @@
 // Shared by the browser workspace and the Word task pane. No framework, no
 // network beyond this local server.
 import { TRANSLATIONS } from "./i18n.js";
+import { partyTermLabel } from "./party-roles.js";
 
 // --- language --------------------------------------------------------------
 // German is the source language: every interface string is written in German
@@ -68,7 +69,6 @@ const LABELS = {
   category: { relief: "Rechtsbegehren", fact: "Sachverhalt", legal: "Rechtliches" },
   part: { facts: "Sachverhalt", issue: "Streitfrage", reasoning: "Erwägung", counterargument: "Gegenargument", open_issue: "Offener Punkt", disposition: "Dispositiv (Vorschlag)" },
   draftStatus: { alleged: "behauptet", disputed: "strittig", working_assumption: "Arbeitsannahme", analysis: "Analyse", proposal: "Vorschlag" },
-  partyRole: { claimant: "Klägerin/Kläger", respondent: "Beklagte/Beklagter", appellant: "Berufungsklägerin/Beschwerdeführerin", appeal_respondent: "Berufungsbeklagte/Beschwerdegegnerin", applicant: "Gesuchstellerin", authority: "Behörde", intervenor: "Nebenintervenientin", other: "Weitere Partei" },
   noteStatus: { proposed: "vorgeschlagen", adopted: "übernommen", disputed: "strittig", done: "erledigt" },
   noteKind: { note: "Notiz", question: "Offene Frage", assumption: "Arbeitsannahme", contradiction: "Widerspruch" },
   kind: { person: "Person", organisation: "Organisation", address: "Adresse", place: "Ort", parcel: "Grundstück", email: "E-Mail", phone: "Telefon", iban: "Konto (IBAN)", ahv: "AHV-Nummer", uid: "UID", url: "Profil/Link", plate: "Kennzeichen", birthdate: "Geburtsdatum", insured: "Versichertennummer", zemis: "ZEMIS-Nummer", document: "Ausweisnummer", account: "Kontonummer", number: "Nummer", identifier: "Kennung" },
@@ -85,7 +85,9 @@ export const TASK_ORDER = ["chronology", "facts_evidence", "party_comparison", "
 export function partyLabel(state, party) {
   if (!party) return tr("ohne Partei");
   const entry = state?.case?.parties?.find(p => p.id === party);
-  return entry ? `${party} · ${label("partyRole", entry.role)}` : party;
+  if (!entry) return party;
+  // Role in the interface language, with the name as it is shown locally.
+  return [party, partyTermLabel(LANG, entry.role, entry.gender_used ?? null), entry.name].filter(Boolean).join(" · ");
 }
 
 // --- errors ------------------------------------------------------------------

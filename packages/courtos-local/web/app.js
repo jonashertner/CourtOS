@@ -1,5 +1,6 @@
-import { api, ApiError, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, tr, traceText, trn, pg, refLabel, labelIn } from "./shared.js";
+import { api, ApiError, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, tr, traceText, trn, pg, refLabel } from "./shared.js";
 import { renderResult } from "./results.js";
+import { COUNTERPART, PARTY_ROLES, partyTerm, partyTermLabel } from "./party-roles.js";
 
 const app = document.getElementById("app");
 const S = {
@@ -278,22 +279,31 @@ function renderCaseLanguage() {
 function renderParties() {
   const c = S.st.case;
   const entities = (S.register ?? []).filter(e => ["person", "organisation"].includes(e.kind));
-  const parties = c.parties.map(p => ({ ...p }));
+  const parties = c.parties.map(({ id, role, entity, gender }) => ({ id, role, entity, gender: gender ?? null }));
   const save = () => attempt(async () => { await api("/api/parties", { method: "POST", body: { parties } }); await refresh(); });
-  const roles = ["claimant", "respondent", "appellant", "appeal_respondent", "applicant", "authority", "intervenor", "other"];
+  // Choosing one side of a pair (Gesuchstellerin) moves a party still on the
+  // old pair's other side (Beklagte) to the new counterpart (Gesuchsgegnerin).
+  const setRole = (i, role) => {
+    const before = parties[i].role;
+    parties[i].role = role;
+    for (const other of parties) if (other !== parties[i] && COUNTERPART[before] && other.role === COUNTERPART[before] && COUNTERPART[role]) other.role = COUNTERPART[role];
+    save();
+  };
+  const genders = [["", tr("Form automatisch")], ["f", tr("weiblich")], ["m", tr("männlich")]];
   if (!S.register) api("/api/register").then(r => { S.register = r.entities; render(); });
   return h("div.parties", {},
     h("h2", {}, tr("Parteien")),
     parties.map((party, i) => h("div.party-row", {},
       h("b", {}, party.id),
-      h("select", { "aria-label": tr("Rolle von {p}", { p: party.id }), onchange: (e) => { parties[i].role = e.target.value; save(); } }, roles.map(r => h("option", { value: r, selected: party.role === r }, label("partyRole", r)))),
+      h("select", { "aria-label": tr("Rolle von {p}", { p: party.id }), onchange: (e) => setRole(i, e.target.value) }, PARTY_ROLES.map(r => h("option", { value: r, selected: party.role === r }, partyTermLabel(LANG, r, c.parties[i].gender_used ?? null)))),
+      h("select", { "aria-label": tr("Grammatikalische Form von {p}", { p: party.id }), onchange: (e) => { parties[i].gender = e.target.value || null; save(); } }, genders.map(([value, text]) => h("option", { value, selected: (party.gender ?? "") === value }, text))),
       h("select", { "aria-label": tr("Name von {p}", { p: party.id }), onchange: (e) => { parties[i].entity = e.target.value || null; save(); } },
         h("option", { value: "" }, tr("Name aus dem Register (optional)")),
         entities.map(e => h("option", { value: e.id, selected: party.entity === e.id }, `${e.label} → ${e.replacement}`))),
       parties.length > 1 ? h("button.btn.small.quiet", { type: "button", "aria-label": tr("{p} entfernen", { p: party.id }), onclick: () => { parties.splice(i, 1); save(); } }, icon("cross")) : null,
     )),
     parties.length < 9 ? h("button.btn.small", { type: "button", onclick: () => { parties.push({ role: "other", entity: null }); save(); } }, icon("plus"), tr("Partei hinzufügen")) : null,
-    h("p.note", {}, tr("Claude sieht nur P1, P2 … und die Rolle. Der Name bleibt lokal und erscheint in Ihren Entwürfen.")),
+    h("p.note", {}, tr("Claude sieht P1, P2 …, die Rolle und den Namen nur in der ersetzten Form (z. B. A.________ AG). Der echte Name bleibt lokal und erscheint in Ihren Entwürfen.")),
   );
 }
 
@@ -715,14 +725,11 @@ function renderNotes() {
 // --- Verfahren ---------------------------------------------------------------------
 function orderTemplate() {
   const c = S.st.case;
-  const name = (p) => {
-    const entity = (S.register ?? []).find(e => e.id === p.entity);
-    return entity ? entity.label : `[${p.id}]`;
-  };
+  const name = (p) => p.name ?? `[${p.id}]`;
   // The order is written in the language of the proceedings, whatever the interface language.
   const lang = c.language?.code ?? "de";
   const date = new Date().toLocaleDateString(lang === "en" ? "en-GB" : `${lang}-CH`, { day: "numeric", month: "long", year: "numeric" });
-  const parties = c.parties.map(p => `${name(p)}, ${labelIn(lang, "partyRole", p.role)}`);
+  const parties = c.parties.map(p => `${name(p)}, ${partyTerm(lang, p.role, p.gender_used ?? null)}`);
   const T = {
     de: `[Gericht]\n\nVerfahren ${c.name}\n\nVerfügung vom ${date}\n\nin Sachen\n${parties.join("\ngegen\n")}\n\nbetreffend […]\n\nDie Instruktionsrichterin / Der Instruktionsrichter zieht in Erwägung:\n\n1. […]\n\nund verfügt:\n\n1. […]\n\n2. Schriftliche Mitteilung an die Parteien.\n\n[Ort], ${date}\n\n[Name, Funktion]`,
     fr: `[Tribunal]\n\nProcédure ${c.name}\n\nOrdonnance du ${date}\n\ndans la cause\n${parties.join("\ncontre\n")}\n\nconcernant […]\n\nLe juge instructeur / La juge instructrice considère :\n\n1. […]\n\net ordonne :\n\n1. […]\n\n2. Communication écrite aux parties.\n\n[Lieu], ${date}\n\n[Nom, fonction]`,

@@ -30,12 +30,17 @@ export async function originalHashes(root) {
   return out;
 }
 
-// Details of natural persons and the parties' distinctive names: never in the
-// mirror or a request. (Counsel, the court and company registry data are
-// public under citecheck's standard and stay readable unless the user
-// replaces them; see PUBLIC_DETAILS.)
+// Everything that identifies a person or a party: never in the mirror or a
+// request. Counsel, the bench and company registry data (UID, IBAN, office
+// addresses) are public under citecheck's standard for published rulings, but
+// a case folder goes to a model provider before any ruling exists, so they are
+// replaced by default too (PUBLIC_DETAILS lists them; the user may keep them).
+export const PUBLIC_DETAILS = [
+  "Thomas Weber", "Sophie Brunner", "Nora Steiner", "CHE-123.456.789", "CH93 0076 2011 6238 5295 7",
+  "+41 44 123 45 67", "Industriestrasse 7", "Bahnhofstrasse 12", "Pilatusstrasse 3",
+];
 export const ORIGINAL_IDENTIFIERS = [
   "Anna Keller", "Keller", "Marco Bianchi", "Bianchi", "Lea Roth", "Alpenblick", "Bergfeld",
   "Seestrasse 41", "anna.keller@alpenblick-hotel.ch", "m.bianchi@bergfeld-bau.ch", "756.1234.5678.97",
+  "Weber", "Brunner", "Vitznau", "Ebikon", "4711", ...PUBLIC_DETAILS,
 ];
-export const PUBLIC_DETAILS = ["Thomas Weber", "Sophie Brunner", "Nora Steiner", "CHE-123.456.789", "CH93 0076 2011 6238 5295 7"];
