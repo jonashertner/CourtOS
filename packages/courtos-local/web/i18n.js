@@ -593,6 +593,9 @@ export const TRANSLATIONS = {
     "Tabelle · {n} Zeile": "Tableau · {n} ligne",
     "Tabelle · {n} Zeilen": "Tableau · {n} lignes",
     "Text mit Überschriften und Fussnoten": "Texte avec titres et notes de bas de page",
+    "Dunkle Darstellung": "Affichage sombre",
+    "Zur hellen Darstellung wechseln": "Passer à l’affichage clair",
+    "Zur dunklen Darstellung wechseln": "Passer à l’affichage sombre",
   },
   it: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Compare solo a inizio frase o è molto breve, ed è una parola comune, non un cognome noto. Resta leggibile finché non lo sostituisce.",
@@ -1188,6 +1191,9 @@ export const TRANSLATIONS = {
     "Tabelle · {n} Zeile": "Tabella · {n} riga",
     "Tabelle · {n} Zeilen": "Tabella · {n} righe",
     "Text mit Überschriften und Fussnoten": "Testo con titoli e note a piè di pagina",
+    "Dunkle Darstellung": "Visualizzazione scura",
+    "Zur hellen Darstellung wechseln": "Passa alla visualizzazione chiara",
+    "Zur dunklen Darstellung wechseln": "Passa alla visualizzazione scura",
   },
   en: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Appears only at the start of a sentence or is very short, and is an ordinary word, not a known surname. Stays readable until you replace it.",
@@ -1781,5 +1787,8 @@ export const TRANSLATIONS = {
     "Tabelle · {n} Zeile": "Table · {n} row",
     "Tabelle · {n} Zeilen": "Table · {n} rows",
     "Text mit Überschriften und Fussnoten": "Text with headings and footnotes",
+    "Dunkle Darstellung": "Dark appearance",
+    "Zur hellen Darstellung wechseln": "Switch to light appearance",
+    "Zur dunklen Darstellung wechseln": "Switch to dark appearance",
   },
 };

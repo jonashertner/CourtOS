@@ -22,6 +22,33 @@ export function setLang(lang) {
 }
 document.documentElement.lang = LANG;
 
+// --- theme -----------------------------------------------------------------
+// Light by default; dark is a choice kept in this browser. theme.js applies it
+// before the first paint; this switches it while the page is open.
+export const THEMES = ["light", "dark"];
+export const currentTheme = () => (document.documentElement.dataset?.theme === "dark" ? "dark" : "light");
+export function setTheme(theme) {
+  const dark = theme === "dark";
+  if (document.documentElement.dataset) {
+    if (dark) document.documentElement.dataset.theme = "dark";
+    else delete document.documentElement.dataset.theme;
+  }
+  try { if (dark) localStorage.setItem("courtos.theme", "dark"); else localStorage.removeItem("courtos.theme"); } catch { /* ignore */ }
+}
+/** A sun or moon button: shows what a click switches to, and says which mode is on. */
+export function themeToggle() {
+  const button = h("button.btn.small.quiet.theme-toggle", { type: "button", "aria-label": tr("Dunkle Darstellung") });
+  const show = () => {
+    const dark = currentTheme() === "dark";
+    button.setAttribute("aria-pressed", String(dark));
+    button.title = dark ? tr("Zur hellen Darstellung wechseln") : tr("Zur dunklen Darstellung wechseln");
+    button.replaceChildren(icon(dark ? "sun" : "moon"));
+  };
+  button.addEventListener("click", () => { setTheme(currentTheme() === "dark" ? "light" : "dark"); show(); });
+  show();
+  return button;
+}
+
 /** The browser and Word share one interface language, kept by the local server. */
 export function chooseLang(lang) {
   setLang(lang);
@@ -214,6 +241,8 @@ const ICONS = {
   doc: "M4 1.5h5l3 3v10H4zM9 1.5v3h3",
   lock: "M4.5 7V5a3.5 3.5 0 017 0v2M3.5 7h9v7h-9z",
   out: "M9 2h5v5M14 2L7 9M12 9.5V14H2V4h4.5",
+  moon: "M13.5 9.8A5.8 5.8 0 0 1 6.2 2.5a5.8 5.8 0 1 0 7.3 7.3z",
+  sun: "M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06",
   folder: "M1.5 3.5h4.5l1.5 1.5h7v8.5h-13z",
   eye: "M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8zM8 10a2 2 0 100-4 2 2 0 000 4z",
   note: "M3 2.5h10v8l-3 3H3zM10 13.5v-3h3",

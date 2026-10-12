@@ -1,4 +1,4 @@
-import { adoptLang, api, ApiError, chooseLang, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, tr, traceText, trn, pg, refLabel } from "./shared.js";
+import { adoptLang, api, ApiError, chooseLang, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, themeToggle, tr, traceText, trn, pg, refLabel } from "./shared.js";
 import { renderResult } from "./results.js";
 import { COUNTERPART, PARTY_ROLES, partyTerm, partyTermLabel } from "./party-roles.js";
 
@@ -118,9 +118,12 @@ function langSelect() {
     LANGUAGES.map(([code, name]) => h("option", { value: code, selected: code === LANG }, name)));
 }
 
+/** Language and light/dark, side by side wherever the interface offers them. */
+const prefs = () => h("div.prefs", {}, langSelect(), themeToggle());
+
 function renderUnpaired() {
   app.replaceChildren(h("div.gate", {}, h("div.gate-inner", {},
-    h("div.gate-top", {}, wordmark(), langSelect()),
+    h("div.gate-top", {}, wordmark(), prefs()),
     h("div.welcome", {},
       h("h1", {}, tr("Diese Seite ist nicht verbunden.")),
       h("p.lede", {}, tr("CourtOS läuft auf diesem Computer. Öffnen Sie den Link, den CourtOS beim Start im Terminal anzeigt. Er verbindet diesen Browser mit Ihrer lokalen Sitzung.")),
@@ -164,7 +167,7 @@ function renderWelcome() {
   };
   const recent = (S.st.recent ?? []).filter(Boolean);
   return h("div.gate", {}, h("div.gate-inner.welcome", {},
-    h("div.gate-top", {}, wordmark(), langSelect()),
+    h("div.gate-top", {}, wordmark(), prefs()),
     h("h1", {}, tr("Ein Fall, ein Ordner.")),
     h("p.lede", {}, tr("Wählen Sie den Ordner mit Rechtsschriften, Beilagen und Literatur. CourtOS anonymisiert ihn auf diesem Computer mit citecheck. Ein Sprachmodell Ihrer Wahl arbeitet danach mit der anonymisierten Fassung, ein Frontiermodell oder ein Modell auf diesem Computer, und jede Aussage führt zurück zur Originalstelle.")),
     h("div.actions", {},
@@ -199,7 +202,7 @@ function renderShell() {
         c.sync ? h("span.alert", {}, tr("Ordner wird mit einem Cloud-Dienst synchronisiert")) : null,
       )),
       h("span.spacer"),
-      langSelect(),
+      prefs(),
       S.st.clients?.word ? h("span.word-on", { title: tr("Word folgt diesem Fenster: Belege öffnen sich hier, Aussagen lassen sich in Word einfügen.") }, icon("check"), tr("Word verbunden"))
         : h("button.btn.small.quiet", { type: "button", onclick: pairWord }, tr("Word verbinden")),
       h("button.btn.small.quiet", { type: "button", onclick: async () => { await attempt(() => api("/api/folder/choose", { method: "POST" })); S.view = null; S.register = null; await refresh(); } }, tr("Anderer Ordner")),

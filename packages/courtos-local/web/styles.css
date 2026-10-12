@@ -25,6 +25,20 @@
   color-scheme: light;
 }
 
+/* Dark, when chosen (theme.js, shared.js). The originals stay white paper. */
+:root[data-theme="dark"] {
+  --paper: #141414; --ink: #ececea; --muted: #a9a9a6; --faint: #7d7d7a; --rule: #2c2c2b; --wash: #1c1c1b;
+  --local: #7cc0a0; --local-wash: #16251e; --external: #b4a2d6; --external-wash: #211c2b;
+  --alert: #e0918a; --alert-wash: #2c1a18; --amber: #d8b65c; --mark: #5a4c16; --focus: #d0d0d0;
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .modal-backdrop { background: #000000a0; }
+:root[data-theme="dark"] .reader-page .sheet, :root[data-theme="dark"] .drawer .sheet { box-shadow: 0 0 0 1px #2c2c2b, 0 8px 28px #00000080; }
+:root[data-theme="dark"] .btn.release { color: #141414; }
+
+.prefs { display: flex; align-items: center; gap: 4px; }
+.theme-toggle { padding-inline: 7px; }
+
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body { background: var(--paper); color: var(--ink); font: 14px/1.5 var(--ui); -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 0; }
@@ -514,3 +528,4 @@ button.live-dot { border: 0; background: none; padding: 0; cursor: pointer; disp
 .reader-page .sheet-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--faint); font-size: 13px; }
 .doc-open { font-weight: 600; color: var(--ink); text-decoration: none; text-align: left; }
 .doc-open:hover { text-decoration: underline; text-underline-offset: 3px; }
+:root[data-theme="dark"] .wordmark img, :root[data-theme="dark"] .wp-head .mark { border-radius: 3px; box-shadow: 0 0 0 1px #3a3a39; }

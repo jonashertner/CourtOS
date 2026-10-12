@@ -1,7 +1,7 @@
 // CourtOS in Word. The draft stays in Word; CourtOS reads only what you ask it
 // to (a selection, or the paragraphs for a citation check) and inserts only
 // what you choose, at the cursor.
-import { adoptLang, api, ApiError, chooseLang, claimPlain, claimText, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, setLang, tr, traceText, trn, refLabel, inLanguage } from "./shared.js";
+import { adoptLang, api, ApiError, chooseLang, claimPlain, claimText, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, setLang, themeToggle, tr, traceText, trn, refLabel, inLanguage } from "./shared.js";
 import { BUILD, plainText, sources } from "./word-doc.js";
 
 const pane = document.getElementById("pane");
@@ -267,6 +267,7 @@ function render() {
     h("img.mark", { src: "icon.svg", alt: "CourtOS", width: 20, height: 20 }),
     h("span.case", {}, c ? c.name : tr("Kein Fall geöffnet")),
     h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { chooseLang(e.target.value); render(); } }, LANGUAGES.map(([code]) => h("option", { value: code, selected: code === LANG }, code.toUpperCase()))),
+    themeToggle(),
     c ? h("div.state", {},
       h("span.local", {}, icon("lock"), trn(c.register.replace, "{n} Angabe lokal ersetzt", "{n} Angaben lokal ersetzt")),
       c.consent_valid ? h("span.external", {}, icon("out"), tr("freigegeben")) : h("span.alert", {}, tr("nicht freigegeben"))) : null,
