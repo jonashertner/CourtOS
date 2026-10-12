@@ -76,7 +76,7 @@ rm -f "$app/Contents/Resources/app/package.json" "$app/Contents/Resources/app/pa
 # 3. The menu-bar app and the OCR helper, for the target CPU
 swiftc -O -target "$swift_arch-apple-macos13" -o "$app/Contents/MacOS/CourtOS" "$here/CourtOS.swift"
 swiftc -O -target "$swift_arch-apple-macos13" -o "$app/Contents/Resources/bin/ocr-vision" "$package/scripts/ocr-vision.swift"
-cp "$here/make-certificate.sh" "$app/Contents/Resources/"
+cp "$here/make-certificate.sh" "$here/make-profile.sh" "$here/uninstall.sh" "$app/Contents/Resources/"
 sed "s/@VERSION@/$version/g" "$here/Info.plist" > "$app/Contents/Info.plist"
 iconset="$build/AppIcon.iconset"
 mkdir -p "$iconset"
