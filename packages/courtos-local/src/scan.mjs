@@ -49,7 +49,8 @@ export async function insideRoot(realRoot, relPath) {
   return resolved;
 }
 
-const EXHIBIT_CODE = /(?:^|[\s_(\-])((?:KB|BB|GB|act\.?|Bel\.?|Beilage|pièce|pi[eè]ce|doc\.?|allegato|all\.|exhibit|ex\.)\s*\d{1,3}[a-z]?)(?=$|[\s_).\-])/iu;
+// "KB 2", "pièce 4", "Doc. 3", "Exhibit 7", and the international "Exhibit C-3" / "R-3".
+const EXHIBIT_CODE = /(?:^|[\s_(\-])((?:KB|BB|GB|act\.?|Bel\.?|Beilage|pièce|pi[eè]ce|doc\.?|allegato|all\.|exhibit|ex\.)\s*(?:[CR]-)?\d{1,3}[a-z]?)(?=$|[\s_).\-])/iu;
 const FOLDER_ROLE = [
   [/^(beilagen|belege|beweismittel|exhibits?|pi[eè]ces|allegati|annexes?|anlagen)$/iu, "exhibit"],
   [/^(literatur|literature|doctrine|dottrina|lehre|materialien|authorities)$/iu, "literature"],
@@ -80,10 +81,11 @@ export function classify(relPath, firstPageText = "") {
   if (role === "claim") party = "P1";
   else if (role === "response") party = "P2";
   else if (role === "exhibit" && code) {
-    if (/^(KB|GB)/i.test(code)) party = "P1";
-    else if (/^BB/i.test(code)) party = "P2";
+    if (/^(KB|GB)|\bC-\d/i.test(code)) party = "P1";
+    else if (/^BB|\bR-\d/i.test(code)) party = "P2";
   }
-  return { role, party, code: code ? code.replace(/^(act|bel|doc|ex)\.?/i, m => m.replace(/\.?$/, ".")) : null };
+  // Abbreviations get their full stop ("Doc 3" → "Doc. 3"); whole words stay as written.
+  return { role, party, code: code ? code.replace(/^(act|bel|doc|ex)\.?(?=\s|\d)/i, m => m.replace(/\.?$/, ".")) : null };
 }
 
 /**
