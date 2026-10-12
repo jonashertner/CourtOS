@@ -1,0 +1,66 @@
+# CI: courtos-local, the case-folder companion, on Linux and macOS.
+#
+# macOS is a first-class target, not extra coverage: the folder dialog, the
+# Word sideload and Vision OCR (compiled from scripts/ocr-vision.swift) exist
+# only there. Linux runs the same suite without an OCR engine, which exercises
+# the "scan reported as unread" path instead.
+#
+# The job also builds the tester tarball, so a change that breaks packaging
+# (an undeclared import, a sibling no longer bundled) fails here rather than on
+# a tester's machine. test/package.test.mjs checks the tarball's contents.
+name: courtos-local
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "packages/courtos-local/**"
+      - "packages/courtos-projection/**"
+      - "packages/courtos-workflows/**"
+      - ".github/workflows/courtos-local.yml"
+  pull_request:
+    paths:
+      - "packages/courtos-local/**"
+      - "packages/courtos-projection/**"
+      - "packages/courtos-workflows/**"
+      - ".github/workflows/courtos-local.yml"
+
+concurrency:
+  group: courtos-local-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests and tester tarball (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    defaults:
+      run:
+        working-directory: packages/courtos-local
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/courtos-local/package-lock.json
+
+      - name: Validate package.json and lockfile parse
+        run: node -e "for (const f of ['package.json','package-lock.json']) JSON.parse(require('fs').readFileSync(f, 'utf8'))"
+
+      # .npmrc sets install-links=true, so the repository siblings are copied
+      # in as real directories (as in the tarball), not symlinked.
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Build the tester tarball
+        run: npm run pack:tester
