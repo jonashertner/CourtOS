@@ -61,6 +61,9 @@ const NAME_ROLE = [
   [/klage|beschwerde|gesuch|berufung|requ[êe]te|demande|recours|petizione|ricorso|istanza|statement of claim|complaint|claim/iu, "claim"],
   [/notiz|memo|note|aktennotiz|instruktion/iu, "other"],
 ];
+// The court's own notes: read by the model as context, never quoted as evidence.
+// Only a file name decides this, never the text of a page.
+const INTERNAL_NOTE = /instruktionsnotiz|interne notiz|aktennotiz|notiz|note interne|nota interna|memo|internal note/iu;
 
 export function classify(relPath, firstPageText = "") {
   const parts = relPath.split("/");
@@ -69,6 +72,7 @@ export function classify(relPath, firstPageText = "") {
   let role = null;
   for (const folder of parts.slice(0, -1)) for (const [pattern, folderRole] of FOLDER_ROLE) if (pattern.test(folder)) role = folderRole;
   if (code && !role) role = "exhibit";
+  if (!role && INTERNAL_NOTE.test(name)) role = "internal_note";
   if (!role) for (const [pattern, nameRole] of NAME_ROLE) if (pattern.test(name)) { role = nameRole; break; }
   if (!role) for (const [pattern, textRole] of NAME_ROLE) if (pattern.test(firstPageText.slice(0, 600))) { role = textRole; break; }
   role ??= "other";

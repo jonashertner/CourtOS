@@ -486,6 +486,9 @@ export const TRANSLATIONS = {
     "Vorher ansehen: {n} Wort aus der Texterkennung ist vorsorglich ersetzt und fehlt Claude sonst im Text.": "À voir d’abord : {n} mot issu de l’OCR est remplacé par précaution et manquera sinon à Claude.",
     "Vorher ansehen: {n} Wörter aus der Texterkennung sind vorsorglich ersetzt und fehlen Claude sonst im Text.": "À voir d’abord : {n} mots issus de l’OCR sont remplacés par précaution et manqueront sinon à Claude.",
     "Diese Lesart passt nicht zu dem Wort aus der Texterkennung.": "Cette lecture ne correspond pas au mot issu de l’OCR.",
+    "Interne Notiz": "Note interne",
+    "Interne Notizen": "Notes internes",
+    "Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen.": "Claude lit une note interne du tribunal comme contexte, comme vos notes : elle peut orienter une réflexion, mais jamais servir de preuve.",
   },
   it: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Compare solo a inizio frase o è molto breve, ed è una parola comune, non un cognome noto. Resta leggibile finché non lo sostituisce.",
@@ -974,6 +977,9 @@ export const TRANSLATIONS = {
     "Vorher ansehen: {n} Wort aus der Texterkennung ist vorsorglich ersetzt und fehlt Claude sonst im Text.": "Da vedere prima: {n} parola dell’OCR è sostituita per prudenza e altrimenti mancherà a Claude.",
     "Vorher ansehen: {n} Wörter aus der Texterkennung sind vorsorglich ersetzt und fehlen Claude sonst im Text.": "Da vedere prima: {n} parole dell’OCR sono sostituite per prudenza e altrimenti mancheranno a Claude.",
     "Diese Lesart passt nicht zu dem Wort aus der Texterkennung.": "Questa lettura non corrisponde alla parola dell’OCR.",
+    "Interne Notiz": "Nota interna",
+    "Interne Notizen": "Note interne",
+    "Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen.": "Claude legge una nota interna del tribunale come contesto, come le sue note: può orientare una riflessione, ma mai fungere da prova.",
   },
   en: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Appears only at the start of a sentence or is very short, and is an ordinary word, not a known surname. Stays readable until you replace it.",
@@ -1460,5 +1466,8 @@ export const TRANSLATIONS = {
     "Vorher ansehen: {n} Wort aus der Texterkennung ist vorsorglich ersetzt und fehlt Claude sonst im Text.": "Look first: {n} word from text recognition is replaced as a precaution and will otherwise be missing for Claude.",
     "Vorher ansehen: {n} Wörter aus der Texterkennung sind vorsorglich ersetzt und fehlen Claude sonst im Text.": "Look first: {n} words from text recognition are replaced as a precaution and will otherwise be missing for Claude.",
     "Diese Lesart passt nicht zu dem Wort aus der Texterkennung.": "This reading does not match the word from text recognition.",
+    "Interne Notiz": "Internal note",
+    "Interne Notizen": "Internal notes",
+    "Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen.": "Claude reads an internal note of the court as context, like your notes: it can guide a line of thought but never serve as evidence.",
   },
 };

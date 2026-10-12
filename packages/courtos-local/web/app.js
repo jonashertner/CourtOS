@@ -28,7 +28,7 @@ const NOTES = {
   surname_alone: "Der Nachname allein wird ebenfalls ersetzt.",
   alias_conflict: "Eine Schreibweise gehört zu mehreren Angaben. Prüfen.",
 };
-const ROLE_GROUPS = [["Rechtsschriften", ["claim", "response", "submission"]], ["Beilagen", ["exhibit"]], ["Literatur und Entscheide", ["literature", "authority"]], ["Weitere", ["other"]]];
+const ROLE_GROUPS = [["Rechtsschriften", ["claim", "response", "submission"]], ["Beilagen", ["exhibit"]], ["Literatur und Entscheide", ["literature", "authority"]], ["Interne Notizen", ["internal_note"]], ["Weitere", ["other"]]];
 const MODELS = [["claude-opus-5-5", "Claude Opus 5.5"], ["claude-sonnet-5-5", "Claude Sonnet 5.5"]];
 const PIPELINE = ["chronology", "facts_evidence", "party_comparison", "legal_claims", "fundamental_questions"];
 const TASK_TEXT = {
@@ -241,7 +241,7 @@ function renderTabs() {
 function renderDocs() {
   const c = S.st.case;
   const change = (id, patch) => attempt(async () => { await api(`/api/sources/${id}`, { method: "POST", body: patch }); S.register = null; S.views.clear(); await refresh(); });
-  const roles = ["claim", "response", "submission", "exhibit", "literature", "authority", "other"];
+  const roles = ["claim", "response", "submission", "exhibit", "literature", "authority", "internal_note", "other"];
   const partyOptions = [["", tr("keine")], ...c.parties.map(p => [p.id, partyLabel(S.st, p.id)])];
   return h("section.pane", {},
     h("header", {}, h("h1", {}, tr("Akten und Parteien")), h("p", {}, tr("Rolle und Partei sind Vorschläge aus Dateinamen und Text. Sie bestimmen, wem eine Aussage zugerechnet wird. Korrigieren Sie, was nicht stimmt."))),
@@ -259,7 +259,7 @@ function renderDocs() {
         h("td", {}, h("input", { type: "checkbox", checked: s.include, disabled: s.status !== "ok", "aria-label": tr("{l} einbeziehen", { l: s.label }), onchange: (e) => change(s.id, { include: e.target.checked }) })),
       ))),
     ),
-    h("p.note", { style: { marginTop: "12px" } }, tr("Seiten: lesbare von allen Seiten. Gescannte Seiten erkennt CourtOS lokal (Texterkennung); Claude sieht dann den erkannten Text. Was nicht lesbar ist, wird in jedem Ergebnis als nicht ausgewertet ausgewiesen.")),
+    h("p.note", { style: { marginTop: "12px" } }, tr("Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen."), " ", tr("Seiten: lesbare von allen Seiten. Gescannte Seiten erkennt CourtOS lokal (Texterkennung); Claude sieht dann den erkannten Text. Was nicht lesbar ist, wird in jedem Ergebnis als nicht ausgewertet ausgewiesen.")),
   );
 }
 

@@ -62,7 +62,7 @@ const LABELS = {
     legal_claims: "Rechtsargumente prüfen", source_chat: "Quellen befragen", decision_draft: "Entscheid entwerfen",
     fundamental_questions: "Grundfragen", hypothetical_impact: "Auswirkungen einer Annahme",
   },
-  role: { claim: "Klage", response: "Antwort", submission: "Eingabe", exhibit: "Beilage", literature: "Literatur", authority: "Entscheid", other: "Weitere" },
+  role: { claim: "Klage", response: "Antwort", submission: "Eingabe", exhibit: "Beilage", literature: "Literatur", authority: "Entscheid", internal_note: "Interne Notiz", other: "Weitere" },
   posture: { allegation: "Behauptung", denial: "Bestreitung", disputed: "strittig", unresolved: "offen" },
   facts: { supports: "gestützt", contradicts: "widersprochen", inconclusive: "offen", not_found: "kein Beweismittel" },
   legal: { supports: "gestützt", contrary: "entgegenstehend", insufficient: "nicht ausreichend belegt", not_found_in_selected_sources: "keine Grundlage gefunden", manual_check_required: "selbst prüfen" },
@@ -218,12 +218,13 @@ export function claimText(display) {
 
 export function citationChip(citation, onOpen) {
   const exact = citation.match === "exact";
-  const kindClass = citation.kind === "authority" ? "is-authority" : citation.kind === "note" ? "is-note" : null;
+  const note = citation.kind === "note" || citation.internal_note;
+  const kindClass = citation.kind === "authority" ? "is-authority" : note ? "is-note" : null;
   return h("button.cite", {
     type: "button", class: [exact ? "is-exact" : "is-unverified", kindClass].filter(Boolean).join(" "),
     title: exact ? tr("An der Quelle geprüft: «{q}»", { q: (citation.quote_original ?? "").slice(0, 240) }) : tr("Nicht verifiziert"),
     onclick: () => onOpen(citation),
-  }, icon(citation.kind === "authority" ? "scale" : citation.kind === "note" ? "note" : exact ? "check" : "cross"),
+  }, icon(citation.kind === "authority" ? "scale" : note ? "note" : exact ? "check" : "cross"),
   refLabel(citation));
 }
 

@@ -11,10 +11,10 @@
 export const CASE_LANGUAGES = ["de", "fr", "it", "en"];
 
 export const ROLE_LABEL = {
-  de: { claim: "Klage", response: "Klageantwort", submission: "Eingabe", exhibit: "Beilage", literature: "Literatur", authority: "Entscheid", other: "Notiz", document: "Dokument" },
-  fr: { claim: "Demande", response: "Réponse", submission: "Écriture", exhibit: "Pièce", literature: "Doctrine", authority: "Décision", other: "Note", document: "Document" },
-  it: { claim: "Petizione", response: "Risposta", submission: "Allegato", exhibit: "Documento", literature: "Dottrina", authority: "Decisione", other: "Nota", document: "Documento" },
-  en: { claim: "Statement of claim", response: "Statement of defence", submission: "Submission", exhibit: "Exhibit", literature: "Literature", authority: "Decision", other: "Note", document: "Document" },
+  de: { claim: "Klage", response: "Klageantwort", submission: "Eingabe", exhibit: "Beilage", literature: "Literatur", authority: "Entscheid", internal_note: "Interne Notiz", other: "Dokument", document: "Dokument" },
+  fr: { claim: "Demande", response: "Réponse", submission: "Écriture", exhibit: "Pièce", literature: "Doctrine", authority: "Décision", internal_note: "Note interne", other: "Document", document: "Document" },
+  it: { claim: "Petizione", response: "Risposta", submission: "Allegato", exhibit: "Documento", literature: "Dottrina", authority: "Decisione", internal_note: "Nota interna", other: "Documento", document: "Documento" },
+  en: { claim: "Statement of claim", response: "Statement of defence", submission: "Submission", exhibit: "Exhibit", literature: "Literature", authority: "Decision", internal_note: "Internal note", other: "Document", document: "Document" },
 };
 
 /** Replacement labels for identifiers, by kind. Persons and organisations get letters ("A.________"). */

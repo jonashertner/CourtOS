@@ -17,7 +17,7 @@ import { systemPrompt, TASKS, tools, validateWorkflowResult } from "./tasks.mjs"
 
 const MAX_READ_CHARS = 60_000;
 const MAX_DECISION_CHARS = 24_000;
-const ROLE_NAMES = { claim: "Klage/claim", response: "Antwort/response", submission: "Eingabe/submission", exhibit: "Beilage/exhibit", literature: "Literatur/literature", authority: "Entscheid/authority", other: "Sonstiges/other" };
+const ROLE_NAMES = { claim: "Klage/claim", response: "Antwort/response", submission: "Eingabe/submission", exhibit: "Beilage/exhibit", literature: "Literatur/literature", authority: "Entscheid/authority", internal_note: "internal note of the court (context only: cite in context_references, never as evidence)", other: "Sonstiges/other" };
 const ID = /^[A-Za-z0-9_.\-]{3,120}$/;
 
 export class AgentRun extends EventEmitter {
@@ -87,10 +87,14 @@ export class AgentRun extends EventEmitter {
   /** Sections in validator shape. */
   sections() {
     const versions = new Map(this.store.sources.map(s => [s.id, s.version]));
-    const pages = this.mirror.documents.flatMap(document => document.pages.filter(p => p.section).map(page => ({
+    // A document the user marked as the court's internal note is context, like a
+    // working note: it may be referenced, never cited as evidence.
+    const pages = this.mirror.documents.flatMap(document => document.pages.filter(p => p.section).map(page => document.role === "internal_note" ? {
+      id: page.section, kind: "working_note", text: page.text, attribution: { author: "court", status: "internal" },
+    } : {
       id: page.section, kind: "source", text: page.text,
       source: { role: document.role, party: document.party, document: document.id, version: `V${versions.get(document.id) ?? 1}` },
-    })));
+    }));
     return [...pages, ...this.extra.map(({ meta, ...section }) => section)];
   }
 
@@ -111,7 +115,10 @@ export class AgentRun extends EventEmitter {
         pages: document.pages.filter(p => p.section).map(p => ({ page: p.label, section: p.section, ...(p.ocr ? { text_from: "OCR (recognised from a scan; may contain recognition errors)" } : {}) })),
         unreadable_pages: document.pages.filter(p => !p.section).map(p => p.label),
       })),
-      working_notes: this.extra.filter(s => s.kind === "working_note").map(s => ({ section: s.id, status: s.attribution.status })),
+      working_notes: [
+        ...this.mirror.documents.filter(d => d.role === "internal_note").flatMap(d => d.pages.filter(p => p.section).map(p => ({ section: p.section, status: "internal note of the court", document: d.label }))),
+        ...this.extra.filter(s => s.kind === "working_note").map(s => ({ section: s.id, status: s.attribution.status })),
+      ],
     });
   }
 
@@ -140,7 +147,7 @@ export class AgentRun extends EventEmitter {
         if (!page.section) { out += `\n[${document.label} · ${page.label}: page not readable, no text]\n`; continue; }
         id = page.section;
         label = `${document.label} ${page.label}`;
-        block = `\n[${page.section} · ${document.id} ${document.label} · ${page.label}${page.ocr ? " · OCR" : ""}]\n${page.text}\n`;
+        block = `\n[${page.section} · ${document.id} ${document.label} · ${page.label}${page.ocr ? " · OCR" : ""}${document.role === "internal_note" ? " · internal note, context only" : ""}]\n${page.text}\n`;
       }
       if (out.length + block.length > MAX_READ_CHARS) { out += `\n[limit reached; read the remaining pages in another call]\n`; break; }
       out += block;
@@ -416,21 +423,21 @@ function explain(code, result, sections) {
     case "schema": return "the claims/rows do not match the schema (ids C1.., R1.., S-numbers, required fields; claims and rows must both be empty or both non-empty).";
     case "source_kind": {
       // Name each wrong reference and its direction: a document in the case
-      // folder (also an internal note filed there) is a source, never context.
+      // folder is a source unless the user marked it as an internal note.
       const bad = [];
       for (const claim of result.claims) {
         for (const cite of claim.citations) {
           const section = byId.get(cite.section_id);
           if (!section) bad.push(`${claim.id} → ${cite.section_id} in citations: no such section`);
-          else if (section.kind !== "source") bad.push(`${claim.id} → ${cite.section_id} in citations: a user working note, not a source; move it to context_references or drop it`);
+          else if (section.kind !== "source") bad.push(`${claim.id} → ${cite.section_id} in citations: ${section.attribution?.author === "court" ? "a page of an internal note of the court" : "a user working note"}, not a source; move it to context_references or drop it`);
         }
         for (const cite of claim.context_references ?? []) {
           const section = byId.get(cite.section_id);
           if (!section) bad.push(`${claim.id} → ${cite.section_id} in context_references: no such section`);
-          else if (section.kind === "source") bad.push(`${claim.id} → ${cite.section_id} in context_references: a page of case document ${section.source?.document ?? "?"}, which is a source even if it is a note; move it to citations or drop it`);
+          else if (section.kind === "source") bad.push(`${claim.id} → ${cite.section_id} in context_references: a page of case document ${section.source?.document ?? "?"}, which is a source (it is not listed under working_notes); move it to citations or drop it`);
         }
       }
-      return `${bad.slice(0, 12).join("; ")}. context_references take only user working notes (listed under working_notes by list_documents); every document of the case folder is a source.`;
+      return `${bad.slice(0, 12).join("; ")}. context_references take only the sections listed under working_notes by list_documents (user notes and internal notes of the court); every other document of the case folder is a source.`;
     }
     default: return "the result does not satisfy the workflow contract.";
   }

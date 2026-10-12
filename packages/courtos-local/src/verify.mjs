@@ -58,7 +58,7 @@ export function bindCitation(store, mirror, citation, extra = []) {
   const page = document.pages.find(p => p.n === meta.page);
   const map = store.maps[document.id]?.pages.find(p => p.n === page.n);
   const source = store.sources.find(s => s.id === document.id);
-  const base = { section_id: citation.section_id, document: document.id, label: document.label, page: page.n, page_label: page.label, kind: document.kind, quote_pseudonymised: citation.exact_quote };
+  const base = { section_id: citation.section_id, document: document.id, label: document.label, page: page.n, page_label: page.label, kind: document.kind, quote_pseudonymised: citation.exact_quote, ...(document.role === "internal_note" ? { internal_note: true } : {}) };
   const unit = page.text.indexOf(citation.exact_quote);
   if (unit < 0 || page.text.indexOf(citation.exact_quote, unit + 1) >= 0) return { ...base, match: unit < 0 ? "absent" : "ambiguous" };
   let original;
@@ -97,7 +97,9 @@ export function bindResult(store, mirror, result, task, extra = []) {
       return { section: entry.section_id, label: document?.label, page: meta?.page };
     }),
   };
-  coverage.sections = mirror.sections.length;
+  // Internal notes of the court are context, not part of the file Claude has to read.
+  const notePages = new Set(mirror.documents.filter(d => d.role === "internal_note").flatMap(d => d.pages.map(p => p.section)).filter(Boolean));
+  coverage.sections = mirror.sections.filter(s => !notePages.has(s.id)).length;
   coverage.reviewed = result.coverage.source_inventory.filter(entry => entry.review === "reviewed" && mirror.sections.some(s => s.id === entry.section_id)).length;
   const authorities = [];
   for (const section of extra) if (section.meta?.decision && !authorities.some(a => a.decision_id === section.meta.decision.decision_id)) authorities.push(section.meta.decision);

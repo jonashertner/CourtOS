@@ -26,7 +26,7 @@ const cleanText = (value, max) => {
   return text;
 };
 
-const ROLES = new Set(["claim", "response", "submission", "exhibit", "literature", "authority", "other"]);
+const ROLES = new Set(["claim", "response", "submission", "exhibit", "literature", "authority", "internal_note", "other"]);
 
 export class CaseStore extends EventEmitter {
   static async open(root) {

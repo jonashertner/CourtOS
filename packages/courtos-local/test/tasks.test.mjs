@@ -144,8 +144,8 @@ test("a document filed in the case folder cited as context gets a repair message
     await store.release({ model: "demo", budgetChf: null });
     const run = new AgentRun({ store, provider: new ScriptedProvider([]), task: "chronology", model: "demo" });
     run.mirror = structuredClone(store.mirror);
-    const section = (role) => run.sections().find(s => s.source.role === role);
-    const claim = section("claim"), other = run.sections().find(s => s.source.role !== "claim" && s.source.role !== "response");
+    const section = (role) => run.sections().find(s => s.source?.role === role);
+    const claim = section("claim"), other = run.sections().find(s => s.kind === "source" && s.source.role !== "claim" && s.source.role !== "response");
     for (const s of run.sections()) run.read.add(s.id);
     const quote = (s) => s.text.split("\n").find(line => line.trim().length > 20 && s.text.indexOf(line) === s.text.lastIndexOf(line)).trim();
     const out = run.toolSubmit({
@@ -160,5 +160,42 @@ test("a document filed in the case folder cited as context gets a repair message
     assert.match(out.error, /^source_kind: /);
     assert.ok(out.error.includes(`C1 → ${other.id} in context_references: a page of case document ${other.source.document}`), out.error);
     assert.match(out.error, /move it to citations or drop it/);
+  } finally { await cleanup(); }
+});
+
+test("the court's internal note is context for Claude, never evidence, and its role is part of the release", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    const note = store.sources.find(s => s.rel_path === "Instruktionsnotiz.docx");
+    assert.equal(note.role, "internal_note", "a file named as an internal note is recognised by its name");
+    await store.release({ model: "demo", budgetChf: null });
+    const run = new AgentRun({ store, provider: new ScriptedProvider([]), task: "chronology", model: "demo" });
+    run.mirror = structuredClone(store.mirror);
+    const listed = JSON.parse(run.toolListDocuments());
+    const notePage = store.mirror.documents.find(d => d.id === note.id).pages.find(p => p.section);
+    assert.deepEqual(listed.working_notes.map(w => w.section), [notePage.section], "list_documents offers the note as a working note");
+    assert.match(listed.documents.find(d => d.document === note.id).role, /context only/);
+    assert.equal(run.sections().find(s => s.id === notePage.section).kind, "working_note");
+
+    const claim = run.sections().find(s => s.source?.role === "claim");
+    for (const s of run.sections()) run.read.add(s.id);
+    const quote = (text) => text.split("\n").find(line => line.trim().length > 20 && text.indexOf(line) === text.lastIndexOf(line)).trim();
+    const submit = (citations, context) => run.toolSubmit({
+      claims: [
+        { id: "C1", text: "Ereignis", citations, context_references: context },
+        { id: "C2", text: "Datum", citations: [cite(claim.id, quote(claim.text))] },
+      ],
+      rows: [{ id: "R1", event: "C1", party: "P1", posture: "allegation", date: null }],
+      more_claims_reported: false,
+    });
+    const asEvidence = submit([cite(notePage.section, quote(notePage.text))], []);
+    assert.equal(asEvidence.ok, false);
+    assert.ok(asEvidence.error.includes(`C1 → ${notePage.section} in citations: a page of an internal note of the court, not a source`), asEvidence.error);
+    const asContext = submit([cite(claim.id, quote(claim.text))], [cite(notePage.section, quote(notePage.text))]);
+    assert.doesNotMatch(asContext.error ?? "", /source_kind/, "the note is accepted as context");
+
+    // Marking it as an ordinary document changes what Claude reads: the release lapses.
+    await store.changeSource(note.id, { role: "other" });
+    assert.equal(store.consentValid(), false);
   } finally { await cleanup(); }
 });
