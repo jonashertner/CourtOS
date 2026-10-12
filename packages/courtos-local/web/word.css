@@ -34,6 +34,7 @@ body.word { font-size: 13.5px; }
 .wp .d-date { min-width: 110px; }
 .wp .live { font-size: 12.5px; color: var(--external); display: flex; gap: 8px; align-items: center; margin-top: 4px; }
 .wp .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--external); animation: pulse 1.1s ease-in-out infinite; flex: none; }
+.wp .live[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .wp .live::before { animation: none; } }
 .finding .src-actions { display: grid; gap: 4px; justify-items: end; }
 .toast .link { margin-left: 10px; color: inherit; }
