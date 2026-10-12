@@ -108,6 +108,7 @@ const LABELS = {
   facts: { supports: "gestützt", contradicts: "widersprochen", inconclusive: "offen", not_found: "kein Beweismittel" },
   legal: { supports: "gestützt", contrary: "entgegenstehend", insufficient: "nicht ausreichend belegt", not_found_in_selected_sources: "keine Grundlage gefunden", manual_check_required: "selbst prüfen" },
   category: { relief: "Rechtsbegehren", fact: "Sachverhalt", legal: "Rechtliches" },
+  compareStatus: { disputed: "bestritten", one_sided: "nur eine Partei", open: "offen", both: "beidseitig dargestellt" },
   part: { facts: "Sachverhalt", issue: "Streitfrage", reasoning: "Würdigung", counterargument: "Gegenargument", open_issue: "Offener Punkt", disposition: "Vorschläge zum weiteren Vorgehen" },
   draftStatus: { alleged: "behauptet", disputed: "strittig", working_assumption: "Arbeitsannahme", analysis: "Analyse", proposal: "Vorschlag" },
   noteStatus: { proposed: "vorgeschlagen", adopted: "übernommen", disputed: "strittig", done: "erledigt" },
@@ -220,7 +221,8 @@ export function h(tag, props = {}, ...children) {
     if (value === undefined || value === null || value === false) continue;
     if (key.startsWith("on")) el.addEventListener(key.slice(2).toLowerCase(), value);
     else if (key === "class") el.setAttribute("class", [el.getAttribute("class"), value].filter(Boolean).join(" "));
-    else if (key === "style" && typeof value === "object") Object.assign(el.style, value);
+    // Custom properties ("--cols") only take effect through setProperty; plain assignment drops them silently.
+    else if (key === "style" && typeof value === "object") for (const [k, v] of Object.entries(value)) k.startsWith("--") ? el.style.setProperty(k, v) : (el.style[k] = v);
     else if (key === "dataset") Object.assign(el.dataset, value);
     else if (key in el && !(el instanceof SVGElement) && key !== "list") el[key] = value;
     else el.setAttribute(key, value === true ? "" : value);

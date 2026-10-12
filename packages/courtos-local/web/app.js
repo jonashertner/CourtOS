@@ -744,7 +744,7 @@ function outlineFor(view) {
   }, 0);
   nav.append(h("ol", {}, heads.map(head => h("li", {},
     h("a", { href: `#${head.id}`, onclick: (e) => { e.preventDefault(); head.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); } },
-      (head.querySelector(".claim-text")?.textContent ?? head.textContent).slice(0, 240))))));
+      (head.querySelector(".claim-text, .group-name")?.textContent ?? head.textContent).slice(0, 240))))));
   return nav;
 }
 

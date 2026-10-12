@@ -1,7 +1,9 @@
 /* CourtOS case folder. Builds on the CourtOS Swiss-minimalist identity
    (frontend/src/app/courtos-design.css): white paper, ink, few rules.
-   Two colours carry meaning and nothing else:
-   green  = stays on this computer;  violet = goes to Claude. */
+   Colours carry meaning and nothing else:
+   green  = stays on this computer;  violet = goes to Claude;
+   blue   = the claimant (P1);       orange = the respondent (P2);
+   red, amber = contradicted or disputed, open. */
 :root {
   --paper: #ffffff;
   --ink: #191919;
@@ -17,6 +19,8 @@
   --alert-wash: #f9efed;
   --amber: #8a6a12;
   --mark: #f3e6ad;
+  --p1: #2d5f93;
+  --p2: #ad5d17;
   --focus: #353535;
   --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   --text: Charter, "Iowan Old Style", "Source Serif 4", Georgia, serif;
@@ -29,7 +33,7 @@
 :root[data-theme="dark"] {
   --paper: #141414; --ink: #ececea; --muted: #a9a9a6; --faint: #7d7d7a; --rule: #2c2c2b; --wash: #1c1c1b;
   --local: #7cc0a0; --local-wash: #16251e; --external: #b4a2d6; --external-wash: #211c2b;
-  --alert: #e0918a; --alert-wash: #2c1a18; --amber: #d8b65c; --mark: #5a4c16; --focus: #d0d0d0;
+  --alert: #e0918a; --alert-wash: #2c1a18; --amber: #d8b65c; --mark: #5a4c16; --p1: #8db5e2; --p2: #e6a362; --focus: #d0d0d0;
   color-scheme: dark;
 }
 :root[data-theme="dark"] .modal-backdrop { background: #000000a0; }
@@ -181,7 +185,7 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
    cross-fades them in place, cascading down the page; the hidden version
    takes no space, so the line reflows to the visible one. */
 .pz { position: relative; }
-.pz > span { transition: opacity .34s ease, filter .34s ease; transition-delay: calc(var(--i, 0) * 10ms); }
+.pz > span { transition: opacity .34s ease, filter .34s ease; transition-delay: min(calc(var(--i, 0) * 10ms), 300ms); }
 .pz .o { color: var(--local); text-decoration: underline 1px var(--local); text-underline-offset: 3px; }
 .pz .d { color: var(--external); background: var(--external-wash); border-radius: 2px; padding: 0 3px; font-family: var(--ui); font-size: .84em; white-space: nowrap; }
 .view-original .pz .d, .view-mirror .pz .o { position: absolute; left: 0; top: 0; opacity: 0; filter: blur(4px); pointer-events: none; white-space: nowrap; }
@@ -253,12 +257,9 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 .timeline .date.none { color: var(--faint); font-weight: 400; }
 .timeline .marker { padding-top: 7px; }
 .timeline .marker i { display: block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); }
-.timeline .P1 .marker i { background: var(--ink); }
 .timeline .who { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 .timeline .who b { font-weight: 550; color: var(--ink); }
-.legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); margin-right: 6px; vertical-align: -1px; }
-.legend .P1 i { background: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13px; margin-bottom: 10px; }
 
 .fact { padding: 18px 0 20px; border-bottom: 1px solid var(--rule); }
 .fact-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
@@ -378,15 +379,57 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 .cite.is-note { border-style: dashed; }
 .verdict.manual { color: var(--external); }
 .legend span { display: inline-flex; align-items: center; }
-.legend .p0 i, .timeline .p0 .marker i { background: var(--ink); }
-.legend .p2 i, .timeline .p2 .marker i { background: var(--faint); border-color: var(--faint); }
-.group-title { font-size: 13px; color: var(--muted); font-weight: 500; margin: 22px 0 6px; }
-.compare-table { display: grid; gap: 0; }
-.compare-row { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)) minmax(0, 1fr); gap: 18px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
-.compare-row.head { font-size: 12px; color: var(--muted); padding: 6px 0; border-bottom: 1px solid var(--ink); }
-.compare-row .cell .claim-text { font-size: 14.5px; }
-.compare-row .analysis { border-left: 1px solid var(--rule); padding-left: 14px; }
+/* Parties: each keeps its colour in every view. */
+.pty { --pc: var(--faint); }
+.pty.P1 { --pc: var(--p1); }
+.pty.P2 { --pc: var(--p2); }
+.party-name { display: inline-flex; align-items: center; gap: 7px; font-weight: 550; color: var(--ink); }
+.party-name i { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); flex: none; }
+.timeline .marker i { background: var(--pc); border-color: var(--pc); }
+.timeline .who b { color: var(--pc); }
+.fact-head .party-name { font-weight: 500; }
+
+/* Postures and statuses as coloured text, not badges. */
 .posture { display: inline-block; font-size: 11.5px; color: var(--muted); margin-right: 6px; font-family: var(--ui); }
+.posture.denial, .posture.disputed { color: var(--alert); }
+.posture.unresolved { color: var(--amber); }
+.tone { --tone: var(--faint); }
+.tone.disputed, .tone.contradicts, .tone.contrary { --tone: var(--alert); }
+.tone.one_sided, .tone.open, .tone.inconclusive, .tone.insufficient { --tone: var(--amber); }
+.tone.supports { --tone: var(--local); }
+.tone.manual_check_required { --tone: var(--external); }
+span.tone { color: var(--tone); }
+.tone.both, .tone.not_found, .tone.not_found_in_selected_sources { --tone: var(--faint); }
+span.tone.both, span.tone.not_found, span.tone.not_found_in_selected_sources { color: var(--muted); }
+
+/* The overview above a result: counts that filter. */
+.tally { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 22px; font-size: 13px; }
+.tally button { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper); color: var(--ink); cursor: pointer; }
+.tally button:hover { background: var(--wash); }
+.tally button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.tally i { width: 8px; height: 8px; border-radius: 50%; background: var(--tone); }
+.tally b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.result [hidden] { display: none !important; }
+
+/* Compare positions: one column per party, then CourtOS's reading of the point. */
+.compare { margin-top: 34px; }
+.compare:first-of-type { margin-top: 0; }
+.group-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: 0 0 12px; }
+.group-name { font-size: 18px; font-weight: 600; }
+.group-count { font-size: 13px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+.compare-table { display: grid; gap: 0; }
+.compare-row { display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)) minmax(0, 1fr); gap: 0 26px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
+.compare-row.head { padding: 0 0 10px; font-size: 13px; }
+.compare-row.head > div { border-top: 3px solid var(--pc, var(--rule)); padding-top: 8px; }
+.compare-row.head .analysis-head { --pc: var(--rule); color: var(--muted); font-weight: 500; }
+.compare-row .cell.pty { border-left: 2px solid var(--pc); padding-left: 14px; }
+.compare-row .cell p + p { margin-top: 10px; }
+.compare-row .cell .claim-text { font-size: 15px; }
+.compare-row .cell .empty { color: var(--faint); font-size: 13px; padding-top: 2px; }
+.compare-row .analysis { background: var(--wash); border-radius: var(--r); padding: 10px 14px 12px; }
+.compare-row .analysis .claim-text { font-size: 14.5px; }
+.row-status { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.cell-party { display: none; font-size: 12px; margin-bottom: 4px; }
 .draft-doc { max-width: 78ch; }
 .draft-doc section { margin-bottom: 18px; }
 .draft-doc h3 { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 6px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
@@ -447,6 +490,9 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
 .drawer .regeste { margin-bottom: 12px; color: var(--muted); }
 @media (max-width: 980px) {
   .research-grid, .q-body, .compare-row { grid-template-columns: 1fr; }
+  .compare-row { gap: 12px; }
+  .compare-row.head { display: none; }
+  .cell-party { display: block; }
   .party-row { grid-template-columns: 34px 1fr; }
   .pipeline { grid-template-columns: 1fr; }
 }
@@ -469,6 +515,11 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
 .crumb .queue { margin: 0; }
 .reading-grid { display: grid; grid-template-columns: minmax(0, 940px); gap: 56px; }
 .reading-grid.has-outline { grid-template-columns: minmax(0, 940px) 200px; }
+/* Three columns side by side need more width than running text. */
+@media (min-width: 1261px) {
+  .reading-grid:has(.compare-table) { grid-template-columns: minmax(0, 1200px); }
+  .reading-grid.has-outline:has(.compare-table) { grid-template-columns: minmax(0, 1200px) 180px; }
+}
 .reading .run { margin-top: 0; max-width: none; }
 .reading .run-head { border-bottom: 1px solid var(--rule); padding-bottom: 14px; row-gap: 8px; }
 .reading .run-head h1 { flex-basis: 100%; font-size: 30px; line-height: 1.2; letter-spacing: -0.012em; }
