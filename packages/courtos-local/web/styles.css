@@ -49,6 +49,7 @@ p { margin: 0; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Buttons ------------------------------------------------------------- */
+a.btn { color: inherit; text-decoration: none; }
 .btn { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper); cursor: pointer; white-space: nowrap; }
 .btn:hover { background: var(--wash); }
 .btn:disabled { opacity: .45; cursor: default; }
@@ -193,7 +194,7 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 
 .run { margin-top: 30px; max-width: 980px; }
 .run-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid var(--ink); padding-bottom: 8px; }
-.run-head h2 { font-size: 20px; font-family: var(--text); font-weight: 400; }
+.run-head h1 { font-size: 20px; font-family: var(--text); font-weight: 400; }
 .run-head .meta { color: var(--muted); font-size: 13px; display: flex; gap: 12px; flex-wrap: wrap; }
 .run-head .spacer { flex: 1; }
 .trace { list-style: none; margin: 14px 0 0; padding: 0 0 0 14px; border-left: 1px solid var(--rule); font-size: 13px; }
@@ -428,3 +429,29 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
 .claim.needs-review .claim-text { background: linear-gradient(transparent 60%, var(--alert-wash) 60%); }
 .review-mark { font: 600 11px/1 var(--ui); color: var(--alert); letter-spacing: .02em; margin-right: 6px; vertical-align: 1px; }
 .review-note { color: var(--alert); margin: -4px 0 14px; }
+
+/* Reading view: an open result has the whole pane. */
+.pane.reading { max-width: none; padding-top: 18px; }
+.crumb { display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; font-size: 13px; margin-bottom: 26px; }
+.crumb .queue { margin: 0; }
+.reading-grid { display: grid; grid-template-columns: minmax(0, 940px); gap: 56px; }
+.reading-grid.has-outline { grid-template-columns: minmax(0, 940px) 200px; }
+.reading .run { margin-top: 0; max-width: none; }
+.reading .run-head { border-bottom: 1px solid var(--rule); padding-bottom: 14px; row-gap: 8px; }
+.reading .run-head h1 { flex-basis: 100%; font-size: 30px; line-height: 1.2; letter-spacing: -0.012em; }
+.reading .result { margin-top: 26px; }
+.reading .draft-doc { max-width: 70ch; }
+.reading .draft-doc section { margin-bottom: 34px; scroll-margin-top: 24px; }
+.reading .draft-doc h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border: 0; padding: 0; margin-bottom: 10px; }
+.reading .draft-doc .claim-text { font-size: 17px; line-height: 1.65; }
+.reading .draft-doc p, .reading .draft-doc li { margin-bottom: 14px; }
+.reading h3[id] { scroll-margin-top: 24px; }
+.outline { position: sticky; top: 24px; align-self: start; font-size: 13px; border-left: 1px solid var(--rule); padding-left: 16px; }
+.outline ol { list-style: none; margin: 0; padding: 0; }
+.outline li { margin: 0 0 8px; }
+.outline a { color: var(--muted); text-decoration: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; line-height: 1.35; }
+.outline a:hover { color: var(--ink); }
+@media (max-width: 1260px) { .reading-grid.has-outline { grid-template-columns: minmax(0, 1fr); } .outline { display: none; } }
+button.live-dot { border: 0; background: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.run-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.outline a[aria-current="true"] { color: var(--ink); font-weight: 500; }

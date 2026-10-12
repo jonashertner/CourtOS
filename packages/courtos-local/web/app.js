@@ -88,7 +88,8 @@ async function boot() {
       renderRunInPlace();
     },
     run_started: async ({ id, task }) => {
-      S.run = { id, task, status: "running", events: [], usage: null };
+      // The next step of a sequence replaces the view only if the user is following it.
+      if (S.follow || !S.run) { S.run = { id, task, status: "running", events: [], usage: null }; S.showTrace = true; }
       await refresh();
     },
     usage: ({ id, usage }) => { if (S.run?.id === id) { S.run.usage = usage; renderRunInPlace(); } },
@@ -181,7 +182,7 @@ function renderShell() {
       h("div.status", {},
         h("span.local", {}, icon("lock"), trn(c.register.replace, "{n} Angabe wird lokal ersetzt", "{n} Angaben werden lokal ersetzt")),
         consent,
-        S.st.current ? h("span.external.live-dot", {}, tr("Claude arbeitet")) : null,
+        S.st.current ? h("button.external.live-dot", { type: "button", title: tr("Laufenden Auftrag ansehen"), onclick: () => openRun(S.st.current, { follow: true }) }, tr("Claude arbeitet")) : null,
         c.sync ? h("span.alert", {}, tr("Ordner wird mit einem Cloud-Dienst synchronisiert")) : null,
       ),
       h("span.spacer"),
@@ -525,10 +526,11 @@ function renderWork() {
   const start = (body) => attempt(async () => {
     const { id } = await api("/api/runs", { method: "POST", body: { language: LANG, notes: [...S.selectedNotes], demo: useDemo, ...body } });
     S.run = { id, task: body.pipeline?.[0] ?? body.task, question: body.question, status: "running", events: [], usage: null, model: useDemo ? "demo-replay" : c.consent.model };
-    S.showTrace = true;
+    S.showTrace = true; S.follow = true;
     await refresh();
-    document.querySelector(".run")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.querySelector(".main")?.scrollTo({ top: 0 });
   });
+  if (S.run) return renderReading(S.run);
   const canRun = (task) => !blocked && !busy && (hasKey || (useDemo && demoTasks.has(task)));
   const assumptions = c.notes.filter(n => n.kind === "assumption");
   return h("section.pane", {},
@@ -570,21 +572,52 @@ function renderWork() {
       h("summary", {}, tr("Notizen als Kontext mitgeben ({n} gewählt)", { n: [...S.selectedNotes].length })),
       h("div.chips", {}, c.notes.filter(n => n.kind !== "assumption").map(n => h("label.chip", {}, h("input", { type: "checkbox", checked: S.selectedNotes.has(n.id), onchange: (e) => { e.target.checked ? S.selectedNotes.add(n.id) : S.selectedNotes.delete(n.id); } }), `${label("noteKind", n.kind)}: ${n.text.slice(0, 70)}`))),
       h("p.note", {}, tr("Notizen sind Kontext, nie Beweis. Sie werden vor dem Senden anonymisiert."))) : null,
-    S.st.queue?.length ? h("p.queue", {}, tr("Danach: {l}", { l: S.st.queue.map(t => label("task", t)).join(", ") }), " ", h("button.link", { type: "button", onclick: () => attempt(() => api("/api/queue/cancel", { method: "POST" })) }, tr("Reihe abbrechen"))) : null,
-    S.run ? renderRun(S.run) : null,
+    S.st.current ? h("p.queue", {}, h("button.link", { type: "button", onclick: () => openRun(S.st.current, { follow: true }) }, tr("Laufenden Auftrag ansehen"))) : null,
     renderHistory(),
   );
 }
 
-async function openRun(id) {
+/** One result, with the whole pane to read it in. */
+function renderReading(run) {
+  const back = () => { S.run = null; S.follow = false; render(); document.querySelector(".main")?.scrollTo({ top: 0 }); };
+  const queue = S.st.queue?.length ? h("span.queue", {}, tr("Danach: {l}", { l: S.st.queue.map(t => label("task", t)).join(", ") }), " ", h("button.link", { type: "button", onclick: () => attempt(() => api("/api/queue/cancel", { method: "POST" })) }, tr("Reihe abbrechen"))) : null;
+  const view = renderRun(run);
+  const outline = outlineFor(view);
+  return h("section.pane.reading", {},
+    h("nav.crumb", { "aria-label": tr("Navigation") }, h("button.link", { type: "button", onclick: back }, h("span", { "aria-hidden": "true" }, "← "), tr("Analyse")), queue),
+    h("div.reading-grid", { class: outline ? "has-outline" : null }, view, outline));
+}
+
+/** A short table of contents for long results: draft parts, comparison groups, key questions. */
+function outlineFor(view) {
+  const heads = [...view.querySelectorAll(".draft-doc section > h3, .compare > h3.group-title, .question > h3.q")];
+  if (heads.length < 3) return null;
+  heads.forEach((head, i) => { head.id = `part-${i + 1}`; });
+  const nav = h("nav.outline", { "aria-label": tr("Gliederung") });
+  setTimeout(() => {
+    const links = new Map([...nav.querySelectorAll("a")].map(a => [a.getAttribute("href").slice(1), a]));
+    const seen = new IntersectionObserver((entries) => {
+      const top = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+      if (!top) return;
+      for (const [id, a] of links) a.setAttribute("aria-current", String(id === top.target.id));
+    }, { root: document.querySelector(".main"), rootMargin: "0px 0px -60% 0px" });
+    heads.forEach(head => seen.observe(head));
+  }, 0);
+  nav.append(h("ol", {}, heads.map(head => h("li", {},
+    h("a", { href: `#${head.id}`, onclick: (e) => { e.preventDefault(); head.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); } },
+      (head.querySelector(".claim-text")?.textContent ?? head.textContent).slice(0, 240))))));
+  return nav;
+}
+
+async function openRun(id, { follow = false } = {}) {
   await attempt(async () => {
-    S.run = await api(`/api/runs/${id}`); S.showTrace = false; S.view = "work"; render();
-    document.querySelector(".run")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    S.run = await api(`/api/runs/${id}`); S.showTrace = follow; S.follow = follow; S.view = "work"; render();
+    document.querySelector(".main")?.scrollTo({ top: 0 });
   });
 }
 
 function renderHistory() {
-  const list = (S.st.runs ?? []).filter(r => r.id !== S.run?.id);
+  const list = S.st.runs ?? [];
   if (!list.length) return null;
   return h("div.history", {}, h("h2", {}, tr("Frühere Aufträge")), list.slice(0, 20).map(r => h("button", { type: "button", onclick: () => openRun(r.id) },
     h("span", {}, label("task", r.task)), h("span.muted", {}, r.question ?? ""),
@@ -595,14 +628,23 @@ function renderHistory() {
 const statusName = (s) => tr({ running: "läuft", succeeded: "fertig", failed: "fehlgeschlagen", blocked: "gestoppt", cancelled: "abgebrochen" }[s] ?? s);
 
 function renderRunInPlace() {
-  const old = document.querySelector(".run");
-  if (old && S.run) old.replaceWith(renderRun(S.run));
+  const old = document.querySelector(".pane.reading");
+  if (old && S.run) old.replaceWith(renderReading(S.run));
 }
 
 function tokens(usage) {
   if (!usage) return null;
   const total = (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0);
   return tr("{n} Tokens", { n: total.toLocaleString("de-CH") });
+}
+
+// US$ per million tokens: input, output, cache write, cache read.
+const PRICES = { "claude-opus-5-5": [4, 20, 5, 0.2] };
+function cost(run) {
+  const p = PRICES[run.model], u = run.usage;
+  if (!p || !u) return null;
+  const usd = ((u.input_tokens ?? 0) * p[0] + (u.output_tokens ?? 0) * p[1] + (u.cache_creation_input_tokens ?? 0) * p[2] + (u.cache_read_input_tokens ?? 0) * p[3]) / 1e6;
+  return `≈ US$ ${usd.toFixed(2)}`;
 }
 
 function renderRun(run) {
@@ -614,13 +656,13 @@ function renderRun(run) {
   const demo = run.model === "demo-replay";
   return h("section.run", {},
     h("div.run-head", {},
-      h("h2", {}, run.question && run.task === "source_chat" ? `«${run.question}»` : label("task", run.task)),
-      h("span.meta", {}, h("span", {}, demo ? tr("Demo-Wiedergabe, kein Modell") : modelName(run.model)), tokens(run.usage) ? h("span", {}, tokens(run.usage)) : null, !running ? h("span", {}, statusName(run.status)) : null),
-      h("span.spacer"),
+      h("h1", {}, run.question && run.task === "source_chat" ? `«${run.question}»` : label("task", run.task)),
+      h("span.meta", {}, h("span", {}, demo ? tr("Demo-Wiedergabe, kein Modell") : modelName(run.model)), tokens(run.usage) ? h("span", {}, tokens(run.usage)) : null, cost(run) ? h("span", { title: tr("Geschätzt nach den Listenpreisen von Anthropic") }, cost(run)) : null, run.started ? h("span", {}, new Date(run.started).toLocaleString(`${LANG}-CH`, { dateStyle: "medium", timeStyle: "short" })) : null, !running ? h("span", {}, statusName(run.status)) : null),
+      h("div.run-actions", {},
       running ? h("button.btn.small", { type: "button", onclick: () => api(`/api/runs/${run.id}/cancel`, { method: "POST" }) }, tr("Abbrechen")) : null,
       !running && run.requests?.length ? h("button.btn.small", { type: "button", onclick: () => openAudit(run) }, tr("Gesendete Anfragen ({n})", { n: run.requests.length })) : null,
       !running && run.result && run.task === "decision_draft" ? h("button.btn.small", { type: "button", onclick: () => saveDraftAsOrder(run) }, tr("Als Verfügungsentwurf speichern")) : null,
-      !running && run.result ? h("a.btn.small", { href: `/api/runs/${run.id}/markdown`, download: `${run.id}.md` }, tr("Als Markdown")) : null,
+      !running && run.result ? h("a.btn.small", { href: `/api/runs/${run.id}/markdown`, download: `${run.id}.md` }, tr("Als Markdown")) : null),
     ),
     renderFreshness(run.freshness),
     running || S.showTrace ? trace : h("button.link.trace-toggle", { type: "button", onclick: () => { S.showTrace = true; renderRunInPlace(); } }, tr("Arbeitsschritte anzeigen ({n})", { n: lines.length })),

@@ -1,6 +1,6 @@
 // Renderers for the eight task results. Every claim keeps its citations; a
 // claim can be taken over into the working notes.
-import { citationChip, claimText, h, icon, label, parseDate, partyLabel, pg, tr } from "./shared.js";
+import { citationChip, claimText, h, icon, label, parseDate, partyLabel, pg, tr, trn } from "./shared.js";
 
 export function renderResult(run, ctx) {
   const result = run.result;
@@ -17,7 +17,7 @@ export function renderResult(run, ctx) {
     // A quotation that failed even after Claude's one correction: the claim is not verified.
     const review = [...c.citations, ...(c.context ?? [])].some(x => x.match !== "exact");
     return h("span.claim", { class: review ? "needs-review" : null },
-      review ? h("span.review-mark", { title: tr("Mindestens ein Zitat steht so nicht in der Quelle. Prüfen Sie die Aussage an der Akte.") }, tr("prüfen")) : null,
+      review ? h("span.review-mark", { title: tr("Mindestens ein Zitat ist nicht an der Quelle verifiziert. Prüfen Sie die Aussage an der Akte.") }, tr("prüfen")) : null,
       claimText(c.display),
       h("span.cites", {}, chips, notes),
       opts.noNote ? null : h("button.note-add", { type: "button", title: tr("Als Notiz übernehmen"), "aria-label": tr("Als Notiz übernehmen"), onclick: () => ctx.addNote(c, run) }, icon("note")));
@@ -113,7 +113,7 @@ export function renderResult(run, ctx) {
   const firstReview = (e) => e.target.closest(".result")?.querySelector(".claim.needs-review")?.scrollIntoView({ behavior: "smooth", block: "center" });
   return h("div.result", {},
     h("p.draft-note", {}, tr("Arbeitsentwurf. {v} von {t} Aussagen sind wörtlich an ihren Quellen geprüft; ob eine Stelle die Aussage trägt, prüfen Sie. Grün unterstrichene Namen hat CourtOS lokal wiederhergestellt.", { v: verified, t: total })),
-    verified < total ? h("p.review-note", {}, tr("{n} Aussagen sind nicht belegt: Ihr Zitat stand auch nach einer Korrektur nicht so in der Quelle. Sie sind mit «prüfen» markiert.", { n: total - verified }), " ", h("button.link", { type: "button", onclick: firstReview }, tr("Zur ersten"))) : null,
+    verified < total ? h("p.review-note", {}, trn(total - verified, "{n} Aussage ist nicht an der Quelle verifiziert und mit «prüfen» markiert.", "{n} Aussagen sind nicht an der Quelle verifiziert und mit «prüfen» markiert."), " ", h("button.link", { type: "button", onclick: firstReview }, tr("Zur ersten"))) : null,
     body,
     h("div.coverage", {},
       h("span", {}, tr("Gelesen: {r} von {s} Aktenseiten.", { r: cov.reviewed, s: cov.sections })),
