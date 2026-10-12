@@ -1,4 +1,4 @@
-import { api, ApiError, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, tr, traceText, trn, pg, refLabel } from "./shared.js";
+import { adoptLang, api, ApiError, chooseLang, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, tr, traceText, trn, pg, refLabel } from "./shared.js";
 import { renderResult } from "./results.js";
 import { COUNTERPART, PARTY_ROLES, partyTerm, partyTermLabel } from "./party-roles.js";
 
@@ -37,7 +37,7 @@ const TASK_TEXT = {
   party_comparison: "Rechtsbegehren, Sachverhalt und Rechtliches beider Parteien nebeneinander.",
   legal_claims: "Die Rechtsargumente der Parteien, geprüft an Entscheiden auf OpenCaseLaw und an der Literatur im Ordner.",
   fundamental_questions: "Die Fragen, an denen der Fall hängt, mit Analyse und Gegenargumenten.",
-  decision_draft: "Ein quellengebundener Entwurf: Sachverhalt, Streitfragen, Erwägungen, Gegenargumente, Dispositiv als Vorschlag.",
+  decision_draft: "Eine quellengebundene Arbeitsgrundlage, kein Entscheid: Sachverhalt, Streitfragen, Würdigung mit Gegenargumenten, offene Punkte und Vorschläge zum weiteren Vorgehen.",
   hypothetical_impact: "Was ändert sich, wenn eine Ihrer Arbeitsannahmen zutrifft? Ausgangslage, Auswirkung, Grenzen.",
   source_chat: "Eine konkrete Frage an die Akten. Die Antwort besteht nur aus belegten Aussagen.",
 };
@@ -72,6 +72,7 @@ async function boot() {
     if (error.code === "not_paired") return renderUnpaired();
     throw error;
   }
+  adoptLang(S.st);
   events({
     scan: (p) => { S.scan = p; renderScanProgress(); },
     case: async (change) => {
@@ -93,6 +94,10 @@ async function boot() {
       await refresh();
     },
     usage: ({ id, usage }) => { if (S.run?.id === id) { S.run.usage = usage; renderRunInPlace(); } },
+    // Word follows this window and can hand a passage across.
+    clients: (clients) => { if (S.st) { const was = Boolean(S.st.clients?.word); S.st.clients = clients; if (was !== Boolean(clients.word)) render(); } },
+    language: ({ language }) => { if (language !== LANG) { setLang(language); render(); } },
+    show: ({ citation }) => { if (!S.st?.case) return; openCitation(citation); window.focus(); toast(tr("Aus Word: {w}", { w: refLabel(citation) })); },
     run_done: async ({ id }) => {
       const summary = await api(`/api/runs/${id}`);
       if (S.run?.id === id) S.run = summary;
@@ -108,7 +113,7 @@ function wordmark() {
 }
 
 function langSelect() {
-  return h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { setLang(e.target.value); render(); } },
+  return h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { chooseLang(e.target.value); render(); } },
     LANGUAGES.map(([code, name]) => h("option", { value: code, selected: code === LANG }, name)));
 }
 
@@ -187,7 +192,8 @@ function renderShell() {
       ),
       h("span.spacer"),
       langSelect(),
-      h("button.btn.small.quiet", { type: "button", onclick: pairWord }, tr("Word verbinden")),
+      S.st.clients?.word ? h("span.word-on", { title: tr("Word folgt diesem Fenster: Belege öffnen sich hier, Aussagen lassen sich in Word einfügen.") }, icon("check"), tr("Word verbunden"))
+        : h("button.btn.small.quiet", { type: "button", onclick: pairWord }, tr("Word verbinden")),
       h("button.btn.small.quiet", { type: "button", onclick: async () => { await attempt(() => api("/api/folder/choose", { method: "POST" })); S.view = null; S.register = null; await refresh(); } }, tr("Anderer Ordner")),
     ),
     renderRail(),
@@ -557,7 +563,7 @@ function renderWork() {
         h("input", { name: "q", placeholder: useDemo ? S.st.demo_question : tr("Zum Beispiel: Wann wurde der Mangel erstmals festgestellt?"), value: useDemo ? S.st.demo_question : "", "aria-label": tr("Frage an die Akten") }),
         h("button.btn.primary", { type: "submit", disabled: !canRun(task) }, useDemo ? action : tr("Fragen")));
       else if (task === "decision_draft") extra = h("form.ask", { onsubmit: (e) => { e.preventDefault(); start({ task, question: e.target.q.value.trim() }); } },
-        h("input", { name: "q", placeholder: tr("Optional: Richtung oder Umfang, z. B. «nur Rügefrist, Dispositiv als Teilentscheid»"), "aria-label": tr("Anweisung für den Entwurf") }),
+        h("input", { name: "q", placeholder: tr("Optional: Richtung oder Umfang, z. B. «nur die Rügefrist»"), "aria-label": tr("Anweisung für die Würdigung") }),
         h("button.btn.primary", { type: "submit", disabled: !canRun(task) }, tr("Entwerfen")));
       else if (task === "hypothetical_impact") extra = h("div.ask", {},
         assumptions.length ? h("div.chips", {}, assumptions.map(n => h("label.chip", {}, h("input", { type: "checkbox", checked: S.selectedNotes.has(n.id), onchange: (e) => { e.target.checked ? S.selectedNotes.add(n.id) : S.selectedNotes.delete(n.id); render(); } }), n.text.slice(0, 80))))
@@ -666,7 +672,7 @@ function renderRun(run) {
     ),
     renderFreshness(run.freshness),
     running || S.showTrace ? trace : h("button.link.trace-toggle", { type: "button", onclick: () => { S.showTrace = true; renderRunInPlace(); } }, tr("Arbeitsschritte anzeigen ({n})", { n: lines.length })),
-    run.result ? renderResult(run, { state: S.st, openCitation, addNote: addNoteFromClaim }) : null,
+    run.result ? renderResult(run, { state: S.st, openCitation, addNote: addNoteFromClaim, toWord: S.st.clients?.word ? sendToWord : null }) : null,
   );
 }
 
@@ -714,7 +720,7 @@ function draftPlain(run) {
 
 function saveDraftAsOrder(run) {
   attempt(async () => {
-    await api("/api/procedure", { method: "POST", body: { list: "orders", op: "add", title: tr("Entscheidentwurf vom {d}", { d: new Date().toLocaleDateString(`${LANG}-CH`) }), text: draftPlain(run), status: "draft", ref: run.id } });
+    await api("/api/procedure", { method: "POST", body: { list: "orders", op: "add", title: tr("Würdigung vom {d}", { d: new Date().toLocaleDateString(`${LANG}-CH`) }), text: draftPlain(run), status: "draft", ref: run.id } });
     toast(tr("Unter Verfahren als Entwurf gespeichert."));
     await refresh();
   });
@@ -1040,6 +1046,14 @@ async function openAudit(run) {
   ));
   document.body.append(backdrop);
   show(current);
+}
+
+/** Insert a claim at the cursor in Word, with its sources as a footnote. */
+async function sendToWord(claim, run) {
+  await attempt(async () => {
+    const { delivered } = await api("/api/word/insert", { method: "POST", body: { run: run.id, claim: claim.id } });
+    toast(delivered ? tr("In Word eingefügt, an der Cursorposition.") : tr("Word ist nicht verbunden."), !delivered);
+  });
 }
 
 async function pairWord() {

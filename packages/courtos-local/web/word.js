@@ -1,17 +1,20 @@
 // CourtOS in Word. The draft stays in Word; CourtOS reads only what you ask it
 // to (a selection, or the paragraphs for a citation check) and inserts only
 // what you choose, at the cursor.
-import { api, ApiError, claimPlain, claimText, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, parseDate, partyLabel, refsPlain, setLang, tr, traceText, trn, refLabel, inLanguage } from "./shared.js";
+import { adoptLang, api, ApiError, chooseLang, claimPlain, claimText, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, parseDate, partyLabel, refsPlain, setLang, tr, traceText, trn, refLabel, inLanguage } from "./shared.js";
 
 const pane = document.getElementById("pane");
 const S = { st: null, tab: "evidence", selection: "", run: null, latest: new Map(), office: false, citecheck: null, citecheckBusy: false };
 
 const inOffice = () => S.office && typeof Word !== "undefined";
-const toast = (message, bad = false) => {
-  const el = h("div.toast", { class: bad ? "bad" : null }, message);
+const toast = (message, bad = false, action = null) => {
+  const el = h("div.toast", { class: bad ? "bad" : null }, message,
+    action ? h("button.link", { type: "button", onclick: () => { el.remove(); action.run(); } }, action.label) : null);
   document.getElementById("toasts").append(el);
-  setTimeout(() => el.remove(), 4500);
+  setTimeout(() => el.remove(), action ? 9000 : 4500);
 };
+// What Claude is doing for the browser, updated in place so typing in the pane is never interrupted.
+const live = h("p.live", { role: "status", hidden: true });
 
 async function attempt(fn) {
   try { return await fn(); }
@@ -74,6 +77,19 @@ async function insertReference(citation) {
   toast(footnotes() ? tr("Fussnote eingefügt: {w}", { w: where }) : tr("Fundstelle eingefügt: {w}", { w: where }));
 }
 
+/** One statement at the cursor, its sources as a footnote (or in parentheses). Strings are built before any await. */
+async function insertClaim(claim) {
+  const text = claimPlain(claim), refs = refsPlain(claim);
+  if (!inOffice()) { await navigator.clipboard?.writeText(refs ? `${text} (${refs})` : text); return toast(tr("In die Zwischenablage kopiert.")); }
+  await Word.run(async (context) => {
+    const inserted = context.document.getSelection().getRange("End").insertText(text, "After");
+    if (refs) { if (footnotes()) inserted.getRange("End").insertFootnote(refs); else inserted.getRange("End").insertText(` (${refs})`, "After"); }
+    inserted.getRange("End").select();
+    await context.sync();
+  });
+  toast(tr("Aus dem Browser eingefügt."));
+}
+
 async function insertTable(header, rows) {
   if (!inOffice()) {
     await navigator.clipboard?.writeText([header, ...rows].map(r => r.join("\t")).join("\n"));
@@ -118,6 +134,9 @@ async function refresh() {
     if (run.status !== "succeeded" || run.task === "source_chat" || S.latest.has(run.task)) continue;
     S.latest.set(run.task, await api(`/api/runs/${run.id}`));
   }
+  const current = S.st.current && S.st.runs?.find(r => r.id === S.st.current);
+  if (current && current.id !== S.run?.id) { S.liveTask = current.task; if (live.hidden) showLive(tr("Im Browser: {t} · läuft", { t: label("task", current.task) })); }
+  else if (!S.st.current) showLive(null);
   render();
 }
 
@@ -226,10 +245,11 @@ function render() {
   const c = S.st.case;
   const head = h("div.wp-head", {},
     h("div.row", {}, h("img", { src: "icon.svg", alt: "", width: 18, height: 18 }), h("span.case", {}, c ? c.name : tr("Kein Fall geöffnet")),
-      h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { setLang(e.target.value); render(); } }, LANGUAGES.map(([code, name]) => h("option", { value: code, selected: code === LANG }, code.toUpperCase())))),
+      h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { chooseLang(e.target.value); render(); } }, LANGUAGES.map(([code, name]) => h("option", { value: code, selected: code === LANG }, code.toUpperCase())))),
     c ? h("div.state", {},
       h("span.local", {}, icon("lock"), trn(c.register.replace, "{n} Angabe lokal ersetzt", "{n} Angaben lokal ersetzt")),
       c.consent_valid ? h("span.external", {}, icon("out"), tr("freigegeben")) : h("span.alert", {}, tr("nicht freigegeben"))) : null,
+    live,
   );
   if (!c) return pane.replaceChildren(h("div.wp", {}, head, h("p.hint", {}, tr("Öffnen Sie den Fallordner im Browser. Dieser Bereich zeigt danach denselben Fall.")), openBrowserButton()));
   const tabs = [["evidence", "Belegen"], ["citations", "Zitate"], ["insert", "Einfügen"], ["procedure", "Fristen"]];
@@ -276,9 +296,11 @@ function renderRun() {
     h("p.hint", {}, tr("Jede Fundstelle ist wörtlich an ihrer Quelle geprüft. Ob sie Ihren Satz trägt, entscheiden Sie.")),
     run.result.rows.map(row => {
       const claim = claims.get(row.answer);
-      return h("div.finding", {}, claimText(claim.display), claim.citations.map(citation => h("div.src", {},
+      return h("div.finding", {}, claimText(claim.display), claim.citations.map((citation, index) => h("div.src", {},
         h("div", {}, h("span.where", {}, icon(citation.match === "exact" ? "check" : "cross"), refLabel(citation)), " ", h("q", {}, (citation.quote_original ?? citation.quote_pseudonymised).slice(0, 220))),
-        citation.match === "exact" ? h("button.btn.small", { type: "button", onclick: () => attempt(() => inLanguage(caseLang(), () => insertReference(citation))) }, footnotes() ? tr("Als Fussnote") : tr("Einfügen")) : null,
+        h("div.src-actions", {},
+          citation.match === "exact" ? h("button.btn.small", { type: "button", onclick: () => attempt(() => inLanguage(caseLang(), () => insertReference(citation))) }, footnotes() ? tr("Als Fussnote") : tr("Einfügen")) : null,
+          citation.document ? h("button.link.small", { type: "button", onclick: () => attempt(() => showInBrowser(run.id, claim.id, index)) }, tr("Im Browser zeigen")) : null),
       )));
     }),
   );
@@ -324,26 +346,57 @@ function renderDeadlines(c) {
   );
 }
 
+function openBrowser() {
+  const url = location.origin + "/";
+  if (inOffice() && Office.context.ui?.openBrowserWindow) Office.context.ui.openBrowserWindow(url); else window.open(url, "_blank", "noopener");
+}
 function openBrowserButton() {
-  return h("button.link", { type: "button", onclick: () => {
-    const url = location.origin + "/";
-    if (inOffice() && Office.context.ui?.openBrowserWindow) Office.context.ui.openBrowserWindow(url); else window.open(url, "_blank", "noopener");
-  } }, tr("Im Browser öffnen"));
+  return h("button.link", { type: "button", onclick: openBrowser }, tr("Im Browser öffnen"));
+}
+
+/** The cited page opens in the browser, with the passage marked. Without an open browser window, one is opened. */
+async function showInBrowser(run, claim, citation) {
+  const { delivered } = await api("/api/show", { method: "POST", body: { run, claim, citation } });
+  if (delivered) toast(tr("Im Browser geöffnet."));
+  else { openBrowser(); toast(tr("Der Browser wird geöffnet. Wählen Sie die Stelle dort erneut.")); }
+}
+
+/** One line on what Claude is doing for the browser: the same run, seen from Word. */
+function showLive(text) {
+  live.hidden = !text;
+  live.textContent = text ?? "";
 }
 
 async function boot() {
   try { S.st = await api("/api/state"); } catch (error) { if (error.code === "not_paired") return renderPairing(); throw error; }
+  adoptLang(S.st);
   events({
     // Another case was opened: never offer the previous case's results.
     case: (change) => { if (change.kind === "opened") { S.latest.clear(); S.run = null; S.selection = ""; S.citecheck = null; } refresh(); },
-    run: ({ id, event }) => { if (S.run?.id === id) { S.run.events.push(event); render(); } },
+    run: ({ id, event }) => {
+      if (S.run?.id === id) { S.run.events.push(event); return render(); }
+      const text = traceText(event);
+      if (text) showLive(tr("Im Browser: {t} · {s}", { t: label("task", S.liveTask ?? "source_chat"), s: text }));
+    },
+    run_started: ({ id, task }) => { if (S.run?.id !== id) { S.liveTask = task; showLive(tr("Im Browser: {t} · gestartet", { t: label("task", task) })); } },
     run_done: async ({ id }) => {
       const summary = await api(`/api/runs/${id}`);
       if (S.run?.id === id) S.run = summary;
+      else {
+        showLive(null);
+        if (summary.status === "succeeded" && summary.task !== "source_chat") toast(tr("Neues Ergebnis: {t}", { t: label("task", summary.task) }), false, { label: tr("Einfügen …"), run: () => { S.tab = "insert"; render(); } });
+      }
       if (summary.status === "succeeded" && summary.task !== "source_chat") S.latest.set(summary.task, summary);
       render();
     },
-  });
+    language: ({ language }) => { if (language !== LANG) { setLang(language); render(); } },
+    // A statement chosen in the browser goes in at the cursor.
+    insert: ({ run, claim }) => attempt(async () => {
+      const summary = await api(`/api/runs/${run}`);
+      const found = summary.result?.claims.find(c => c.id === claim);
+      if (found) await inLanguage(caseLang(), () => insertClaim(found));
+    }),
+  }, "word");
   await refresh();
 }
 

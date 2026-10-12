@@ -22,6 +22,20 @@ export function setLang(lang) {
 }
 document.documentElement.lang = LANG;
 
+/** The browser and Word share one interface language, kept by the local server. */
+export function chooseLang(lang) {
+  setLang(lang);
+  api("/api/language", { method: "POST", body: { language: lang } }).catch(() => { /* the language still applies here */ });
+}
+/** Take the shared language on start; the first view to start sets it. Returns true if it changed. */
+export function adoptLang(st) {
+  const shared = st?.settings?.language;
+  if (!shared) { chooseLang(LANG); return false; }
+  if (shared === LANG) return false;
+  setLang(shared);
+  return true;
+}
+
 /**
  * Run fn with tr() and label() answering in another language, without changing
  * the interface. Used for text that goes into the court's own document, which
@@ -59,7 +73,7 @@ export function trn(n, one, many, vars = {}) {
 const LABELS = {
   task: {
     chronology: "Chronologie", facts_evidence: "Behauptungen und Beweise", party_comparison: "Positionen vergleichen",
-    legal_claims: "Rechtsargumente prüfen", source_chat: "Quellen befragen", decision_draft: "Entscheid entwerfen",
+    legal_claims: "Rechtsargumente prüfen", source_chat: "Quellen befragen", decision_draft: "Würdigung und weiteres Vorgehen",
     fundamental_questions: "Grundfragen", hypothetical_impact: "Auswirkungen einer Annahme",
   },
   role: { claim: "Klage", response: "Antwort", submission: "Eingabe", exhibit: "Beilage", literature: "Literatur", authority: "Entscheid", internal_note: "Interne Notiz", other: "Weitere" },
@@ -67,7 +81,7 @@ const LABELS = {
   facts: { supports: "gestützt", contradicts: "widersprochen", inconclusive: "offen", not_found: "kein Beweismittel" },
   legal: { supports: "gestützt", contrary: "entgegenstehend", insufficient: "nicht ausreichend belegt", not_found_in_selected_sources: "keine Grundlage gefunden", manual_check_required: "selbst prüfen" },
   category: { relief: "Rechtsbegehren", fact: "Sachverhalt", legal: "Rechtliches" },
-  part: { facts: "Sachverhalt", issue: "Streitfrage", reasoning: "Erwägung", counterargument: "Gegenargument", open_issue: "Offener Punkt", disposition: "Dispositiv (Vorschlag)" },
+  part: { facts: "Sachverhalt", issue: "Streitfrage", reasoning: "Würdigung", counterargument: "Gegenargument", open_issue: "Offener Punkt", disposition: "Vorschläge zum weiteren Vorgehen" },
   draftStatus: { alleged: "behauptet", disputed: "strittig", working_assumption: "Arbeitsannahme", analysis: "Analyse", proposal: "Vorschlag" },
   noteStatus: { proposed: "vorgeschlagen", adopted: "übernommen", disputed: "strittig", done: "erledigt" },
   noteKind: { note: "Notiz", question: "Offene Frage", assumption: "Arbeitsannahme", contradiction: "Widerspruch" },
@@ -158,8 +172,8 @@ export async function pairFromHash() {
   await api("/api/pair", { method: "POST", body: { token: match[1] } }).catch(() => {});
 }
 
-export function events(handlers) {
-  const source = new EventSource("/api/events", { withCredentials: true });
+export function events(handlers, client = "web") {
+  const source = new EventSource(`/api/events?client=${client}`, { withCredentials: true });
   for (const [type, handler] of Object.entries(handlers)) source.addEventListener(type, (e) => handler(JSON.parse(e.data)));
   return source;
 }
@@ -201,6 +215,7 @@ const ICONS = {
   scale: "M8 2v12M4 14h8M3 5h10M3 5l-1.5 4a2 2 0 003 0zM13 5l-1.5 4a2 2 0 003 0z",
   calendar: "M2.5 3.5h11v10h-11zM2.5 6.5h11M5.5 2v3M10.5 2v3",
   plus: "M8 3v10M3 8h10",
+  insert: "M8 2v8M4.5 6.5L8 10l3.5-3.5M2.5 13.5h11",
   arrow: "M3 8h10M9 4l4 4-4 4",
   spark: "M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3M3.4 3.4l2.1 2.1M10.5 10.5l2.1 2.1M3.4 12.6l2.1-2.1M10.5 5.5l2.1-2.1",
 };

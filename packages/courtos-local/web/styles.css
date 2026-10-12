@@ -341,6 +341,7 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 .note-add { border: 0; background: none; color: var(--faint); cursor: pointer; padding: 0 4px; vertical-align: -1px; opacity: 0; transition: opacity .15s; }
 .claim:hover .note-add, .note-add:focus-visible { opacity: 1; }
 @media (hover: none) { .note-add { opacity: 1; } }
+.word-on { display: inline-flex; align-items: center; gap: 5px; color: var(--local); font: 500 12.5px/1 var(--ui); }
 .cite.is-authority .icon { color: var(--external); }
 .cite.is-note { border-style: dashed; }
 .verdict.manual { color: var(--external); }

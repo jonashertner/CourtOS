@@ -34,6 +34,8 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
 const CONFIG = () => join(homedir(), ".config", "courtos");
 const KEY = () => join(CONFIG(), "anthropic-key");
 const RECENT = () => join(CONFIG(), "recent.json");
+const PREFS = () => join(CONFIG(), "preferences.json");
+const UI_LANGUAGES = ["de", "fr", "it", "en"];
 
 export async function loadCertificates() {
   const dir = join(homedir(), ".office-addin-dev-certs");
@@ -65,15 +67,26 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   const layout = pageLayouts();
   const sessions = new Set();
   const codes = new Map(); // code → expiry
-  const clients = new Set();
+  const clients = new Set(); // { res, kind: "web" | "word" }
   let failedPairs = 0;
   let store = null;
   let currentRun = null;
   const runs = new Map();
 
-  const broadcast = (type, data) => {
+  /** Send an event to every open view, or only to the browser ("web") or Word ("word") views. Returns how many received it. */
+  const broadcast = (type, data, kind = null) => {
     const payload = `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
-    for (const client of clients) client.write(payload);
+    let delivered = 0;
+    for (const client of clients) if (!kind || client.kind === kind) { client.res.write(payload); delivered++; }
+    return delivered;
+  };
+  const connected = () => ({ web: [...clients].filter(c => c.kind === "web").length, word: [...clients].filter(c => c.kind === "word").length });
+  /** A citation of a stored result, by position: the views exchange references, never content. */
+  const storedCitation = (runId, claimId, index) => {
+    const claim = runs.get(String(runId))?.result?.claims.find(c => c.id === claimId);
+    if (!claim) return null;
+    const all = [...claim.citations, ...(claim.context ?? [])];
+    return Number.isInteger(index) && index >= 0 && index < all.length ? { claim, citation: all[index] } : { claim, citation: null };
   };
 
   async function openFolder(path) {
@@ -100,7 +113,8 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
 
   async function state() {
     const key = Boolean(await apiKey());
-    const base = { origin, settings: { has_key: key, model: DEFAULT_MODEL }, tasks: Object.keys(TASKS), demo_question: DEMO_QUESTION };
+    const prefs = await readJson(PREFS(), {}).catch(() => ({}));
+    const base = { origin, settings: { has_key: key, model: DEFAULT_MODEL, language: UI_LANGUAGES.includes(prefs.language) ? prefs.language : null }, clients: connected(), tasks: Object.keys(TASKS), demo_question: DEMO_QUESTION };
     if (!store) return { ...base, case: null, recent: await readJson(RECENT(), []).catch(() => []) };
     const register = store.register.entities;
     return {
@@ -277,9 +291,11 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       if (path === "/api/events" && req.method === "GET") {
         res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-store", Connection: "keep-alive" });
         res.write(": connected\n\n");
-        clients.add(res);
+        const client = { res, kind: url.searchParams.get("client") === "word" ? "word" : "web" };
+        clients.add(client);
+        broadcast("clients", connected());
         const ping = setInterval(() => res.write(": ping\n\n"), 20000);
-        req.on("close", () => { clearInterval(ping); clients.delete(res); });
+        req.on("close", () => { clearInterval(ping); clients.delete(client); broadcast("clients", connected()); });
         return;
       }
       if (path === "/api/pair/code" && req.method === "POST") {
@@ -362,6 +378,26 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       }
       if (path === "/api/revoke" && req.method === "POST") { await store.revoke(); return send(res, 200, { ok: true }); }
       if (path === "/api/runs" && req.method === "POST") return send(res, 200, await startRuns(await body(req)));
+      // The browser and Word follow each other: one interface language, and a passage or claim handed across.
+      if (path === "/api/language" && req.method === "POST") {
+        const { language } = await body(req, 1024);
+        if (!UI_LANGUAGES.includes(language)) throw new CourtosError("invalid_language");
+        await mkdir(CONFIG(), { recursive: true, mode: 0o700 });
+        await writeFile(PREFS(), JSON.stringify({ ...(await readJson(PREFS(), {}).catch(() => ({}))), language }));
+        broadcast("language", { language });
+        return send(res, 200, { ok: true });
+      }
+      if (path === "/api/show" && req.method === "POST") {
+        const { run, claim, citation } = await body(req, 1024);
+        const found = storedCitation(run, claim, citation);
+        if (!found?.citation) return send(res, 404, { error: "not_found" });
+        return send(res, 200, { delivered: broadcast("show", { run, claim, citation: found.citation }, "web") });
+      }
+      if (path === "/api/word/insert" && req.method === "POST") {
+        const { run, claim } = await body(req, 1024);
+        if (!storedCitation(run, claim, -1)) return send(res, 404, { error: "not_found" });
+        return send(res, 200, { delivered: broadcast("insert", { run, claim }, "word") });
+      }
       if (path === "/api/queue/cancel" && req.method === "POST") { queue.length = 0; currentRun?.cancel(); return send(res, 200, { ok: true }); }
       if ((match = /^\/api\/register\/(E[0-9a-f]{12})\/occurrences$/.exec(path)) && req.method === "GET") return send(res, 200, { occurrences: store.occurrences(match[1]) });
       if (path === "/api/register/occurrence" && req.method === "POST") { await store.setOccurrence(await body(req)); return send(res, 200, { ok: true }); }
@@ -438,7 +474,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   log(`CourtOS läuft auf ${origin}`);
   log(`Im Browser öffnen: ${pairUrl}`);
   if (openBrowser && process.platform === "darwin") execFile("open", [pairUrl]);
-  return { server, origin, pairUrl, close: () => { store?.close(); for (const c of clients) c.end(); server.close(); } };
+  return { server, origin, pairUrl, close: () => { store?.close(); for (const c of clients) c.res.end(); server.close(); } };
 }
 
 async function listRuns(store) {

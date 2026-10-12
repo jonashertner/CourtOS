@@ -20,7 +20,8 @@ export function renderResult(run, ctx) {
       review ? h("span.review-mark", { title: tr("Mindestens ein Zitat ist nicht an der Quelle verifiziert. Prüfen Sie die Aussage an der Akte.") }, tr("prüfen")) : null,
       claimText(c.display),
       h("span.cites", {}, chips, notes),
-      opts.noNote ? null : h("button.note-add", { type: "button", title: tr("Als Notiz übernehmen"), "aria-label": tr("Als Notiz übernehmen"), onclick: () => ctx.addNote(c, run) }, icon("note")));
+      opts.noNote ? null : h("button.note-add", { type: "button", title: tr("Als Notiz übernehmen"), "aria-label": tr("Als Notiz übernehmen"), onclick: () => ctx.addNote(c, run) }, icon("note")),
+      ctx.toWord && !review ? h("button.note-add", { type: "button", title: tr("In Word einfügen"), "aria-label": tr("In Word einfügen"), onclick: () => ctx.toWord(c, run) }, icon("insert")) : null);
   };
   const party = (p) => partyLabel(ctx.state, p);
   let body;
