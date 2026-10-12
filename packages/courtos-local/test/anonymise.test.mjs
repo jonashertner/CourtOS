@@ -104,3 +104,11 @@ test("the guard lets a replacement label pass, and an ordinary word only where t
   assert.throws(() => guard.checkBody({ messages: [{ role: "assistant", content: "Anna Keller a signé." }] }), { code: "outbound_blocked" });
   assert.throws(() => guard.checkBody({ messages: [{ role: "user", content: "Lieu: Lausanne" }] }), { code: "outbound_blocked" });
 });
+
+test("a name in a flattened e-mail header is shown without the header word, and the header form is still replaced", () => {
+  const { candidates } = suggestAnonymisation(doc("Von Thomas Baumann <t.baumann@example.ch> An Urs Vogel <u.vogel@example.ch> Cc Anna Meier"));
+  const vogel = candidates.find(c => c.kind === "person" && c.aliases.includes("Urs Vogel"));
+  assert.equal(vogel.label, "Urs Vogel");
+  assert.ok(vogel.aliases.includes("An Urs Vogel"), "the form with the header word stays an alias");
+  assert.ok(candidates.every(c => !/^(An|Cc) /u.test(c.label)));
+});

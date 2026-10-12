@@ -52,6 +52,13 @@ const LABEL_WORDS = new Set([
   ...Object.values(ROLE_LABEL).flatMap(names => Object.values(names)).flatMap(name => name.toLocaleLowerCase("de").split(" ")),
   ..."exhibit exhibits pièce pièces piece pieces beilage beilagen allegato allegati annex annexe anlage beweismittel".split(" "),
 ]);
+// Words that open an e-mail header or an address line ("An Urs Vogel", "Cc Anna Meier"). They are
+// no part of the name a result shows; the form with them stays an alias, so the mirror is unchanged.
+const HEADER_WORDS = new Set("an cc bcc kopie to from".split(" "));
+const withoutHeader = (form) => {
+  const tokens = form.split(/\s+/);
+  return tokens.length > 2 && HEADER_WORDS.has(tokens[0].replace(/:$/u, "").toLocaleLowerCase("de")) && tokens.slice(1).every(t => /^\p{Lu}/u.test(t)) ? tokens.slice(1).join(" ") : form;
+};
 const FUNCTION_WORDS = new Set("le la les l des du de d par pour sur sous dans en et ou au aux un une il lo gli i del della dei di da per con su tra fra e o un una the and of in on at for to by der die das den dem des und oder im am an auf bei mit von vom zu zum zur ein eine".split(" "));
 const GENERIC = new Set("hotel hotels bau immobilien holding partner partners treuhand group gruppe services service consulting management invest swiss schweiz suisse svizzera international verwaltung handel technik bank legal rechtsanwälte versicherung versicherungen transport garage restaurant immo real estate capital finance pharma energie media software systems solutions".split(" "));
 
@@ -223,7 +230,8 @@ export function suggestAnonymisation(documents) {
     // A word the files also write in lower case ("may", "item") is a word there: only its
     // capitalised form is replaced.
     const lower = single && forms.some(f => /^\p{Ll}/u.test(f)) ? { match: "capitalised" } : {};
-    candidates.push({ key: `person:${normal(person.name)}`, kind: "person", label: person.name, aliases: forms.sort((a, b) => b.length - a.length), count: person.mentions.length, samples: person.mentions.slice(0, 8).map(sample), notes, decision, source: "citecheck", style: "letter", ...lower, ...ordinaryMatch(forms) });
+    const aliases = [...new Set([...forms, ...forms.map(withoutHeader)])].sort((a, b) => b.length - a.length);
+    candidates.push({ key: `person:${normal(person.name)}`, kind: "person", label: withoutHeader(person.name), aliases, count: person.mentions.length, samples: person.mentions.slice(0, 8).map(sample), notes, decision, source: "citecheck", style: "letter", ...lower, ...ordinaryMatch(forms) });
   }
   for (const item of result.ambiguous) {
     const forms = [...new Set(item.mentions.map(m => m.text.trim()))];
