@@ -119,3 +119,38 @@ test("a run needs a valid release, and a new file in the folder revokes it", asy
     assert.equal(store.consentValid(), false, "changed content revokes the release");
   } finally { await cleanup(); }
 });
+
+test("a result turns stale when a file it was made from changes or disappears; new files are listed", async () => {
+  const { staleness } = await import("../src/verify.mjs");
+  const { rm } = await import("node:fs/promises");
+  const { root, store, cleanup } = await freshCase();
+  try {
+    await store.release({ model: "demo", budgetChf: null });
+    const { summary } = await runTask(store, "chronology");
+    assert.equal(summary.status, "succeeded");
+    assert.deepEqual(staleness(store, summary.result), { stale: false, changed: [], added: [] });
+
+    const cited = store.sources.find(s => s.id === summary.result.claims[0].citations[0].document);
+    const literature = store.sources.find(s => s.rel_path.startsWith("Literatur/"));
+    await writeFile(join(root, literature.rel_path), "# Notiz\n\nGeänderter Text der Notiz zur Rügefrist.\n");
+    await rm(join(root, cited.rel_path));
+    await writeFile(join(root, "Replik.md"), "Replik der Klägerin.\n\nDie Klägerin hält an ihren Rechtsbegehren fest.\n");
+    await store.scan();
+    const fresh = staleness(store, summary.result);
+    assert.equal(fresh.stale, true);
+    assert.deepEqual(fresh.changed.map(c => [c.document, c.reason]).sort(), [[cited.id, "missing"], [literature.id, "changed"]].sort());
+    assert.deepEqual(fresh.added.map(a => store.sources.find(s => s.id === a.document).rel_path), ["Replik.md"]);
+    assert.ok(fresh.changed.find(c => c.reason === "missing").pages.length > 0, "every cited page of a missing file is gone");
+
+    // Bytes appended to a PDF change the file but not the cited page text.
+    const pdf = store.sources.find(s => s.rel_path.endsWith(".pdf") && summary.result.claims.some(c => c.citations.some(x => x.document === s.id)) && s.id !== cited.id);
+    assert.ok(pdf, "the run cites a second PDF");
+    {
+      await writeFile(join(root, pdf.rel_path), Buffer.concat([await readFile(join(root, pdf.rel_path)), Buffer.from("\n% annotated\n")]));
+      await store.scan();
+      const entry = staleness(store, summary.result).changed.find(c => c.document === pdf.id);
+      assert.equal(entry.reason, "changed");
+      assert.deepEqual(entry.pages, [], "the cited passages themselves are unchanged");
+    }
+  } finally { await cleanup(); }
+});

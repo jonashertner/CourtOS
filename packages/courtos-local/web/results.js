@@ -5,13 +5,15 @@ import { citationChip, claimText, h, icon, label, parseDate, partyLabel, pg, tr 
 export function renderResult(run, ctx) {
   const result = run.result;
   const claims = new Map(result.claims.map(c => [c.id, c]));
+  // Cited pages whose text is no longer the text that was checked.
+  const changed = new Set((run.freshness?.changed ?? []).flatMap(x => x.pages.map(n => `${x.document}:${n}`)));
   const claim = (id, opts = {}) => {
     const c = claims.get(id);
     if (!c) return null;
     const bySection = new Map();
     for (const x of c.citations) bySection.set(x.section_id, [...(bySection.get(x.section_id) ?? []), x]);
-    const chips = [...bySection.values()].map(group => citationChip({ ...group[0], match: group.every(x => x.match === "exact") ? "exact" : "unverified", group }, ctx.openCitation));
-    const notes = (c.context ?? []).map(x => citationChip(x, ctx.openCitation));
+    const chips = [...bySection.values()].map(group => citationChip({ ...group[0], match: group.every(x => x.match === "exact") ? "exact" : "unverified", group }, ctx.openCitation, changed));
+    const notes = (c.context ?? []).map(x => citationChip(x, ctx.openCitation, changed));
     return h("span.claim", {},
       claimText(c.display),
       h("span.cites", {}, chips, notes),

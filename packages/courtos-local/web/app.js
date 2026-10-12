@@ -588,6 +588,7 @@ function renderHistory() {
   if (!list.length) return null;
   return h("div.history", {}, h("h2", {}, tr("Frühere Aufträge")), list.slice(0, 20).map(r => h("button", { type: "button", onclick: () => openRun(r.id) },
     h("span", {}, label("task", r.task)), h("span.muted", {}, r.question ?? ""),
+    r.stale ? h("span.stale-mark", { title: tr("Eine Akte hat sich seit diesem Auftrag geändert.") }, tr("veraltet")) : null,
     h("span.faint", { style: { marginLeft: "auto" } }, `${r.status === "succeeded" ? "" : statusName(r.status) + ", "}${r.started ? new Date(r.started).toLocaleString(`${LANG}-CH`) : ""}`))));
 }
 
@@ -621,9 +622,25 @@ function renderRun(run) {
       !running && run.result && run.task === "decision_draft" ? h("button.btn.small", { type: "button", onclick: () => saveDraftAsOrder(run) }, tr("Als Verfügungsentwurf speichern")) : null,
       !running && run.result ? h("a.btn.small", { href: `/api/runs/${run.id}/markdown`, download: `${run.id}.md` }, tr("Als Markdown")) : null,
     ),
+    renderFreshness(run.freshness),
     running || S.showTrace ? trace : h("button.link.trace-toggle", { type: "button", onclick: () => { S.showTrace = true; renderRunInPlace(); } }, tr("Arbeitsschritte anzeigen ({n})", { n: lines.length })),
     run.result ? renderResult(run, { state: S.st, openCitation, addNote: addNoteFromClaim }) : null,
   );
+}
+
+/** A result made from files that have since changed is stale; say which. */
+function renderFreshness(f) {
+  if (!f || (!f.stale && !f.added.length)) return null;
+  const names = (list) => list.map(x => x.label).join(", ");
+  const missing = f.changed.filter(x => x.reason === "missing");
+  const moved = f.changed.filter(x => x.reason === "changed" && x.pages.length), kept = f.changed.filter(x => x.reason === "changed" && !x.pages.length);
+  return h("div.stale", { role: "status" },
+    h("strong", {}, f.stale ? tr("Veraltet") : tr("Neue Akten")),
+    moved.length ? h("p", {}, tr("Seit diesem Auftrag geändert: {l}. Die markierten Belege zeigen auf Text, der so nicht mehr in der Akte steht.", { l: names(moved) })) : null,
+    kept.length ? h("p", {}, tr("Seit diesem Auftrag geändert: {l}. Die zitierten Stellen sind unverändert; anderes in der Datei kann sich geändert haben.", { l: names(kept) })) : null,
+    missing.length ? h("p", {}, tr("Nicht mehr im Aktenordner: {l}.", { l: names(missing) })) : null,
+    f.added.length ? h("p", {}, tr("Nicht berücksichtigt, weil später hinzugekommen: {l}.", { l: names(f.added) })) : null,
+    h("p.faint", {}, tr("Starten Sie den Auftrag erneut, um den aktuellen Stand zu verwenden.")));
 }
 
 function addNoteFromClaim(claim, run) {

@@ -106,7 +106,45 @@ export function bindResult(store, mirror, result, task, extra = []) {
   coverage.authorities_read = authorities.filter(a => extra.some(s => s.meta?.decision?.decision_id === a.decision_id && result.coverage.source_inventory.some(e => e.section_id === s.id && e.review === "reviewed")));
   return {
     task, rows: result.rows, claims, coverage,
-    integrity: { result_sha256: sha256(JSON.stringify(result)), mirror_sha256: mirror.sha256, register_rev: store.register.rev, original_bytes_revalidated: false },
+    integrity: {
+      result_sha256: sha256(JSON.stringify(result)), mirror_sha256: mirror.sha256, register_rev: store.register.rev, original_bytes_revalidated: false,
+      // The file versions this result was produced from, for marking it stale later.
+      sources: Object.fromEntries(mirror.documents.map(d => [d.id, store.sources.find(s => s.id === d.id)?.sha256 ?? null])),
+    },
     status: "ai_draft_requires_review",
   };
+}
+
+/**
+ * Has a file changed since the result was produced? A document Claude read
+ * that changed or disappeared makes the result stale, and each citation into
+ * it is marked; documents added to the folder since are listed. Results from
+ * before the per-run file list fall back to the files their citations name.
+ */
+/**
+ * Whether a result still matches the case folder. `changed` lists files that
+ * changed or disappeared since the run, each with the cited pages whose text
+ * is no longer the text that was checked; `added` lists files the run never saw.
+ */
+export function staleness(store, bound) {
+  if (!bound) return null;
+  const recorded = new Map(Object.entries(bound.integrity?.sources ?? {}));
+  if (!bound.integrity?.sources) for (const claim of bound.claims) for (const c of [...claim.citations, ...claim.context]) if (c.document && c.file_sha256) recorded.set(c.document, c.file_sha256);
+  const current = new Map(store.sources.filter(s => !s.missing).map(s => [s.id, s]));
+  // A changed file need not touch the cited passage: compare each cited page's text.
+  const citedPages = (id) => {
+    const pages = new Map();
+    for (const claim of bound.claims) for (const c of [...claim.citations, ...claim.context]) if (c.document === id && c.page) pages.set(c.page, c.page_sha256 ?? null);
+    return pages;
+  };
+  const pageMoved = (id, n, hash) => { try { return !hash || store.originalPage(id, n).sha256 !== hash; } catch { return true; } };
+  const changed = [];
+  for (const [id, hash] of recorded) {
+    const source = current.get(id);
+    const pages = [...citedPages(id)];
+    if (!source) changed.push({ document: id, label: store.sources.find(s => s.id === id)?.label ?? id, reason: "missing", pages: pages.map(([n]) => n).sort((a, b) => a - b) });
+    else if (hash && source.sha256 !== hash) changed.push({ document: id, label: source.label, reason: "changed", pages: pages.filter(([n, h]) => pageMoved(id, n, h)).map(([n]) => n).sort((a, b) => a - b) });
+  }
+  const added = bound.integrity?.sources ? [...current.values()].filter(s => s.include && s.status === "ok" && !recorded.has(s.id)).map(s => ({ document: s.id, label: s.label })) : [];
+  return { stale: changed.length > 0, changed, added };
 }

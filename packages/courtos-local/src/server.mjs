@@ -19,6 +19,7 @@ import { wikiMarkdown } from "./wiki.mjs";
 import { OpenCaseLaw } from "./opencaselaw.mjs";
 import { checkCitations } from "./citecheck.mjs";
 import { backupArchive } from "./backup.mjs";
+import { staleness } from "./verify.mjs";
 import { CourtosError, randomId, readJson, writeAtomic } from "./util.mjs";
 
 const WEB = new URL("../web/", import.meta.url);
@@ -112,7 +113,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       },
       queue: queue.map(q => q.task),
       current: currentRun?.status === "running" ? currentRun.id : null,
-      runs: [...runs.values()].map(r => ({ id: r.id, task: r.task, question: r.question, status: r.status, started: r.started, finished: r.finished, model: r.model })).sort((a, b) => String(b.started).localeCompare(String(a.started))),
+      runs: [...runs.values()].map(r => ({ id: r.id, task: r.task, question: r.question, status: r.status, started: r.started, finished: r.finished, model: r.model, stale: staleness(store, r.result)?.stale ?? false })).sort((a, b) => String(b.started).localeCompare(String(a.started))),
     };
   }
 
@@ -385,7 +386,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       if ((match = /^\/api\/runs\/([\w-]{8,80})$/.exec(path)) && req.method === "GET") {
         const run = currentRun?.id === match[1] ? currentRun.summary() : runs.get(match[1]);
         if (!run) throw new CourtosError("run_unknown", undefined, 404);
-        return send(res, 200, run);
+        return send(res, 200, { ...run, freshness: staleness(store, run.result) });
       }
       if ((match = /^\/api\/runs\/([\w-]{8,80})\/cancel$/.exec(path)) && req.method === "POST") {
         if (currentRun?.id === match[1]) { queue.length = 0; currentRun.cancel(); }

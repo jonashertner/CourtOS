@@ -407,3 +407,10 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
   .party-row { grid-template-columns: 34px 1fr; }
   .pipeline { grid-template-columns: 1fr; }
 }
+
+/* Stale results: the files changed after the run. */
+.stale { border-left: 2px solid var(--amber); background: var(--wash); padding: 8px 14px; margin: 12px 0 16px; max-width: 72ch; }
+.stale strong { display: block; font-weight: 600; margin-bottom: 2px; }
+.stale p { margin: 2px 0; }
+.cite.is-stale { border-color: var(--amber); border-style: dashed; }
+.stale-mark { color: var(--amber); font-size: 12px; }

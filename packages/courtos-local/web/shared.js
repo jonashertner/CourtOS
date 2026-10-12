@@ -218,13 +218,15 @@ export function claimText(display) {
     : segment.text));
 }
 
-export function citationChip(citation, onOpen) {
+export function citationChip(citation, onOpen, changed = null) {
   const exact = citation.match === "exact";
+  // The page this citation was checked against has changed since the run.
+  const moved = Boolean(changed && citation.document && changed.has(`${citation.document}:${citation.page}`));
   const note = citation.kind === "note" || citation.internal_note;
   const kindClass = citation.kind === "authority" ? "is-authority" : note ? "is-note" : null;
   return h("button.cite", {
-    type: "button", class: [exact ? "is-exact" : "is-unverified", kindClass].filter(Boolean).join(" "),
-    title: exact ? tr("An der Quelle geprüft: «{q}»", { q: (citation.quote_original ?? "").slice(0, 240) }) : tr("Nicht verifiziert"),
+    type: "button", class: [exact ? "is-exact" : "is-unverified", kindClass, moved ? "is-stale" : null].filter(Boolean).join(" "),
+    title: (moved ? tr("Diese Seite hat sich seit dem Auftrag geändert.") + " " : "") + (exact ? tr("An der Quelle geprüft: «{q}»", { q: (citation.quote_original ?? "").slice(0, 240) }) : tr("Nicht verifiziert")),
     onclick: () => onOpen(citation),
   }, icon(citation.kind === "authority" ? "scale" : note ? "note" : exact ? "check" : "cross"),
   refLabel(citation));
