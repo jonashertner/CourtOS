@@ -6,7 +6,7 @@ import { EventEmitter } from "node:events";
 import { watch } from "node:fs";
 import { lstat, mkdir, readFile, realpath, stat } from "node:fs/promises";
 import { join, sep } from "node:path";
-import { classify, insideRoot, neutralLabels, syncWarning, walk, WORKSPACE_DIR } from "./scan.mjs";
+import { classify, filerOf, insideRoot, neutralLabels, syncWarning, walk, WORKSPACE_DIR } from "./scan.mjs";
 import { extractFile, EXTRACTOR, SUPPORTED } from "./extract.mjs";
 import { sampleContext } from "./detect.mjs";
 import { suggestAnonymisation } from "./anonymise.mjs";
@@ -196,6 +196,7 @@ export class CaseStore extends EventEmitter {
         if (detected !== "de") this.register = relabelReplacements(this.register, "de", detected, this.corpus());
       }
     }
+    this.deriveParties();
     neutralLabels(this.sources.filter(s => !s.missing && s.status === "ok"), this.lang);
     progress({ phase: "detect" });
     const docs = this.includedDocuments();
@@ -411,6 +412,47 @@ export class CaseStore extends EventEmitter {
   }
 
   // --- parties -----------------------------------------------------------
+  /**
+   * The parties as the file names show them, until the user sets them. A claim has a claimant
+   * and a respondent; a civil appeal an appellant and the other side; an appeal against a
+   * decision has the appellant, then each filer of a response or observations in file order:
+   * a private respondent, an authority or the court below. Their pleadings are assigned to them.
+   */
+  deriveParties() {
+    // Parties set before CourtOS recorded who set them count as the user's unless they are the untouched default.
+    const current = this.case.parties ?? [];
+    const untouched = current.length === 2 && current[0].role === "claimant" && current[1].role === "respondent" && current.every(p => !p.entity && !p.gender);
+    if (this.case.parties_by === "user" || (this.case.parties_by !== "files" && !untouched)) return;
+    const live = this.sources.filter(s => !s.missing && s.status === "ok");
+    const kindOf = (s) => (s.guess && s.guess.role === s.role ? s.guess.kind ?? null : null);
+    const claims = live.filter(s => s.role === "claim").map(kindOf);
+    let roles = ["claimant", "respondent"];
+    const assigned = new Map();
+    if (claims.includes("appeal")) {
+      roles = ["objector"];
+      const filers = new Map();
+      for (const s of live.filter(s => s.role === "response").sort((a, b) => a.rel_path.localeCompare(b.rel_path))) {
+        const kind = kindOf(s);
+        const key = filerOf(s.name);
+        if (!filers.has(key) && roles.length < 9) {
+          roles.push(kind === "lower_instance" ? "lower_instance" : ["authority", "observations"].includes(kind) ? "authority" : "objection_respondent");
+          filers.set(key, `P${roles.length}`);
+        }
+        if (filers.has(key)) assigned.set(s.id, filers.get(key));
+      }
+      if (roles.length === 1) roles.push("objection_respondent");
+    } else if (claims.includes("civil_appeal")) {
+      roles = ["appellant", "appeal_respondent"];
+    }
+    this.case.parties_by = "files";
+    if (current.length !== roles.length || current.some((party, i) => party.role !== roles[i])) {
+      this.case.parties = roles.map((role, i) => ({ id: `P${i + 1}`, role, entity: null, gender: null }));
+      // A document the user gave to a party that no longer exists belongs to no party.
+      for (const s of this.sources) if (s.party && Number(s.party.slice(1)) > roles.length) { s.party = null; if (s.overrides.party !== undefined) s.overrides.party = null; }
+    }
+    for (const s of live) if (s.overrides.party === undefined && assigned.has(s.id)) s.party = assigned.get(s.id);
+  }
+
   async setParties(parties) {
     if (!Array.isArray(parties) || !parties.length || parties.length > 9) throw new CourtosError("invalid_parties");
     const ids = new Set();
@@ -422,6 +464,7 @@ export class CaseStore extends EventEmitter {
       ids.add(id);
       return { id, role: party.role, entity: party.entity ?? null, gender: party.gender ?? null };
     });
+    this.case.parties_by = "user";
     for (const source of this.sources) if (source.party && !ids.has(source.party)) { source.party = null; source.overrides.party = null; }
     await this.rebuild();
   }

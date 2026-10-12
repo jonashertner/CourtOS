@@ -17,6 +17,15 @@ export const ROLE_LABEL = {
   en: { claim: "Statement of claim", response: "Statement of defence", submission: "Submission", exhibit: "Exhibit", literature: "Literature", authority: "Decision", internal_note: "Internal note", other: "Document", document: "Document" },
 };
 
+/** Labels for pleadings whose file name says more than the role: an appeal and its answer,
+ *  observations of an authority or a court below, a reply and a rejoinder. */
+export const PLEADING_LABEL = {
+  de: { appeal: { claim: "Beschwerde", response: "Beschwerdeantwort" }, civil_appeal: { claim: "Berufung", response: "Berufungsantwort" }, observations: "Vernehmlassung", reply: "Replik", rejoinder: "Duplik" },
+  fr: { appeal: { claim: "Recours", response: "Réponse" }, civil_appeal: { claim: "Appel", response: "Réponse à l'appel" }, observations: "Observations", reply: "Réplique", rejoinder: "Duplique" },
+  it: { appeal: { claim: "Ricorso", response: "Risposta" }, civil_appeal: { claim: "Appello", response: "Risposta all'appello" }, observations: "Osservazioni", reply: "Replica", rejoinder: "Duplica" },
+  en: { appeal: { claim: "Appeal", response: "Response to the appeal" }, civil_appeal: { claim: "Appeal", response: "Response to the appeal" }, observations: "Observations", reply: "Reply", rejoinder: "Rejoinder" },
+};
+
 /** Replacement labels for identifiers, by kind. Persons and organisations get letters ("A.________"). */
 export const REPLACEMENT_PREFIX = {
   de: {

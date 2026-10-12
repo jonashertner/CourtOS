@@ -69,3 +69,64 @@ test("Claude reads each party's role term and pseudonymised name; a change revok
     await assert.rejects(store.setParties([{ role: "claimant", entity: null, gender: "x" }]), { code: "invalid_party" });
   } finally { await cleanup(); }
 });
+
+test("an appeal's parties follow its file names until the user sets them, and parties a user set are kept", async () => {
+  const { mkdtemp, mkdir, writeFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { CaseStore } = await import("../src/caseStore.mjs");
+  const dir = await mkdtemp(join(tmpdir(), "courtos-appeal-"));
+  const root = join(dir, "1C_412_2026");
+  await mkdir(join(root, "Dossier cantonal"), { recursive: true });
+  const text = (title) => `${title}\n\nLe présent mémoire est déposé dans le délai et contient les motifs du recours ainsi que les conclusions.\n`;
+  for (const name of ["01 Recours en matière de droit public.md", "02 Réponse des intimés.md", "03 Observations Municipalité.md",
+    "04 Observations Tribunal cantonal.md", "05 Observations OFEV.md", "06 Réplique.md", "Dossier cantonal/Pièce 201 Demande de permis.md"]) {
+    await writeFile(join(root, name), text(name));
+  }
+  const store = await CaseStore.open(root);
+  try {
+    await store.scan();
+    assert.deepEqual(store.case.parties.map(p => p.role), ["objector", "objection_respondent", "authority", "lower_instance", "authority"]);
+    const partyOf = (name) => store.sources.find(s => s.name === name).party;
+    assert.equal(partyOf("01 Recours en matière de droit public.md"), "P1");
+    assert.equal(partyOf("02 Réponse des intimés.md"), "P2");
+    assert.equal(partyOf("03 Observations Municipalité.md"), "P3");
+    assert.equal(partyOf("04 Observations Tribunal cantonal.md"), "P4");
+    assert.equal(partyOf("05 Observations OFEV.md"), "P5", "each authority that filed is its own party");
+    assert.equal(partyOf("06 Réplique.md"), "P1");
+    assert.equal(partyOf("Pièce 201 Demande de permis.md"), null, "the cantonal record is no party's pleading");
+
+    // Without the appeal the folder reads as a two-party case, and no document points to a party that is gone.
+    const observations = store.sources.find(s => s.name === "05 Observations OFEV.md");
+    await store.changeSource(observations.id, { party: "P5" });
+    await rm(join(root, "01 Recours en matière de droit public.md"));
+    await store.scan();
+    assert.deepEqual(store.case.parties.map(p => p.role), ["claimant", "respondent"]);
+    assert.equal(partyOf("03 Observations Municipalité.md"), "P2");
+    assert.equal(partyOf("05 Observations OFEV.md"), null);
+    await writeFile(join(root, "01 Recours en matière de droit public.md"), text("01 Recours en matière de droit public.md"));
+    await store.scan();
+    assert.equal(store.case.parties.length, 5);
+
+    // Once the user sets the parties, a new scan keeps them.
+    await store.setParties([{ role: "objector" }, { role: "objection_respondent" }]);
+    await store.scan();
+    assert.deepEqual(store.case.parties.map(p => p.role), ["objector", "objection_respondent"]);
+  } finally {
+    store.close();
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a civil claim keeps claimant and respondent, and parties set before CourtOS recorded who set them are kept", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    assert.deepEqual(store.case.parties.map(p => p.role), ["claimant", "respondent"]);
+    store.case.parties = [{ id: "P1", role: "applicant", entity: null, gender: null }, { id: "P2", role: "applicant_respondent", entity: null, gender: null }];
+    delete store.case.parties_by;
+    await store.scan();
+    assert.deepEqual(store.case.parties.map(p => p.role), ["applicant", "applicant_respondent"]);
+  } finally {
+    await cleanup();
+  }
+});
