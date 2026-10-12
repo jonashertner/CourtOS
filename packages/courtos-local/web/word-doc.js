@@ -5,8 +5,8 @@
 import { claimPlain, label, parseDate, refLabel, tr } from "./shared.js";
 
 const NBSP = " ";
-/** "Klage, S. 1; KB 1, S. 3", with the page number bound to its abbreviation. */
-export const sources = (claim) => [...new Set((claim?.citations ?? []).map(refLabel))].join("; ").replace(/\b(S|p|pag)\. (\d)/g, `$1.${NBSP}$2`);
+/** "Klage, S. 1; KB 1, S. 3", each number bound to the word before it ("KB 1", "S. 3"). */
+export const sources = (claim) => [...new Set((claim?.citations ?? []).map(refLabel))].join("; ").replace(/ (?=\d)/g, NBSP);
 const text = (claim) => claimPlain(claim) || "–";
 /** A cell starts with a capital, as a line in a court document does. */
 const cap = (value) => value ? value.charAt(0).toLocaleUpperCase() + value.slice(1) : value;
@@ -46,13 +46,15 @@ function chronology(run, state) {
 
 function factsEvidence(run, state) {
   const claims = claimsOf(run);
+  // The other side and the reasons belong to the work product: "Offen" alone does not say why.
   return { kind: "table", columns: [
-    { head: tr("Partei"), width: 0.14 }, { head: tr("Behauptung"), width: 0.32 }, { head: tr("Beweismittel"), width: 0.27 }, { head: tr("Einschätzung"), width: 0.12 }, { head: tr("Fundstellen"), width: 0.15 },
+    { head: tr("Partei"), width: 0.10 }, { head: tr("Behauptung"), width: 0.21 }, { head: tr("Beweismittel"), width: 0.19 }, { head: tr("Andere Partei"), width: 0.18 }, { head: tr("Würdigung"), width: 0.21 }, { head: tr("Fundstellen"), width: 0.11 },
   ], rows: run.result.rows.map(row => [
     { text: partyName(state, row.party) },
     { text: text(claims.get(row.statement)) },
     { text: row.evidence.map(id => text(claims.get(id))).join("\n") || "–" },
-    { text: cap(label("facts", row.assessment)) },
+    { text: row.opposing.map(id => text(claims.get(id))).join("\n") || tr("Keine Stellungnahme im ausgewerteten Material") },
+    { text: `${cap(label("facts", row.assessment))}\n${text(claims.get(row.reasoning))}` },
     // Each place once, though several statements rest on it.
     { text: [...new Set([row.statement, ...row.evidence, ...row.opposing, row.reasoning].flatMap(id => sources(claims.get(id)).split("; ")).filter(Boolean))].join("; ") || "–" },
   ]) };

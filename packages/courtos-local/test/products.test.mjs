@@ -159,7 +159,10 @@ test("the facts table names each place once", () => {
   const ref = (page) => ({ label: "Klage", page_label: `S. ${page}`, match: "exact" });
   const claims = [["S", [ref(1)]], ["E", [ref(1), ref(2)]], ["O", [ref(2)]], ["W", []]].map(([id, citations]) => ({ id, text: id, citations }));
   const spec = BUILD.facts_evidence({ result: { claims, rows: [{ party: null, statement: "S", evidence: ["E"], opposing: ["O"], reasoning: "W", assessment: "supported" }] } }, { case: { parties: [] } });
-  assert.equal(spec.rows[0][4].text, "Klage, S.\u00a01; Klage, S.\u00a02");
+  assert.equal(spec.rows[0][5].text, "Klage, S.\u00a01; Klage, S.\u00a02");
+  assert.deepEqual(spec.columns.map(c => c.head).slice(3, 5), ["Andere Partei", "Würdigung"]);
+  assert.equal(spec.rows[0][3].text, "O", "the other side's position");
+  assert.match(spec.rows[0][4].text, /\nW$/, "the reasons follow the assessment");
 });
 
 test("the Word pane and the document mark a disputed fact in the assessment", async () => {

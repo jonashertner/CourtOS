@@ -36,6 +36,7 @@ test("an inserted table names the parties by their role, binds page numbers and 
       assert.equal(/\bP\d\b/.test(cells), false, "no internal party ids in the document");
       assert.ok(cells.includes("S. 1"), "page number bound to its abbreviation");
       assert.equal(/S\. \d/.test(cells), false);
+      if (task === "facts_evidence") assert.match(cells, /\b[KB]B\u00a0\d/, "an exhibit's number stays with it");
       assert.ok(plainText(spec).split("\n").length === spec.rows.length + 1);
     }
     const chronology = BUILD.chronology(await demoRun(store, "chronology"), state);
@@ -51,7 +52,7 @@ test("two parties in the same role are numbered; an unknown party keeps its id",
     { id: "P3", role: "respondent", term: "Beklagte" },
   ] } };
   assert.deepEqual(["P1", "P2", "P3", "P9"].map(id => partyName(state, id)), ["Klägerin", "Beklagte 1", "Beklagte 2", "P9"]);
-  assert.equal(sources({ citations: [{ label: "KB 1", page_label: "S. 3" }, { label: "KB 1", page_label: "S. 3" }] }), "KB 1, S. 3");
+  assert.equal(sources({ citations: [{ label: "KB 1", page_label: "S. 3" }, { label: "KB 1", page_label: "S. 3" }] }), "KB\u00a01, S.\u00a03");
 });
 
 test("a draft goes in as headings and paragraphs, its proposals numbered, sources as notes", async () => {

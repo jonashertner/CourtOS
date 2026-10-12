@@ -60,15 +60,18 @@ Things we most want to hear about: a name or identifier that was not replaced; a
 
 | Where | What |
 |---|---|
-| `<case folder>/.courtos/private/` | Extracted text, and the register that maps pseudonyms to **real names**. |
-| `<case folder>/.courtos/mirror/` | The pseudonymised pages that the model may read. |
-| `<case folder>/.courtos/runs/` | Each run, including every request sent to the model, stored verbatim. |
-| `~/.config/courtos/` | Your API keys (plain text, readable only by your user), recent folders, preferences. |
-| System temporary folder, `courtos-demo/` | The demo copy. |
+| `~/CourtOS/<case>/` | The case's work folder, proposed when you add a case. You can choose another folder, or the originals' folder itself. |
+| `<work folder>/Arbeitsprodukte/` | Each result as a Word and a Markdown file, **with real names**. The folder is named in the language of the proceedings (`Travaux`, `Lavori`, `Work products`). |
+| `<work folder>/.courtos/private/` | Extracted text, and the register that maps pseudonyms to **real names**. |
+| `<work folder>/.courtos/mirror/` | The pseudonymised pages that the model may read. |
+| `<work folder>/.courtos/runs/` | Each run, including every request sent to the model, stored verbatim. |
+| `<work folder>/.courtos/memory/` | The case memory, **with real names**. |
+| `~/.config/courtos/` | Your API keys (plain text, readable only by your user), the list of cases, preferences. |
+| System temporary folder, `courtos-demo/` | The sample case files. |
 
-Originals in the case folder are never changed. CourtOS writes only into `.courtos/` inside it.
+Originals are never changed. CourtOS writes only into the work folder; if you chose the originals' folder as the work folder, that means `.courtos/` and the work-products folder inside it.
 
-If the case folder is in iCloud Drive, OneDrive, Dropbox or a network share, **`.courtos/` is synced with it, including the register of real names.** Keep real case folders out of synced locations, or remove `.courtos/` when you are done.
+If the work folder is in iCloud Drive, OneDrive, Dropbox or a network share, **it is synced, including the register of real names.** CourtOS warns when it detects this. Keep work folders out of synced locations, or remove them when you are done.
 
 **Sent over the network**
 

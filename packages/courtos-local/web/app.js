@@ -256,7 +256,7 @@ function renderPlaces() {
       h("dt", {}, tr("Arbeitsprodukte")), h("dd", {}, c.products ? h("span.path", {}, c.products) : h("span.muted", {}, tr("entstehen mit der ersten Analyse")),
         h("button.link", { type: "button", onclick: () => reveal("products") }, tr("Zeigen")),
         c.products_failed ? h("p.alert", {}, tr("Die Word- und Markdown-Dateien konnten nicht in den Ordner der Arbeitsprodukte geschrieben werden. Die Ergebnisse bleiben in CourtOS. Ist der Ordner schreibgeschützt oder das Laufwerk voll?"), " ", h("button.link", { type: "button", onclick: () => attempt(async () => { await api("/api/products/retry", { method: "POST" }); await refresh(); }) }, tr("Erneut versuchen"))) : null)),
-    h("p.note", {}, tr("Jede Analyse wird als Markdown-Datei abgelegt, die Würdigung zusätzlich als Word-Dokument mit Fussnoten; die Dateien enthalten die echten Namen. Register, Fallgedächtnis und Notizen liegen im Unterordner .courtos. Word zeigt denselben Fall wie dieses Fenster.")));
+    h("p.note", {}, tr("Jede Analyse wird als Word- und als Markdown-Datei abgelegt; die Dateien enthalten die echten Namen. Register, Fallgedächtnis und Notizen liegen im Unterordner .courtos. Word zeigt denselben Fall wie dieses Fenster.")));
 }
 
 // ---------------------------------------------------------------------------
