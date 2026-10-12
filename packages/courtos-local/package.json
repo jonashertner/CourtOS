@@ -8,6 +8,16 @@
   "bin": {
     "courtos-local": "bin/courtos-local.mjs"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "web/",
+    "word/",
+    "scripts/ocr-vision.swift",
+    "fixtures/HG.2026.57 Alpenblick/",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=22.12"
   },
@@ -15,11 +25,19 @@
     "start": "node bin/courtos-local.mjs",
     "demo": "node bin/courtos-local.mjs --demo",
     "fixture": "python3 fixtures/build_dossier.py \"fixtures/HG.2026.57 Alpenblick\"",
-    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "prepack": "cp ../../LICENSE LICENSE",
+    "pack:tester": "npm pack --pack-destination dist"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
+    "@courtos/projection": "file:../courtos-projection",
+    "@courtos/workflows": "file:../courtos-workflows",
     "fflate": "0.8.3",
     "pdfjs-dist": "6.4.299"
-  }
+  },
+  "bundleDependencies": [
+    "@courtos/projection",
+    "@courtos/workflows"
+  ]
 }

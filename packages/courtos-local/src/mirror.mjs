@@ -9,7 +9,7 @@ import { reviewedTerms } from "./register.mjs";
 import { CourtosError, sha256 } from "./util.mjs";
 
 const require = createRequire(import.meta.url);
-const kernel = require("../../courtos-projection/index.js");
+const kernel = require("@courtos/projection");
 
 export const PASSES = [
   new Set(["email", "url", "iban", "ahv", "uid", "phone"]),

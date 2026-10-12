@@ -5,9 +5,9 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const workflows = require("../../../courtos-workflows/index.js");
-const schema = require("../../../courtos-workflows/schema.json");
-const contract = readFileSync(new URL("../../../courtos-workflows/system.txt", import.meta.url), "utf8");
+const workflows = require("@courtos/workflows");
+const schema = require("@courtos/workflows/schema.json");
+const contract = readFileSync(require.resolve("@courtos/workflows/system.txt"), "utf8");
 
 export const { validateWorkflowResult, WorkflowResultError } = workflows;
 
