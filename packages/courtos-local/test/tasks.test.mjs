@@ -199,3 +199,28 @@ test("the court's internal note is context for Claude, never evidence, and its r
     assert.equal(store.consentValid(), false);
   } finally { await cleanup(); }
 });
+
+test("effort is fixed per task, Claude's progress notes reach the trace with names restored, and a refusal ends the run", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    await store.release({ model: "demo", budgetChf: null });
+    const pseudonym = store.register.entities.find(e => e.label === "Marco Bianchi").replacement;
+    const provider = new ScriptedProvider([
+      [{ type: "thinking", thinking: `Überblick verschafft; als Nächstes lese ich die Eingaben von ${pseudonym}.`, signature: "sig" }, toolUse("t1", "list_documents", {})],
+      { content: [], stop_reason: "refusal", stop_details: { category: null } },
+    ]);
+    const run = new AgentRun({ store, provider, task: "decision_draft", model: "demo", caselaw: mockCaseLaw() });
+    await run.run();
+    assert.equal(provider.calls[0].output_config.effort, "high");
+    assert.deepEqual(provider.calls[0].thinking, { type: "adaptive", display: "updates" });
+    assert.equal(provider.calls[1].messages[1].content[0].type, "thinking", "thinking blocks go back to the model unchanged");
+    const note = run.events.find(e => e.type === "note");
+    assert.equal(note.text, "Überblick verschafft; als Nächstes lese ich die Eingaben von Marco Bianchi.");
+    assert.equal(run.status, "failed");
+    assert.equal(run.error.code, "model_refused");
+
+    const extraction = new AgentRun({ store, provider: new ScriptedProvider([]), task: "chronology", model: "demo" });
+    await extraction.run();
+    assert.equal(extraction.provider.calls[0].output_config.effort, "medium");
+  } finally { await cleanup(); }
+});

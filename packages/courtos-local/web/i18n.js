@@ -489,6 +489,8 @@ export const TRANSLATIONS = {
     "Interne Notiz": "Note interne",
     "Interne Notizen": "Notes internes",
     "Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen.": "Claude lit une note interne du tribunal comme contexte, comme vos notes : elle peut orienter une réflexion, mais jamais servir de preuve.",
+    "Claude hat diesen Auftrag abgelehnt. Nichts wurde übernommen. Eine enger gefasste Frage oder eine andere Auswahl der Akten kann helfen.": "Claude a refusé cette tâche. Rien n’a été repris. Une question plus étroite ou une autre sélection de pièces peut aider.",
+    "Claude hat kein Ergebnis eingereicht. Nichts wurde übernommen.": "Claude n’a remis aucun résultat. Rien n’a été repris.",
   },
   it: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Compare solo a inizio frase o è molto breve, ed è una parola comune, non un cognome noto. Resta leggibile finché non lo sostituisce.",
@@ -980,6 +982,8 @@ export const TRANSLATIONS = {
     "Interne Notiz": "Nota interna",
     "Interne Notizen": "Note interne",
     "Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen.": "Claude legge una nota interna del tribunale come contesto, come le sue note: può orientare una riflessione, ma mai fungere da prova.",
+    "Claude hat diesen Auftrag abgelehnt. Nichts wurde übernommen. Eine enger gefasste Frage oder eine andere Auswahl der Akten kann helfen.": "Claude ha rifiutato questo incarico. Nulla è stato ripreso. Una domanda più circoscritta o un’altra selezione degli atti può aiutare.",
+    "Claude hat kein Ergebnis eingereicht. Nichts wurde übernommen.": "Claude non ha consegnato alcun risultato. Nulla è stato ripreso.",
   },
   en: {
     "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.": "Appears only at the start of a sentence or is very short, and is an ordinary word, not a known surname. Stays readable until you replace it.",
@@ -1469,5 +1473,7 @@ export const TRANSLATIONS = {
     "Interne Notiz": "Internal note",
     "Interne Notizen": "Internal notes",
     "Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen.": "Claude reads an internal note of the court as context, like your notes: it can guide a line of thought but never serve as evidence.",
+    "Claude hat diesen Auftrag abgelehnt. Nichts wurde übernommen. Eine enger gefasste Frage oder eine andere Auswahl der Akten kann helfen.": "Claude declined this task. Nothing was kept. A narrower question or a different selection of documents may help.",
+    "Claude hat kein Ergebnis eingereicht. Nichts wurde übernommen.": "Claude did not submit a result. Nothing was kept.",
   },
 };

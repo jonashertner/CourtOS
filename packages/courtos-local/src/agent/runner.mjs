@@ -7,7 +7,7 @@
 import { EventEmitter } from "node:events";
 import { join } from "node:path";
 import { buildIndex, search } from "../search.mjs";
-import { bindResult } from "../verify.mjs";
+import { bindResult, rehydrator } from "../verify.mjs";
 import { decisionPassages } from "../opencaselaw.mjs";
 import { lookupId } from "../citecheck.mjs";
 import { noteLabel } from "../language.mjs";
@@ -19,6 +19,15 @@ const MAX_READ_CHARS = 60_000;
 const MAX_DECISION_CHARS = 24_000;
 const ROLE_NAMES = { claim: "Klage/claim", response: "Antwort/response", submission: "Eingabe/submission", exhibit: "Beilage/exhibit", literature: "Literatur/literature", authority: "Entscheid/authority", internal_note: "internal note of the court (context only: cite in context_references, never as evidence)", other: "Sonstiges/other" };
 const ID = /^[A-Za-z0-9_.\-]{3,120}$/;
+// Reasoning depth per task. Reading and sorting what the parties say (the first
+// three tasks, questions to the sources) is extraction and runs at the model's
+// default "medium"; weighing law, finding the questions that decide the case and
+// drafting a decision run at "high". Effort is fixed per task, never changed
+// within a run (a change would invalidate the prompt cache).
+export const EFFORT = {
+  chronology: "medium", facts_evidence: "medium", party_comparison: "medium", source_chat: "medium",
+  legal_claims: "high", fundamental_questions: "high", decision_draft: "high", hypothetical_impact: "high",
+};
 
 export class AgentRun extends EventEmitter {
   constructor({ store, provider, task, question = "", language = "de", model, notes = [], caselaw = null, limits = {} }) {
@@ -35,7 +44,7 @@ export class AgentRun extends EventEmitter {
     this.model = model;
     this.noteIds = notes;
     this.caselaw = caselaw;
-    this.limits = { maxTurns: 60, maxOutputTokens: 32000, maxTotalTokens: 3_000_000, maxSubmits: 4, maxCaseLawCalls: 24, ...limits };
+    this.limits = { maxTurns: 60, maxOutputTokens: 64000, maxTotalTokens: 3_000_000, maxSubmits: 4, maxCaseLawCalls: 24, ...limits };
     this.status = "queued";
     this.events = [];
     this.usage = { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
@@ -281,8 +290,11 @@ export class AgentRun extends EventEmitter {
       for (let turn = 1; turn <= this.limits.maxTurns; turn++) {
         if (this.controller.signal.aborted) return;
         if (!this.store.consentValid() || this.store.mirror.sha256 !== this.mirror.sha256) throw new CourtosError("folder_changed_during_run");
+        // Adaptive thinking with display "updates": reasoning stays hidden, the
+        // short progress notes Claude writes between tool calls come back as text.
         const body = {
           model: this.model, max_tokens: this.limits.maxOutputTokens,
+          thinking: { type: "adaptive", display: "updates" }, output_config: { effort: EFFORT[this.task] },
           system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
           tools: toolDefs, messages: withCacheBreakpoint(messages),
         };
@@ -297,8 +309,16 @@ export class AgentRun extends EventEmitter {
         this.emit("usage", this.usage);
         const total = this.usage.input_tokens + this.usage.output_tokens + this.usage.cache_read_input_tokens + this.usage.cache_creation_input_tokens;
         if (total > this.limits.maxTotalTokens) throw new CourtosError("token_limit_reached");
+        // A refusal ends the run. There is no fallback model: the release names one model.
+        if (response.stop_reason === "refusal") throw new CourtosError("model_refused", { category: response.stop_details?.category ?? null });
         messages.push({ role: "assistant", content: response.content });
-        for (const block of response.content) if (block.type === "text" && block.text.trim()) this.trace("note", { text: block.text.trim().slice(0, 600) });
+        // Progress notes and text, shown locally with names restored. Thinking blocks
+        // go back to the model unchanged.
+        const restore = rehydrator(this.store.register);
+        for (const block of response.content) {
+          const text = block.type === "text" ? block.text : block.type === "thinking" ? block.thinking : null;
+          if (text?.trim()) this.trace("note", { text: restore(text.trim().slice(0, 600)).text });
+        }
         const calls = response.content.filter(block => block.type === "tool_use");
         if (!calls.length) {
           if (response.stop_reason === "max_tokens") throw new CourtosError("output_limit_reached");

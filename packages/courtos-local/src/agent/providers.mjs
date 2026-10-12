@@ -15,7 +15,8 @@ export class AnthropicProvider {
     try {
       // Streaming keeps long outputs (a full claims table) within the
       // connection limits; only the final message is used.
-      const stream = this.client.messages.stream(body, { signal });
+      const headers = body.thinking?.display === "updates" ? { "anthropic-beta": "thinking-display-updates-2026-08-18" } : undefined;
+      const stream = this.client.messages.stream(body, { signal, headers });
       return await stream.finalMessage();
     } catch (error) {
       if (signal?.aborted) throw new CourtosError("aborted");
@@ -40,8 +41,11 @@ export class ScriptedProvider {
     });
     const turn = this.turns[this.calls.length - 1];
     if (!turn) throw new CourtosError("script_exhausted");
-    const content = typeof turn === "function" ? turn(body) : turn;
-    return { content, stop_reason: content.some(b => b.type === "tool_use") ? "tool_use" : "end_turn", usage: { input_tokens: Math.round(JSON.stringify(body).length / 4), output_tokens: Math.round(JSON.stringify(content).length / 4) } };
+    const out = typeof turn === "function" ? turn(body) : turn;
+    // A turn is a list of content blocks, or { content, stop_reason, stop_details }.
+    const content = Array.isArray(out) ? out : out.content;
+    const stop = Array.isArray(out) ? null : out;
+    return { content, stop_reason: stop?.stop_reason ?? (content.some(b => b.type === "tool_use") ? "tool_use" : "end_turn"), stop_details: stop?.stop_details ?? null, usage: { input_tokens: Math.round(JSON.stringify(body).length / 4), output_tokens: Math.round(JSON.stringify(content).length / 4) } };
   }
 }
 

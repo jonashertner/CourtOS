@@ -111,6 +111,8 @@ const ERRORS = {
   result_failed_validation: "Claude konnte kein Ergebnis liefern, das alle Zitatprüfungen besteht. Nichts wurde übernommen.",
   token_limit_reached: "Das Tokenlimit für diesen Auftrag ist erreicht. Nichts wurde übernommen.",
   output_limit_reached: "Die Antwort wurde zu lang. Wählen Sie weniger Dokumente oder eine engere Frage.",
+  model_refused: "Claude hat diesen Auftrag abgelehnt. Nichts wurde übernommen. Eine enger gefasste Frage oder eine andere Auswahl der Akten kann helfen.",
+  no_result_submitted: "Claude hat kein Ergebnis eingereicht. Nichts wurde übernommen.",
   turn_limit_reached: "Der Auftrag brauchte zu viele Schritte und wurde beendet. Nichts wurde übernommen.",
   provider_401: "Anthropic lehnt den API-Schlüssel ab.",
   provider_429: "Anthropic meldet ein Ratenlimit. Später erneut versuchen.",
