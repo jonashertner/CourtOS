@@ -414,7 +414,24 @@ function explain(code, result, sections) {
     case "duplicate_citation": return "the same citation appears twice in one claim.";
     case "duplicate_id": return "claim or row ids must be unique.";
     case "schema": return "the claims/rows do not match the schema (ids C1.., R1.., S-numbers, required fields; claims and rows must both be empty or both non-empty).";
-    case "source_kind": return "citations must point to source sections; working notes may appear only in context_references.";
+    case "source_kind": {
+      // Name each wrong reference and its direction: a document in the case
+      // folder (also an internal note filed there) is a source, never context.
+      const bad = [];
+      for (const claim of result.claims) {
+        for (const cite of claim.citations) {
+          const section = byId.get(cite.section_id);
+          if (!section) bad.push(`${claim.id} → ${cite.section_id} in citations: no such section`);
+          else if (section.kind !== "source") bad.push(`${claim.id} → ${cite.section_id} in citations: a user working note, not a source; move it to context_references or drop it`);
+        }
+        for (const cite of claim.context_references ?? []) {
+          const section = byId.get(cite.section_id);
+          if (!section) bad.push(`${claim.id} → ${cite.section_id} in context_references: no such section`);
+          else if (section.kind === "source") bad.push(`${claim.id} → ${cite.section_id} in context_references: a page of case document ${section.source?.document ?? "?"}, which is a source even if it is a note; move it to citations or drop it`);
+        }
+      }
+      return `${bad.slice(0, 12).join("; ")}. context_references take only user working notes (listed under working_notes by list_documents); every document of the case folder is a source.`;
+    }
     default: return "the result does not satisfy the workflow contract.";
   }
 }

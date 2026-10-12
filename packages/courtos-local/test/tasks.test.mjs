@@ -137,3 +137,28 @@ test("a working note with a real name is pseudonymised before it is sent", async
     assert.match(sent, /Frage an [A-Z]\.________/);
   } finally { await cleanup(); }
 });
+
+test("a document filed in the case folder cited as context gets a repair message naming the claim and the fix", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    await store.release({ model: "demo", budgetChf: null });
+    const run = new AgentRun({ store, provider: new ScriptedProvider([]), task: "chronology", model: "demo" });
+    run.mirror = structuredClone(store.mirror);
+    const section = (role) => run.sections().find(s => s.source.role === role);
+    const claim = section("claim"), other = run.sections().find(s => s.source.role !== "claim" && s.source.role !== "response");
+    for (const s of run.sections()) run.read.add(s.id);
+    const quote = (s) => s.text.split("\n").find(line => line.trim().length > 20 && s.text.indexOf(line) === s.text.lastIndexOf(line)).trim();
+    const out = run.toolSubmit({
+      claims: [
+        { id: "C1", text: "Ereignis", citations: [cite(claim.id, quote(claim))], context_references: [cite(other.id, quote(other))] },
+        { id: "C2", text: "Datum", citations: [cite(claim.id, quote(claim))] },
+      ],
+      rows: [{ id: "R1", event: "C1", party: "P1", posture: "allegation", date: null }],
+      more_claims_reported: false,
+    });
+    assert.equal(out.ok, false);
+    assert.match(out.error, /^source_kind: /);
+    assert.ok(out.error.includes(`C1 → ${other.id} in context_references: a page of case document ${other.source.document}`), out.error);
+    assert.match(out.error, /move it to citations or drop it/);
+  } finally { await cleanup(); }
+});
