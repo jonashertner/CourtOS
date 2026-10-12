@@ -8,7 +8,7 @@ import { AgentRun } from "../src/agent/runner.mjs";
 import { demoProvider } from "../src/agent/demo.mjs";
 import { OpenAICompatibleProvider, normaliseEndpoint } from "../src/agent/providers.mjs";
 import { startServer } from "../src/server.mjs";
-import { freshCase, ORIGINAL_IDENTIFIERS } from "./helpers.mjs";
+import { freePort, freshCase, ORIGINAL_IDENTIFIERS } from "./helpers.mjs";
 
 /** A stand-in for an OpenAI-compatible service that answers with the given Messages-shaped turns. */
 function fakeService(turns) {
@@ -98,7 +98,7 @@ function call(port, path, { method = "GET", headers = {}, body } = {}) {
 test("a release names the model and its address; a remote address needs its own key, a local one none", async (t) => {
   process.env.HOME = await mkdtemp(join(tmpdir(), "courtos-home-"));
   const { root, cleanup } = await freshCase();
-  const port = 4300 + Math.floor(Math.random() * 400);
+  const port = await freePort();
   const app = await startServer({ port, folder: root, openBrowser: false, log: () => {} });
   t.after(async () => { app.close(); await cleanup(); });
   const origin = `http://localhost:${port}`;

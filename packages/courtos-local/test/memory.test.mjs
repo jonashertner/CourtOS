@@ -9,9 +9,10 @@ import { demoProvider } from "../src/agent/demo.mjs";
 import { OpenAICompatibleProvider, ScriptedProvider } from "../src/agent/providers.mjs";
 import { collectMemory, memoryMarkdown, memoryPrompt, memorySha, memorySnapshot } from "../src/memory.mjs";
 import { startServer } from "../src/server.mjs";
-import { freshCase, ORIGINAL_IDENTIFIERS } from "./helpers.mjs";
+import { freePort, freshCase, ORIGINAL_IDENTIFIERS } from "./helpers.mjs";
 
-const leaks = (text) => ORIGINAL_IDENTIFIERS.filter(identifier => text.includes(identifier));
+// Hashes are hex digits, not text a model reads; one can contain a number such as 4711 by chance.
+const leaks = (text) => { const words = text.replace(/\b[0-9a-f]{64}\b/g, "<sha256>"); return ORIGINAL_IDENTIFIERS.filter(identifier => words.includes(identifier)); };
 
 /** A chronology produced by "the first model": the scripted demo run through the real loop. */
 async function firstRun(store, task = "chronology") {
@@ -158,7 +159,7 @@ function call(port, path, { method = "GET", headers = {}, body } = {}) {
 test("results after a release wait for the next release; the memory is on disk and can be left out", async (t) => {
   process.env.HOME = await mkdtemp(join(tmpdir(), "courtos-home-"));
   const { root, cleanup } = await freshCase();
-  const port = 4300 + Math.floor(Math.random() * 400);
+  const port = await freePort();
   const app = await startServer({ port, folder: root, openBrowser: false, log: () => {} });
   t.after(async () => { app.close(); await cleanup(); });
   const origin = `http://localhost:${port}`;

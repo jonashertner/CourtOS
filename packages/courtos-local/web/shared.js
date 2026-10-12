@@ -93,6 +93,9 @@ export function pg(text) {
 export const refLabel = (c) => (c.page_label ? `${c.label}, ${pg(c.page_label)}` : c.label);
 
 /** Count-dependent string: German singular and plural source strings, {n} filled in. */
+/** The open case lost its release. Closing it or switching to another case is not a loss. */
+export const consentLost = (before, after) => Boolean(before?.consent_valid && after && after.id === before.id && !after.consent_valid);
+
 export function trn(n, one, many, vars = {}) {
   return tr(n === 1 ? one : many, { ...vars, n });
 }
@@ -179,6 +182,12 @@ const ERRORS = {
   date_required: "Bitte ein Datum angeben.",
   invalid_text: "Bitte einen Text eingeben.",
   workspace_unsafe: "Der Arbeitsordner .courtos ist ein Verweis auf einen anderen Ort. CourtOS schreibt dort nicht.",
+  case_unknown: "Diesen Fall gibt es in der Liste nicht mehr.",
+  folder_not_found: "Der Ordner ist nicht erreichbar. Ist das Laufwerk verbunden?",
+  native_dialog_unavailable: "Auf diesem System gibt es keine Ordnerauswahl. Starten Sie CourtOS mit dem Ordner als Argument.",
+  work_inside_source: "Der Arbeitsordner darf nicht im Aktenordner liegen: CourtOS würde seine eigenen Ergebnisse als Akten lesen.",
+  work_folder_taken: "Im gewählten Ordner arbeitet CourtOS bereits an einem anderen Fall. Wählen Sie einen anderen Ordner.",
+  work_folder_unavailable: "Kein freier Ordnername gefunden. Wählen Sie den Arbeitsordner selbst.",
 };
 export const errorText = (code) => tr(ERRORS[code] ?? (String(code).startsWith("provider_") ? "Anthropic hat die Anfrage abgelehnt." : "Das hat nicht geklappt. Bitte erneut versuchen."));
 

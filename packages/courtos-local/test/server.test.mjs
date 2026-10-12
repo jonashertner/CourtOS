@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { request } from "node:http";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, realpath } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startServer } from "../src/server.mjs";
-import { freshCase } from "./helpers.mjs";
+import { freePort, freshCase } from "./helpers.mjs";
 
 function call(port, path, { method = "GET", headers = {}, body } = {}) {
   return new Promise((resolve, reject) => {
@@ -23,7 +23,7 @@ test("the loopback server enforces host, pairing, origin and folder rules", asyn
   // A temporary HOME: no developer certificates (plain HTTP) and no real CourtOS settings.
   process.env.HOME = await mkdtemp(join(tmpdir(), "courtos-home-"));
   const { root, cleanup } = await freshCase();
-  const port = 4300 + Math.floor(Math.random() * 400);
+  const port = await freePort();
   const app = await startServer({ port, folder: root, openBrowser: false, log: () => {} });
   t.after(async () => { app.close(); await cleanup(); });
   const origin = `http://localhost:${port}`;
@@ -46,9 +46,11 @@ test("the loopback server enforces host, pairing, origin and folder rules", asyn
   // Writes need the exact own Origin and the custom header, even with a session.
   assert.equal((await call(port, "/api/revoke", { method: "POST", headers: { Cookie: cookie } })).status, 403);
   assert.equal((await call(port, "/api/revoke", { method: "POST", headers: { Cookie: cookie, Origin: "https://evil.example", "X-CourtOS": "1" } })).status, 403);
-  // A page cannot make CourtOS open an arbitrary path.
+  // A page cannot make CourtOS open an arbitrary path: cases open by id, samples by name.
   const open = await call(port, "/api/folder", { method: "POST", headers: { Cookie: cookie, Origin: origin, "X-CourtOS": "1" }, body: { path: "/etc" } });
-  assert.equal(open.status, 403);
+  assert.equal(open.status, 400);
+  assert.equal((await call(port, "/api/cases/open", { method: "POST", headers: { Cookie: cookie, Origin: origin, "X-CourtOS": "1" }, body: { id: "/etc" } })).status, 404);
+  assert.equal(JSON.parse((await call(port, "/api/state", { headers: { Cookie: cookie } })).body).case.root, await realpath(root), "the open case is unchanged");
   // Static files are restricted to the bundled web folder.
   assert.equal((await call(port, "/..%2Fsrc%2Fserver.mjs")).status, 404);
   // Malformed or foreign requests never crash the server.
@@ -67,7 +69,7 @@ test("the loopback server enforces host, pairing, origin and folder rules", asyn
 test("the browser and Word follow each other: one language, a passage shown in the browser, a claim inserted in Word", async (t) => {
   process.env.HOME = await mkdtemp(join(tmpdir(), "courtos-home-"));
   const { root, cleanup } = await freshCase();
-  const port = 4300 + Math.floor(Math.random() * 400);
+  const port = await freePort();
   const app = await startServer({ port, folder: root, openBrowser: false, log: () => {} });
   const streams = [];
   t.after(async () => { for (const s of streams) s.destroy(); app.close(); await cleanup(); });

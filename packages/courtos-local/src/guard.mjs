@@ -32,13 +32,14 @@ export class OutboundBlocked extends CourtosError {
   }
 }
 
-export function compileGuard({ register, realRoot, relPaths = [], allowCorpus = [] }) {
+export function compileGuard({ register, realRoot, workRoot = null, relPaths = [], allowCorpus = [] }) {
   const checks = [];
   for (const entity of register.entities) {
     if (entity.decision !== "replace") continue;
     for (const alias of new Set(entity.aliases)) checks.push({ kind: "registered", entity: entity.id, test: bounded(alias) });
   }
-  if (realRoot) checks.push({ kind: "path", test: new RegExp(escape(realRoot), "gi"), strict: true });
+  // Neither the case folder's nor the work folder's path leaves the computer: both usually name the case.
+  for (const path of new Set([realRoot, workRoot].filter(Boolean))) checks.push({ kind: "path", test: new RegExp(escape(path), "gi"), strict: true });
   // File names never reach the model (documents carry neutral labels); this
   // catches a code path that would accidentally include one.
   for (const rel of relPaths) checks.push({ kind: "file_name", test: new RegExp(escape(basename(rel)), "gi"), strict: true });

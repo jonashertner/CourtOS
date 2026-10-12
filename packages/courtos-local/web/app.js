@@ -1,4 +1,4 @@
-import { adoptLang, api, ApiError, chooseLang, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, themeToggle, tr, traceText, trn, pg, refLabel } from "./shared.js";
+import { adoptLang, api, ApiError, chooseLang, consentLost, citationChip, claimPlain, errorText, events, formatDate, h, icon, label, LANG, LANGUAGES, pairFromHash, partyLabel, refsPlain, setLang, TASK_ORDER, themeToggle, tr, traceText, trn, pg, refLabel } from "./shared.js";
 import { renderResult } from "./results.js";
 import { COUNTERPART, PARTY_ROLES, partyTerm, partyTermLabel } from "./party-roles.js";
 
@@ -78,11 +78,11 @@ async function boot() {
     scan: (p) => { S.scan = p; renderScanProgress(); },
     case: async (change) => {
       if (change.kind === "opening") return;
-      const wasValid = S.st?.case?.consent_valid;
+      const before = S.st?.case;
       if (change.kind === "mirror" || change.kind === "folder") { S.views.clear(); S.occurrences.clear(); }
       await refresh();
       if (change.kind === "folder") toast(tr("Der Ordner hat sich geändert. Die Akten wurden neu eingelesen."));
-      if (wasValid && !S.st.case?.consent_valid) toast(tr("Die Freigabe ist aufgehoben, weil sich der Inhalt geändert hat. Bitte erneut prüfen."), true);
+      if (consentLost(before, S.st.case)) toast(tr("Die Freigabe ist aufgehoben, weil sich der Inhalt geändert hat. Bitte erneut prüfen."), true);
     },
     run: ({ id, event }) => {
       if (S.run?.id !== id) return;
@@ -160,39 +160,100 @@ function render() {
 
 const LANGUAGE_NAME = Object.fromEntries(LANGUAGES);
 
+const dateOf = (iso) => (iso ? new Date(iso).toLocaleDateString(`${LANG}-CH`, { day: "numeric", month: "short", year: "numeric" }) : "");
+
+/** Opening, adding or leaving a case: a short busy state, then the new state from the server. */
+const caseAction = (fn) => async () => {
+  S.busy = true; render();
+  await attempt(fn);
+  S.busy = false; S.view = null; S.register = null; S.run = null;
+  await refresh();
+};
+
+/** The start page: the cases on this computer, a case being added, and the sample dossiers. */
 function renderWelcome() {
-  const open = (fn) => async () => {
-    S.busy = true; render();
-    await attempt(fn);
-    S.busy = false; S.view = null; S.register = null;
-    await refresh();
-  };
-  const recent = (S.st.recent ?? []).filter(Boolean);
+  const cases = S.st.cases ?? [];
   const samples = S.st.samples ?? [];
+  const pending = S.st.pending;
+  const add = caseAction(() => api("/api/cases/source", { method: "POST" }));
   return h("div.gate", {}, h("div.gate-inner.welcome", {},
     h("div.gate-top", {}, wordmark(), prefs()),
-    h("h1", {}, tr("Ein Fall, ein Ordner.")),
-    h("p.lede", {}, tr("Wählen Sie den Ordner mit Rechtsschriften, Beilagen und Literatur. CourtOS anonymisiert ihn auf diesem Computer mit citecheck. Ein Sprachmodell Ihrer Wahl arbeitet danach mit der anonymisierten Fassung, ein Frontiermodell oder ein Modell auf diesem Computer, und jede Aussage führt zurück zur Originalstelle.")),
-    h("div.actions", {},
-      h("button.btn.primary", { type: "button", onclick: open(() => api("/api/folder/choose", { method: "POST" })), disabled: S.busy }, icon("folder"), tr("Fallordner wählen")),
-    ),
+    h("div.cases-head", {},
+      h("h1", {}, tr("Fälle")),
+      pending ? null : h("button.btn.primary", { type: "button", onclick: add, disabled: S.busy }, icon("plus"), tr("Fall hinzufügen"))),
+    !cases.length && !pending ? h("p.lede", {}, tr("Ein Fall verbindet den Ordner mit den Akten mit einem Arbeitsordner auf diesem Computer. CourtOS liest die Akten nur; Register, Fallgedächtnis, Ergebnisse und Arbeitsprodukte legt es im Arbeitsordner ab. Ein Sprachmodell Ihrer Wahl arbeitet mit der anonymisierten Fassung, und jede Aussage führt zurück zur Originalstelle.")) : null,
     S.busy ? h("div", {}, h("div.progress-line.scan-progress", {}, h("span", { style: { width: "4%" } })), h("p.scan-label.muted", { style: { marginTop: "8px", fontSize: "13px" } }, tr("Ordner wird geöffnet"))) : null,
-    h("ul.promises", {},
-      h("li", {}, icon("doc"), h("span", {}, h("b", {}, tr("Originale bleiben, wo sie sind. ")), tr("CourtOS liest sie nur und legt seine Arbeit im Unterordner .courtos ab."))),
-      h("li", { class: "local" }, icon("lock"), h("span", {}, h("b", {}, tr("Anonymisiert wird hier, mit citecheck. ")), h("span.muted", {}, tr("Das Register mit den echten Namen verlässt diesen Computer nie.")))),
+    pending ? renderPendingCase(pending) : null,
+    cases.length ? h("ul.case-list", { "aria-label": tr("Fälle") }, cases.map(renderCaseRow)) : null,
+    !cases.length && !pending ? h("ul.promises", {},
+      h("li", {}, icon("doc"), h("span", {}, h("b", {}, tr("Originale bleiben, wo sie sind. ")), tr("Auch auf einem Netzlaufwerk: CourtOS liest sie nur."))),
+      h("li", { class: "local" }, icon("lock"), h("span", {}, h("b", {}, tr("Anonymisiert wird hier, mit citecheck. ")), h("span.muted", {}, tr("Das Register mit den echten Namen bleibt im Arbeitsordner auf diesem Computer.")))),
       h("li", { class: "external" }, icon("out"), h("span", {}, h("b", {}, tr("Das Modell liest erst nach Ihrer Freigabe. ")), h("span.muted", {}, tr("Und nur die anonymisierte Fassung. Jede gesendete Anfrage können Sie nachlesen.")))),
-    ),
+    ) : null,
     samples.length ? h("section.samples", { "aria-labelledby": "samples-title" },
       h("h2", { id: "samples-title" }, tr("Beispieldossiers")),
       h("p.muted", {}, tr("Erfundene Fälle mit Rechtsschriften und Beilagen, an verschiedenen Gerichten und in den Sprachen der Verfahren. Alle Namen, Firmen und Zahlen sind fiktiv.")),
       h("ul.sample-list", {}, samples.map(sample => h("li", {},
-        h("button.sample", { type: "button", disabled: S.busy, onclick: open(() => api("/api/folder", { method: "POST", body: { sample: sample.id } })) },
+        h("button.sample", { type: "button", disabled: S.busy, onclick: caseAction(() => api("/api/folder", { method: "POST", body: { sample: sample.id } })) },
           h("span.sample-court", { lang: sample.language }, sample.court),
           h("span.sample-matter", { lang: sample.language }, sample.matter),
           h("span.sample-meta", {}, h("span", { lang: sample.language }, LANGUAGE_NAME[sample.language] ?? sample.language), sample.offline ? ` · ${tr("kurzer Fall, läuft auch ohne Modell")}` : ""),
         ))))) : null,
-    recent.length ? h("div.recent", {}, h("h2", {}, tr("Zuletzt geöffnet")), recent.map(path => h("button.link", { type: "button", onclick: open(() => api("/api/folder", { method: "POST", body: { path } })) }, path))) : null,
   ));
+}
+
+/** A case being added: where the originals are, and where CourtOS will keep its work. */
+function renderPendingCase(p) {
+  const step = (path, body) => caseAction(() => api(path, { method: "POST", body }));
+  return h("section.case-new", { "aria-labelledby": "case-new-title" },
+    h("h2", { id: "case-new-title" }, tr("Neuer Fall: {n}", { n: p.name })),
+    h("dl.places", {},
+      h("dt", {}, tr("Akten")), h("dd", {}, h("span.path", {}, p.source), h("span.muted", {}, tr("werden nur gelesen"))),
+      h("dt", {}, tr("Arbeitsordner")), h("dd", {}, h("span.path", {}, p.work),
+        h("span.muted", {}, p.same_folder ? tr("im Aktenordner, Unterordner .courtos") : tr("Register, Fallgedächtnis, Ergebnisse und Arbeitsprodukte")))),
+    p.sync ? h("p.warning", {}, tr("Dieser Arbeitsordner wird mit einem Cloud-Dienst synchronisiert, und mit ihm das Register mit den echten Namen. Wählen Sie besser einen Ordner, der nur auf diesem Computer liegt.")) : null,
+    h("div.case-new-actions", {},
+      h("button.btn.primary", { type: "button", disabled: S.busy, onclick: step("/api/cases/create") }, tr("Fall anlegen")),
+      h("button.btn", { type: "button", disabled: S.busy, onclick: step("/api/cases/pending/work") }, icon("folder"), tr("Anderen Arbeitsordner wählen")),
+      p.same_folder ? null : h("button.btn.quiet", { type: "button", disabled: S.busy, onclick: step("/api/cases/pending/work", { same: true }) }, tr("Im Aktenordner arbeiten")),
+      h("button.btn.quiet", { type: "button", disabled: S.busy, onclick: step("/api/cases/pending/cancel") }, tr("Abbrechen"))));
+}
+
+function renderCaseRow(c) {
+  const facts = [
+    c.language ? h("span", { lang: c.language }, LANGUAGE_NAME[c.language] ?? c.language) : null,
+    c.started ? trn(c.documents, "{n} Dokument", "{n} Dokumente") : tr("noch nicht eingelesen"),
+    c.released_for ? tr("Modell: {m}", { m: modelLabel(c.released_for) }) : null,
+    c.runs ? trn(c.runs, "{n} Analyse, zuletzt am {d}", "{n} Analysen, zuletzt am {d}", { d: dateOf(c.last_run) }) : null,
+  ].filter(Boolean);
+  const remove = () => { if (confirm(tr("«{n}» aus der Liste entfernen? Akten und Arbeitsordner bleiben unverändert.", { n: c.name }))) caseAction(() => api("/api/cases/remove", { method: "POST", body: { id: c.id } }))(); };
+  return h("li", {},
+    h("button.case-open", { type: "button", disabled: S.busy || !c.source_available, onclick: caseAction(() => api("/api/cases/open", { method: "POST", body: { id: c.id } })) },
+      h("span.case-title", {}, c.name),
+      h("span.case-facts", {}, facts.flatMap((f, i) => i ? [" · ", f] : [f])),
+      !c.source_available ? h("span.alert", {}, tr("Akten nicht erreichbar. Ist das Laufwerk verbunden?")) : null,
+      c.sync ? h("span.alert", {}, tr("Arbeitsordner wird mit einem Cloud-Dienst synchronisiert")) : null,
+      h("span.case-work", {}, tr("Akten: {p}", { p: c.source })),
+      h("span.case-work", {}, c.same_folder ? tr("Arbeitsordner: im Aktenordner") : tr("Arbeitsordner: {p}", { p: c.work }))),
+    h("div.case-actions", {},
+      c.opened ? h("span.faint", {}, tr("geöffnet am {d}", { d: dateOf(c.opened) })) : null,
+      h("button.link", { type: "button", onclick: () => attempt(() => api("/api/cases/reveal", { method: "POST", body: { id: c.id, place: "work" } })) }, tr("Arbeitsordner zeigen")),
+      h("button.link", { type: "button", onclick: remove }, tr("Aus der Liste entfernen"))));
+}
+
+/** In the case: where the originals and the work are, with the move of the work folder. */
+function renderPlaces() {
+  const c = S.st.case;
+  const reveal = (place) => attempt(() => api("/api/cases/reveal", { method: "POST", body: { id: c.id, place } }));
+  const move = async () => { await attempt(() => api("/api/cases/move", { method: "POST", body: { id: c.id } })); await refresh(); };
+  return h("section.places-block", { "aria-labelledby": "places-title" },
+    h("h2", { id: "places-title" }, tr("Ablage")),
+    h("dl.places", {},
+      h("dt", {}, tr("Akten")), h("dd", {}, h("span.path", {}, c.root), h("button.link", { type: "button", onclick: () => reveal("source") }, tr("Zeigen"))),
+      h("dt", {}, tr("Arbeitsordner")), h("dd", {}, h("span.path", {}, c.same_folder ? `${c.work} (.courtos)` : c.work),
+        h("button.link", { type: "button", onclick: () => reveal("work") }, tr("Zeigen")),
+        c.sample ? null : h("button.link", { type: "button", onclick: move }, tr("Verschieben …")))),
+    h("p.note", {}, tr("Register, Fallgedächtnis, Ergebnisse und Arbeitsprodukte liegen im Arbeitsordner. Word zeigt denselben Fall wie dieses Fenster.")));
 }
 
 // ---------------------------------------------------------------------------
@@ -216,7 +277,7 @@ function renderShell() {
       prefs(),
       S.st.clients?.word ? h("span.word-on", { title: tr("Word folgt diesem Fenster: Belege öffnen sich hier, Aussagen lassen sich in Word einfügen.") }, icon("check"), tr("Word verbunden"))
         : h("button.btn.small.quiet", { type: "button", onclick: pairWord }, tr("Word verbinden")),
-      h("button.btn.small.quiet", { type: "button", onclick: async () => { await attempt(() => api("/api/folder/choose", { method: "POST" })); S.view = null; S.register = null; await refresh(); } }, tr("Anderer Ordner")),
+      h("button.btn.small.quiet", { type: "button", onclick: caseAction(() => api("/api/cases/close", { method: "POST" })) }, tr("Alle Fälle")),
     ),
     renderRail(),
     h("main.main", {},
@@ -279,6 +340,7 @@ function renderDocs() {
   const partyOptions = [["", tr("keine")], ...c.parties.map(p => [p.id, partyLabel(S.st, p.id)])];
   return h("section.pane", {},
     h("header", {}, h("h1", {}, tr("Akten und Parteien")), h("p", {}, tr("Rolle und Partei sind Vorschläge aus Dateinamen und Text. Sie bestimmen, wem eine Aussage zugerechnet wird. Korrigieren Sie, was nicht stimmt."))),
+    renderPlaces(),
     renderCaseLanguage(),
     renderParties(),
     h("table.docs", {},

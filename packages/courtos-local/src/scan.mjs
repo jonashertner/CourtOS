@@ -10,8 +10,10 @@ export const WORKSPACE_DIR = ".courtos";
 const MAX_FILES = 600;
 const MAX_DEPTH = 6;
 
-export async function walk(root) {
+/** `skip`: names of top-level folders to leave out (CourtOS's work products when they sit in the case folder). */
+export async function walk(root, { skip = [] } = {}) {
   const realRoot = await realpath(root);
+  const skipTop = new Set(skip);
   const files = [];
   async function visit(directory, depth) {
     if (depth > MAX_DEPTH) return;
@@ -19,6 +21,7 @@ export async function walk(root) {
     entries.sort((a, b) => a.name.localeCompare(b.name, "de", { numeric: true }));
     for (const entry of entries) {
       if (entry.name.startsWith(".") || entry.name.startsWith("~$") || entry.name === WORKSPACE_DIR) continue;
+      if (depth === 0 && skipTop.has(entry.name)) continue;
       const absolute = join(directory, entry.name);
       const info = await lstat(absolute);
       if (info.isSymbolicLink()) continue;

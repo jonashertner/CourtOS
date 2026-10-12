@@ -7,12 +7,14 @@ import { execFile } from "node:child_process";
 import { randomInt } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createHttpsServer } from "node:https";
-import { mkdir, readFile, stat, writeFile, chmod } from "node:fs/promises";
+import { mkdir, readFile, realpath, stat, writeFile, chmod } from "node:fs/promises";
 import { homedir } from "node:os";
 import { createRequire } from "node:module";
-import { dirname, extname, join } from "node:path";
+import { basename, dirname, extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { CaseStore } from "./caseStore.mjs";
+import { addCase, caseSummary, defaultWorkFolder, loadCases, moveWork, removeCase, updateCase, workFolderFor } from "./cases.mjs";
+import { WORKSPACE_DIR, syncWarning } from "./scan.mjs";
 import { AgentRun } from "./agent/runner.mjs";
 import { AnthropicProvider, DEFAULT_MODEL, OpenAICompatibleProvider, isLocalEndpoint, normaliseEndpoint } from "./agent/providers.mjs";
 import { DEMO_QUESTION, demoProvider, isDemoFolder } from "./agent/demo.mjs";
@@ -34,7 +36,6 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
 // Resolved at call time so HOME can be redirected (tests, managed installs).
 const CONFIG = () => join(homedir(), ".config", "courtos");
 const KEY = () => join(CONFIG(), "anthropic-key");
-const RECENT = () => join(CONFIG(), "recent.json");
 const PREFS = () => join(CONFIG(), "preferences.json");
 const ENDPOINT_KEYS = () => join(CONFIG(), "endpoint-keys.json");
 const UI_LANGUAGES = ["de", "fr", "it", "en"];
@@ -67,15 +68,34 @@ async function providerReady(consent) {
   return isLocalEndpoint(consent.endpoint) || Boolean(await endpointKey(consent.endpoint));
 }
 
-function chooseFolderMac() {
-  return new Promise((resolve) => {
-    execFile("osascript", ["-e", 'POSIX path of (choose folder with prompt "Fallordner für CourtOS wählen")'], { timeout: 5 * 60 * 1000 }, (error, stdout) => {
-      resolve(error ? null : stdout.trim());
-    });
+/** The system's own folder dialog; the page never names a path. Resolves to null when cancelled. */
+function chooseFolder(prompt) {
+  const timeout = 5 * 60 * 1000;
+  return new Promise((resolve, reject) => {
+    const done = (error, stdout) => resolve(error ? null : String(stdout).trim().split(/\r?\n/).at(-1) || null);
+    if (process.platform === "darwin") {
+      execFile("osascript", ["-e", `POSIX path of (choose folder with prompt ${JSON.stringify(prompt)})`], { timeout }, done);
+    } else if (process.platform === "win32") {
+      const script = "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; Add-Type -AssemblyName System.Windows.Forms; " +
+        "$d=New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description='" + prompt.replace(/'/g, "''") + "'; $d.ShowNewFolderButton=$true; " +
+        "$o=New-Object System.Windows.Forms.Form -Property @{TopMost=$true}; if($d.ShowDialog($o) -eq [System.Windows.Forms.DialogResult]::OK){ $d.SelectedPath }";
+      execFile("powershell.exe", ["-NoProfile", "-STA", "-Command", script], { timeout, windowsHide: true }, done);
+    } else {
+      execFile("zenity", ["--file-selection", "--directory", `--title=${prompt}`], { timeout }, (error, stdout) =>
+        error?.code === "ENOENT" ? reject(new CourtosError("native_dialog_unavailable")) : done(error, stdout));
+    }
   });
 }
 
-export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log } = {}) {
+/** Shows a file or folder with the system's own program (Finder, Explorer, the PDF viewer). */
+function openPath(path) {
+  if (process.platform === "darwin") execFile("open", [path]);
+  else if (process.platform === "win32" && /^https?:/.test(path)) execFile("cmd.exe", ["/c", "start", "", path], { windowsHide: true }, () => {});
+  else if (process.platform === "win32") execFile("explorer.exe", [path], { windowsHide: true }, () => { /* Explorer exits with 1 even on success */ });
+  else execFile("xdg-open", [path], () => {});
+}
+
+export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log, choose = chooseFolder } = {}) {
   const tls = await loadCertificates();
   const scheme = tls ? "https" : "http";
   const origin = `${scheme}://localhost:${port}`;
@@ -88,6 +108,9 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   const clients = new Set(); // { res, kind: "web" | "word" }
   let failedPairs = 0;
   let store = null;
+  let current = null;   // the open case: { id, source, work, sample? }
+  let pending = null;   // a case being added: { source, work }
+  let caseList = null;  // summaries for the list, rebuilt after a change
   let currentRun = null;
   const runs = new Map();
 
@@ -107,24 +130,43 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     return Number.isInteger(index) && index >= 0 && index < all.length ? { claim, citation: all[index] } : { claim, citation: null };
   };
 
-  async function openFolder(path) {
+  const cases = async () => (caseList ??= await Promise.all((await loadCases()).map(caseSummary)));
+  const casesChanged = () => { caseList = null; };
+
+  async function openCase(entry) {
     if (currentRun?.status === "running") throw new CourtosError("run_in_progress", undefined, 409);
     store?.close();
-    store = await CaseStore.open(path);
-    store.on("change", (change) => { broadcast("case", change); if (["notes", "consent"].includes(change.kind)) writeMemory(); });
+    store = null; current = null;
+    store = await CaseStore.open(entry.source, { work: entry.work });
+    current = entry;
+    casesChanged();
+    store.on("change", (change) => { casesChanged(); broadcast("case", change); if (["notes", "consent"].includes(change.kind)) writeMemory(); });
     broadcast("case", { kind: "opening" });
     await store.ensureLoaded();
     await store.scan({ progress: (p) => broadcast("scan", p) });
     store.watch();
     runs.clear();
     for (const run of await listRuns(store)) runs.set(run.id, run);
-    try {
-      await mkdir(CONFIG(), { recursive: true });
-      const recent = (await readJson(RECENT(), [])).filter(p => p !== store.root);
-      await writeFile(RECENT(), JSON.stringify([store.root, ...recent].slice(0, 6)));
-    } catch { /* recent list is a convenience */ }
+    if (!entry.sample) await updateCase(entry.id, { opened: new Date().toISOString() }).catch(() => {});
     broadcast("case", { kind: "opened" });
   }
+
+  function closeCase() {
+    if (currentRun?.status === "running") throw new CourtosError("run_in_progress", undefined, 409);
+    queue.length = 0;
+    store?.close();
+    store = null; current = null;
+    runs.clear();
+    casesChanged();
+    broadcast("case", { kind: "closed" });
+  }
+
+  const listed = async (id) => {
+    const entry = (await loadCases()).find(c => c.id === id);
+    if (!entry) throw new CourtosError("case_unknown", undefined, 404);
+    return entry;
+  };
+  const pendingView = () => pending && { name: basename(pending.source), source: pending.source, work: pending.work, same_folder: pending.work === pending.source, sync: syncWarning(pending.work) };
 
   // The case memory: collected from the runs on this computer, readable in
   // .courtos/memory/memory.md; a model reads only the snapshot a release names.
@@ -152,12 +194,16 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     const key = Boolean(await apiKey());
     const prefs = await readJson(PREFS(), {}).catch(() => ({}));
     const base = { origin, settings: { has_key: key, model: DEFAULT_MODEL, language: UI_LANGUAGES.includes(prefs.language) ? prefs.language : null }, clients: connected(), tasks: Object.keys(TASKS), demo_question: DEMO_QUESTION };
-    if (!store) return { ...base, case: null, recent: await readJson(RECENT(), []).catch(() => []), samples: samples.map(({ id, language, court, matter, offline }) => ({ id, language, court, matter, offline: Boolean(offline) })) };
+    base.cases = await cases();
+    base.pending = pendingView();
+    base.samples = samples.map(({ id, language, court, matter, offline }) => ({ id, language, court, matter, offline: Boolean(offline) }));
+    if (!store) return { ...base, case: null };
     const register = store.register.entities;
     return {
       ...base,
       case: {
-        name: store.root.split("/").at(-1), root: store.root, sync: store.case.sync, consent: store.case.consent,
+        id: current.id, sample: Boolean(current.sample), name: basename(store.root), root: store.root, work: store.work, same_folder: store.work === store.root,
+        sync: store.case.sync, consent: store.case.consent,
         consent_valid: store.consentValid(), provider_ready: await providerReady(store.case.consent), issues: store.issues, demo: isDemoFolder(store.mirror),
         mirror: { sha256: store.mirror?.sha256, sections: store.mirror?.sections.length ?? 0, register_rev: store.register.rev },
         register: { total: register.length, replace: register.filter(e => e.decision === "replace").length },
@@ -197,6 +243,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     run.on("usage", (usage) => broadcast("usage", { id: run.id, usage }));
     run.on("done", async (summary) => {
       runs.set(run.id, summary);
+      casesChanged();
       broadcast("run_done", { id: run.id, status: summary.status });
       if (summary.status === "succeeded") {
         try { await writeAtomic(join(store.dir, "wiki", `${task}.md`), wikiMarkdown(summary, store)); } catch { /* wiki is derived */ }
@@ -347,27 +394,74 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         codes.set(code, Date.now() + 5 * 60 * 1000);
         return send(res, 200, { code, expires_in: 300 });
       }
-      if (path === "/api/folder/choose" && req.method === "POST") {
-        if (process.platform !== "darwin") throw new CourtosError("native_dialog_unavailable");
-        const chosen = await chooseFolderMac();
-        if (!chosen) return send(res, 200, { cancelled: true });
-        await openFolder(chosen);
+      if (path === "/api/folder" && req.method === "POST") {
+        // A sample is opened by its id only; its path is never taken from the page.
+        const { demo, sample: sampleId } = await body(req);
+        const sample = samples.find(s => (demo ? s.offline : s.id === sampleId));
+        if (!sample) throw new CourtosError("demo_not_available");
+        await openCase({ id: `sample:${sample.id}`, source: sample.path, work: sample.path, sample: true });
         return send(res, 200, { ok: true });
       }
-      if (path === "/api/folder" && req.method === "POST") {
-        const { path: folderPath, demo, sample: sampleId } = await body(req);
-        if (demo || sampleId) {
-          // A sample is opened by its id only; its path is never taken from the page.
-          const sample = samples.find(s => (demo ? s.offline : s.id === sampleId));
-          if (!sample) throw new CourtosError("demo_not_available");
-          await openFolder(sample.path);
-        } else {
-          const recent = await readJson(RECENT(), []).catch(() => []);
-          // Only a folder chosen natively, given on the command line or listed
-          // as recent may be opened; arbitrary paths from a page are refused.
-          if (!recent.includes(folderPath) && folderPath !== folder) throw new CourtosError("folder_not_allowed", undefined, 403);
-          await openFolder(folderPath);
+      // Adding a case: the originals' folder and the work folder come from the
+      // system's folder dialog, never from the page.
+      if (path === "/api/cases/source" && req.method === "POST") {
+        const chosen = await choose("Ordner mit den Akten des Falls wählen");
+        if (!chosen) return send(res, 200, { cancelled: true });
+        const realSource = await realpath(chosen);
+        const known = (await loadCases()).find(c => c.source === realSource);
+        if (known) { pending = null; await openCase(known); return send(res, 200, { opened: known.id }); }
+        const continuing = Boolean(await stat(join(realSource, WORKSPACE_DIR)).catch(() => null));
+        pending = { source: realSource, work: continuing ? realSource : await defaultWorkFolder(realSource) };
+        return send(res, 200, { pending: pendingView() });
+      }
+      if (path === "/api/cases/pending/work" && req.method === "POST") {
+        if (!pending) throw new CourtosError("case_unknown", undefined, 404);
+        const { same } = await body(req);
+        if (same) pending.work = pending.source;
+        else {
+          const chosen = await choose("Arbeitsordner für CourtOS wählen");
+          if (!chosen) return send(res, 200, { cancelled: true, pending: pendingView() });
+          pending.work = await workFolderFor(chosen, pending.source);
         }
+        return send(res, 200, { pending: pendingView() });
+      }
+      if (path === "/api/cases/pending/cancel" && req.method === "POST") { pending = null; return send(res, 200, { ok: true }); }
+      if (path === "/api/cases/create" && req.method === "POST") {
+        if (!pending) throw new CourtosError("case_unknown", undefined, 404);
+        const entry = await addCase(pending);
+        pending = null;
+        casesChanged();
+        await openCase(entry);
+        return send(res, 200, { opened: entry.id });
+      }
+      if (path === "/api/cases/open" && req.method === "POST") {
+        await openCase(await listed((await body(req)).id));
+        return send(res, 200, { ok: true });
+      }
+      if (path === "/api/cases/close" && req.method === "POST") { closeCase(); return send(res, 200, { ok: true }); }
+      if (path === "/api/cases/remove" && req.method === "POST") {
+        const entry = await listed((await body(req)).id);
+        if (current?.id === entry.id) closeCase();
+        await removeCase(entry.id);
+        casesChanged();
+        return send(res, 200, { ok: true });
+      }
+      if (path === "/api/cases/move" && req.method === "POST") {
+        const entry = await listed((await body(req)).id);
+        const chosen = await choose("Neuen Arbeitsordner für CourtOS wählen");
+        if (!chosen) return send(res, 200, { cancelled: true });
+        const open = current?.id === entry.id;
+        if (open) closeCase();
+        let moved = entry;
+        try { moved = await moveWork(entry, await workFolderFor(chosen, entry.source)); }
+        finally { casesChanged(); if (open) await openCase(moved); }
+        return send(res, 200, { work: moved.work });
+      }
+      if (path === "/api/cases/reveal" && req.method === "POST") {
+        const { id, place } = await body(req);
+        const entry = current?.id === id ? current : await listed(id);
+        if (!["source", "work"].includes(place)) throw new CourtosError("invalid_request");
+        openPath(entry[place]);
         return send(res, 200, { ok: true });
       }
       if (path === "/api/settings/key" && req.method === "POST") {
@@ -420,7 +514,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       if (path === "/api/open-original" && req.method === "POST") {
         const { id } = await body(req);
         const { source } = await store.originalFile(id);
-        if (process.platform === "darwin") execFile("open", [join(store.root, ...source.rel_path.split("/"))]);
+        openPath(join(store.root, ...source.rel_path.split("/")));
         return send(res, 200, { ok: true });
       }
       if (path === "/api/release" && req.method === "POST") {
@@ -543,7 +637,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     server.once("error", (error) => reject(error.code === "EADDRINUSE" ? new CourtosError("port_in_use", { port }) : error));
     server.listen(port, "127.0.0.1", resolve);
   });
-  if (folder) await openFolder(folder);
+  if (folder) await openCase(await addCase({ source: folder }));
   const pairUrl = `${origin}/#pair=${pairToken}`;
   log(`CourtOS läuft auf ${origin}`);
   log(`Im Browser öffnen: ${pairUrl}`);
@@ -552,7 +646,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     log("Hinweis: Kein Entwicklerzertifikat für localhost gefunden. Der Browser funktioniert, Word nicht.");
     log("Für Word einmal ausführen: npx office-addin-dev-certs install, dann CourtOS neu starten.");
   }
-  if (openBrowser && process.platform === "darwin") execFile("open", [pairUrl]);
+  if (openBrowser) openPath(pairUrl);
   return { server, origin, pairUrl, close: () => { store?.close(); for (const c of clients) c.res.end(); server.close(); } };
 }
 

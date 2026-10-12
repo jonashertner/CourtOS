@@ -1,3 +1,4 @@
+import { createServer } from "node:net";
 import { cp, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -44,3 +45,12 @@ export const ORIGINAL_IDENTIFIERS = [
   "Seestrasse 41", "anna.keller@alpenblick-hotel.ch", "m.bianchi@bergfeld-bau.ch", "756.1234.5678.97",
   "Weber", "Brunner", "Vitznau", "Ebikon", "4711", ...PUBLIC_DETAILS,
 ];
+
+/** A port the system reports free, so a test never collides with a running CourtOS. */
+export async function freePort() {
+  const probe = createServer();
+  await new Promise(resolve => probe.listen(0, "127.0.0.1", resolve));
+  const { port } = probe.address();
+  await new Promise(resolve => probe.close(resolve));
+  return port;
+}

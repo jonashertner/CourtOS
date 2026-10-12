@@ -1,5 +1,7 @@
-// One open case folder: inventory, extraction cache, register, mirror and
-// consent, all inside <case>/.courtos/. Originals are only ever read.
+// One open case: inventory, extraction cache, register, mirror and consent,
+// all inside <work folder>/.courtos/. The work folder is either the case
+// folder itself or a separate local folder (cases.mjs). Originals are only
+// ever read.
 import { EventEmitter } from "node:events";
 import { watch } from "node:fs";
 import { lstat, mkdir, readFile, realpath, stat } from "node:fs/promises";
@@ -14,6 +16,7 @@ import { applyChange, emptyRegister, mergeDetections, ocrReadings, relabelReplac
 import { buildMirror, compilePageTransform } from "./mirror.mjs";
 import { ocrEngine, ocrPdfPages, OCR_VERSION } from "./ocr.mjs";
 import { compileGuard } from "./guard.mjs";
+import { refuseInside } from "./cases.mjs";
 import { memorySha } from "./memory.mjs";
 import { canonicalText, CourtosError, now, randomId, readJson, sha256, writeAtomic, writeJson } from "./util.mjs";
 import { extname } from "node:path";
@@ -30,16 +33,22 @@ const cleanText = (value, max) => {
 const ROLES = new Set(["claim", "response", "submission", "exhibit", "literature", "authority", "internal_note", "other"]);
 
 export class CaseStore extends EventEmitter {
-  static async open(root) {
+  static async open(root, { work = root } = {}) {
     const info = await stat(root).catch(() => null);
     if (!info?.isDirectory()) throw new CourtosError("folder_not_found", undefined, 404);
     const store = new CaseStore();
     store.ocr = { engine: ocrEngine, pdfPages: ocrPdfPages };
     store.ocrFailed = new Set();
-    const { realRoot } = await walk(root);
+    const realRoot = await realpath(root);
+    // A work folder inside the originals' folder would be read back as case documents.
+    await refuseInside(realRoot, work);
+    await mkdir(work, { recursive: true });
+    const realWork = await realpath(work);
+    await refuseInside(realRoot, realWork);
     store.root = realRoot;
-    store.dir = join(realRoot, WORKSPACE_DIR);
-    // The workspace must be real directories inside the case folder. A planted
+    store.work = realWork;
+    store.dir = join(realWork, WORKSPACE_DIR);
+    // The workspace must be real directories inside the work folder. A planted
     // symlink (e.g. from an unpacked archive) would redirect writes elsewhere.
     for (const part of ["", "private", "private/extract", "mirror", "runs", "wiki", "memory", "memory/released", "public"]) {
       const path = join(store.dir, ...part.split("/").filter(Boolean));
@@ -47,7 +56,7 @@ export class CaseStore extends EventEmitter {
       if (info && (info.isSymbolicLink() || !info.isDirectory())) throw new CourtosError("workspace_unsafe", undefined, 409);
       if (!info) await mkdir(path, { mode: /^(private|memory)/.test(part) ? 0o700 : 0o755 });
       const real = await realpath(path);
-      if (real !== path || !real.startsWith(realRoot + sep)) throw new CourtosError("workspace_unsafe", undefined, 409);
+      if (real !== path || !real.startsWith(realWork + sep)) throw new CourtosError("workspace_unsafe", undefined, 409);
     }
     await writeAtomic(join(store.dir, ".gitignore"), "*\n");
     await writeAtomic(join(store.dir, "README.txt"),
@@ -67,7 +76,8 @@ export class CaseStore extends EventEmitter {
     ];
     store.notes = await readJson(join(store.dir, "private", "notes.json"), []);
     store.procedure = await readJson(join(store.dir, "private", "procedure.json"), { deadlines: [], orders: [] });
-    store.case.sync = syncWarning(realRoot);
+    // The register lives in the work folder: that is the folder whose synchronisation matters.
+    store.case.sync = syncWarning(realWork);
     store.sources = await readJson(join(store.dir, "sources.json"), []);
     store.register = await readJson(join(store.dir, "private", "register.json"), emptyRegister());
     store.mirror = await readJson(join(store.dir, "mirror", "mirror.json"), null);
@@ -107,7 +117,7 @@ export class CaseStore extends EventEmitter {
 
   /** Re-inventory the folder, extract new or changed files, refresh suggestions. */
   async scan({ progress = () => {} } = {}) {
-    const { files } = await walk(this.root);
+    const { files } = await walk(this.root, { skip: this.ownFolders() });
     const byPath = new Map(this.sources.map(s => [s.rel_path, s]));
     let maxId = this.sources.reduce((n, s) => Math.max(n, Number(s.id.slice(1))), 0);
     const seen = new Set();
@@ -220,7 +230,7 @@ export class CaseStore extends EventEmitter {
     const parties = this.partiesView().map(({ id, role, term, pseudonym }) => ({ id, role, term, name_in_text: pseudonym }));
     const { mirror, maps, issues } = buildMirror(this.register, this.includedDocuments(), this.lang, parties);
     this.issues = issues;
-    const guard = compileGuard({ register: this.register, realRoot: this.root, relPaths: this.sources.map(s => s.rel_path), allowCorpus: mirror.kept });
+    const guard = compileGuard({ register: this.register, realRoot: this.root, workRoot: this.work, relPaths: this.sources.map(s => s.rel_path), allowCorpus: mirror.kept });
     for (const document of mirror.documents) for (const page of [{ text: document.label }, ...document.pages]) {
       const hits = guard.scan(page.text);
       if (hits.length) this.issues.push({ code: "mirror_guard", document: document.id, page: page.n ?? null, hits });
@@ -243,7 +253,7 @@ export class CaseStore extends EventEmitter {
   }
 
   guard() {
-    return compileGuard({ register: this.register, realRoot: this.root, relPaths: this.sources.map(s => s.rel_path), allowCorpus: this.mirror?.kept ?? [] });
+    return compileGuard({ register: this.register, realRoot: this.root, workRoot: this.work, relPaths: this.sources.map(s => s.rel_path), allowCorpus: this.mirror?.kept ?? [] });
   }
 
   async changeRegister(change) {
@@ -525,13 +535,22 @@ export class CaseStore extends EventEmitter {
     this.emit("change", { kind: "procedure" });
   }
 
-  /** Re-scan when files in the case folder change. CourtOS's own folder is ignored. */
+  /**
+   * Top-level folders of the case folder that are CourtOS's own output: the
+   * work-products folder, when the work folder is the case folder itself.
+   */
+  ownFolders() {
+    return this.work === this.root && this.case.products_dir ? [this.case.products_dir] : [];
+  }
+
+  /** Re-scan when files in the case folder change. CourtOS's own folders are ignored. */
   watch() {
     if (this.watcher) return;
     let timer = null;
     try {
       this.watcher = watch(this.root, { recursive: true }, (_event, name) => {
-        if (!name || String(name).split(/[\\/]/).some(part => part.startsWith("."))) return;
+        const parts = String(name ?? "").split(/[\\/]/);
+        if (!name || parts.some(part => part.startsWith(".")) || this.ownFolders().includes(parts[0])) return;
         clearTimeout(timer);
         timer = setTimeout(() => this.scan().then(() => this.emit("change", { kind: "folder" })).catch(() => {}), 1200);
       });

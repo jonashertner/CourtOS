@@ -13,7 +13,7 @@ function fakeElement() {
 }
 globalThis.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {} };
 globalThis.document ??= { documentElement: { dataset: {} }, createElement: () => fakeElement() };
-const { h } = await import("../web/shared.js");
+const { consentLost, h } = await import("../web/shared.js");
 const { comparisonStatus, partyClass, tally } = await import("../web/results.js");
 
 test("a custom property in a style reaches the element, so the comparison gets its columns", () => {
@@ -43,4 +43,12 @@ test("only the claimant and the respondent carry a party colour", () => {
   assert.equal(partyClass("P2"), "pty P2");
   assert.equal(partyClass("P3"), "pty");
   assert.equal(partyClass(null), "pty");
+});
+
+test("closing a released case or switching cases does not report a lost release", () => {
+  const open = { id: "a", consent_valid: true };
+  assert.equal(consentLost(open, { id: "a", consent_valid: false }), true, "the same case lost its release");
+  assert.equal(consentLost(open, null), false, "the case was closed");
+  assert.equal(consentLost(open, { id: "b", consent_valid: false }), false, "another case was opened");
+  assert.equal(consentLost({ id: "a", consent_valid: false }, { id: "a", consent_valid: false }), false);
 });
