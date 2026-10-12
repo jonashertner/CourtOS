@@ -126,7 +126,7 @@ function renderUnpaired() {
     h("div.gate-top", {}, wordmark(), prefs()),
     h("div.welcome", {},
       h("h1", {}, tr("Diese Seite ist nicht verbunden.")),
-      h("p.lede", {}, tr("CourtOS läuft auf diesem Computer. Öffnen Sie den Link, den CourtOS beim Start im Terminal anzeigt. Er verbindet diesen Browser mit Ihrer lokalen Sitzung.")),
+      h("p.lede", {}, tr("CourtOS läuft auf diesem Computer. Öffnen Sie den Link, den CourtOS beim Start im Terminal anzeigt. Er verbindet einen Browser mit Ihrer lokalen Sitzung und gilt einmal. Für einen weiteren Browser starten Sie CourtOS neu.")),
     ),
   )));
 }

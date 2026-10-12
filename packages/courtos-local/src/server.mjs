@@ -101,7 +101,8 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   const origin = `${scheme}://localhost:${port}`;
   const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`]);
   const allowedOrigins = new Set([`${scheme}://localhost:${port}`, `${scheme}://127.0.0.1:${port}`]);
-  const pairToken = randomId(24);
+  // The startup link pairs one browser; a second browser needs a restart or a code.
+  let pairToken = randomId(24);
   const layout = pageLayouts();
   const sessions = new Set();
   const codes = new Map(); // code → expiry
@@ -112,6 +113,9 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   let pending = null;   // a case being added: { source, work }
   let caseList = null;  // summaries for the list, rebuilt after a change
   let currentRun = null;
+  // A run is finished for everyone once its memory and work products are on disk.
+  const settled = new WeakSet();
+  const busy = () => Boolean(currentRun && !settled.has(currentRun));
   const runs = new Map();
 
   /** Send an event to every open view, or only to the browser ("web") or Word ("word") views. Returns how many received it. */
@@ -134,7 +138,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   const casesChanged = () => { caseList = null; };
 
   async function openCase(entry) {
-    if (currentRun?.status === "running") throw new CourtosError("run_in_progress", undefined, 409);
+    if (busy()) throw new CourtosError("run_in_progress", undefined, 409);
     store?.close();
     store = null; current = null;
     store = await CaseStore.open(entry.source, { work: entry.work });
@@ -159,7 +163,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   }
 
   function closeCase() {
-    if (currentRun?.status === "running") throw new CourtosError("run_in_progress", undefined, 409);
+    if (busy()) throw new CourtosError("run_in_progress", undefined, 409);
     queue.length = 0;
     store?.close();
     store = null; current = null;
@@ -177,9 +181,9 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
 
   // The case memory: collected from the runs on this computer, readable in
   // .courtos/memory/memory.md; a model reads only the snapshot a release names.
-  const liveMemory = () => collectMemory(store, [...runs.values()]);
-  async function writeMemory() {
-    try { await writeAtomic(join(store.dir, "memory", "memory.md"), memoryMarkdown(liveMemory(), store, store.case.consent?.memory ?? null)); } catch { /* derived */ }
+  const liveMemory = (finishing = []) => collectMemory(store, [...runs.values(), ...finishing]);
+  async function writeMemory(finishing) {
+    try { await writeAtomic(join(store.dir, "memory", "memory.md"), memoryMarkdown(liveMemory(finishing), store, store.case.consent?.memory ?? null)); } catch { /* derived */ }
   }
   function memoryState() {
     const live = liveMemory();
@@ -224,7 +228,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         memory: memoryState(),
       },
       queue: queue.map(q => q.task),
-      current: currentRun?.status === "running" ? currentRun.id : null,
+      current: busy() ? currentRun.id : null,
       runs: [...runs.values()].map(r => ({ id: r.id, task: r.task, question: r.question, status: r.status, started: r.started, finished: r.finished, model: r.model, endpoint: r.endpoint ?? null, stale: staleness(store, r.result)?.stale ?? false })).sort((a, b) => String(b.started).localeCompare(String(a.started))),
     };
   }
@@ -249,13 +253,17 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     run.on("event", (event) => broadcast("run", { id: run.id, event }));
     run.on("usage", (usage) => broadcast("usage", { id: run.id, usage }));
     run.on("done", async (summary) => {
-      runs.set(run.id, summary);
+      try {
+        if (summary.status === "succeeded") {
+          await writeMemory([summary]);
+          await saveProducts([summary]);
+        }
+      } finally {
+        runs.set(run.id, summary);
+        settled.add(run);
+      }
       casesChanged();
       broadcast("run_done", { id: run.id, status: summary.status });
-      if (summary.status === "succeeded") {
-        await saveProducts([summary]);
-        await writeMemory();
-      }
       // The pipeline continues only after a success; a failure stops it visibly.
       const next = queue.shift();
       if (next && summary.status === "succeeded" && store.consentValid()) {
@@ -270,7 +278,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
 
   async function startRuns(request) {
     if (!store) throw new CourtosError("no_case", undefined, 409);
-    if (currentRun?.status === "running") throw new CourtosError("run_in_progress", undefined, 409);
+    if (busy()) throw new CourtosError("run_in_progress", undefined, 409);
     if (!store.consentValid()) throw new CourtosError("consent_required", undefined, 409);
     const steps = Array.isArray(request.pipeline) ? request.pipeline : [request.task];
     if (!steps.length || steps.length > 8 || steps.some(t => !TASKS[t])) throw new CourtosError("unknown_task");
@@ -375,7 +383,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         failedPairs++;
         return send(res, 403, { error: "pairing_failed" });
       }
-      if (code) codes.delete(code);
+      if (code) codes.delete(code); else pairToken = null;
       const session = randomId(24);
       sessions.add(session);
       res.setHeader("Set-Cookie", `courtos_session=${session}; Path=/; HttpOnly; SameSite=${tls ? "None; Secure" : "Strict"}`);
@@ -585,7 +593,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       if (path === "/api/register/occurrence" && req.method === "POST") { await store.setOccurrence(await body(req)); return send(res, 200, { ok: true }); }
       if (path === "/api/case/language" && req.method === "POST") {
         const { language } = await body(req);
-        if (currentRun?.status === "running" || queue.length) throw new CourtosError("run_in_progress", undefined, 409);
+        if (busy() || queue.length) throw new CourtosError("run_in_progress", undefined, 409);
         await store.setLanguage(String(language ?? ""));
         return send(res, 200, { ok: true, language: store.lang });
       }
@@ -621,7 +629,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         return res.end(archive);
       }
       if ((match = /^\/api\/runs\/([\w-]{8,80})$/.exec(path)) && req.method === "GET") {
-        const run = currentRun?.id === match[1] ? currentRun.summary() : runs.get(match[1]);
+        const run = currentRun?.id === match[1] && busy() ? { ...currentRun.summary(), status: "running" } : runs.get(match[1]);
         if (!run) throw new CourtosError("run_unknown", undefined, 404);
         return send(res, 200, { ...run, freshness: staleness(store, run.result) });
       }
@@ -666,7 +674,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   if (folder) await openCase(await addCase({ source: folder }));
   const pairUrl = `${origin}/#pair=${pairToken}`;
   log(`CourtOS läuft auf ${origin}`);
-  log(`Im Browser öffnen: ${pairUrl}`);
+  log(`Im Browser öffnen (gilt einmal): ${pairUrl}`);
   if (!tls) {
     // Word loads add-ins over https only; the browser works either way.
     log("Hinweis: Kein Entwicklerzertifikat für localhost gefunden. Der Browser funktioniert, Word nicht.");

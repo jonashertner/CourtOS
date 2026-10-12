@@ -176,6 +176,8 @@ test("results after a release wait for the next release; the memory is on disk a
 
   const { id } = JSON.parse((await post("/api/runs", { task: "chronology", demo: true })).body);
   for (let i = 0; i < 200 && (await get(`/api/runs/${id}`)).status === "running"; i++) await new Promise(r => setTimeout(r, 100));
+  // A run reads as finished only once its memory and work products are on disk.
+  assert.ok(JSON.parse(await readFile(join(root, ".courtos", "products.json"), "utf8"))[id], "the work product is written");
   c = (await get("/api/state")).case;
   assert.ok(c.memory.findings > 0);
   assert.equal(c.memory.pending, true, "the new findings are not in the release");
