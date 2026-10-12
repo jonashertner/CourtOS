@@ -47,6 +47,15 @@ Blocks for "pdf" and "scan":
   ["rule"]                   horizontal line
   ["space"]                  vertical space
   ["pagebreak"]
+  ["drawing", {"width": mm, "height": mm, "frame": true, "items": [...]}]
+                             a plan (site plan, elevation, sketch), drawn as vectors;
+                             coordinates in mm from the drawing's lower left corner:
+      ["line", x1, y1, x2, y2, opts]      ["rect", x, y, w, h, opts]
+      ["poly", [[x, y], ...], opts]       closed polygon
+      ["text", x, y, text, opts]          opts: size, bold, anchor l|c|r, angle
+      ["dim", x1, y1, x2, y2, label, opts]  dimension line with ticks, label at its middle
+      ["north", x, y]                     north arrow
+    opts for lines and shapes: {"width": pt, "dash": true, "fill": "light"|"mid"|"dark"}
 """
 
 import io
@@ -64,7 +73,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 from reportlab.platypus import (BaseDocTemplate, Frame, KeepTogether, PageBreak, PageTemplate, Paragraph, Spacer, Table,
                                 TableStyle)
-from reportlab.platypus.flowables import HRFlowable
+from reportlab.platypus.flowables import Flowable, HRFlowable
 
 HERE = Path(__file__).resolve().parent
 GREY = colors.HexColor("#555555")
@@ -112,6 +121,99 @@ def styles(font):
 
 
 WIDTH = A4[0] - 40 * mm
+FILLS = {"light": colors.HexColor("#E6E6E6"), "mid": colors.HexColor("#BDBDBD"), "dark": colors.HexColor("#7A7A7A")}
+
+
+class Drawing(Flowable):
+    """A plan drawn with vectors; its labels are real text, as in a CAD export."""
+
+    def __init__(self, spec, font):
+        super().__init__()
+        self.spec, self.font = spec, font
+        self.width = spec.get("width", WIDTH / mm) * mm
+        self.height = spec["height"] * mm
+
+    def wrap(self, *_):
+        return self.width, self.height + 4 * mm
+
+    def stroke(self, c, opts):
+        c.setLineWidth(opts.get("width", 0.7))
+        c.setDash(3, 2) if opts.get("dash") else c.setDash()
+        c.setStrokeColor(colors.black)
+        fill = FILLS.get(opts.get("fill"))
+        if fill is not None:
+            c.setFillColor(fill)
+        return 1 if fill is not None else 0
+
+    def draw(self):
+        c, regular, bold = self.canv, FONTS[self.font][0], FONTS[self.font][1]
+        at = lambda v: v * mm
+        c.saveState()
+        if self.spec.get("frame", True):
+            c.setLineWidth(0.5)
+            c.rect(0, 0, self.width, self.height)
+        for item in self.spec["items"]:
+            kind, args = item[0], item[1:]
+            opts = args[-1] if args and isinstance(args[-1], dict) else {}
+            if kind == "line":
+                self.stroke(c, opts)
+                c.line(*(at(v) for v in args[:4]))
+            elif kind == "rect":
+                fill = self.stroke(c, opts)
+                c.rect(*(at(v) for v in args[:4]), stroke=1, fill=fill)
+            elif kind == "poly":
+                fill = self.stroke(c, opts)
+                path = c.beginPath()
+                points = args[0]
+                path.moveTo(at(points[0][0]), at(points[0][1]))
+                for x, y in points[1:]:
+                    path.lineTo(at(x), at(y))
+                path.close()
+                c.drawPath(path, stroke=1, fill=fill)
+            elif kind == "text":
+                x, y, text = args[:3]
+                c.saveState()
+                c.setFillColor(colors.black)
+                c.setFont(bold if opts.get("bold") else regular, opts.get("size", 7.5))
+                c.translate(at(x), at(y))
+                c.rotate(opts.get("angle", 0))
+                {"l": c.drawString, "c": c.drawCentredString, "r": c.drawRightString}[opts.get("anchor", "l")](0, 0, text)
+                c.restoreState()
+            elif kind == "dim":
+                x1, y1, x2, y2, label = args[:5]
+                c.setLineWidth(0.35)
+                c.setDash()
+                c.setStrokeColor(colors.black)
+                c.line(at(x1), at(y1), at(x2), at(y2))
+                dx, dy = x2 - x1, y2 - y1
+                length = (dx * dx + dy * dy) ** 0.5 or 1
+                nx, ny = -dy / length * 1.5, dx / length * 1.5
+                for x, y in ((x1, y1), (x2, y2)):
+                    c.line(at(x - nx), at(y - ny), at(x + nx), at(y + ny))
+                c.saveState()
+                c.setFillColor(colors.black)
+                c.setFont(regular, opts.get("size", 7))
+                c.translate(at((x1 + x2) / 2 + nx * 0.9), at((y1 + y2) / 2 + ny * 0.9))
+                angle = __import__("math").degrees(__import__("math").atan2(dy, dx))
+                c.rotate(angle if -90 < angle <= 90 else angle - 180)
+                c.drawCentredString(0, 0.6 * mm, label)
+                c.restoreState()
+            elif kind == "north":
+                x, y = args[:2]
+                c.setDash()
+                c.setLineWidth(0.6)
+                c.setFillColor(colors.black)
+                path = c.beginPath()
+                path.moveTo(at(x), at(y + 8))
+                path.lineTo(at(x - 2.5), at(y))
+                path.lineTo(at(x + 2.5), at(y))
+                path.close()
+                c.drawPath(path, stroke=1, fill=1)
+                c.setFont(bold, 8)
+                c.drawCentredString(at(x), at(y + 9.5), "N")
+            else:
+                raise SystemExit(f"drawing: unknown item {kind}")
+        c.restoreState()
 
 
 def flowables(doc, where):
@@ -189,6 +291,12 @@ def flowables(doc, where):
             out.append(Spacer(1, 12))
         elif kind == "pagebreak":
             out.append(PageBreak())
+        elif kind == "drawing":
+            for item in args[0]["items"]:
+                for value in item[1:]:
+                    if isinstance(value, str):
+                        check_text(value, at)
+            out += [Spacer(1, 4), Drawing(args[0], doc.get("font", "sans")), Spacer(1, 8)]
         else:
             raise SystemExit(f"{at}: unknown block")
     return out
