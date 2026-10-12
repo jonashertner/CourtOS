@@ -1,5 +1,8 @@
 /** Shared projection contract. Every field outside outbound_json is private. */
-export type ReviewedTerm = { entity_id: string; revision: number; aliases: string[]; replacement: string; reviewed: boolean; reading?: true };
+/** match "capitalised": an alias that is also an ordinary word matches only capitalised or in capitals. */
+export type ReviewedTerm = { entity_id: string; revision: number; aliases: string[]; replacement: string; reviewed: boolean; reading?: true; match?: "capitalised" };
+/** The capitalised spellings a `match: "capitalised"` alias stands for. */
+export declare function capitalisedForms(alias: string): string[];
 export type PrivateTransformationSpan = {
     entity_id: string; original_start: number; original_end: number;
     derivative_start: number; derivative_end: number; original: string; replacement: string;

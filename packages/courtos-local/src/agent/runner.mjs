@@ -302,6 +302,9 @@ export class AgentRun extends EventEmitter {
       if (this.question) this.questionSent = this.store.pseudonymise(this.question);
       const system = systemPrompt(this.task, this.language, this.store.lang);
       const toolDefs = tools(this.task);
+      // CourtOS's own instructions hold no case data; a registered word in them ("May",
+      // "CourtOS" in a footer) is not a disclosure.
+      for (const text of [system, ...strings(toolDefs)]) this.guard.allow(text);
       const noteBlock = this.extra.filter(s => s.kind === "working_note").map(s => `[${s.id} · working note by the user · status ${s.attribution.status}${this.task === "hypothetical_impact" ? " · hypothetical assumption" : ""}]\n${s.text}`).join("\n\n");
       const opening = [
         this.task === "source_chat" ? `Question: ${this.questionSent}` : `Prepare the ${this.task} working draft for this case folder.`,
@@ -426,6 +429,14 @@ export class AgentRun extends EventEmitter {
 
 /** Copy of the conversation with one cache breakpoint on its last block, so
  *  each turn reuses the previous prefix (system prompt has its own). */
+/** Every string inside a value (the tool definitions' names and descriptions). */
+function strings(value) {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(strings);
+  if (value && typeof value === "object") return Object.values(value).flatMap(strings);
+  return [];
+}
+
 function withCacheBreakpoint(messages) {
   const copy = messages.map(m => ({ ...m, content: typeof m.content === "string" ? m.content : m.content.map(b => ({ ...b })) }));
   const last = copy[copy.length - 1];

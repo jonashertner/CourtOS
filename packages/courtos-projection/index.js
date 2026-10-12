@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportProjectionError = exports.PseudonymisationError = void 0;
 exports.transformTextCore = transformTextCore;
+exports.capitalisedForms = capitalisedForms;
 exports.compileTextTransformation = compileTextTransformation;
 exports.resolveDerivativeSpan = resolveDerivativeSpan;
 exports.buildProjectionCore = buildProjectionCore;
@@ -24,10 +25,22 @@ const count = (text) => Array.from(text).length;
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const forbidden = /[\p{Cf}\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
 const invalidUnicode = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
-function expression(alias) {
-    const escaped = alias.split(/\s+/u).map(escapeRegex).join("\\s+");
+function expression(alias, match) {
+    const escaped = (text) => text.split(/\s+/u).map(escapeRegex).join("\\s+");
     // Unicode word boundaries protect, e.g., Ann from replacing Anne.
-    return new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${escaped})(?![\\p{L}\\p{N}\\p{M}_])`, "giu");
+    if (match !== "capitalised")
+        return new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${escaped(alias)})(?![\\p{L}\\p{N}\\p{M}_])`, "giu");
+    // A word that is also an ordinary word ("Pour", "Date") is a name only where it is
+    // capitalised. The lower-case word stays readable. Aliases differing only in case are
+    // one alias here, so every capitalised form is derived from whichever spelling is kept.
+    const forms = capitalisedForms(alias).map(escaped).join("|");
+    return new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${forms})(?![\\p{L}\\p{N}\\p{M}_])`, "gu");
+}
+/** "ledger" → Ledger, LEDGER; "date document" → Date document, Date Document, DATE DOCUMENT. */
+function capitalisedForms(alias) {
+    const upperFirst = (text) => text.charAt(0).toLocaleUpperCase() + text.slice(1);
+    const lower = alias.toLocaleLowerCase();
+    return [...new Set([upperFirst(alias), upperFirst(lower), lower.split(" ").map(upperFirst).join(" "), alias.toLocaleUpperCase()])];
 }
 function validateTerms(terms) {
     if (terms.length > 500 || terms.reduce((total, term) => total + term.aliases.length, 0) > 1000) {
@@ -44,7 +57,8 @@ function validateTerms(terms) {
             || !term.aliases.length || term.aliases.length > 100 || count(term.replacement) < 2
             || count(term.replacement) > 80 || term.replacement !== term.replacement.trim()
             || /[\r\n]/u.test(term.replacement) || forbidden.test(term.replacement) || invalidUnicode.test(term.replacement)
-            || (term.reading !== undefined && term.reading !== true)) {
+            || (term.reading !== undefined && term.reading !== true)
+            || (term.match !== undefined && term.match !== "capitalised")) {
             throw new PseudonymisationError("invalid_mapping");
         }
         entities.add(term.entity_id);
@@ -92,7 +106,8 @@ function matchView(text) {
 /**
  * Replaces only reviewed registered aliases. Unknown identifying information is
  * deliberately not guessed away: the entire derivative still needs review.
- * Overlapping different identities fail closed instead of longest-name wins.
+ * Matches of different identities that cross fail closed; a match inside a
+ * longer one is covered by it.
  */
 function transformTextCore(text, terms) {
     return compileTextTransformation(terms)(text);
@@ -101,7 +116,7 @@ function transformTextCore(text, terms) {
 function compileTextTransformation(terms) {
     const canonical = validateTerms(terms);
     const mapJson = JSON.stringify(canonical);
-    const patterns = canonical.flatMap(term => term.aliases.map(alias => ({ term, pattern: expression(alias) })));
+    const patterns = canonical.flatMap(term => term.aliases.map(alias => ({ term, pattern: expression(alias, term.match) })));
     // A reading replaces a damaged word with the ordinary word it was reviewed to be;
     // that word elsewhere in the text is the same word, not another identity.
     const replacementPatterns = canonical.filter(term => !term.reading).map(term => expression(term.replacement));
@@ -146,10 +161,16 @@ function transformText(text, mapJson, patterns, replacementPatterns) {
     for (const next of candidates) {
         const previous = hits.at(-1);
         if (previous && next.start < previous.end) {
-            if (previous.term.entity_id !== next.term.entity_id || next.end > previous.end) {
-                throw new PseudonymisationError("ambiguous_occurrence");
+            // Two matches that cross ("Anna Keller" and "Keller Bau") are ambiguous. A match
+            // inside a longer one ("Herrmann" in "Moser Herrmann") is covered by it: every
+            // character of both is replaced, under the longer one's identity. Two aliases of
+            // the same identity that cross ("M. F." and "F. Mercier") are replaced together.
+            if (next.end > previous.end) {
+                if (next.term.entity_id !== previous.term.entity_id)
+                    throw new PseudonymisationError("ambiguous_occurrence");
+                previous.end = next.end;
             }
-            continue; // Same identity's contained alias was already covered.
+            continue;
         }
         hits.push(next);
     }

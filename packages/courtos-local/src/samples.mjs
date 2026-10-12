@@ -9,6 +9,10 @@ import { fileURLToPath } from "node:url";
 
 export const SAMPLES = [
   { id: "alpenblick", folder: "HG.2026.57 Alpenblick", language: "de", court: "Handelsgericht des Kantons Zürich", matter: "Werkvertrag: Mängel an der Abdichtung eines Wellnessbereichs", offline: true },
+  { id: "sg-maschine", folder: "HG.2026.112 Rheintal Präzision", language: "de", court: "Handelsgericht des Kantons St. Gallen", matter: "Kaufvertrag: eine CNC-Fräsmaschine, die die Toleranzen nicht hält" },
+  { id: "vd-fiduciaire", folder: "PC.2026.0914 Domaine des Tourelles SA", language: "fr", court: "Chambre patrimoniale cantonale (Vaud), Lausanne", matter: "Mandat : responsabilité de la fiduciaire pour des décomptes TVA omis" },
+  { id: "ti-lavoro", folder: "PD.2026.184 Lanfranchi", language: "it", court: "Pretura del Distretto di Lugano", matter: "Contratto di lavoro: licenziamento abusivo, ore straordinarie e bonus" },
+  { id: "be-software", folder: "HG ICC 2026 7 Zytglogge Praezisionsinstrumente AG", language: "en", court: "Bern International Commercial Court", matter: "ERP implementation: termination for cause and restitution of milestone payments" },
 ];
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);

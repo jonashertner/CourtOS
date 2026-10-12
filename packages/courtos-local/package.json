@@ -15,6 +15,10 @@
     "word/",
     "scripts/ocr-vision.swift",
     "fixtures/HG.2026.57 Alpenblick/",
+    "fixtures/HG.2026.112 Rheintal Präzision/",
+    "fixtures/PC.2026.0914 Domaine des Tourelles SA/",
+    "fixtures/PD.2026.184 Lanfranchi/",
+    "fixtures/HG ICC 2026 7 Zytglogge Praezisionsinstrumente AG/",
     "README.md",
     "TESTING.md",
     "LICENSE"

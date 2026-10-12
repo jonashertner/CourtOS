@@ -57,6 +57,8 @@ export function mergeDetections(register, candidates, corpus, lang = "de") {
       for (const alias of candidate.aliases) if (!existing.removed_aliases?.some(r => normal(r) === normal(alias)) && !byAlias.has(normal(alias))) {
         existing.aliases.push(alias);
         byAlias.set(normal(alias), existing);
+        // Fail safe: only an entry that is nothing but an ordinary word matches capitalised only.
+        if (!candidate.match) delete existing.match;
       }
       existing.count = (existing.count ?? 0) + candidate.count;
       existing.samples = [...(existing.samples ?? []), ...candidate.samples].slice(0, 8);
@@ -72,6 +74,7 @@ export function mergeDetections(register, candidates, corpus, lang = "de") {
       decision: candidate.decision === "keep" ? "keep" : "replace", origin: "detected", source: candidate.source ?? "courtos",
       count: candidate.count, samples: candidate.samples, notes: candidate.notes, revision: 1,
       ...(candidate.candidates ? { candidates: candidate.candidates } : {}),
+      ...(candidate.match === "capitalised" ? { match: "capitalised" } : {}),
     };
     if (!entity.aliases.length) continue;
     entity.replacement = nextReplacement(next, entity.kind, corpus, candidate.style, lang);
@@ -107,7 +110,7 @@ export function relabelReplacements(register, from, to, corpus) {
 }
 const escapeForRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const signature = (register) => JSON.stringify(register.entities.map(e => [e.id, e.decision, e.replacement, [...e.aliases].sort()]));
+const signature = (register) => JSON.stringify(register.entities.map(e => [e.id, e.decision, e.replacement, [...e.aliases].sort(), e.match ?? null]));
 
 /** Repaired readings the user may choose for a damaged OCR word, capitalised like the word. */
 export function ocrReadings(entity) {
@@ -184,6 +187,7 @@ export function applyChange(register, change, corpus, lang = "de") {
       const value = clean(change.alias);
       if (claimedElsewhere(value, entity)) throw new CourtosError("alias_taken");
       if (!entity.aliases.some(a => normal(a) === normal(value))) entity.aliases.push(value);
+      delete entity.match; // an alias the user adds is found in any case
       entity.removed_aliases = (entity.removed_aliases ?? []).filter(a => normal(a) !== normal(value));
       entity.revision++;
       break;
@@ -211,6 +215,7 @@ export function applyChange(register, change, corpus, lang = "de") {
       const target = find(change.into), source = find(change.id);
       if (target === source || STRUCTURED_KINDS.has(target.kind) !== STRUCTURED_KINDS.has(source.kind)) throw new CourtosError("merge_rejected");
       target.aliases = [...new Set([...target.aliases, source.label, ...source.aliases])];
+      if (target.match !== source.match) delete target.match;
       target.count += source.count;
       target.revision++;
       next.entities = next.entities.filter(e => e !== source);
@@ -228,5 +233,5 @@ export function applyChange(register, change, corpus, lang = "de") {
 export function reviewedTerms(register, kinds = null) {
   return register.entities
     .filter(e => e.decision === "replace" && (!kinds || kinds.has(e.kind)))
-    .map(e => ({ entity_id: e.id, revision: e.revision, aliases: [...new Set(e.aliases.filter(a => Array.from(a).length >= 2))], replacement: e.replacement, reviewed: true, ...(e.read_as && e.read_as === e.replacement ? { reading: true } : {}) }));
+    .map(e => ({ entity_id: e.id, revision: e.revision, aliases: [...new Set(e.aliases.filter(a => Array.from(a).length >= 2))], replacement: e.replacement, reviewed: true, ...(e.read_as && e.read_as === e.replacement ? { reading: true } : {}), ...(e.match === "capitalised" ? { match: "capitalised" } : {}) }));
 }

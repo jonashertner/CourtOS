@@ -2,6 +2,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname } from "node:path";
+import { capitalisedForms } from "@courtos/projection";
 
 export const sha256 = (data) => createHash("sha256").update(data).digest("hex");
 export const randomId = (bytes = 12) => randomBytes(bytes).toString("base64url");
@@ -59,6 +60,17 @@ export const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 export function aliasExpression(alias, flags = "giu") {
   const escaped = alias.trim().split(/\s+/u).map(escapeRegex).join("\\s+");
   return new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${escaped})(?![\\p{L}\\p{N}\\p{M}_])`, flags);
+}
+
+/**
+ * How a registered alias is found. An alias that is also an ordinary word
+ * (match "capitalised") counts only capitalised or in capitals, as in the
+ * projection kernel; any other alias in any case.
+ */
+export function matchExpression(alias, match = null, global = true) {
+  if (match !== "capitalised") return aliasExpression(alias, global ? "giu" : "iu");
+  const alternatives = capitalisedForms(alias).map(form => form.trim().split(/\s+/u).map(escapeRegex).join("\\s+")).join("|");
+  return new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${alternatives})(?![\\p{L}\\p{N}\\p{M}_])`, global ? "gu" : "u");
 }
 
 export const codepoints = (text) => Array.from(text).length;

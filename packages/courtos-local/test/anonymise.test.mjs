@@ -1,0 +1,106 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { capitalisedForms, compileTextTransformation } from "@courtos/projection";
+import { consolidatePersons, suggestAnonymisation, surnamesAlone } from "../src/anonymise.mjs";
+import { detectCandidates } from "../src/detect.mjs";
+import { compileGuard } from "../src/guard.mjs";
+import { compilePageTransform } from "../src/mirror.mjs";
+import { CaseStore } from "../src/caseStore.mjs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const FIXTURES = fileURLToPath(new URL("../fixtures/", import.meta.url));
+
+const doc = (text) => [{ id: "D1", pages: [{ n: 1, text, has_text: true }] }];
+const detected = (text) => detectCandidates(doc(text)).map(c => [c.kind, ...c.aliases]);
+const term = (entity_id, replacement, aliases, extra = {}) => ({ entity_id, revision: 1, reviewed: true, replacement, aliases, ...extra });
+const entity = (id, kind, replacement, aliases, extra = {}) => ({ id, kind, revision: 1, decision: "replace", replacement, aliases, ...extra });
+
+test("an alias that is an ordinary word is replaced only capitalised, from whichever spelling was kept", () => {
+  assert.deepEqual(capitalisedForms("ledger"), ["Ledger", "LEDGER"]);
+  for (const aliases of [["Ledger"], ["LEDGER"], ["ledger", "LEDGER"]]) {
+    const transform = compileTextTransformation([term("E1", "A.________", aliases, { match: "capitalised" })]);
+    assert.equal(transform("the General Ledger, LEDGER, a ledger").text, "the General A.________, A.________, a ledger");
+  }
+});
+
+test("a match inside a longer one is covered by it; crossing matches of two identities fail closed, of one are joined", () => {
+  const nested = compileTextTransformation([term("E1", "A.________", ["Moser Herrmann"]), term("E2", "B.________", ["Herrmann"])]);
+  assert.equal(nested("Moser Herrmann und Herrmann").text, "A.________ und B.________");
+  const same = compileTextTransformation([term("E1", "A.________", ["M. F.", "F. Mercier"])]);
+  assert.equal(same("par M. F. Mercier, associé").text, "par A.________, associé");
+  const crossing = compileTextTransformation([term("E1", "A.________", ["Anna Keller"]), term("E2", "B.________", ["Keller Bau"])]);
+  assert.throws(() => crossing("Anna Keller Bau"), { code: "ambiguous_occurrence" });
+});
+
+test("every registered kind is replaced, and a later pass does not look inside an earlier label", () => {
+  const register = { entities: [
+    entity("E1", "plate", "Plaque 1", ["BE 123456"]),
+    entity("E2", "birthdate", "Date de naissance 1", ["14.08.1979"]),
+    entity("E3", "person", "A.________", ["Date"], { match: "capitalised" }),
+  ] };
+  const result = compilePageTransform(register)("Véhicule BE 123456, né le 14.08.1979. Date: hier.");
+  assert.equal(result.text, "Véhicule Plaque 1, né le Date de naissance 1. A.________: hier.");
+  assert.deepEqual(result.residual, []);
+});
+
+test("number plates, dates of birth, initials, foreign VAT numbers, Italian and English firms and banks are detected", () => {
+  assert.deepEqual(detected("Fahrzeug SG 412 873 des Beklagten"), [["plate", "SG 412 873"]]);
+  assert.deepEqual(detected("geboren am 3. März 1981 in Chur").filter(([k]) => k === "birthdate"), [["birthdate", "3. März 1981"]]);
+  assert.deepEqual(detected("né le 14.08.1979").filter(([k]) => k === "birthdate"), [["birthdate", "14.08.1979"]]);
+  assert.ok(detected("Mail von D.L. an die HR").some(([k, a]) => k === "person" && a === "D.L."));
+  assert.ok(!detected("Gemäss U.S. law and N.B. the clause").some(([k]) => k === "person"));
+  assert.ok(detected("VAT GB 123 4567 89").some(([k]) => k === "uid"));
+  assert.ok(detected("Officine Meccaniche Varesine S.r.l. a Varese").some(([k, a]) => k === "organisation" && a.includes("Varesine")));
+  assert.deepEqual(detected("Raiffeisenbank Rheintal Bahnhofstrasse 9"), [["organisation", "Raiffeisenbank Rheintal"], ["address", "Bahnhofstrasse 9"]]);
+  assert.ok(!detected("Aareland Bank AG").some(([k, a]) => a === "Bank AG"), "Bank AG is the company rule's");
+});
+
+test("a postcode and town stay on one line, and a year before an article is no place", () => {
+  assert.ok(!detected("vom 4. Mai 2024\nLe contrat").some(([k]) => k === "place"));
+  const { candidates } = suggestAnonymisation(doc("Hotel in 6354 Vitznau. Gäste in Vitznau. En 2024 Les parties signent."));
+  const places = candidates.filter(c => c.kind === "place").map(c => c.aliases);
+  assert.ok(places.some(a => a.includes("Vitznau")), "a town that is also in the vocabulary is still replaced on its own");
+  assert.ok(!places.some(a => a.some(x => /les/i.test(x))));
+});
+
+test("in the samples, headings, document labels and words written in lower case stay readable", async () => {
+  const mirrorOf = async (folder) => {
+    const work = await mkdtemp(join(tmpdir(), "courtos-readable-"));
+    const store = await CaseStore.open(join(FIXTURES, folder), { work });
+    try {
+      await store.scan();
+      return { register: store.register, text: store.mirror.documents.flatMap(d => d.pages.map(p => p.text)).join("\n") };
+    } finally { store.close(); await rm(work, { recursive: true, force: true }); }
+  };
+  const fr = await mirrorOf("PC.2026.0914 Domaine des Tourelles SA");
+  assert.match(fr.text, /\nC\. Sur l’objection anticipée/u, "a heading is no initial and surname");
+  assert.match(fr.text, / sur /u);
+  assert.ok(!fr.register.entities.some(e => e.decision === "replace" && e.aliases.includes("Pièce")), "a document label is no name");
+  assert.doesNotMatch(fr.text, /Chatelain/u, "counsel's surname in the firm's name");
+  const en = await mirrorOf("HG ICC 2026 7 Zytglogge Praezisionsinstrumente AG");
+  assert.equal(en.register.entities.find(e => e.aliases.includes("May"))?.match, "capitalised");
+  assert.match(en.text, / may /u);
+});
+
+test("one person's entries join; a surname standing alone joins its person or, if shared, stands on its own", () => {
+  const person = (aliases, extra = {}) => ({ kind: "person", label: aliases[0], aliases, count: 1, samples: [], notes: [], decision: "replace", ...extra });
+  const joined = consolidatePersons([person(["Fabien Mercier"]), person(["M. Fabien Mercier"]), person(["Fabien"]), person(["Pour"], { match: "capitalised" })]);
+  assert.deepEqual(joined.map(c => c.aliases), [["M. Fabien Mercier", "Fabien Mercier", "Fabien"], ["Pour"]]);
+  const pages = [{ doc: "D1", page: 1, text: "Me Delphine Chatelain, Chatelain & Associés. Thierry Baudin et Anne Baudin; Baudin conteste." }];
+  const candidates = surnamesAlone([person(["Delphine Chatelain"]), person(["Thierry Baudin"]), person(["Anne Baudin"])], pages);
+  assert.ok(candidates[0].aliases.includes("Chatelain"));
+  assert.ok(candidates.some(c => c.notes.includes("shared_surname") && c.aliases[0] === "Baudin"));
+});
+
+test("the guard lets a replacement label pass, and an ordinary word only where the model wrote it", () => {
+  const register = { entities: [entity("E1", "person", "A.________", ["Lieu"], { match: "capitalised" }), entity("E2", "person", "B.________", ["Anna Keller"]), entity("E3", "place", "Lieu 6", ["Vitznau"])] };
+  const guard = compileGuard({ register, realRoot: "/nowhere" });
+  assert.deepEqual(guard.scan("à Lieu 6, selon A.________"), []);
+  assert.deepEqual(guard.scan("Lieu: Lausanne"), [{ kind: "registered", entity: "E1" }], "a word the files wrote counts");
+  assert.ok(guard.checkBody({ messages: [{ role: "assistant", content: [{ type: "text", text: "Lieu et date: Lausanne." }] }] }));
+  assert.throws(() => guard.checkBody({ messages: [{ role: "assistant", content: "Anna Keller a signé." }] }), { code: "outbound_blocked" });
+  assert.throws(() => guard.checkBody({ messages: [{ role: "user", content: "Lieu: Lausanne" }] }), { code: "outbound_blocked" });
+});

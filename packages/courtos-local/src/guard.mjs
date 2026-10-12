@@ -13,7 +13,7 @@
 // the same word in new wording is still blocked. Errors carry kinds and entity
 // ids only, never the matched text.
 import { basename } from "node:path";
-import { CourtosError } from "./util.mjs";
+import { CourtosError, matchExpression } from "./util.mjs";
 
 const STRUCTURED = [
   ["email", /[\p{L}\p{N}.!#$%&'*+/=?^_`{|}~-]+@[\p{L}\p{N}](?:[\p{L}\p{N}.-]*[\p{L}\p{N}])?\.[\p{L}]{2,24}/giu],
@@ -36,7 +36,10 @@ export function compileGuard({ register, realRoot, workRoot = null, relPaths = [
   const checks = [];
   for (const entity of register.entities) {
     if (entity.decision !== "replace") continue;
-    for (const alias of new Set(entity.aliases)) checks.push({ kind: "registered", entity: entity.id, test: bounded(alias) });
+    // A name that is also an ordinary word ("Pour", "Date") counts only where CourtOS or the
+    // files put it, not in what the model wrote: the model saw it replaced wherever it was
+    // capitalised, so its own "Pour" is French.
+    for (const alias of new Set(entity.aliases)) checks.push({ kind: "registered", entity: entity.id, test: matchExpression(alias, entity.match), word: entity.match === "capitalised" });
   }
   // Neither the case folder's nor the work folder's path leaves the computer: both usually name the case.
   for (const path of new Set([realRoot, workRoot].filter(Boolean))) checks.push({ kind: "path", test: new RegExp(escape(path), "gi"), strict: true });
@@ -45,8 +48,11 @@ export function compileGuard({ register, realRoot, workRoot = null, relPaths = [
   for (const rel of relPaths) checks.push({ kind: "file_name", test: new RegExp(escape(basename(rel)), "gi"), strict: true });
   for (const [kind, test] of STRUCTURED) checks.push({ kind, test });
   const keptPatterns = register.entities.filter(e => e.decision === "keep").flatMap(e => e.aliases).filter(a => a.length >= 3).map(bounded);
-  // Ranges of values the user chose to keep readable; a pattern hit inside one
-  // (the digits of a kept IBAN that look like a phone number) is allowed.
+  // Replacement labels are never originals (a label is chosen so that the case
+  // folder does not contain it): "Lieu" registered as a name inside "Lieu 6".
+  for (const entity of register.entities) if (entity.decision === "replace" && entity.replacement) keptPatterns.push(bounded(entity.replacement));
+  // Ranges of values the user chose to keep readable, and of replacement labels;
+  // a pattern hit inside one (the digits of a kept IBAN that look like a phone number) is allowed.
   const keptRanges = (text) => {
     const ranges = [];
     for (const pattern of keptPatterns) { pattern.lastIndex = 0; for (const m of text.matchAll(pattern)) ranges.push([m.index, m.index + m[0].length]); }
@@ -67,10 +73,11 @@ export function compileGuard({ register, realRoot, workRoot = null, relPaths = [
     allow(text) {
       if (typeof text === "string" && text.length && !corpusSet.has(text)) { corpusSet.add(text); corpus.push(text); }
     },
-    scan(text) {
+    scan(text, { authored = false } = {}) {
       const hits = [];
       let ranges = null;
       for (const check of checks) {
+        if (authored && check.word) continue;
         check.test.lastIndex = 0;
         for (const match of text.matchAll(check.test)) {
           ranges ??= keptRanges(text);
@@ -87,13 +94,14 @@ export function compileGuard({ register, realRoot, workRoot = null, relPaths = [
       return true;
     },
     /** Scan every string inside a request body. Scanning the serialised JSON
-     *  would miss words after "\n" (escaped as backslash-n) and Windows paths. */
+     *  would miss words after "\n" (escaped as backslash-n) and Windows paths.
+     *  An assistant message (both wire formats carry `role`) is the model's own text. */
     checkBody(body) {
       const hits = [];
-      const visit = (value) => {
-        if (typeof value === "string") hits.push(...guard.scan(value));
-        else if (Array.isArray(value)) value.forEach(visit);
-        else if (value && typeof value === "object") Object.values(value).forEach(visit);
+      const visit = (value, authored = false) => {
+        if (typeof value === "string") hits.push(...guard.scan(value, { authored }));
+        else if (Array.isArray(value)) value.forEach(item => visit(item, authored));
+        else if (value && typeof value === "object") Object.values(value).forEach(item => visit(item, authored || value.role === "assistant"));
       };
       visit(body);
       if (hits.length) throw new OutboundBlocked(hits);

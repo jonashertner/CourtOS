@@ -6,17 +6,20 @@
 import { pageLabel } from "./language.mjs";
 import { createRequire } from "node:module";
 import { reviewedTerms } from "./register.mjs";
-import { CourtosError, sha256 } from "./util.mjs";
+import { CourtosError, matchExpression, sha256 } from "./util.mjs";
 
 const require = createRequire(import.meta.url);
 const kernel = require("@courtos/projection");
 
-export const PASSES = [
-  new Set(["email", "url", "iban", "ahv", "uid", "phone"]),
+const LATER = [
   new Set(["parcel", "address"]),
   new Set(["organisation", "person"]),
   new Set(["place"]),
 ];
+// The first pass takes every other kind: e-mail, IBAN, AHV, UID, phone, and
+// plates, dates of birth, document numbers and any kind added later. A kind
+// no pass names would be registered but never replaced.
+export const PASSES = [{ has: (kind) => !LATER.some(kinds => kinds.has(kind)) }, ...LATER];
 
 /** Map a position in the previous text to the original text, given spans. */
 function toOriginal(spans, position) {
@@ -46,13 +49,17 @@ export function compilePageTransform(register) {
     const terms = reviewedTerms(register, kinds);
     return terms.length ? kernel.compileTextTransformation(terms) : null;
   });
-  const originals = Array.from(new Set(register.entities.filter(e => e.decision === "replace").flatMap(e => e.aliases)));
+  const originals = register.entities.filter(e => e.decision === "replace").flatMap(e => e.aliases.map(alias => matchExpression(alias, e.match, false)));
   return (text, keep = null) => {
     let current = text;
     let spans = [];
     for (const transform of compiled) {
       if (!transform) continue;
-      const pass = transform(current);
+      // Labels put in by an earlier pass are CourtOS's own text: a later pass does not look
+      // inside them ("Date" registered as a name, in "Date of birth 1"). They are masked with a
+      // character no alias contains, and put back after the pass.
+      const pass = transform(maskLabels(current, spans));
+      const passText = restoreLabels(pass.text, current, spans, pass.spans);
       for (const span of spans) {
         if (pass.spans.some(p => p.original_start < span.derivative_end && p.original_end > span.derivative_start)) throw new CourtosError("pass_overlap");
       }
@@ -63,13 +70,34 @@ export function compilePageTransform(register) {
         return { ...span, original_start: originalStart, original_end: originalEnd, original: Array.from(text).slice(originalStart, originalEnd).join("") };
       });
       spans = [...carried, ...added].sort((a, b) => a.original_start - b.original_start);
-      current = pass.text;
+      current = passText;
     }
     let kept = [];
     if (keep?.size && spans.some(span => keep.has(span.original_start))) ({ text: current, spans, kept } = rebuild(text, spans, keep));
-    const masked = kept.length ? maskKept(current, kept) : current;
+    // Kept occurrences, and the labels just put in, are not originals: "Lieu" registered as a
+    // name is not left over in the place label "Lieu 6".
+    const masked = maskKept(current, [...kept, ...spans]);
     return { text: current, original_text: text, spans, kept, requires_human_review: true, external_eligible: false, residual: residualOriginals(masked, originals) };
   };
+}
+
+const MASK = "\uE000";
+
+function maskLabels(text, spans) {
+  if (!spans.length) return text;
+  const chars = Array.from(text);
+  for (const span of spans) chars.fill(MASK, span.derivative_start, span.derivative_end);
+  return chars.join("");
+}
+
+function restoreLabels(text, previous, spans, passSpans) {
+  if (!spans.length) return text;
+  const chars = Array.from(text), before = Array.from(previous);
+  for (const span of spans) {
+    const at = toNext(passSpans, span.derivative_start);
+    chars.splice(at, span.derivative_end - span.derivative_start, ...before.slice(span.derivative_start, span.derivative_end));
+  }
+  return chars.join("");
 }
 
 /** Rebuild the derivative from the original, leaving kept occurrences verbatim. */
@@ -100,7 +128,8 @@ function rebuild(text, spans, keep) {
 
 function maskKept(text, kept) {
   const chars = Array.from(text);
-  for (const k of kept) for (let i = k.derivative_start; i < k.derivative_end; i++) chars[i] = "\u2007";
+  // Not a space: "Acheteur [label] Nordsee" must not read as "Acheteur Nordsee".
+  for (const k of kept) for (let i = k.derivative_start; i < k.derivative_end; i++) chars[i] = MASK;
   return chars.join("");
 }
 
@@ -110,10 +139,9 @@ export function keptWindows(text, kept, radius = 48) {
   return kept.map(k => chars.slice(Math.max(0, k.derivative_start - radius), Math.min(chars.length, k.derivative_end + radius)).join(""));
 }
 
-/** Registered originals still present (case-insensitive, word-bounded). */
+/** Registered originals still present (word-bounded; in any case unless the alias is an ordinary word). */
 function residualOriginals(text, originals) {
-  const lower = text.toLocaleLowerCase("de");
-  return originals.filter(alias => lower.includes(alias.toLocaleLowerCase("de")) && new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")}(?![\\p{L}\\p{N}\\p{M}_])`, "iu").test(text));
+  return originals.filter(pattern => pattern.test(text));
 }
 
 export const resolveDerivativeSpan = kernel.resolveDerivativeSpan;
