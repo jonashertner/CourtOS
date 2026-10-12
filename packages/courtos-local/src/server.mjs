@@ -14,7 +14,7 @@ import { dirname, extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { CaseStore } from "./caseStore.mjs";
 import { AgentRun } from "./agent/runner.mjs";
-import { AnthropicProvider, DEFAULT_MODEL } from "./agent/providers.mjs";
+import { AnthropicProvider, DEFAULT_MODEL, OpenAICompatibleProvider, isLocalEndpoint, normaliseEndpoint } from "./agent/providers.mjs";
 import { DEMO_QUESTION, demoProvider, isDemoFolder } from "./agent/demo.mjs";
 import { TASKS } from "./agent/tasks.mjs";
 import { wikiMarkdown } from "./wiki.mjs";
@@ -35,6 +35,7 @@ const CONFIG = () => join(homedir(), ".config", "courtos");
 const KEY = () => join(CONFIG(), "anthropic-key");
 const RECENT = () => join(CONFIG(), "recent.json");
 const PREFS = () => join(CONFIG(), "preferences.json");
+const ENDPOINT_KEYS = () => join(CONFIG(), "endpoint-keys.json");
 const UI_LANGUAGES = ["de", "fr", "it", "en"];
 
 export async function loadCertificates() {
@@ -47,6 +48,22 @@ export async function loadCertificates() {
 async function apiKey() {
   if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY;
   try { return (await readFile(KEY(), "utf8")).trim() || null; } catch { return null; }
+}
+
+/** The key saved for exactly this endpoint, or COURTOS_API_KEY when COURTOS_API_ENDPOINT names it. A key never goes to another address. */
+async function endpointKey(endpoint) {
+  if (process.env.COURTOS_API_KEY && process.env.COURTOS_API_ENDPOINT) {
+    try { if (normaliseEndpoint(process.env.COURTOS_API_ENDPOINT) === endpoint) return process.env.COURTOS_API_KEY; } catch { /* an unusable address in the environment names no endpoint */ }
+  }
+  const keys = await readJson(ENDPOINT_KEYS(), {}).catch(() => ({}));
+  return typeof keys[endpoint] === "string" ? keys[endpoint] : null;
+}
+
+/** Whether a run under this release can start: a key where the endpoint needs one. */
+async function providerReady(consent) {
+  if (!consent) return false;
+  if ((consent.provider ?? "anthropic") === "anthropic") return Boolean(await apiKey());
+  return isLocalEndpoint(consent.endpoint) || Boolean(await endpointKey(consent.endpoint));
 }
 
 function chooseFolderMac() {
@@ -121,7 +138,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       ...base,
       case: {
         name: store.root.split("/").at(-1), root: store.root, sync: store.case.sync, consent: store.case.consent,
-        consent_valid: store.consentValid(), issues: store.issues, demo: isDemoFolder(store.mirror),
+        consent_valid: store.consentValid(), provider_ready: await providerReady(store.case.consent), issues: store.issues, demo: isDemoFolder(store.mirror),
         mirror: { sha256: store.mirror?.sha256, sections: store.mirror?.sections.length ?? 0, register_rev: store.register.rev },
         register: { total: register.length, replace: register.filter(e => e.decision === "replace").length },
         anonymisation: store.anonymisationReport ?? null,
@@ -134,7 +151,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       },
       queue: queue.map(q => q.task),
       current: currentRun?.status === "running" ? currentRun.id : null,
-      runs: [...runs.values()].map(r => ({ id: r.id, task: r.task, question: r.question, status: r.status, started: r.started, finished: r.finished, model: r.model, stale: staleness(store, r.result)?.stale ?? false })).sort((a, b) => String(b.started).localeCompare(String(a.started))),
+      runs: [...runs.values()].map(r => ({ id: r.id, task: r.task, question: r.question, status: r.status, started: r.started, finished: r.finished, model: r.model, endpoint: r.endpoint ?? null, stale: staleness(store, r.result)?.stale ?? false })).sort((a, b) => String(b.started).localeCompare(String(a.started))),
     };
   }
 
@@ -146,8 +163,10 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       provider = demoProvider(store, task);
       model = "demo-replay";
     } else {
-      provider = new AnthropicProvider(launch.key);
-      model = store.case.consent.model || DEFAULT_MODEL;
+      // The run uses exactly the model and endpoint the release names.
+      const consent = store.case.consent;
+      provider = (consent.provider ?? "anthropic") === "anthropic" ? new AnthropicProvider(launch.key) : new OpenAICompatibleProvider({ endpoint: consent.endpoint, apiKey: launch.key });
+      model = consent.model || DEFAULT_MODEL;
     }
     caselaw ??= new OpenCaseLaw({ cacheDir: join(store.dir, "public") });
     const run = new AgentRun({ store, provider, task, question, language, model, notes, caselaw: demo ? null : caselaw, limits: { maxTotalTokens: store.case.consent.token_limit ?? 3_000_000 } });
@@ -182,8 +201,10 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     const notes = Array.isArray(request.notes) ? request.notes.filter(id => typeof id === "string").slice(0, 40) : [];
     const language = ["de", "fr", "it", "en"].includes(request.language) ? request.language : "de";
     if (!request.demo) {
-      launch.key = await apiKey();
-      if (!launch.key) throw new CourtosError("api_key_missing", undefined, 409);
+      const consent = store.case.consent;
+      const anthropic = (consent.provider ?? "anthropic") === "anthropic";
+      launch.key = anthropic ? await apiKey() : await endpointKey(consent.endpoint);
+      if (!launch.key && (anthropic || !isLocalEndpoint(consent.endpoint))) throw new CourtosError("api_key_missing", undefined, 409);
     }
     const [first, ...rest] = steps.map(task => ({ task, question: typeof request.question === "string" ? request.question : "", language, demo: Boolean(request.demo), notes }));
     queue.length = 0;
@@ -326,9 +347,18 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         return send(res, 200, { ok: true });
       }
       if (path === "/api/settings/key" && req.method === "POST") {
-        const { key } = await body(req);
-        if (typeof key !== "string" || !/^sk-ant-[A-Za-z0-9_-]{20,}$/.test(key.trim())) throw new CourtosError("invalid_key");
+        const { key, endpoint } = await body(req);
         await mkdir(CONFIG(), { recursive: true, mode: 0o700 });
+        // A key for an OpenAI-compatible endpoint is saved for exactly that endpoint.
+        if (endpoint !== undefined) {
+          const target = normaliseEndpoint(endpoint);
+          if (typeof key !== "string" || !/^[\x21-\x7e]{8,512}$/.test(key.trim())) throw new CourtosError("invalid_endpoint_key");
+          const keys = await readJson(ENDPOINT_KEYS(), {}).catch(() => ({}));
+          await writeFile(ENDPOINT_KEYS(), JSON.stringify({ ...keys, [target]: key.trim() }), { mode: 0o600 });
+          await chmod(ENDPOINT_KEYS(), 0o600);
+          return send(res, 200, { ok: true });
+        }
+        if (typeof key !== "string" || !/^sk-ant-[A-Za-z0-9_-]{20,}$/.test(key.trim())) throw new CourtosError("invalid_key");
         await writeFile(KEY(), key.trim(), { mode: 0o600 });
         await chmod(KEY(), 0o600);
         return send(res, 200, { ok: true });
@@ -370,8 +400,13 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         return send(res, 200, { ok: true });
       }
       if (path === "/api/release" && req.method === "POST") {
-        const { model, token_limit } = await body(req);
-        const consent = await store.release({ model: typeof model === "string" && /^[a-z0-9.-]{3,60}$/.test(model) ? model : DEFAULT_MODEL, budgetChf: null });
+        const { model, token_limit, provider, endpoint } = await body(req);
+        // Anthropic, or any model behind an OpenAI-compatible endpoint (a cloud
+        // service or a model on this computer). The release names both.
+        const release = provider === "openai"
+          ? { provider: "openai", endpoint: normaliseEndpoint(endpoint), model: typeof model === "string" && /^[A-Za-z0-9._:\/@-]{1,120}$/.test(model) ? model : (() => { throw new CourtosError("invalid_model"); })() }
+          : { provider: "anthropic", endpoint: null, model: typeof model === "string" && /^[a-z0-9.-]{3,60}$/.test(model) ? model : DEFAULT_MODEL };
+        const consent = await store.release({ ...release, budgetChf: null });
         consent.token_limit = Math.min(Math.max(Number(token_limit) || 1_500_000, 100_000), 10_000_000);
         await store.save();
         return send(res, 200, { ok: true, consent });

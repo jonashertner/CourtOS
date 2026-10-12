@@ -42,6 +42,7 @@ export class AgentRun extends EventEmitter {
     this.question = question.trim().slice(0, 4000);
     this.language = language;
     this.model = model;
+    this.endpoint = provider.endpoint ?? null; // null: Anthropic, or the offline demo
     this.noteIds = notes;
     this.caselaw = caselaw;
     this.limits = { maxTurns: 60, maxOutputTokens: 64000, maxTotalTokens: 3_000_000, maxSubmits: 4, maxCaseLawCalls: 24, ...limits };
@@ -60,7 +61,7 @@ export class AgentRun extends EventEmitter {
 
   summary() {
     return {
-      id: this.id, task: this.task, question: this.question, question_sent: this.questionSent ?? null, notes: this.noteIds, language: this.language, model: this.model,
+      id: this.id, task: this.task, question: this.question, question_sent: this.questionSent ?? null, notes: this.noteIds, language: this.language, model: this.model, endpoint: this.endpoint,
       status: this.status, error: this.error ?? null, started: this.started ?? null, finished: this.finished ?? null,
       usage: this.usage, events: this.events, requests: this.requests.map(({ n, sha256, bytes }) => ({ n, sha256, bytes })),
       read_sections: [...this.read], result: this.bound ?? null,
@@ -313,13 +314,16 @@ export class AgentRun extends EventEmitter {
           system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
           tools: toolDefs, messages: withCacheBreakpoint(messages),
         };
-        this.guard.checkBody(body);
-        const json = JSON.stringify(body);
+        // What is checked and stored is exactly what goes out: a provider with
+        // another wire format translates first.
+        const wire = this.provider.wire ? this.provider.wire(body) : body;
+        this.guard.checkBody(wire);
+        const json = JSON.stringify(wire);
         const n = this.requests.length + 1;
         await writeAtomic(join(this.dir, "requests", `${String(n).padStart(3, "0")}.json`), json);
         this.requests.push({ n, sha256: sha256(json), bytes: Buffer.byteLength(json) });
         this.trace("thinking", { turn });
-        const response = await this.provider.create(body, { signal: this.controller.signal });
+        const response = await this.provider.create(wire, { signal: this.controller.signal });
         for (const key of Object.keys(this.usage)) this.usage[key] += response.usage?.[key] ?? 0;
         this.emit("usage", this.usage);
         const total = this.usage.input_tokens + this.usage.output_tokens + this.usage.cache_read_input_tokens + this.usage.cache_creation_input_tokens;

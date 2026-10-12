@@ -1,6 +1,8 @@
 # courtos-local: the case folder
 
-One local case folder, a sanitised mirror of it, and a frontier-model agent that may read only that mirror. Results come back bound to the original pages, in the browser and in Word.
+One local case folder, a sanitised mirror of it, and a model agent that may read only that mirror. Results come back bound to the original pages, in the browser and in Word.
+
+CourtOS is model-agnostic. The release names one model: Claude through the Anthropic API, any other frontier model behind an OpenAI-compatible endpoint (OpenAI, Mistral, OpenRouter, a court's own gateway), or an open model running on the same computer (Ollama, LM Studio, vLLM, llama.cpp). The guard, the quotation checks and the binding to the original pages are the same for every model.
 
 ```
 case folder (originals, read only)
@@ -12,13 +14,14 @@ case folder (originals, read only)
    ▼
 .courtos/mirror/    pseudonymised pages with neutral labels in the language of the
                     proceedings (Klage / Demande / Petizione …, KB 1, S. 2 / p. 2)
-   │  explicit release per folder: model, token limit, exact mirror hash
+   │  explicit release per folder: model and its address, token limit, exact mirror hash
    ▼
 agent loop          tools: list_documents · read · search · submit_result
                     (+ search_case_law · read_decision on OpenCaseLaw for legal tasks)
    │  every request: outbound guard, then stored verbatim in .courtos/runs/<id>/requests/
    ▼
-Anthropic Messages API (Claude)
+the released model: Anthropic Messages API, or any OpenAI-compatible
+                    Chat Completions endpoint (cloud, or local on this computer)
    │  submit_result → courtos-workflows validateWorkflowResult (exact quotes,
    │  party attribution, row structure); errors go back to the model to repair
    ▼
@@ -40,6 +43,29 @@ node bin/courtos-local.mjs ~/Akten/HG.2026.57
 ```
 
 The terminal prints a pairing link; on macOS the browser opens it. Choose a folder with the native dialog, check roles, parties and the language of the proceedings under **Akten**, review the register under **Schutz**, release the folder, then run tasks under **Analyse**. The interface is available in German, French, Italian and English. The Anthropic API key is read from `ANTHROPIC_API_KEY` or saved through the interface to `~/.config/courtos/anthropic-key` (mode 0600).
+
+### Choosing the model
+
+Under **Schutz → Für dieses Modell freigeben**, pick a Claude model, or **Anderes Modell, Cloud oder lokal …** and give the address of an OpenAI-compatible endpoint and the model name as that service lists it:
+
+| Where the model runs | Address | Key |
+|---|---|---|
+| Ollama on this computer | `http://localhost:11434/v1` | none |
+| LM Studio on this computer | `http://localhost:1234/v1` | none |
+| vLLM / llama.cpp server on this computer | `http://localhost:8000/v1` (as configured) | none |
+| OpenAI, Mistral, OpenRouter, a court gateway | `https://…/v1` | saved under **Analyse** for exactly that address (`~/.config/courtos/endpoint-keys.json`, mode 0600), or `COURTOS_API_KEY` together with `COURTOS_API_ENDPOINT` |
+
+Rules that keep this safe:
+
+- Plain `http` is accepted only for this computer (localhost). Any other address must be `https` and may not carry credentials or a query in the URL.
+- The release is bound to the model and the address. Switching either one needs a new release.
+- A key is only ever sent to the address it was saved for.
+- With a local model, the anonymised text does not leave the computer. Only OpenCaseLaw search terms for the legal tasks go out.
+- The request is checked by the guard and stored after translation into the endpoint's format, so the audit view shows exactly what went out.
+
+Local models must support tool calling and need a context window of at least 64,000 tokens. Ollama's default is much smaller; set `OLLAMA_CONTEXT_LENGTH`, or `num_ctx` in a Modelfile.
+
+The quotation checks hold every model to the same standard. A weaker model gets more submissions rejected, and more claims marked «prüfen», but no unverified quotation is presented as verified. Cost is shown only for Claude models; for other services, see the provider's own billing.
 
 Word on macOS:
 
@@ -70,7 +96,7 @@ Without `~/.office-addin-dev-certs` the server falls back to plain HTTP on loopb
 | Case law: OpenCaseLaw search and full decisions in the browser and for the agent (public text, cached in `.courtos/public/`) | done |
 | Citecheck of decision citations in the case file and in the Word draft (only the reference is sent) | done |
 | Parties register (P1, P2 … with roles; names stay local) | done |
-| Notes, questions, assumptions, contradictions with status and sources; selected notes go to Claude pseudonymised, as context, never as evidence | done |
+| Notes, questions, assumptions, contradictions with status and sources; selected notes go to the model pseudonymised, as context, never as evidence | done |
 | Procedure: deadlines and steps with sources, order template (no AI) in the language of the proceedings, issued orders | done |
 | Binding to original page offsets, local name restoration, Markdown working notes in `.courtos/wiki/`, backup archive of the workspace | done |
 | Browser workspace and Word task pane, pairing code, live trace, source drawer, audit of every sent request | done |
@@ -95,7 +121,7 @@ Not guaranteed:
 
 ## Before real case files
 
-The pilot is for public and synthetic material. For real files, the decision that the pseudonymised text may be processed by the chosen provider belongs to the court or authority (official secrecy, Art. 320 StGB; cross-border disclosure, Art. 16 ff. DSG; the cantonal rules on court IT). The provider is one class (`src/agent/providers.mjs`); an institution-hosted model with the same Messages-style tool interface can replace it without changing the guard, validator or binder.
+The pilot is for public and synthetic material. For real files, the decision that the pseudonymised text may be processed by the chosen provider belongs to the court or authority (official secrecy, Art. 320 StGB; cross-border disclosure, Art. 16 ff. DSG; the cantonal rules on court IT). The provider is one class (`src/agent/providers.mjs`): Anthropic, or an OpenAI-compatible endpoint. An institution-hosted model, or one on the judge's own computer, needs no change to the guard, validator or binder.
 
 ## Layout
 

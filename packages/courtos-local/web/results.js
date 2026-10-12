@@ -121,7 +121,7 @@ export function renderResult(run, ctx) {
       cov.authorities_read?.length ? h("span", {}, tr("Entscheide gelesen: {l}.", { l: cov.authorities_read.map(a => a.docket ?? a.decision_id).join(", ") })) : null,
       cov.unread.length ? h("span", {}, tr("Nicht gelesen: {l}.", { l: cov.unread.map(u => pg(`${u.label} S. ${u.page}`)).join(", ") })) : null,
       cov.unreadable_pages.length ? h("span.alert", {}, tr("Ohne Text, nicht ausgewertet: {l}.", { l: cov.unreadable_pages.map(u => `${u.label} ${u.page}`).join(", ") })) : null,
-      cov.more_claims_reported ? h("span.alert", {}, tr("Claude meldet, nicht alle Aussagen erfasst zu haben.")) : null,
+      cov.more_claims_reported ? h("span.alert", {}, tr("Das Modell meldet, nicht alle Aussagen erfasst zu haben.")) : null,
     ),
   );
 }

@@ -176,6 +176,12 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 .release .controls { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
 .release label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
 .release select, .release input { border: 1px solid var(--rule); border-radius: var(--r); padding: 6px 8px; background: var(--paper); }
+.release .lede-small { color: var(--muted); max-width: 68ch; margin: 0 0 12px; }
+.release .model-other { flex-basis: 100%; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 10px 14px; }
+.release .model-other[hidden] { display: none; }
+.release .model-other .note { grid-column: 1 / -1; margin: 0; max-width: 72ch; }
+.release .model-other input { width: 100%; min-width: 0; font: inherit; color: var(--ink); }
+@media (max-width: 640px) { .release .model-other { grid-template-columns: 1fr; } }
 .release.done { border-color: var(--local); background: var(--local-wash); }
 .release.done h2 { color: var(--local); }
 .warning { border-left: 2px solid var(--alert); padding: 6px 12px; background: var(--alert-wash); margin: 10px 0; color: var(--ink); }

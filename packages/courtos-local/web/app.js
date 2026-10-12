@@ -159,7 +159,7 @@ function renderWelcome() {
   return h("div.gate", {}, h("div.gate-inner.welcome", {},
     h("div.gate-top", {}, wordmark(), langSelect()),
     h("h1", {}, tr("Ein Fall, ein Ordner.")),
-    h("p.lede", {}, tr("Wählen Sie den Ordner mit Rechtsschriften, Beilagen und Literatur. CourtOS anonymisiert ihn auf diesem Computer mit citecheck. Claude arbeitet danach mit der anonymisierten Fassung, und jede Aussage führt zurück zur Originalstelle.")),
+    h("p.lede", {}, tr("Wählen Sie den Ordner mit Rechtsschriften, Beilagen und Literatur. CourtOS anonymisiert ihn auf diesem Computer mit citecheck. Ein Sprachmodell Ihrer Wahl arbeitet danach mit der anonymisierten Fassung, ein Frontiermodell oder ein Modell auf diesem Computer, und jede Aussage führt zurück zur Originalstelle.")),
     h("div.actions", {},
       h("button.btn.primary", { type: "button", onclick: open(() => api("/api/folder/choose", { method: "POST" })), disabled: S.busy }, icon("folder"), tr("Fallordner wählen")),
       h("button.btn", { type: "button", onclick: open(() => api("/api/folder", { method: "POST", body: { demo: true } })), disabled: S.busy }, tr("Beispieldossier öffnen")),
@@ -168,7 +168,7 @@ function renderWelcome() {
     h("ul.promises", {},
       h("li", {}, icon("doc"), h("span", {}, h("b", {}, tr("Originale bleiben, wo sie sind. ")), tr("CourtOS liest sie nur und legt seine Arbeit im Unterordner .courtos ab."))),
       h("li", { class: "local" }, icon("lock"), h("span", {}, h("b", {}, tr("Anonymisiert wird hier, mit citecheck. ")), h("span.muted", {}, tr("Das Register mit den echten Namen verlässt diesen Computer nie.")))),
-      h("li", { class: "external" }, icon("out"), h("span", {}, h("b", {}, tr("Claude liest erst nach Ihrer Freigabe. ")), h("span.muted", {}, tr("Und nur die anonymisierte Fassung. Jede gesendete Anfrage können Sie nachlesen.")))),
+      h("li", { class: "external" }, icon("out"), h("span", {}, h("b", {}, tr("Das Modell liest erst nach Ihrer Freigabe. ")), h("span.muted", {}, tr("Und nur die anonymisierte Fassung. Jede gesendete Anfrage können Sie nachlesen.")))),
     ),
     recent.length ? h("div.recent", {}, h("h2", {}, tr("Zuletzt geöffnet")), recent.map(path => h("button.link", { type: "button", onclick: open(() => api("/api/folder", { method: "POST", body: { path } })) }, path))) : null,
   ));
@@ -178,7 +178,7 @@ function renderWelcome() {
 function renderShell() {
   const c = S.st.case;
   const consent = c.consent_valid
-    ? h("span.external", {}, icon("out"), tr("Für {m} freigegeben", { m: modelName(c.consent.model) }))
+    ? h("span.external", {}, icon("out"), tr("Für {m} freigegeben", { m: modelLabel(c.consent) }))
     : h("span", {}, icon("lock"), c.consent?.stale ? tr("Freigabe aufgehoben") : tr("Nicht freigegeben"));
   return h("div.shell", {},
     h("header.topbar", {},
@@ -187,7 +187,7 @@ function renderShell() {
       h("div.status", {},
         h("span.local", {}, icon("lock"), trn(c.register.replace, "{n} Angabe wird lokal ersetzt", "{n} Angaben werden lokal ersetzt")),
         consent,
-        S.st.current ? h("button.external.live-dot", { type: "button", title: tr("Laufenden Auftrag ansehen"), onclick: () => openRun(S.st.current, { follow: true }) }, tr("Claude arbeitet")) : null,
+        S.st.current ? h("button.external.live-dot", { type: "button", title: tr("Laufenden Auftrag ansehen"), onclick: () => openRun(S.st.current, { follow: true }) }, tr("Das Modell arbeitet")) : null,
         c.sync ? h("span.alert", {}, tr("Ordner wird mit einem Cloud-Dienst synchronisiert")) : null,
       ),
       h("span.spacer"),
@@ -205,6 +205,11 @@ function renderShell() {
 }
 
 const modelName = (id) => MODELS.find(([m]) => m === id)?.[1] ?? id;
+// Suggestions for an OpenAI-compatible endpoint; any https address, or http on this computer, is accepted.
+const ENDPOINTS = [["http://localhost:11434/v1", "Ollama"], ["http://localhost:1234/v1", "LM Studio"], ["http://localhost:8000/v1", "vLLM"], ["https://api.openai.com/v1", "OpenAI"], ["https://api.mistral.ai/v1", "Mistral"], ["https://openrouter.ai/api/v1", "OpenRouter"]];
+const isLocal = (endpoint) => { try { return ["localhost", "127.0.0.1", "[::1]"].includes(new URL(endpoint).hostname); } catch { return false; } };
+/** A release or run names a model and, unless it is Anthropic, the endpoint it went to. */
+const modelLabel = ({ model, endpoint }) => endpoint ? `${model} · ${isLocal(endpoint) ? tr("auf diesem Computer") : new URL(endpoint).hostname}` : modelName(model);
 
 function renderRail() {
   const c = S.st.case;
@@ -266,7 +271,7 @@ function renderDocs() {
         h("td", {}, h("input", { type: "checkbox", checked: s.include, disabled: s.status !== "ok", "aria-label": tr("{l} einbeziehen", { l: s.label }), onchange: (e) => change(s.id, { include: e.target.checked }) })),
       ))),
     ),
-    h("p.note", { style: { marginTop: "12px" } }, tr("Eine interne Notiz des Gerichts liest Claude als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen."), " ", tr("Seiten: lesbare von allen Seiten. Gescannte Seiten erkennt CourtOS lokal (Texterkennung); Claude sieht dann den erkannten Text. Was nicht lesbar ist, wird in jedem Ergebnis als nicht ausgewertet ausgewiesen.")),
+    h("p.note", { style: { marginTop: "12px" } }, tr("Eine interne Notiz des Gerichts liest das Modell als Kontext, wie Ihre Notizen: Sie kann eine Überlegung leiten, aber nie als Beleg dienen."), " ", tr("Seiten: lesbare von allen Seiten. Gescannte Seiten erkennt CourtOS lokal (Texterkennung); das Modell sieht dann den erkannten Text. Was nicht lesbar ist, wird in jedem Ergebnis als nicht ausgewertet ausgewiesen.")),
   );
 }
 
@@ -310,7 +315,7 @@ function renderParties() {
       parties.length > 1 ? h("button.btn.small.quiet", { type: "button", "aria-label": tr("{p} entfernen", { p: party.id }), onclick: () => { parties.splice(i, 1); save(); } }, icon("cross")) : null,
     )),
     parties.length < 9 ? h("button.btn.small", { type: "button", onclick: () => { parties.push({ role: "other", entity: null }); save(); } }, icon("plus"), tr("Partei hinzufügen")) : null,
-    h("p.note", {}, tr("Claude sieht P1, P2 …, die Rolle und den Namen nur in der ersetzten Form (z. B. A.________ AG). Der echte Name bleibt lokal und erscheint in Ihren Entwürfen.")),
+    h("p.note", {}, tr("Das Modell sieht P1, P2 …, die Rolle und den Namen nur in der ersetzten Form (z. B. A.________ AG). Der echte Name bleibt lokal und erscheint in Ihren Entwürfen.")),
   );
 }
 
@@ -322,8 +327,8 @@ function renderPrivacy() {
   const report = c.anonymisation;
   return h("section.pane", {},
     h("header", {},
-      h("h1", {}, trn(replaced, "{n} Angabe wird ersetzt, bevor Claude etwas sieht.", "{n} Angaben werden ersetzt, bevor Claude etwas sieht.")),
-      h("p", {}, tr("citecheck zeigt alles, was eine Person erkennbar machen kann, und erklärt den Rest (gewöhnliche Wörter, Zahlen, öffentliche Ämter). Abwählen, was lesbar bleiben soll; ergänzen, was fehlt. Die Vorschau zeigt jede Seite so, wie Claude sie lesen würde.")),
+      h("h1", {}, trn(replaced, "{n} Angabe wird ersetzt, bevor das Modell etwas sieht.", "{n} Angaben werden ersetzt, bevor das Modell etwas sieht.")),
+      h("p", {}, tr("citecheck zeigt alles, was eine Person erkennbar machen kann, und erklärt den Rest (gewöhnliche Wörter, Zahlen, öffentliche Ämter). Abwählen, was lesbar bleiben soll; ergänzen, was fehlt. Die Vorschau zeigt jede Seite so, wie das Modell sie lesen würde.")),
       report ? h("p.engine", {}, icon("check"), tr("Geprüft mit citecheck, Wortliste vom {d} ({w} Wörter).", { d: formatDate(report.vocabulary?.generated), w: (report.vocabulary?.words ?? 0).toLocaleString("de-CH") }),
         report.unassessed ? ` ${trn(report.unassessed, "{n} einzelnes unbekanntes Wort in Kleinschreibung wurde gezählt, nicht gezeigt.", "{n} einzelne unbekannte Wörter in Kleinschreibung wurden gezählt, nicht gezeigt.")}` : "") : null,
     ),
@@ -402,7 +407,7 @@ function renderOcrReading(entity) {
   const passage = sample ? h("span.ctx", {}, sample.before.slice(-40), h("mark", {}, sample.match), sample.after.slice(0, 40)) : null;
   if (entity.read_as) {
     return h("div.ocr-fix.done", {},
-      h("p", {}, icon("check"), " ", tr("Claude liest hier das Wort «{w}».", { w: entity.read_as })),
+      h("p", {}, icon("check"), " ", tr("Das Modell liest hier das Wort «{w}».", { w: entity.read_as })),
       h("button.link", { type: "button", onclick: () => registerChange({ op: "read_as_word", id: entity.id, reading: null }) }, tr("Doch als Name ersetzen")));
   }
   return h("div.ocr-fix", { id: `ocr-${entity.id}` },
@@ -447,15 +452,15 @@ function renderPreview() {
     h("select", { "aria-label": tr("Seite"), onchange: (e) => { S.preview.page = Number(e.target.value); render(); } }, Array.from({ length: doc.pages }, (_, i) => h("option", { value: i + 1, selected: S.preview.page === i + 1 }, pg(`S. ${i + 1}`)))),
     h("div.veil-toggle", { role: "group", "aria-label": tr("Ansicht") },
       h("button.o", { type: "button", dataset: { mode: "original" }, "aria-pressed": S.preview.mode === "original" ? "true" : "false", onclick: () => setMode("original") }, icon("lock"), tr("Original")),
-      h("button.d", { type: "button", dataset: { mode: "mirror" }, "aria-pressed": S.preview.mode === "mirror" ? "true" : "false", onclick: () => setMode("mirror") }, icon("eye"), tr("Was Claude liest"))),
+      h("button.d", { type: "button", dataset: { mode: "mirror" }, "aria-pressed": S.preview.mode === "mirror" ? "true" : "false", onclick: () => setMode("mirror") }, icon("eye"), tr("Was das Modell liest"))),
   ));
   const holder = h("div", {}, h("div.page-text.empty", {}, tr("Lädt …")));
   box.append(holder);
   viewFor(doc.id).then(view => {
     const page = view.pages.find(p => p.n === S.preview.page) ?? view.pages[0];
     holder.replaceChildren(
-      page.has_text ? veiledText(page, S.preview.mode) : h("div.page-text.empty", {}, tr("Diese Seite hat keinen lesbaren Text. Claude sieht sie nicht; Ergebnisse weisen sie als nicht ausgewertet aus.")),
-      h("p.page-caption", {}, page.has_text ? [trn(page.spans.length, "{n} Ersetzung auf dieser Seite. Grün: bleibt hier. Violett: so liest es Claude.", "{n} Ersetzungen auf dieser Seite. Grün: bleibt hier. Violett: so liest es Claude."), page.mirror?.ocr ? ` ${tr("Text per Texterkennung aus dem Scan; mit dem Original vergleichen.")}` : ""] : ""),
+      page.has_text ? veiledText(page, S.preview.mode) : h("div.page-text.empty", {}, tr("Diese Seite hat keinen lesbaren Text. Das Modell sieht sie nicht; Ergebnisse weisen sie als nicht ausgewertet aus.")),
+      h("p.page-caption", {}, page.has_text ? [trn(page.spans.length, "{n} Ersetzung auf dieser Seite. Grün: bleibt hier. Violett: so liest es das Modell.", "{n} Ersetzungen auf dieser Seite. Grün: bleibt hier. Violett: so liest es das Modell."), page.mirror?.ocr ? ` ${tr("Text per Texterkennung aus dem Scan; mit dem Original vergleichen.")}` : ""] : ""),
     );
   }).catch(() => holder.replaceChildren(h("div.page-text.empty", {}, tr("Die Seite konnte nicht geladen werden."))));
   return box;
@@ -480,24 +485,33 @@ function veiledText(page, mode) {
 function renderRelease(c, replaced) {
   if (c.consent_valid) {
     return h("div.release.done", {},
-      h("h2", {}, icon("check"), tr("Freigegeben für {m}", { m: modelName(c.consent.model) })),
+      h("h2", {}, icon("check"), tr("Freigegeben für {m}", { m: modelLabel(c.consent) })),
       h("p", {}, tr("Seit {d}. Ändern sich Akten oder Register, wird die Freigabe automatisch aufgehoben.", { d: new Date(c.consent.at).toLocaleString(`${LANG}-CH`) })),
       h("div", { style: { marginTop: "12px", display: "flex", gap: "8px" } },
         h("button.btn.primary", { type: "button", onclick: () => { S.view = "work"; render(); } }, tr("Zur Analyse")),
         h("button.btn", { type: "button", onclick: () => attempt(async () => { await api("/api/revoke", { method: "POST" }); await refresh(); }) }, tr("Freigabe widerrufen"))),
     );
   }
-  let model = c.consent?.model ?? MODELS[0][0], limit = 3000000;
+  const prior = c.consent?.provider === "openai" ? c.consent : null;
+  let model = prior ? "other" : c.consent?.model ?? MODELS[0][0], limit = 3000000;
+  const endpointInput = h("input", { name: "endpoint", type: "url", list: "endpoints", value: prior?.endpoint ?? "", placeholder: "http://localhost:11434/v1", autocomplete: "off", spellcheck: "false" });
+  const modelInput = h("input", { name: "model", value: prior?.model ?? "", placeholder: tr("z. B. llama3.3:70b, gpt-5, mistral-large-latest"), autocomplete: "off", spellcheck: "false" });
+  const other = h("div.model-other", { hidden: model !== "other" },
+    h("label", {}, tr("Adresse (OpenAI-kompatibel)"), endpointInput),
+    h("datalist", { id: "endpoints" }, ENDPOINTS.map(([url, name]) => h("option", { value: url }, name))),
+    h("label", {}, tr("Modellname"), modelInput),
+    h("p.note", {}, tr("Mit einer Adresse auf diesem Computer (Ollama, LM Studio, vLLM) verlässt die anonymisierte Fassung den Computer nicht; hinaus gehen nur Suchbegriffe an OpenCaseLaw. Lokale Modelle brauchen ein Kontextfenster von mindestens 64 000 Tokens und Werkzeugaufrufe.")));
   const issues = c.issues ?? [];
   const ocrWords = (S.register ?? []).filter(e => e.decision === "replace" && !e.read_as && e.readings?.length);
   const showEntity = (entity) => { S.expanded.add(entity.id); render(); document.getElementById(`ocr-${entity.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }); };
   return h("div.release", {},
-    h("h2", {}, icon("out"), tr("Für Claude freigeben")),
+    h("h2", {}, icon("out"), tr("Für dieses Modell freigeben")),
+    h("p.lede-small", {}, tr("CourtOS ist an kein Modell gebunden: Claude, ein anderes Frontiermodell oder ein offenes Modell auf diesem Computer. Die Freigabe gilt für genau das gewählte Modell an genau dieser Adresse; jeder Wechsel verlangt eine neue Freigabe.")),
     ocrWords.length ? h("div.review-first", {},
-      h("p", {}, trn(ocrWords.length, "Vorher ansehen: {n} Wort aus der Texterkennung ist vorsorglich ersetzt und fehlt Claude sonst im Text.", "Vorher ansehen: {n} Wörter aus der Texterkennung sind vorsorglich ersetzt und fehlen Claude sonst im Text.")),
+      h("p", {}, trn(ocrWords.length, "Vorher ansehen: {n} Wort aus der Texterkennung ist vorsorglich ersetzt und fehlt dem Modell sonst im Text.", "Vorher ansehen: {n} Wörter aus der Texterkennung sind vorsorglich ersetzt und fehlen dem Modell sonst im Text.")),
       h("ul", {}, ocrWords.map(e => h("li", {}, h("button.link", { type: "button", onclick: () => showEntity(e) }, `${e.label} → ${e.readings.join(", ")}?`))))) : null,
     h("div.split", {},
-      h("div", {}, h("h3.external", {}, icon("out"), tr("Claude darf lesen")), h("ul", {},
+      h("div", {}, h("h3.external", {}, icon("out"), tr("Das Modell darf lesen")), h("ul", {},
         h("li", {}, trn(c.mirror.sections, "{n} Seite der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)", "{n} Seiten der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)")),
         h("li", {}, tr("Ihre Fragen und ausgewählten Notizen, ebenfalls anonymisiert")),
         h("li", {}, tr("Für Rechtsfragen: Suchbegriffe an OpenCaseLaw und veröffentlichte Entscheide")))),
@@ -508,14 +522,18 @@ function renderRelease(c, replaced) {
     c.sync ? h("p.warning", {}, tr("Dieser Ordner liegt in einem synchronisierten Cloud-Ordner. Das Register in .courtos/private wird damit ebenfalls synchronisiert.")) : null,
     issues.length ? h("p.warning", {}, trn(issues.length, "Freigabe nicht möglich: Auf {n} Seite liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.", "Freigabe nicht möglich: Auf {n} Seiten liess sich die Ersetzung nicht eindeutig durchführen. Prüfen Sie die betroffenen Schreibweisen.")) : null,
     h("div.controls", {},
-      h("label", {}, tr("Modell"), h("select", { onchange: (e) => { model = e.target.value; } }, MODELS.map(([id, name]) => h("option", { value: id, selected: id === model }, name)))),
+      h("label", {}, tr("Modell"), h("select", { onchange: (e) => { model = e.target.value; other.hidden = model !== "other"; if (model === "other") endpointInput.focus(); } },
+        h("optgroup", { label: "Anthropic" }, MODELS.map(([id, name]) => h("option", { value: id, selected: id === model }, name))),
+        h("option", { value: "other", selected: model === "other" }, tr("Anderes Modell, Cloud oder lokal …")))),
       h("label", {}, tr("Höchstens Tokens je Auftrag"), h("select", { onchange: (e) => { limit = Number(e.target.value); } }, [[1000000, "1 Mio."], [3000000, "3 Mio."], [8000000, "8 Mio."]].map(([v, l]) => h("option", { value: v, selected: v === limit }, l)))),
+      other,
       h("button.btn.release", { type: "button", disabled: issues.length > 0 || !c.mirror.sections, onclick: () => attempt(async () => {
-        await api("/api/release", { method: "POST", body: { model, token_limit: limit } });
-        toast(tr("Freigegeben. Claude kann jetzt die anonymisierte Fassung lesen."));
+        const choice = model === "other" ? { provider: "openai", endpoint: endpointInput.value.trim(), model: modelInput.value.trim() } : { provider: "anthropic", model };
+        await api("/api/release", { method: "POST", body: { ...choice, token_limit: limit } });
+        toast(tr("Freigegeben. {m} kann jetzt die anonymisierte Fassung lesen.", { m: modelLabel({ model: choice.model, endpoint: choice.endpoint ?? null }) }));
         S.view = "work";
         await refresh();
-      }) }, tr("Für Claude freigeben")),
+      }) }, tr("Für dieses Modell freigeben")),
     ),
     h("p.note", { style: { marginTop: "12px" } }, tr("Mit der Freigabe wird noch nichts gesendet. Gesendet wird erst, wenn Sie eine Analyse starten, und jede Anfrage wird vorher automatisch auf registrierte Originalangaben geprüft.")),
   );
@@ -524,14 +542,15 @@ function renderRelease(c, replaced) {
 // --- Analyse --------------------------------------------------------------------
 function renderWork() {
   const c = S.st.case;
-  const hasKey = S.st.settings.has_key;
+  const hasKey = Boolean(c.provider_ready);
+  const endpoint = c.consent?.provider === "openai" ? c.consent.endpoint : null;
   const blocked = !c.consent_valid;
   const busy = Boolean(S.st.current);
   const useDemo = !hasKey && c.demo;
   const demoTasks = new Set(["chronology", "facts_evidence", "source_chat"]);
   const start = (body) => attempt(async () => {
     const { id } = await api("/api/runs", { method: "POST", body: { language: LANG, notes: [...S.selectedNotes], demo: useDemo, ...body } });
-    S.run = { id, task: body.pipeline?.[0] ?? body.task, question: body.question, status: "running", events: [], usage: null, model: useDemo ? "demo-replay" : c.consent.model };
+    S.run = { id, task: body.pipeline?.[0] ?? body.task, question: body.question, status: "running", events: [], usage: null, model: useDemo ? "demo-replay" : c.consent.model, endpoint: useDemo ? null : c.consent.endpoint ?? null };
     S.showTrace = true; S.follow = true;
     await refresh();
     document.querySelector(".main")?.scrollTo({ top: 0 });
@@ -540,13 +559,13 @@ function renderWork() {
   const canRun = (task) => !blocked && !busy && (hasKey || (useDemo && demoTasks.has(task)));
   const assumptions = c.notes.filter(n => n.kind === "assumption");
   return h("section.pane", {},
-    h("header", {}, h("h1", {}, tr("Analyse")), h("p", {}, tr("Claude liest die freigegebene Fassung über Werkzeuge: Überblick, Lesen, Suchen, OpenCaseLaw. CourtOS prüft jedes Zitat wörtlich, bevor ein Ergebnis erscheint."))),
+    h("header", {}, h("h1", {}, tr("Analyse")), h("p", {}, tr("Das freigegebene Modell liest die anonymisierte Fassung über Werkzeuge: Überblick, Lesen, Suchen, OpenCaseLaw. CourtOS prüft jedes Zitat wörtlich, bevor ein Ergebnis erscheint."))),
     blocked ? h("p.warning", {}, c.consent?.stale ? tr("Die Freigabe ist aufgehoben, weil sich Akten oder Register geändert haben. Prüfen Sie den Schutz und geben Sie erneut frei.") : tr("Noch nicht freigegeben. Prüfen Sie zuerst den Schutz."), " ", h("button.link", { type: "button", onclick: async () => { S.view = "privacy"; S.register = (await api("/api/register")).entities; render(); } }, tr("Zum Schutz"))) : null,
-    !hasKey ? h("div.keybox", {},
-      h("b", {}, c.demo ? tr("Ohne API-Schlüssel läuft das Beispieldossier als Demo.") : tr("Für Claude ist ein Anthropic-API-Schlüssel nötig.")),
+    !hasKey && (c.consent || c.demo) ? h("div.keybox", {},
+      h("b", {}, c.demo ? tr("Ohne API-Schlüssel läuft das Beispieldossier als Demo.") : endpoint ? tr("Für {m} ist ein API-Schlüssel nötig.", { m: modelLabel(c.consent) }) : tr("Für Claude ist ein Anthropic-API-Schlüssel nötig.")),
       h("p.muted", {}, c.demo ? tr("Die Demo spielt aufgezeichnete Werkzeugaufrufe für drei Aufgaben ab, durch dieselbe Prüfung und Bindung an die Originale. Sie ist kein Modell.") : tr("Der Schlüssel wird nur auf diesem Computer gespeichert (~/.config/courtos).")),
-      h("form.inline-form", { onsubmit: (e) => { e.preventDefault(); attempt(async () => { await api("/api/settings/key", { method: "POST", body: { key: e.target.key.value } }); toast(tr("Schlüssel gespeichert.")); await refresh(); }); } },
-        h("input", { name: "key", type: "password", autocomplete: "off", placeholder: "sk-ant-…", "aria-label": tr("Anthropic-API-Schlüssel") }),
+      h("form.inline-form", { onsubmit: (e) => { e.preventDefault(); attempt(async () => { await api("/api/settings/key", { method: "POST", body: { key: e.target.key.value, ...(endpoint ? { endpoint } : {}) } }); toast(tr("Schlüssel gespeichert.")); await refresh(); }); } },
+        h("input", { name: "key", type: "password", autocomplete: "off", placeholder: endpoint ? tr("API-Schlüssel") : "sk-ant-…", "aria-label": endpoint ? tr("API-Schlüssel") : tr("Anthropic-API-Schlüssel") }),
         h("button.btn.small", { type: "submit" }, tr("Speichern"))),
     ) : null,
     h("div.pipeline", {},
@@ -658,12 +677,12 @@ function renderRun(run) {
   const lines = (run.events ?? []).map(e => ({ e, text: traceText(e) })).filter(x => x.text && !(x.e.type === "status" && x.e.status === "running"));
   const trace = h("ol.trace", {}, lines.map(({ e, text }) => h("li", {
     class: e.type === "rejected" || e.type === "needs_review" || (e.type === "status" && e.status !== "succeeded") ? "bad" : ["validated", "bound"].includes(e.type) || e.status === "succeeded" ? "ok" : e.type === "note" ? "note" : e.type.startsWith("caselaw") ? "law" : null,
-  }, text)), running ? h("li.live", {}, tr("Claude arbeitet …")) : null);
+  }, text)), running ? h("li.live", {}, tr("Das Modell arbeitet …")) : null);
   const demo = run.model === "demo-replay";
   return h("section.run", {},
     h("div.run-head", {},
       h("h1", {}, run.question && run.task === "source_chat" ? `«${run.question}»` : label("task", run.task)),
-      h("span.meta", {}, h("span", {}, demo ? tr("Demo-Wiedergabe, kein Modell") : modelName(run.model)), tokens(run.usage) ? h("span", {}, tokens(run.usage)) : null, cost(run) ? h("span", { title: tr("Geschätzt nach den Listenpreisen von Anthropic") }, cost(run)) : null, run.started ? h("span", {}, new Date(run.started).toLocaleString(`${LANG}-CH`, { dateStyle: "medium", timeStyle: "short" })) : null, !running ? h("span", {}, statusName(run.status)) : null),
+      h("span.meta", {}, h("span", {}, demo ? tr("Demo-Wiedergabe, kein Modell") : modelLabel(run)), tokens(run.usage) ? h("span", {}, tokens(run.usage)) : null, cost(run) ? h("span", { title: tr("Geschätzt nach den Listenpreisen von Anthropic") }, cost(run)) : null, run.started ? h("span", {}, new Date(run.started).toLocaleString(`${LANG}-CH`, { dateStyle: "medium", timeStyle: "short" })) : null, !running ? h("span", {}, statusName(run.status)) : null),
       h("div.run-actions", {},
       running ? h("button.btn.small", { type: "button", onclick: () => api(`/api/runs/${run.id}/cancel`, { method: "POST" }) }, tr("Abbrechen")) : null,
       !running && run.requests?.length ? h("button.btn.small", { type: "button", onclick: () => openAudit(run) }, tr("Gesendete Anfragen ({n})", { n: run.requests.length })) : null,
@@ -789,7 +808,7 @@ function renderNotes() {
   const notes = c.notes.filter(n => S.noteFilter === "all" || n.status === S.noteFilter || n.kind === S.noteFilter);
   const update = (id, patch) => attempt(async () => { await api(`/api/notes/${id}`, { method: "POST", body: patch }); await refresh(); });
   return h("section.pane", {},
-    h("header", {}, h("h1", {}, tr("Notizen")), h("p", {}, tr("Offene Fragen, Widersprüche und Arbeitsannahmen, mit Fundstellen und Status. Notizen bleiben lokal; nur ausgewählte gehen anonymisiert als Kontext an Claude, nie als Beweis."))),
+    h("header", {}, h("h1", {}, tr("Notizen")), h("p", {}, tr("Offene Fragen, Widersprüche und Arbeitsannahmen, mit Fundstellen und Status. Notizen bleiben lokal; nur ausgewählte gehen anonymisiert als Kontext an das Modell, nie als Beweis."))),
     h("form.note-form", { onsubmit: (e) => { e.preventDefault(); const text = e.target.text.value.trim(); if (!text) return; attempt(async () => { await api("/api/notes", { method: "POST", body: { text, kind: e.target.kind.value, status: "proposed" } }); e.target.reset(); await refresh(); }); } },
       h("textarea", { name: "text", rows: 3, placeholder: tr("Neue Notiz, offene Frage oder Arbeitsannahme"), "aria-label": tr("Notiztext") }),
       h("div.inline-form", {},
@@ -1015,7 +1034,7 @@ async function renderDrawer() {
     text.append(chars.slice(cursor).join(""));
     body.replaceChildren(text,
       page.mirror?.ocr ? h("p.page-caption.alert", {}, tr("Text per Texterkennung aus dem Scan. Mit dem Original vergleichen.")) : null,
-      ...group.map(x => h("p.sent", {}, tr("An Claude ging diese Stelle so:"), " «", x.quote_pseudonymised, "»")),
+      ...group.map(x => h("p.sent", {}, tr("An das Modell ging diese Stelle so:"), " «", x.quote_pseudonymised, "»")),
       source ? h("p.page-caption", {}, tr("{p}, Fassung {v}", { p: source.rel_path, v: source.version })) : null);
     body.querySelector("mark")?.scrollIntoView({ block: "center" });
   } catch {
@@ -1037,7 +1056,7 @@ async function openAudit(run) {
     backdrop.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.n === String(n) ? "true" : "false"));
   };
   backdrop.append(h("div.modal", { role: "dialog", "aria-label": tr("Gesendete Anfragen") },
-    h("header", {}, h("h2", {}, tr("Genau diese Anfragen gingen an Anthropic")), h("button.btn.small.quiet", { type: "button", onclick: () => backdrop.remove(), "aria-label": tr("Schliessen") }, icon("cross"))),
+    h("header", {}, h("h2", {}, run.endpoint ? tr("Genau diese Anfragen gingen an {d}", { d: isLocal(run.endpoint) ? tr("das Modell auf diesem Computer") : new URL(run.endpoint).hostname }) : tr("Genau diese Anfragen gingen an Anthropic")), h("button.btn.small.quiet", { type: "button", onclick: () => backdrop.remove(), "aria-label": tr("Schliessen") }, icon("cross"))),
     h("div.tabs", {}, run.requests.map(r => h("button.btn.small", { type: "button", dataset: { n: String(r.n) }, onclick: () => show(r.n) }, tr("Anfrage {n}", { n: r.n }))),
       h("label.note", { style: { alignSelf: "center", marginLeft: "8px", display: "inline-flex", gap: "6px", alignItems: "center" } },
         h("input", { type: "checkbox", onchange: (e) => { full = e.target.checked; show(current); } }),

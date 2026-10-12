@@ -108,8 +108,8 @@ export function partyLabel(state, party) {
 const ERRORS = {
   not_paired: "Diese Seite ist noch nicht mit CourtOS verbunden.",
   invalid_language: "Diese Verfahrenssprache wird nicht unterstützt.",
-  consent_required: "Der Ordner ist nicht oder nicht mehr für Claude freigegeben. Prüfen Sie den Schutz und geben Sie ihn frei.",
-  api_key_missing: "Für Claude ist ein API-Schlüssel nötig. Hinterlegen Sie ihn unter Analyse.",
+  consent_required: "Der Ordner ist nicht oder nicht mehr für ein Modell freigegeben. Prüfen Sie den Schutz und geben Sie ihn frei.",
+  api_key_missing: "Für das freigegebene Modell ist ein API-Schlüssel nötig. Hinterlegen Sie ihn unter Analyse.",
   run_in_progress: "Ein Auftrag läuft bereits.",
   mirror_has_issues: "Die ersetzte Fassung hat offene Probleme. Prüfen Sie die markierten Seiten im Schutz.",
   outbound_blocked: "Gestoppt: Die Anfrage hätte eine registrierte Originalangabe enthalten. Nichts wurde gesendet.",
@@ -122,16 +122,21 @@ const ERRORS = {
   demo_question_only: "Im Demo-Modus gibt es nur die vorbereitete Frage. Für freie Fragen ist ein API-Schlüssel nötig.",
   demo_not_available: "Diese Aufgabe braucht einen API-Schlüssel; die Demo umfasst Chronologie, Behauptungen und Beweise sowie die vorbereitete Frage.",
   invalid_key: "Das sieht nicht wie ein Anthropic-API-Schlüssel aus (sk-ant-…).",
-  result_failed_validation: "Claude konnte kein Ergebnis liefern, das alle Zitatprüfungen besteht. Nichts wurde übernommen.",
+  result_failed_validation: "Das Modell konnte kein Ergebnis liefern, das alle Zitatprüfungen besteht. Nichts wurde übernommen.",
   token_limit_reached: "Das Tokenlimit für diesen Auftrag ist erreicht. Nichts wurde übernommen.",
   output_limit_reached: "Die Antwort wurde zu lang. Wählen Sie weniger Dokumente oder eine engere Frage.",
-  model_refused: "Claude hat diesen Auftrag abgelehnt. Nichts wurde übernommen. Eine enger gefasste Frage oder eine andere Auswahl der Akten kann helfen.",
-  no_result_submitted: "Claude hat kein Ergebnis eingereicht. Nichts wurde übernommen.",
+  model_refused: "Das Modell hat diesen Auftrag abgelehnt. Nichts wurde übernommen. Eine enger gefasste Frage oder eine andere Auswahl der Akten kann helfen.",
+  no_result_submitted: "Das Modell hat kein Ergebnis eingereicht. Nichts wurde übernommen.",
   turn_limit_reached: "Der Auftrag brauchte zu viele Schritte und wurde beendet. Nichts wurde übernommen.",
-  provider_401: "Anthropic lehnt den API-Schlüssel ab.",
-  provider_429: "Anthropic meldet ein Ratenlimit. Später erneut versuchen.",
-  provider_529: "Anthropic ist überlastet. Später erneut versuchen.",
-  provider_unreachable: "Anthropic ist nicht erreichbar.",
+  provider_401: "Der Modelldienst lehnt den API-Schlüssel ab.",
+  provider_404: "Der Modelldienst kennt dieses Modell nicht. Prüfen Sie den Modellnamen und geben Sie erneut frei.",
+  provider_429: "Der Modelldienst meldet ein Ratenlimit. Später erneut versuchen.",
+  provider_529: "Der Modelldienst ist überlastet. Später erneut versuchen.",
+  provider_unreachable: "Der Modelldienst ist nicht erreichbar. Läuft das lokale Modell?",
+  provider_bad_reply: "Der Modelldienst hat keine verwertbare Antwort geliefert. Nichts wurde übernommen.",
+  invalid_endpoint: "Diese Adresse geht nicht: https, oder http nur auf diesem Computer (localhost), ohne Zugangsdaten in der Adresse.",
+  invalid_model: "Bitte den Modellnamen angeben, wie ihn der Dienst führt (z. B. llama3.3:70b).",
+  invalid_endpoint_key: "Das sieht nicht wie ein API-Schlüssel aus.",
   folder_not_allowed: "Dieser Ordner kann nur über die Ordnerauswahl geöffnet werden.",
   last_alias: "Eine Angabe braucht mindestens eine Schreibweise.",
   pairing_failed: "Der Code stimmt nicht oder ist abgelaufen.",
@@ -229,7 +234,7 @@ export function icon(name, labelText = null) {
 /** Claim text with restored names marked; the pseudonym that left the machine is in the tooltip. */
 export function claimText(display) {
   return h("span.claim-text", {}, display.segments.map(segment => segment.pseudonym
-    ? h("span.restored", { title: tr("Lokal wiederhergestellt. Claude sah: {p}", { p: segment.pseudonym }) }, segment.text)
+    ? h("span.restored", { title: tr("Lokal wiederhergestellt. Das Modell sah: {p}", { p: segment.pseudonym }) }, segment.text)
     : segment.text));
 }
 
@@ -270,7 +275,7 @@ export function traceText(event) {
     case "caselaw_search": return event.error ? tr("OpenCaseLaw: {e}", { e: event.error }) : trn(event.hits, "Sucht auf OpenCaseLaw «{q}» – {n} Entscheid", "Sucht auf OpenCaseLaw «{q}» – {n} Entscheide", { q: event.query });
     case "caselaw_read": return event.error ? tr("Entscheid nicht verfügbar: {l}", { l: event.label }) : tr("Liest {l}", { l: event.label });
     case "caselaw_error": return tr("OpenCaseLaw vorübergehend nicht erreichbar");
-    case "rejected": return tr("Prüfung nicht bestanden: {r} Claude korrigiert.", { r: humanReject(event.reason) });
+    case "rejected": return tr("Prüfung nicht bestanden: {r} Das Modell korrigiert.", { r: humanReject(event.reason) });
     case "needs_review": return trn(event.claims, "{n} Aussage bleibt nach der Korrektur unbelegt und ist zum Prüfen markiert", "{n} Aussagen bleiben nach der Korrektur unbelegt und sind zum Prüfen markiert");
     case "validated": return tr("{c} Aussagen in {r} Zeilen bestehen die Zitatprüfung", { c: event.claims, r: event.rows });
     case "bound": return tr("{v} von {c} Aussagen an Originalstellen gebunden", { v: event.verified, c: event.claims });

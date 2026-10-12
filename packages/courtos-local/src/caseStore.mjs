@@ -266,11 +266,11 @@ export class CaseStore extends EventEmitter {
   }
 
   /** The user's consent to let the model read this exact mirror. */
-  async release({ model, budgetChf }) {
+  async release({ model, budgetChf, provider = "anthropic", endpoint = null }) {
     if (!this.mirror?.sections.length) throw new CourtosError("nothing_to_release");
     if (this.issues.length) throw new CourtosError("mirror_has_issues", { issues: this.issues });
     this.case.consent = {
-      at: now(), register_rev: this.register.rev, mirror_sha256: this.mirror.sha256, model,
+      at: now(), register_rev: this.register.rev, mirror_sha256: this.mirror.sha256, provider, endpoint, model,
       budget_chf: budgetChf, stale: false,
     };
     await this.save();

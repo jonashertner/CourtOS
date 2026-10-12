@@ -264,7 +264,7 @@ function render() {
 function renderEvidence(c) {
   const demo = !S.st.settings.has_key && c.demo;
   return [
-    !c.consent_valid ? h("p.warning", {}, tr("Der Ordner ist nicht für Claude freigegeben. Prüfen und freigeben im Browser.")) : null,
+    !c.consent_valid ? h("p.warning", {}, tr("Der Ordner ist für kein Modell freigegeben. Prüfen und freigeben im Browser.")) : null,
     h("div.block", {},
       h("h2", {}, tr("Markierte Stelle belegen")),
       h("p.hint", {}, demo ? tr("Im Demo-Modus steht nur die vorbereitete Frage zur Verfügung.") : tr("Markieren Sie im Entwurf einen Satz. CourtOS sucht die Aktenstellen dazu. Namen in der Markierung werden vor dem Senden ersetzt.")),
@@ -286,7 +286,7 @@ function renderEvidence(c) {
 function renderRun() {
   const run = S.run;
   if (run.status === "running") {
-    const last = [...run.events].reverse().map(traceText).find(Boolean) ?? tr("Claude arbeitet …");
+    const last = [...run.events].reverse().map(traceText).find(Boolean) ?? tr("Das Modell arbeitet …");
     return h("div.block", {}, h("p.progress-text", {}, last));
   }
   if (!run.result) return h("p.warning", {}, errorText(run.error?.code ?? run.status));
