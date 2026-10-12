@@ -5,7 +5,8 @@ import { cp, mkdir, mkdtemp, readdir, realpath, rm, stat, writeFile } from "node
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { addCase, caseSummary, checkPlaces, loadCases, moveWork, removeCase, workFolderFor } from "../src/cases.mjs";
+import { pathToFileURL } from "node:url";
+import { addCase, caseForDocument, caseSummary, checkPlaces, loadCases, moveWork, removeCase, workFolderFor } from "../src/cases.mjs";
 import { CaseStore } from "../src/caseStore.mjs";
 import { compileGuard } from "../src/guard.mjs";
 import { emptyRegister } from "../src/register.mjs";
@@ -106,6 +107,22 @@ test("the work folder's path never leaves the computer", () => {
   assert.throws(() => guard.check("/Volumes/Gericht/HG.2026.57 Alpenblick/KB 1.pdf"), { code: "outbound_blocked" });
 });
 
+test("a Word document belongs to the case whose work folder or originals hold it, the innermost one", async (t) => {
+  const { home, source, cleanup } = await setup();
+  t.after(cleanup);
+  const entry = await addCase({ source });
+  await mkdir(join(entry.work, "Entwürfe"), { recursive: true });
+  const nested = { id: "inner", source: join(home, "anderswo"), work: join(entry.work, "Entwürfe") };
+  const list = [entry, nested];
+  assert.equal((await caseForDocument(list, join(entry.work, "Urteil.docx")))?.id, entry.id, "a path, as Word on a Mac gives it");
+  assert.equal((await caseForDocument(list, pathToFileURL(join(source, "Beilagen", "x.docx")).href))?.id, entry.id, "a file URL, in the originals' folder");
+  assert.equal((await caseForDocument(list, join(entry.work, "Entwürfe", "y.docx")))?.id, "inner", "the innermost folder wins");
+  assert.equal(await caseForDocument(list, join(home, "Brief.docx")), null);
+  assert.equal(await caseForDocument(list, "https://gericht.sharepoint.com/sites/x/Urteil.docx"), null, "an online document belongs to no case");
+  assert.equal(await caseForDocument(list, ""), null, "nor does a document not saved yet");
+  assert.equal(await caseForDocument(list, join(entry.work + " (2)", "z.docx")), null, "a folder that only starts with the same name is another folder");
+});
+
 function call(port, path, { method = "GET", headers = {}, body } = {}) {
   return new Promise((resolve, reject) => {
     const req = request({ host: "127.0.0.1", port, path, method, headers: { Host: `localhost:${port}`, ...headers } }, (res) => {
@@ -158,6 +175,29 @@ test("the page lists the cases, opens, closes and removes them by id, never by a
   assert.equal(s.case, null, "removing the open case closes it");
   assert.deepEqual(s.cases, []);
   assert.deepEqual(await readdir(join(home, "CourtOS")), ["HG.2026.57 Alpenblick"], "the work stays on disk");
+});
+
+test("the Word pane learns which case its document belongs to, and opens only listed work products", async (t) => {
+  const { home, source, cleanup } = await setup();
+  const port = await freePort();
+  const shown = [];
+  const app = await startServer({ port, folder: source, openBrowser: false, log: () => {}, show: (path) => shown.push(path) });
+  t.after(async () => { app.close(); await cleanup(); });
+  const origin = `http://localhost:${port}`;
+  const token = new URL(app.pairUrl).hash.slice("#pair=".length);
+  const cookie = (await call(port, "/api/pair", { method: "POST", headers: { Origin: origin, "X-CourtOS": "1" }, body: { token } })).headers["set-cookie"][0].split(";")[0];
+  const write = async (path, body) => { const r = await call(port, path, { method: "POST", headers: { Cookie: cookie, Origin: origin, "X-CourtOS": "1" }, body }); return { status: r.status, body: JSON.parse(r.body) }; };
+  const state = JSON.parse((await call(port, "/api/state", { headers: { Cookie: cookie } })).body);
+
+  const work = join(home, "CourtOS", "HG.2026.57 Alpenblick");
+  assert.deepEqual((await write("/api/cases/for-document", { url: pathToFileURL(join(work, "Urteil.docx")).href })).body, { id: state.case.id }, "only the id comes back");
+  assert.deepEqual((await write("/api/cases/for-document", { url: join(home, "Brief.docx") })).body, { id: null });
+  assert.deepEqual((await write("/api/cases/for-document", { url: 42 })).body, { id: null });
+
+  assert.deepEqual(JSON.parse((await call(port, "/api/products", { headers: { Cookie: cookie } })).body), { folder: null, files: [] }, "no analysis yet, no folder");
+  for (const name of ["../.courtos/case.json", "/etc/passwd", null]) assert.equal((await write("/api/products/open", { name })).status, 404);
+  assert.equal((await write("/api/cases/reveal", { id: state.case.id, place: "products" })).status, 200);
+  assert.deepEqual(shown, [join(work, "Arbeitsprodukte")], "nothing else was opened");
 });
 
 test("adding a case through the page: the originals' folder, then the work folder, then the case", async (t) => {

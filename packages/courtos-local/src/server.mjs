@@ -13,13 +13,13 @@ import { createRequire } from "node:module";
 import { basename, dirname, extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { CaseStore } from "./caseStore.mjs";
-import { addCase, caseSummary, defaultWorkFolder, loadCases, moveWork, removeCase, updateCase, workFolderFor } from "./cases.mjs";
+import { addCase, caseForDocument, caseSummary, defaultWorkFolder, loadCases, moveWork, removeCase, updateCase, workFolderFor } from "./cases.mjs";
 import { WORKSPACE_DIR, syncWarning } from "./scan.mjs";
 import { AgentRun } from "./agent/runner.mjs";
 import { AnthropicProvider, DEFAULT_MODEL, OpenAICompatibleProvider, isLocalEndpoint, normaliseEndpoint } from "./agent/providers.mjs";
 import { DEMO_QUESTION, demoProvider, isDemoFolder } from "./agent/demo.mjs";
 import { TASKS } from "./agent/tasks.mjs";
-import { productsFolder, resultMarkdown, runLanguage, writeProducts } from "./products.mjs";
+import { listProducts, productPath, productsFolder, resultMarkdown, runLanguage, writeProducts } from "./products.mjs";
 import { collectMemory, memoryMarkdown, memorySnapshot } from "./memory.mjs";
 import { OpenCaseLaw } from "./opencaselaw.mjs";
 import { checkCitations } from "./citecheck.mjs";
@@ -95,7 +95,7 @@ function openPath(path) {
   else execFile("xdg-open", [path], () => {});
 }
 
-export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log, choose = chooseFolder } = {}) {
+export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log, choose = chooseFolder, show = openPath } = {}) {
   const tls = await loadCertificates();
   const scheme = tls ? "https" : "http";
   const origin = `${scheme}://localhost:${port}`;
@@ -154,7 +154,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
 
   /** The work products of finished runs, as files in the work folder. A folder that cannot be written (a read-only share) leaves the results in CourtOS only. */
   async function saveProducts(list) {
-    try { if ((await writeProducts(store, list, { case: { parties: store.partiesView() } })).length) casesChanged(); }
+    try { if ((await writeProducts(store, list, { case: { parties: store.partiesView() } })).length) { casesChanged(); broadcast("products", {}); } }
     catch (error) { log(`Arbeitsprodukte nicht geschrieben (${error.code ?? "Fehler"})`); }
   }
 
@@ -472,8 +472,22 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
           if (current?.id !== id || !store) throw new CourtosError("case_unknown", undefined, 404);
           const folder = await productsFolder(store);
           await mkdir(folder, { recursive: true });
-          openPath(folder);
-        } else openPath(entry[place]);
+          show(folder);
+        } else show(entry[place]);
+        return send(res, 200, { ok: true });
+      }
+      // The Word pane asks which case the document it runs in belongs to. The answer is an id; the path stays here.
+      if (path === "/api/cases/for-document" && req.method === "POST") {
+        const entry = await caseForDocument(await loadCases(), (await body(req)).url);
+        return send(res, 200, { id: entry?.id ?? null });
+      }
+      if (path === "/api/products" && req.method === "GET") {
+        if (!store) throw new CourtosError("case_unknown", undefined, 404);
+        return send(res, 200, await listProducts(store));
+      }
+      if (path === "/api/products/open" && req.method === "POST") {
+        if (!store) throw new CourtosError("case_unknown", undefined, 404);
+        show(await productPath(store, (await body(req)).name));
         return send(res, 200, { ok: true });
       }
       if (path === "/api/settings/key" && req.method === "POST") {

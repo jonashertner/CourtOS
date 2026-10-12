@@ -8,6 +8,7 @@
 // configuration: no name from a register lands outside the work folder.
 import { cp, lstat, mkdir, readdir, realpath, rename, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
+import { fileURLToPath } from "node:url";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { WORKSPACE_DIR, syncWarning } from "./scan.mjs";
 import { CourtosError, now, randomId, readJson, writeJson } from "./util.mjs";
@@ -154,6 +155,31 @@ export async function moveWork(entry, target) {
     }
   }
   return updateCase(entry.id, { work: places.work });
+}
+
+/**
+ * The case a Word document belongs to: the listed case whose work folder or
+ * originals' folder holds it, the innermost if several do. A document that is
+ * not saved yet, or lives online (OneDrive, SharePoint), belongs to none.
+ */
+export async function caseForDocument(list, url) {
+  if (typeof url !== "string" || !url) return null;
+  let path = null;
+  if (/^file:/i.test(url)) { try { path = fileURLToPath(url); } catch { return null; } }
+  else if (url.startsWith("/") || /^[a-z]:[\\/]/i.test(url) || url.startsWith("\\\\")) path = url;
+  if (!path) return null;
+  const folder = await realpath(dirname(path)).catch(() => null);
+  if (!folder) return null;
+  // macOS and Windows compare names without regard to case.
+  const fold = (p) => (process.platform === "linux" ? p : p.toLowerCase());
+  const holds = (place) => fold(place) === fold(folder) || isInside(fold(place), fold(folder));
+  let best = null, depth = -1;
+  for (const entry of list) {
+    for (const place of [entry.work, entry.source]) {
+      if (holds(place) && place.length > depth) { best = entry; depth = place.length; }
+    }
+  }
+  return best;
 }
 
 /** What the list shows for one case, read from its folders now. */

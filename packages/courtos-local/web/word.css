@@ -1,10 +1,14 @@
 /* Word task pane, 320–450 px wide. Light, quiet, with room: the document in Word is the main surface. */
 body.word { font-size: 13.5px; line-height: 1.5; background: var(--paper); }
 .wp { display: grid; grid-template-rows: auto auto 1fr auto; min-height: 100vh; }
+.wp.no-tabs { grid-template-rows: auto 1fr auto; }
 
 /* Head: mark and case name on one line, the status aligned under the name. */
 .wp-head { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto auto; column-gap: 10px; row-gap: 4px; align-items: center; padding: 18px 20px 14px; }
 .wp-head .mark { display: block; width: 20px; height: 20px; }
+.wp-head button.case { display: inline-flex; gap: 6px; align-items: center; justify-self: start; max-width: 100%; text-align: left; background: none; border: 0; padding: 0; margin: 0; color: var(--ink); cursor: pointer; }
+.wp-head button.case .icon { width: 13px; height: 13px; color: var(--muted); flex: none; }
+.wp-head button.case:hover .icon { color: var(--ink); }
 .wp-head .case { font-weight: 600; font-size: 15px; line-height: 1.3; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .wp-head .lang { font-size: 12px; padding: 2px 4px; border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper); color: var(--muted); }
 .wp-head .state, .wp-head .live { grid-column: 2 / -1; }
@@ -57,7 +61,7 @@ ul.inserts li { border-bottom: 1px solid var(--rule); }
 ul.inserts button { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title icon" "meta icon"; gap: 1px 10px; align-items: center; width: 100%; text-align: left; background: none; border: 0; padding: 10px 6px 10px 0; cursor: pointer; }
 ul.inserts button:hover { background: var(--wash); }
 ul.inserts .i-title { grid-area: title; font-weight: 500; }
-ul.inserts .i-meta { grid-area: meta; color: var(--muted); font-size: 12px; }
+ul.inserts .i-meta { grid-area: meta; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 ul.inserts .icon { grid-area: icon; color: var(--muted); }
 ul.inserts button:hover .icon { color: var(--ink); }
 
@@ -69,3 +73,19 @@ ul.inserts button:hover .icon { color: var(--ink); }
 .wp .d-date { min-width: 104px; font-variant-numeric: tabular-nums; }
 .toast .link { margin-left: 10px; color: inherit; }
 @media (prefers-reduced-motion: reduce) { .wp .live::before, .progress-text::before { animation: none; } }
+
+/* The case list: the open case is marked, a case whose originals are out of reach cannot be opened. */
+ul.cases button[aria-current="true"] .i-title { font-weight: 600; }
+ul.cases button:disabled { cursor: default; opacity: .55; }
+ul.cases button:disabled:hover { background: none; }
+
+/* The case the document belongs to, when it is not the open one. */
+.doc-case { display: grid; gap: 8px; justify-items: start; padding: 12px 14px; border-left: 2px solid var(--alert); background: var(--alert-wash); font-size: 12.5px; }
+.doc-case p { margin: 0; }
+
+/* Work products: one row per result, its formats side by side. */
+ul.files { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+ul.files li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title actions" "meta actions"; gap: 1px 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+ul.files .f-title { grid-area: title; font-weight: 500; overflow-wrap: anywhere; }
+ul.files .f-meta { grid-area: meta; color: var(--muted); font-size: 12px; }
+ul.files .f-actions { grid-area: actions; display: flex; gap: 6px; flex-wrap: wrap; justify-content: end; }

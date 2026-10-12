@@ -186,6 +186,8 @@ const ERRORS = {
   workspace_unsafe: "Der Arbeitsordner .courtos ist ein Verweis auf einen anderen Ort. CourtOS schreibt dort nicht.",
   case_unknown: "Diesen Fall gibt es in der Liste nicht mehr.",
   folder_not_found: "Der Ordner ist nicht erreichbar. Ist das Laufwerk verbunden?",
+  file_not_found: "Die Datei ist nicht mehr im Ordner der Arbeitsprodukte.",
+  document_other_case: "Dieses Dokument liegt im Ordner eines anderen Falls. Öffnen Sie diesen Fall, bevor Sie einfügen.",
   native_dialog_unavailable: "Auf diesem System gibt es keine Ordnerauswahl. Starten Sie CourtOS mit dem Ordner als Argument.",
   work_inside_source: "Der Arbeitsordner darf nicht im Aktenordner liegen: CourtOS würde seine eigenen Ergebnisse als Akten lesen.",
   work_folder_taken: "Im gewählten Ordner arbeitet CourtOS bereits an einem anderen Fall. Wählen Sie einen anderen Ordner.",

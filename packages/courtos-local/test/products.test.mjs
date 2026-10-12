@@ -8,7 +8,7 @@ import { AgentRun } from "../src/agent/runner.mjs";
 import { demoProvider } from "../src/agent/demo.mjs";
 import { ScriptedProvider } from "../src/agent/providers.mjs";
 import { CaseStore } from "../src/caseStore.mjs";
-import { resultDocx, resultMarkdown, wordDocument, writeProducts } from "../src/products.mjs";
+import { listProducts, productPath, resultDocx, resultMarkdown, wordDocument, writeProducts } from "../src/products.mjs";
 import { BUILD } from "../web/word-doc.js";
 import { FIXTURE, freshCase, originalHashes } from "./helpers.mjs";
 
@@ -55,6 +55,12 @@ test("each verified run becomes a file in the work folder, once, with its quotat
   assert.deepEqual(await originalHashes(source), before, "nothing is written next to the originals");
 
   assert.deepEqual(await writeProducts(store, [run], view(store)), [], "a run is written once");
+  await writeFile(join(work, "Arbeitsprodukte", "Notiz der Richterin.txt"), "x");
+  await writeFile(join(work, "Arbeitsprodukte", `~$${day} Chronologie.docx`), "lock");
+  const { files } = await listProducts(store);
+  assert.deepEqual(files.map(f => f.name).sort(), [...written, "Notiz der Richterin.txt"].sort(), "the judge's own files are listed, Word's lock files are not");
+  assert.equal(await productPath(store, written[1]), join(store.work, "Arbeitsprodukte", written[1]));
+  for (const name of ["../.courtos/case.json", `~$${day} Chronologie.docx`, "Arbeitsprodukte"]) await assert.rejects(productPath(store, name), { code: "file_not_found" });
   for (const name of written) await rm(join(work, "Arbeitsprodukte", name));
   assert.deepEqual(await writeProducts(store, [run], view(store)), [], "a file the judge deleted is not brought back");
 

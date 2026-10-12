@@ -5,14 +5,14 @@
 //
 // The labels come from the same tables as the browser and the Word pane
 // (web/shared.js, web/word-doc.js), so a file reads like the screen.
-import { stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
 import { claimPlain, inLanguage, label, labelIn, parseDate, refLabel, tr } from "../web/shared.js";
 import { comparisonStatus } from "../web/results.js";
 import { BUILD, partyName, sources } from "../web/word-doc.js";
 import { PRODUCTS_DIR } from "./cases.mjs";
-import { readJson, writeAtomic, writeJson } from "./util.mjs";
+import { CourtosError, readJson, writeAtomic, writeJson } from "./util.mjs";
 
 const exists = async (path) => Boolean(await stat(path).catch(() => null));
 const verified = (claim) => [...(claim?.citations ?? []), ...(claim?.context ?? [])].every(x => x.match === "exact");
@@ -313,4 +313,27 @@ export async function writeProducts(store, runs, view) {
   }
   if (written.length) await writeJson(manifestPath, manifest);
   return written;
+}
+
+/**
+ * The files in the work-products folder, newest first: CourtOS's and any the
+ * judge put there. Hidden files and Word's lock files ("~$…") are left out.
+ */
+export async function listProducts(store) {
+  if (!store.case.products_dir) return { folder: null, files: [] };
+  const folder = join(store.work, store.case.products_dir);
+  const files = [];
+  for (const name of await readdir(folder).catch(() => [])) {
+    if (name.startsWith(".") || name.startsWith("~$")) continue;
+    const info = await stat(join(folder, name)).catch(() => null);
+    if (info?.isFile()) files.push({ name, modified: info.mtime.toISOString(), size: info.size });
+  }
+  return { folder, files: files.sort((a, b) => b.modified.localeCompare(a.modified) || a.name.localeCompare(b.name)) };
+}
+
+/** The path of a file in the work-products folder, named as the list shows it. Nothing outside the folder can be named. */
+export async function productPath(store, name) {
+  const { folder, files } = await listProducts(store);
+  if (!folder || typeof name !== "string" || !files.some(f => f.name === name)) throw new CourtosError("file_not_found", undefined, 404);
+  return join(folder, name);
 }

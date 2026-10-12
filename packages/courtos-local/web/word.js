@@ -5,7 +5,7 @@ import { adoptLang, api, ApiError, chooseLang, claimPlain, claimText, errorText,
 import { BUILD, plainText, sources } from "./word-doc.js";
 
 const pane = document.getElementById("pane");
-const S = { st: null, tab: "evidence", selection: "", run: null, latest: new Map(), office: false, citecheck: null, citecheckBusy: false };
+const S = { st: null, tab: "evidence", selection: "", run: null, latest: new Map(), office: false, citecheck: null, citecheckBusy: false, choosing: false, docCase: null, products: null };
 
 const inOffice = () => S.office && typeof Word !== "undefined";
 const toast = (message, bad = false, action = null) => {
@@ -23,6 +23,21 @@ async function attempt(fn) {
     if (error instanceof ApiError && error.code === "not_paired") return renderPairing();
     toast(errorText(error.code ?? "internal_error"), true);
   }
+}
+
+// --- Which case the document belongs to ------------------------------------------
+/** Where the document is saved: a path or file URL on this computer, a web address, or nothing for a new document. */
+function documentUrl() {
+  try { return inOffice() ? Office.context.document.url ?? "" : ""; } catch { return ""; }
+}
+async function findDocumentCase() {
+  const url = documentUrl();
+  S.docCase = url ? (await api("/api/cases/for-document", { method: "POST", body: { url } })).id : null;
+}
+/** The document lies in another case's folder than the open case's: nothing of the open case may go into it. */
+const foreignDocument = () => Boolean(S.docCase && S.st?.case && S.docCase !== S.st.case.id);
+function refuseForeign() {
+  if (foreignDocument()) throw new ApiError("document_other_case", 409);
 }
 
 // --- Word host operations -------------------------------------------------------
@@ -66,6 +81,7 @@ const footnotes = () => inOffice() && Office.context.requirements.isSetSupported
 
 /** Pinpoint reference after the selection; a footnote with the quotation where Word supports it. */
 async function insertReference(citation) {
+  refuseForeign();
   const where = refLabel(citation);
   const quote = (citation.quote_original ?? "").replace(/\s+/g, " ").trim();
   if (!inOffice()) { await navigator.clipboard?.writeText(`${where}: «${quote}»`); return toast(tr("In die Zwischenablage kopiert.")); }
@@ -80,6 +96,7 @@ async function insertReference(citation) {
 
 /** One statement at the cursor, its sources as a footnote (or in parentheses). Strings are built before any await. */
 async function insertClaim(claim) {
+  refuseForeign();
   const text = claimPlain(claim), refs = sources(claim);
   if (!inOffice()) { await navigator.clipboard?.writeText(refs ? `${text} (${refs})` : text); return toast(tr("In die Zwischenablage kopiert.")); }
   await Word.run(async (context) => {
@@ -100,6 +117,7 @@ const HANG = 21; // points: room for "10." before the text of a numbered paragra
  * page) and hairlines between rows; no vertical lines, cells aligned at the top.
  */
 async function insertTable(spec) {
+  refuseForeign();
   // A cell's second line (the posture under the party) goes in with the value
   // and is styled afterwards; inserting it separately lands in the wrong cell on Mac.
   const values = [spec.columns.map(c => c.head), ...spec.rows.map(r => r.map(c => c.sub ? `${c.text}\n${c.sub}` : c.text))];
@@ -161,6 +179,7 @@ async function insertTable(spec) {
  * where Word has no footnotes), ending with a full stop as Swiss footnotes do.
  */
 async function insertOutline(spec) {
+  refuseForeign();
   if (!inOffice()) { await navigator.clipboard?.writeText(plainText(spec)); return toast(tr("In die Zwischenablage kopiert.")); }
   const done = tr("In das Dokument eingefügt.");
   await Word.run(async (context) => {
@@ -205,6 +224,13 @@ async function insertOutline(spec) {
 // --- Data ---------------------------------------------------------------------
 async function refresh() {
   S.st = await api("/api/state");
+  await findDocumentCase().catch(() => { S.docCase = null; });
+  // A document saved in a case's folder brings its case along, when no case is open. An open case is never switched from here unasked.
+  if (!S.st.case && S.docCase && S.followed !== S.docCase && S.st.cases?.some(x => x.id === S.docCase && x.source_available)) {
+    S.followed = S.docCase;
+    return attempt(() => openCase(S.docCase));
+  }
+  await loadProducts();
   for (const run of S.st.runs ?? []) {
     if (run.status !== "succeeded" || run.task === "source_chat" || S.latest.has(run.task)) continue;
     S.latest.set(run.task, await api(`/api/runs/${run.id}`));
@@ -213,6 +239,16 @@ async function refresh() {
   if (current && current.id !== S.run?.id) { S.liveTask = current.task; if (live.hidden) showLive(tr("Im Browser: {t} · läuft", { t: label("task", current.task) })); }
   else if (!S.st.current) showLive(null);
   render();
+}
+
+async function loadProducts() {
+  S.products = S.st.case ? await api("/api/products").catch(() => null) : null;
+}
+
+async function openCase(id) {
+  if (S.st.case?.id !== id) await api("/api/cases/open", { method: "POST", body: { id } });
+  S.choosing = false;
+  await refresh();
 }
 
 const claimsOf = (run) => new Map(run.result.claims.map(c => [c.id, c]));
@@ -265,7 +301,8 @@ function render() {
   // The mark sits beside the case name; the status lines up under the name, not under the mark.
   const head = h("header.wp-head", {},
     h("img.mark", { src: "icon.svg", alt: "CourtOS", width: 20, height: 20 }),
-    h("span.case", {}, c ? c.name : tr("Kein Fall geöffnet")),
+    c ? h("button.case", { type: "button", "aria-expanded": String(S.choosing), title: tr("Fall wechseln"), onclick: () => { S.choosing = !S.choosing; render(); } }, h("span", {}, c.name), icon(S.choosing ? "up" : "down"))
+      : h("span.case", {}, tr("Kein Fall geöffnet")),
     h("select.lang", { "aria-label": tr("Sprache"), onchange: (e) => { chooseLang(e.target.value); render(); } }, LANGUAGES.map(([code]) => h("option", { value: code, selected: code === LANG }, code.toUpperCase()))),
     themeToggle(),
     c ? h("div.state", {},
@@ -273,14 +310,71 @@ function render() {
       c.consent_valid ? h("span.external", {}, icon("out"), tr("freigegeben")) : h("span.alert", {}, tr("nicht freigegeben"))) : null,
     live,
   );
-  if (!c) return pane.replaceChildren(h("div.wp", {}, head, h("div.wp-body", {}, h("p.hint", {}, tr("Öffnen Sie den Fallordner im Browser. Dieser Bereich zeigt danach denselben Fall."))), h("footer.wp-foot", {}, openBrowserButton())));
-  const tabs = [["evidence", "Belegen"], ["citations", "Zitate"], ["insert", "Einfügen"], ["procedure", "Fristen"]];
+  if (!c || S.choosing) return pane.replaceChildren(h("div.wp.no-tabs", {}, head, h("div.wp-body", {}, documentNotice(), renderCases()), h("footer.wp-foot", {}, openBrowserButton())));
+  const tabs = [["evidence", "Belegen"], ["citations", "Zitate"], ["insert", "Einfügen"], ["files", "Dateien"], ["procedure", "Fristen"]];
   pane.replaceChildren(h("div.wp", {},
     head,
     h("nav.wp-tabs", { role: "tablist", "aria-label": tr("Bereiche") }, tabs.map(([id, name]) => h("button", { type: "button", role: "tab", "aria-selected": S.tab === id ? "true" : "false", onclick: () => { S.tab = id; render(); } }, tr(name)))),
-    h("div.wp-body", { role: "tabpanel" }, S.tab === "evidence" ? renderEvidence(c) : S.tab === "citations" ? renderCitations() : S.tab === "insert" ? renderInserts() : renderDeadlines(c)),
+    h("div.wp-body", { role: "tabpanel" }, documentNotice(), S.tab === "evidence" ? renderEvidence(c) : S.tab === "citations" ? renderCitations() : S.tab === "insert" ? renderInserts() : S.tab === "files" ? renderFiles(c) : renderDeadlines(c)),
     h("footer.wp-foot", {}, openBrowserButton()),
   ));
+}
+
+/** The case list. Choosing a case here opens it for the browser as well: there is one open case. */
+function renderCases() {
+  const c = S.st.case, list = S.st.cases ?? [];
+  return h("div.block", {},
+    h("h2", {}, tr("Fälle")),
+    list.length ? h("ul.inserts.cases", {}, list.map(x => h("li", {}, h("button", { type: "button", "aria-current": c?.id === x.id ? "true" : null, disabled: !x.source_available, onclick: () => attempt(() => openCase(x.id)) },
+        h("span.i-title", {}, x.name),
+        h("span.i-meta", {}, [
+          c?.id === x.id ? tr("geöffnet") : null,
+          S.docCase === x.id ? tr("zu diesem Dokument") : null,
+          x.started ? trn(x.documents, "{n} Dokument", "{n} Dokumente") : tr("noch nicht eingelesen"),
+          !x.source_available ? tr("Akten nicht erreichbar. Ist das Laufwerk verbunden?") : null,
+          // Two cases of the same name are told apart by their work folder.
+          list.some(y => y !== x && y.name === x.name) ? x.work : null,
+        ].filter(Boolean).join(" · ")),
+        c?.id === x.id ? icon("check") : icon("arrow")))))
+      : h("p.hint", {}, tr("Fälle fügen Sie im Browser hinzu. Danach wählen Sie sie hier.")),
+  );
+}
+
+/** A document saved in a case's folder names its case. If another case is open, nothing can be inserted until its own case is. */
+function documentNotice() {
+  const c = S.st.case;
+  if (!S.docCase || S.docCase === c?.id) return null;
+  const owner = S.st.cases?.find(x => x.id === S.docCase);
+  if (!owner) return null;
+  return h("div.doc-case", { role: "status" },
+    h("p", {}, c ? tr("Dieses Dokument liegt im Ordner des Falls «{n}». Geöffnet ist ein anderer Fall; Einfügen ist gesperrt.", { n: owner.name }) : tr("Dieses Dokument liegt im Ordner des Falls «{n}».", { n: owner.name })),
+    owner.source_available ? h("button.btn.small", { type: "button", onclick: () => attempt(() => openCase(owner.id)) }, tr("Diesen Fall öffnen")) : null);
+}
+
+/** "12. Okt. 2026, 16:05": several results of one day are told apart by the hour. */
+const whenOf = (iso) => (iso ? new Date(iso).toLocaleString(`${LANG}-CH`, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
+const FORMAT = { docx: "Word", md: "Markdown" };
+
+/** The work-products folder: each result as a Word and a Markdown file, opened with the computer's own programs. */
+function renderFiles(c) {
+  const groups = new Map();
+  for (const file of S.products?.files ?? []) {
+    const [, base, ext] = file.name.match(/^(.*)\.(docx|md)$/i) ?? [null, file.name, null];
+    if (!groups.has(base)) groups.set(base, { base, modified: file.modified, files: [] });
+    groups.get(base).files.push({ ...file, format: ext ? FORMAT[ext.toLowerCase()] : null });
+  }
+  const order = (f) => (f.format === "Word" ? 0 : f.format ? 1 : 2);
+  return h("div.block", {},
+    h("h2", {}, tr("Arbeitsprodukte")),
+    groups.size ? h("ul.files", {}, [...groups.values()].map(g => h("li", {},
+      // "2026-10-12 Chronologie": the date stands below, as on the other rows.
+      h("span.f-title", {}, g.base.replace(/^\d{4}-\d{2}-\d{2} (?=\S)/, "")),
+      h("span.f-meta", {}, whenOf(g.modified)),
+      h("span.f-actions", {}, g.files.sort((a, b) => order(a) - order(b)).map(file => h("button.btn.small", { type: "button", "aria-label": tr("{f} öffnen: {n}", { f: file.format ?? tr("Datei"), n: file.name }), onclick: () => attempt(() => api("/api/products/open", { method: "POST", body: { name: file.name } })) }, file.format ?? file.name)))))
+    ) : h("p.hint", {}, tr("Noch keine. Jede Analyse legt hier eine Word- und eine Markdown-Datei ab.")),
+    h("p.hint", {}, tr("Die Dateien gehören Ihnen: Sie können sie umbenennen, ändern oder löschen. CourtOS überschreibt sie nicht.")),
+    h("div.actions", {}, h("button.link", { type: "button", onclick: () => attempt(() => api("/api/cases/reveal", { method: "POST", body: { id: c.id, place: "products" } })) }, icon("folder"), tr("Ordner zeigen"))),
+  );
 }
 
 function renderEvidence(c) {
@@ -415,6 +509,7 @@ async function boot() {
       if (summary.status === "succeeded" && summary.task !== "source_chat") S.latest.set(summary.task, summary);
       render();
     },
+    products: () => attempt(async () => { await loadProducts(); render(); }),
     language: ({ language }) => { if (language !== LANG) { setLang(language); render(); } },
     // A statement chosen in the browser goes in at the cursor.
     insert: ({ run, claim }) => attempt(async () => {
@@ -425,6 +520,9 @@ async function boot() {
   }, "word");
   await refresh();
 }
+
+// Saving the document under another name may put it in another case's folder.
+document.addEventListener("visibilitychange", () => { if (!document.hidden && S.st) attempt(refresh); });
 
 const start = () => boot().catch(() => renderPairing());
 if (window.Office?.onReady) Office.onReady((info) => { S.office = info.host === Office.HostType.Word; start(); });
