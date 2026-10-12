@@ -13,3 +13,9 @@ test("exhibit codes are read from file names as the parties number them, in ever
   assert.deepEqual(code("Exhibits/Exhibit C-3 Master Agreement.pdf"), { role: "exhibit", party: "P1", code: "Exhibit C-3" }, "claimant's exhibit");
   assert.deepEqual(code("Exhibits/Exhibit R-12 Minutes.pdf"), { role: "exhibit", party: "P2", code: "Exhibit R-12" }, "respondent's exhibit");
 });
+
+test("a file name written decomposed (e and accent apart) is read as the same name", () => {
+  const name = "Pièces/Pièce 4 Contrat.pdf";
+  assert.deepEqual(classify(name.normalize("NFD")), classify(name));
+  assert.equal(classify(name.normalize("NFD")).code, "Pièce 4");
+});

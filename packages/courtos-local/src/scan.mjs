@@ -69,7 +69,9 @@ const NAME_ROLE = [
 // Only a file name decides this, never the text of a page.
 const INTERNAL_NOTE = /instruktionsnotiz|interne notiz|aktennotiz|notiz|note interne|nota interna|memo|internal note/iu;
 
-export function classify(relPath, firstPageText = "") {
+export function classify(path, firstPageText = "") {
+  // Names copied from older Macs, network shares or a package come decomposed ("e" + accent).
+  const relPath = path.normalize("NFC");
   const parts = relPath.split("/");
   const name = basename(relPath, extname(relPath));
   const code = EXHIBIT_CODE.exec(` ${name} `)?.[1]?.replace(/\s+/g, " ");
