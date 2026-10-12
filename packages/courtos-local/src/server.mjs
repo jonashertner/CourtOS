@@ -40,11 +40,21 @@ const PREFS = () => join(CONFIG(), "preferences.json");
 const ENDPOINT_KEYS = () => join(CONFIG(), "endpoint-keys.json");
 const UI_LANGUAGES = ["de", "fr", "it", "en"];
 
-export async function loadCertificates() {
-  const dir = join(homedir(), ".office-addin-dev-certs");
-  try {
-    return { cert: await readFile(join(dir, "localhost.crt")), key: await readFile(join(dir, "localhost.key")) };
-  } catch { return null; }
+/** Where the certificate for https://localhost is looked for: COURTOS_CERT_DIR, the Office
+ *  developer certificates, then the ones the CourtOS installer made for this computer. */
+export function certificateDirs(env = process.env, platform = process.platform) {
+  const installed = platform === "darwin" ? "/Library/Application Support/CourtOS/certs"
+    : platform === "win32" && env.ProgramData ? join(env.ProgramData, "CourtOS", "certs") : null;
+  return [env.COURTOS_CERT_DIR, join(homedir(), ".office-addin-dev-certs"), installed].filter(Boolean);
+}
+
+/** A PEM pair (localhost.crt, localhost.key) or, as the Windows installer writes it, localhost.pfx. */
+export async function loadCertificates(dirs = certificateDirs()) {
+  for (const dir of dirs) {
+    try { return { cert: await readFile(join(dir, "localhost.crt")), key: await readFile(join(dir, "localhost.key")) }; } catch { /* try the PFX */ }
+    try { return { pfx: await readFile(join(dir, "localhost.pfx")) }; } catch { /* next folder */ }
+  }
+  return null;
 }
 
 async function apiKey() {
@@ -95,8 +105,8 @@ function openPath(path) {
   else execFile("xdg-open", [path], () => {});
 }
 
-export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log, choose = chooseFolder, show = openPath } = {}) {
-  const tls = await loadCertificates();
+export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log, choose = chooseFolder, show = openPath, certDirs = certificateDirs() } = {}) {
+  const tls = await loadCertificates(certDirs);
   const scheme = tls ? "https" : "http";
   const origin = `${scheme}://localhost:${port}`;
   const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`]);
@@ -703,7 +713,10 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     log("Für Word einmal ausführen: npx office-addin-dev-certs install, dann CourtOS neu starten.");
   }
   if (openBrowser) openPath(pairUrl);
-  return { server, origin, pairUrl, close: () => { store?.close(); for (const c of clients) c.res.end(); server.close(); } };
+  /** A new one-time link for the menu-bar app; an unused earlier link stops working. */
+  const newPairUrl = () => { pairToken = randomId(24); failedPairs = 0; return `${origin}/#pair=${pairToken}`; };
+  const status = () => ({ origin, busy: busy(), case: current ? basename(current.source) : null, clients: connected() });
+  return { server, origin, pairUrl, newPairUrl, status, close: () => { store?.close(); for (const c of clients) c.res.end(); server.close(); } };
 }
 
 async function listRuns(store) {

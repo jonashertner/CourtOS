@@ -22,7 +22,11 @@ const which = async (cmd) => { try { return (await run("/usr/bin/which", [cmd], 
 let enginePromise = null;
 
 async function visionHelper() {
-  if (process.platform !== "darwin" || !(await which("swiftc"))) return null;
+  if (process.platform !== "darwin") return null;
+  // The installed app ships the helper compiled; a checkout compiles it once with swiftc.
+  const shipped = process.env.COURTOS_OCR_HELPER;
+  if (shipped && (await stat(shipped).catch(() => null))?.isFile()) return shipped;
+  if (!(await which("swiftc"))) return null;
   const source = await readFile(SWIFT_SOURCE);
   const hash = createHash("sha256").update(source).digest("hex").slice(0, 12);
   const dir = join(homedir(), "Library", "Caches", "courtos");
