@@ -59,7 +59,7 @@ The browser works without the certificate (plain HTTP on 127.0.0.1); Word does n
 
 Unsigned test builds warn when opened:
 
-- macOS: "cannot be opened because it is from an unidentified developer". Right-click the package and choose **Open**.
+- macOS: the package "cannot be opened". Open **System Settings › Privacy & Security** and choose **Open Anyway** (since macOS 15 right-clicking and choosing **Open** no longer skips the check).
 - Windows: SmartScreen. Choose **More info › Run anyway**.
 
 Signed builds do not warn (see [Building](#building)).
