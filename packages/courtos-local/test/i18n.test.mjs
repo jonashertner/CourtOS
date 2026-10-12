@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { TRANSLATIONS } from "../web/i18n.js";
 
-const FILES = ["app.js", "shared.js", "results.js", "word.js", "word-doc.js"].map(f => new URL(`../web/${f}`, import.meta.url));
+const FILES = [...["app.js", "shared.js", "results.js", "word.js", "word-doc.js"].map(f => new URL(`../web/${f}`, import.meta.url)), new URL("../src/products.mjs", import.meta.url)];
 const STRING = String.raw`"((?:[^"\\\n]|\\.)*)"`;
 const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort().join(",");
 

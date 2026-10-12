@@ -19,7 +19,7 @@ import { AgentRun } from "./agent/runner.mjs";
 import { AnthropicProvider, DEFAULT_MODEL, OpenAICompatibleProvider, isLocalEndpoint, normaliseEndpoint } from "./agent/providers.mjs";
 import { DEMO_QUESTION, demoProvider, isDemoFolder } from "./agent/demo.mjs";
 import { TASKS } from "./agent/tasks.mjs";
-import { wikiMarkdown } from "./wiki.mjs";
+import { productsFolder, resultMarkdown, runLanguage, writeProducts } from "./products.mjs";
 import { collectMemory, memoryMarkdown, memorySnapshot } from "./memory.mjs";
 import { OpenCaseLaw } from "./opencaselaw.mjs";
 import { checkCitations } from "./citecheck.mjs";
@@ -147,8 +147,15 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     store.watch();
     runs.clear();
     for (const run of await listRuns(store)) runs.set(run.id, run);
+    await saveProducts([...runs.values()]);
     if (!entry.sample) await updateCase(entry.id, { opened: new Date().toISOString() }).catch(() => {});
     broadcast("case", { kind: "opened" });
+  }
+
+  /** The work products of finished runs, as files in the work folder. A folder that cannot be written (a read-only share) leaves the results in CourtOS only. */
+  async function saveProducts(list) {
+    try { if ((await writeProducts(store, list, { case: { parties: store.partiesView() } })).length) casesChanged(); }
+    catch (error) { log(`Arbeitsprodukte nicht geschrieben (${error.code ?? "Fehler"})`); }
   }
 
   function closeCase() {
@@ -203,7 +210,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       ...base,
       case: {
         id: current.id, sample: Boolean(current.sample), name: basename(store.root), root: store.root, work: store.work, same_folder: store.work === store.root,
-        sync: store.case.sync, consent: store.case.consent,
+        sync: store.case.sync, consent: store.case.consent, products: store.case.products_dir ? join(store.work, store.case.products_dir) : null,
         consent_valid: store.consentValid(), provider_ready: await providerReady(store.case.consent), issues: store.issues, demo: isDemoFolder(store.mirror),
         mirror: { sha256: store.mirror?.sha256, sections: store.mirror?.sections.length ?? 0, register_rev: store.register.rev },
         register: { total: register.length, replace: register.filter(e => e.decision === "replace").length },
@@ -246,7 +253,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       casesChanged();
       broadcast("run_done", { id: run.id, status: summary.status });
       if (summary.status === "succeeded") {
-        try { await writeAtomic(join(store.dir, "wiki", `${task}.md`), wikiMarkdown(summary, store)); } catch { /* wiki is derived */ }
+        await saveProducts([summary]);
         await writeMemory();
       }
       // The pipeline continues only after a success; a failure stops it visibly.
@@ -460,8 +467,13 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       if (path === "/api/cases/reveal" && req.method === "POST") {
         const { id, place } = await body(req);
         const entry = current?.id === id ? current : await listed(id);
-        if (!["source", "work"].includes(place)) throw new CourtosError("invalid_request");
-        openPath(entry[place]);
+        if (!["source", "work", "products"].includes(place)) throw new CourtosError("invalid_request");
+        if (place === "products") {
+          if (current?.id !== id || !store) throw new CourtosError("case_unknown", undefined, 404);
+          const folder = await productsFolder(store);
+          await mkdir(folder, { recursive: true });
+          openPath(folder);
+        } else openPath(entry[place]);
         return send(res, 200, { ok: true });
       }
       if (path === "/api/settings/key" && req.method === "POST") {
@@ -622,7 +634,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         const run = runs.get(match[1]);
         if (!run?.result) throw new CourtosError("run_unknown", undefined, 404);
         res.writeHead(200, { "Content-Type": "text/markdown; charset=utf-8", "Cache-Control": "no-store" });
-        return res.end(wikiMarkdown(run, store));
+        return res.end(resultMarkdown(run, { case: { parties: store.partiesView() } }, runLanguage(run, store.lang)));
       }
       return send(res, 404, { error: "not_found" });
     } catch (error) {

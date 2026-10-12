@@ -8,8 +8,9 @@ import { partyTermLabel } from "./party-roles.js";
 // and translated through i18n.js. Missing translations fall back to German.
 const LANGS = ["de", "fr", "it", "en"];
 function initialLang() {
+  if (typeof document === "undefined") return "de"; // on the server, outside a page
   try { const saved = localStorage.getItem("courtos.lang"); if (LANGS.includes(saved)) return saved; } catch { /* storage may be blocked */ }
-  const nav = (navigator.language || "de").slice(0, 2);
+  const nav = (globalThis.navigator?.language || "de").slice(0, 2);
   return LANGS.includes(nav) ? nav : "de";
 }
 export let LANG = initialLang();
@@ -20,7 +21,8 @@ export function setLang(lang) {
   try { localStorage.setItem("courtos.lang", lang); } catch { /* ignore */ }
   document.documentElement.lang = lang;
 }
-document.documentElement.lang = LANG;
+// The server builds work products with these helpers; there is no page there.
+if (typeof document !== "undefined") document.documentElement.lang = LANG;
 
 // --- theme -----------------------------------------------------------------
 // Light by default; dark is a choice kept in this browser. theme.js applies it

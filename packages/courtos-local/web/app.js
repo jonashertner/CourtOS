@@ -252,8 +252,10 @@ function renderPlaces() {
       h("dt", {}, tr("Akten")), h("dd", {}, h("span.path", {}, c.root), h("button.link", { type: "button", onclick: () => reveal("source") }, tr("Zeigen"))),
       h("dt", {}, tr("Arbeitsordner")), h("dd", {}, h("span.path", {}, c.same_folder ? `${c.work} (.courtos)` : c.work),
         h("button.link", { type: "button", onclick: () => reveal("work") }, tr("Zeigen")),
-        c.sample ? null : h("button.link", { type: "button", onclick: move }, tr("Verschieben …")))),
-    h("p.note", {}, tr("Register, Fallgedächtnis, Ergebnisse und Arbeitsprodukte liegen im Arbeitsordner. Word zeigt denselben Fall wie dieses Fenster.")));
+        c.sample ? null : h("button.link", { type: "button", onclick: move }, tr("Verschieben …"))),
+      h("dt", {}, tr("Arbeitsprodukte")), h("dd", {}, c.products ? h("span.path", {}, c.products) : h("span.muted", {}, tr("entstehen mit der ersten Analyse")),
+        h("button.link", { type: "button", onclick: () => reveal("products") }, tr("Zeigen")))),
+    h("p.note", {}, tr("Jede Analyse wird als Markdown-Datei abgelegt, die Würdigung zusätzlich als Word-Dokument mit Fussnoten; die Dateien enthalten die echten Namen. Register, Fallgedächtnis und Notizen liegen im Unterordner .courtos. Word zeigt denselben Fall wie dieses Fenster.")));
 }
 
 // ---------------------------------------------------------------------------

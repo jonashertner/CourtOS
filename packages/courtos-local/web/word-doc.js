@@ -103,7 +103,9 @@ function decisionDraft(run) {
     const rows = run.result.rows.filter(r => r.part === part);
     if (!rows.length) continue;
     blocks.push({ heading: label("part", part) });
-    rows.forEach((row, i) => blocks.push({ ...para(claims.get(row.claim)), number: part === "disposition" ? i + 1 : null }));
+    // A fact the draft rests on says whether it is alleged, disputed or only a working assumption.
+    const lead = (row) => part === "facts" && row.status !== "analysis" ? cap(label("draftStatus", row.status)) : null;
+    rows.forEach((row, i) => blocks.push({ ...para(claims.get(row.claim), lead(row)), number: part === "disposition" ? i + 1 : null }));
   }
   return { kind: "outline", blocks };
 }
