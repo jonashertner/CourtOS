@@ -404,7 +404,7 @@ export function suggestAnonymisation(documents) {
       // harmless number, so CourtOS replaces it anyway.
       c.aliases.forEach(a => covered.add(normal(a)));
       candidates.push({ ...c, notes: ["ahv_checksum"], decision: "replace", source: "courtos", style: "label" });
-    } else if (["iban", "phone", "email", "address", "uid", "parcel", "url", "plate", "birthdate"].includes(c.kind)) {
+    } else if (["iban", "phone", "email", "address", "uid", "parcel", "url", "plate", "birthdate", "docket"].includes(c.kind)) {
       c.aliases.forEach(a => covered.add(normal(a)));
       const existing = overlapping(c);
       if (existing) {

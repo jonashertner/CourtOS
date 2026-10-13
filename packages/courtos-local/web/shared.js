@@ -118,7 +118,7 @@ const LABELS = {
   draftStatus: { alleged: "behauptet", disputed: "strittig", working_assumption: "Arbeitsannahme", analysis: "Analyse", proposal: "Vorschlag" },
   noteStatus: { proposed: "vorgeschlagen", adopted: "übernommen", disputed: "strittig", done: "erledigt" },
   noteKind: { note: "Notiz", question: "Offene Frage", assumption: "Arbeitsannahme", contradiction: "Widerspruch" },
-  kind: { person: "Person", organisation: "Organisation", address: "Adresse", place: "Ort", parcel: "Grundstück", email: "E-Mail", phone: "Telefon", iban: "Konto (IBAN)", ahv: "AHV-Nummer", uid: "UID", url: "Profil/Link", plate: "Kennzeichen", birthdate: "Geburtsdatum", insured: "Versichertennummer", zemis: "ZEMIS-Nummer", document: "Ausweisnummer", account: "Kontonummer", number: "Nummer", identifier: "Kennung" },
+  kind: { person: "Person", organisation: "Organisation", address: "Adresse", place: "Ort", parcel: "Grundstück", email: "E-Mail", phone: "Telefon", iban: "Konto (IBAN)", ahv: "AHV-Nummer", uid: "UID", url: "Profil/Link", plate: "Kennzeichen", birthdate: "Geburtsdatum", insured: "Versichertennummer", zemis: "ZEMIS-Nummer", document: "Ausweisnummer", docket: "Verfahrensnummer", account: "Kontonummer", number: "Nummer", identifier: "Kennung" },
 };
 export const label = (group, value) => (LABELS[group]?.[value] ? tr(LABELS[group][value]) : value ?? "");
 /** A label in a given language rather than the interface language (e.g. the language of the proceedings). */

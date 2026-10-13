@@ -16,7 +16,7 @@ const KIND_GROUPS = [
   ["Personen", ["person"]],
   ["Organisationen", ["organisation"]],
   ["Adressen und Orte", ["address", "place", "parcel"]],
-  ["Kennnummern und Kontakt", ["email", "phone", "iban", "ahv", "uid", "url", "plate", "birthdate", "insured", "zemis", "document", "account", "identifier", "number"]],
+  ["Kennnummern und Kontakt", ["email", "phone", "iban", "ahv", "uid", "url", "plate", "birthdate", "insured", "zemis", "document", "docket", "account", "identifier", "number"]],
 ];
 const NOTES = {
   check_word: "Steht nur am Satzanfang oder ist sehr kurz und ist ein gewöhnliches Wort, kein bekannter Nachname. Bleibt lesbar, bis Sie es ersetzen.",

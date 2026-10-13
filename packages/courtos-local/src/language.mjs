@@ -33,25 +33,25 @@ export const REPLACEMENT_PREFIX = {
   de: {
     person: "Person", organisation: "Organisation", address: "Adresse", parcel: "Grundstück", place: "Ort",
     email: "E-Mail", iban: "Konto", phone: "Telefon", ahv: "AHV", uid: "UID", url: "Link",
-    plate: "Kennzeichen", birthdate: "Geburtsdatum", insured: "Versichertennummer", zemis: "ZEMIS-Nr.", document: "Ausweisnummer",
+    plate: "Kennzeichen", birthdate: "Geburtsdatum", insured: "Versichertennummer", zemis: "ZEMIS-Nr.", document: "Ausweisnummer", docket: "Verfahrensnummer",
     account: "Kontonummer", number: "Nummer", identifier: "Kennung",
   },
   fr: {
     person: "Personne", organisation: "Organisation", address: "Adresse", parcel: "Parcelle", place: "Lieu",
     email: "Courriel", iban: "Compte", phone: "Téléphone", ahv: "AVS", uid: "IDE", url: "Lien",
-    plate: "Plaque", birthdate: "Date de naissance", insured: "N° d’assuré", zemis: "N° SYMIC", document: "N° de pièce d’identité",
+    plate: "Plaque", birthdate: "Date de naissance", insured: "N° d’assuré", zemis: "N° SYMIC", document: "N° de pièce d’identité", docket: "N° de procédure",
     account: "N° de compte", number: "Numéro", identifier: "Identifiant",
   },
   it: {
     person: "Persona", organisation: "Organizzazione", address: "Indirizzo", parcel: "Fondo", place: "Luogo",
     email: "E-mail", iban: "Conto", phone: "Telefono", ahv: "AVS", uid: "IDI", url: "Link",
-    plate: "Targa", birthdate: "Data di nascita", insured: "N. assicurato", zemis: "N. SIMIC", document: "N. documento d’identità",
+    plate: "Targa", birthdate: "Data di nascita", insured: "N. assicurato", zemis: "N. SIMIC", document: "N. documento d’identità", docket: "N. incarto",
     account: "N. conto", number: "Numero", identifier: "Identificativo",
   },
   en: {
     person: "Person", organisation: "Organisation", address: "Address", parcel: "Parcel", place: "Place",
     email: "Email", iban: "Account", phone: "Phone", ahv: "AHV", uid: "UID", url: "Link",
-    plate: "Plate", birthdate: "Date of birth", insured: "Insured no.", zemis: "ZEMIS no.", document: "ID document no.",
+    plate: "Plate", birthdate: "Date of birth", insured: "Insured no.", zemis: "ZEMIS no.", document: "ID document no.", docket: "Case no.",
     account: "Account no.", number: "Number", identifier: "Identifier",
   },
 };

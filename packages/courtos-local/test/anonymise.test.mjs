@@ -178,3 +178,24 @@ test("a flattened line of signatures is several people, not one", () => {
   const kept = consolidatePersons([person(["Georges Bettex"]), person(["Werner Stucki"]), person(["Georges Bettex Werner Stucki Zbinden"])]);
   assert.ok(kept.some(c => c.aliases.includes("Georges Bettex Werner Stucki Zbinden")));
 });
+
+test("a court case number is replaced wherever the files introduce one, a cited precedent stays readable", () => {
+  const dockets = (text) => detected(text).filter(([kind]) => kind === "docket").map(([, ...aliases]) => aliases[0]);
+  for (const [text, number] of [
+    ["Cause CPC n° PC.2026.0914", "PC.2026.0914"], ["Verfahren Nr. HG.2026.112", "HG.2026.112"], ["dans la cause 1C_412/2026, Bettex", "1C_412/2026"],
+    ["**Case No. HG ICC 26 7**", "HG ICC 26 7"], ["Geschäfts-Nr. 2024/123", "2024/123"], ["Dossier n° 45678", "45678"],
+    // The cantonal forms with a year are case numbers on their own.
+    ["Causa Lanfranchi c. Technoval Swiss AG - PD.2026.184", "PD.2026.184"], ["son arrêt AC.2025.0398 du 2 avril", "AC.2025.0398"], ["Klage HG260074-O", "HG260074-O"],
+  ]) assert.deepEqual(dockets(text), [number], text);
+  for (const text of ["(BGE 81 II 56 E. 3; 4A_399/2018 E. 3.2)", "à cause de la TVA", "im Verfahren 2025 wurde", "Procédure du 12.03.2025", "AS 2020 1234", "ISO 230-2", "Dossier 2.1"]) {
+    assert.deepEqual(dockets(text), [], text);
+  }
+});
+
+test("a postcode is followed by a town of two letters at least, so a consideration is no place", () => {
+  const places = (text) => detected(text).filter(([kind]) => kind === "place").map(([, ...aliases]) => aliases[0]);
+  assert.deepEqual(places("(BGE 81 II 56 E. 3; 4A_399/2018 E. 3.2)"), []);
+  assert.deepEqual(places("9000 St. Gallen"), ["9000 St. Gallen"]);
+  assert.deepEqual(places("6592 S. Antonino"), ["6592 S. Antonino"]);
+  assert.deepEqual(places("1180 Rolle."), ["1180 Rolle"]);
+});

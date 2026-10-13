@@ -9,7 +9,7 @@
 import { aliasExpression, escapeRegex } from "./util.mjs";
 import { REPLACEMENT_PREFIX } from "./language.mjs";
 
-export const STRUCTURED_KINDS = new Set(["email", "iban", "phone", "ahv", "uid", "url", "plate", "birthdate"]);
+export const STRUCTURED_KINDS = new Set(["email", "iban", "phone", "ahv", "uid", "url", "plate", "birthdate", "docket"]);
 /** German replacement labels; other case languages in language.mjs. */
 export const PREFIX = REPLACEMENT_PREFIX.de;
 
@@ -37,7 +37,19 @@ const VEHICLE = /(?:kontrollschild|kennzeichen|nummernschild|fahrzeug|auto|plaqu
 const MONTHS = "Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|dicembre|January|February|March|May|June|July|October|December";
 const DATE = `(?:\\d{1,2}(?:\\.|er|°)?[ \\t]*(?:\\d{1,2}\\.|${MONTHS})[ \\t]*\\d{4}|\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}/\\d{1,2}/\\d{2,4}|(?:${MONTHS})[ \\t]+\\d{1,2},?[ \\t]+\\d{4})`;
 const BIRTH = new RegExp(`(?<![\\p{L}])(?:born(?:[ \\t]+on)?|date[ \\t]+of[ \\t]+birth|D\\.?O\\.?B\\.?|geb(?:oren)?\\.?(?:[ \\t]+am)?|Geburtsdatum|n[ée]e?(?:[ \\t]+le)?|date[ \\t]+de[ \\t]+naissance|nat[oa](?:[ \\t]+il)?|data[ \\t]+di[ \\t]+nascita)[ \\t:]*(${DATE})`, "giu");
+// Court case numbers ("Verfahren Nr. HG.2026.112", "Cause CPC n° PC.2026.0914", "dans la cause
+// 1C_412/2026", "Case No. HG ICC 26 7"). A case number leads to the parties as surely as a name.
+// After a word that introduces one, any number with letters or separators counts; on its own,
+// only the cantonal forms with a year ("PD.2026.184", "HG260074-O"). Precedents cited by their
+// number ("4A_399/2018 E. 3.2", "BGE 81 II 56") stay readable unless the files call one a case.
+const DOCKET_WORD = "(?:Verfahren(?:s(?:nummer|-Nr\\.))?|Geschäfts(?:nummer|-?Nr\\.)|Prozess(?:nummer|-?Nr\\.)|Proz\\.-?Nr\\.|Fall(?:nummer|-?Nr\\.)|Aktenzeichen|Az\\.|Dossier|[Cc]ause|[Cc]ausa|[Pp]rocédure|[Aa]ffaire|[Ii]ncarto|[Pp]rocedura|Case|Docket)";
+const DOCKET_TOKEN = "(?:(?=[\\p{L}\\p{N}._/-]*\\d)[\\p{Lu}\\d][\\p{L}\\d]*(?:[._/-][\\p{L}\\d]+)+|\\p{Lu}{1,4}\\d{4,}(?:-\\p{Lu})?|\\d{5,}|\\p{Lu}{1,4}(?:[ \\t]\\p{Lu}{2,4})?[ \\t]\\d{2,4}[ \\t]\\d{1,6})";
+const DOCKET = new RegExp(`(?<![${L}])${DOCKET_WORD}(?:[ \\t]+\\p{Lu}{2,5})?(?:[ \\t]*(?:Nr\\.|n°|N°|nº|no\\.|No\\.|n\\.|Nummer|number))?[ \\t:]*(${DOCKET_TOKEN})(?![\\p{L}\\p{N}])`, "gu");
+const COURT_NUMBER = /(?<![\p{L}\p{N}._/-])(?:\p{Lu}{1,4}\d?[._](?:19|20)\d{2}[._]\d{1,6}|\p{Lu}{2}\d{6}-\p{Lu})(?![\p{L}\p{N}]|[._/-][\p{L}\p{N}])/gu;
+const DATE_ONLY = /^\d{1,2}[./]\d{1,2}[./]\d{2,4}$/u;
+
 // Initials standing for a person ("D.L.", "U.B."), not common abbreviations.
+
 const INITIALS = /(?<![\p{L}\p{N}.])\p{Lu}\.[ ]?\p{Lu}\.(?!\p{L})(?![ ]?\p{Lu}\.)/gu;
 const NOT_INITIALS = new Set("S.A. N.B. P.S. U.S. U.K. E.U. A.D. B.C. P.O. C.V. Q.C. K.C. R.I.P.".split(" "));
 
@@ -53,7 +65,9 @@ const TITLES = "(?:(?:Herrn?|Frau|Dr\\.(?:\\s?(?:iur|med|phil|oec)\\.)?|Prof\\.|
 const TITLED_PERSON = new RegExp(`(?<![${L}])${TITLES}+(${NAME}(?:[ \\t]+${NAME}){0,2})`, "gu");
 const ROLE_PERSON = new RegExp(`(?<![${L}])(?:Geschäftsführerin|Geschäftsführer|Bauleiterin|Bauleiter|Sachverständigen|Sachverständige|Sachverständiger|Gutachterin|Gutachter|Zeugin|Zeuge|Referentin|Referent|Verwaltungsrätin|Verwaltungsrat|Präsidentin|Präsident|Vertreterin|Vertreter|témoin|experte?|perito|testimone|witness|expert)\\s+(${NAME}[ \\t]+${NAME})`, "gu");
 const STREET = new RegExp(`(?<![${L}])(?:[\\p{Lu}][${L}-]*(?:strasse|straße|str\\.|gasse|weg|platz|rain|halde|quai|allee|ring|matte|graben|steig)|(?:[Rr]ue|[Cc]hemin|[Cc]h\\.|[Aa]venue|[Aa]v\\.|[Rr]oute|[Pp]lace|[Bb]oulevard|[Vv]ia|[Vv]iale|[Pp]iazza|[Vv]icolo)(?:\\s+(?:de\\s+la|de|des|du|del|della|dei|d'))?\\s+[\\p{Lu}][${L}'’-]+)\\s+\\d{1,4}[a-z]?(?![${L}\\d])`, "gu");
-const PLACE = new RegExp(`(?<![\\d.'’])([1-9]\\d{3})[ \\t\\u00a0]+(\\p{Lu}[${L}.-]+(?:\\s(?:bei|b\\.|am|an der|sur|près|di|im)\\s\\p{Lu}[${L}.-]+)?)(?![${L}])`, "gu");
+// A town has two letters at least, after an abbreviation such as "St." or "S." ("9000 St. Gallen",
+// "6592 S. Antonino"): "4A_399/2018 E. 3.2" names a consideration, not the town "E.".
+const PLACE = new RegExp(`(?<![\\d.'’])([1-9]\\d{3})[ \\t\\u00a0]+((?:\\p{Lu}\\p{Ll}{0,2}\\.[ \\t]?)?\\p{Lu}[${L}][${L}.-]*(?:\\s(?:bei|b\\.|am|an der|sur|près|di|im)\\s\\p{Lu}[${L}.-]+)?)(?![${L}])`, "gu");
 const MAJOR_PLACES = new Set("Zürich Genève Genf Basel Bern Lausanne Winterthur Luzern Lucerne St.Gallen Lugano Biel Bienne Thun Berne Berna Bâle Basilea Zurich Zurigo Ginevra Soleure Coire Thoune Saint-Gall Schaffhouse Fribourg Freiburg Neuchâtel Schaffhausen Chur Sion Sitten Zug Aarau Bellinzona Locarno Solothurn Frauenfeld Liestal Delémont Glarus Altdorf Sarnen Stans Schwyz Herisau Appenzell".split(" "));
 // "2025 CHF 210'000" in a table is a year and an amount, not a postcode and a town.
 const CURRENCY = new Set(["CHF", "EUR", "USD", "GBP", "Fr.", "SFr."]);
@@ -117,6 +131,7 @@ export function detectCandidates(documents) {
       structured.push({ kind: "plate", value: match[0], start: match.index });
     }
     for (const hit of collect(BIRTH, text, 1)) structured.push({ kind: "birthdate", ...hit });
+    for (const hit of [...collect(DOCKET, text, 1), ...collect(COURT_NUMBER, text)]) if (hit.value.length >= 5 && !DATE_ONLY.test(hit.value)) structured.push({ kind: "docket", ...hit });
     structured.sort((a, b) => a.start - b.start || b.value.length - a.value.length);
     let reach = -1;
     for (const hit of structured) {
