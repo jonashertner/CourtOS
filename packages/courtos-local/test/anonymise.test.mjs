@@ -89,6 +89,13 @@ test("in the samples, headings, document labels and words written in lower case 
   const en = await mirrorOf("HG ICC 2026 7 Zytglogge Praezisionsinstrumente AG");
   assert.equal(en.register.entities.find(e => e.aliases.includes("May"))?.match, "capitalised");
   assert.match(en.text, / may /u);
+  // "C. Georges et Marianne Bettex" opens a lettered paragraph: "C." is no initial of a second person,
+  // so Georges Bettex keeps one entry (it had three) and his name is replaced everywhere.
+  const permis = await mirrorOf("1C_412_2026 Bettex");
+  const georges = permis.register.entities.filter(e => e.decision === "replace" && e.aliases.some(a => /(?<!\p{L})Georges(?!\p{L})/u.test(a)));
+  assert.deepEqual(georges.map(e => e.aliases.includes("Georges Bettex") && e.aliases.includes("Georges")), [true]);
+  assert.doesNotMatch(permis.text, /Georges|Bettex/u);
+  assert.match(permis.text, /\nC\. \p{Lu}+\.________ et /u);
 });
 
 test("one person's entries join; a surname standing alone joins its person or, if shared, stands on its own", () => {

@@ -301,9 +301,14 @@ export function suggestAnonymisation(documents) {
 
   // A heading opens with a letter and an ordinary word ("C. Sur l'objection", "B. Zum Schaden"):
   // that is no initial and surname.
+  // So does a paragraph letter before a name ("C. Georges et Marianne Bettex") when that name
+  // is reported alone as well and is replaced through its own entry: the name stays replaced,
+  // and "C." does not become a rival full name that keeps "Georges" from its person.
+  const alone = new Set([...result.people, ...result.ambiguous].flatMap(p => p.mentions.map(m => m.text.trim())).filter(f => !/\s/u.test(f)));
+  const replacedAlone = (word) => alone.has(word) && !LABEL_WORDS.has(word.toLocaleLowerCase("de")) && !MONTHS.has(word.toLocaleLowerCase("de"));
   const heading = (m) => {
     const word = /^\p{Lu}\.\s+(\p{L}+)$/u.exec(m.text.trim())?.[1];
-    return Boolean(word) && ordinary(word) && /(?:^|\n)[ \t]*$/.test(where[m.part].text.slice(0, m.start));
+    return Boolean(word) && (ordinary(word) || replacedAlone(word)) && /(?:^|\n)[ \t]*$/.test(where[m.part].text.slice(0, m.start));
   };
 
   for (const person of result.people) {
