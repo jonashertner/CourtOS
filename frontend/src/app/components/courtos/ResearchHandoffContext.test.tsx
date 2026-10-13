@@ -16,7 +16,8 @@ const record = (revision = 1, query = "Word-Anfrage", direction: "to_browser" | 
 function Workspace({ documentScope = scope }: { documentScope?: string | null }) {
     const handoff = useResearchHandoff()!;
     const [snapshot, setSnapshot] = useState(state());
-    const current = useRef(snapshot); current.current = snapshot;
+    const current = useRef(snapshot);
+    useEffect(() => { current.current = snapshot; }, [snapshot]);
     const register = handoff.register, changed = handoff.changed, bind = handoff.bindWordDocument;
     useEffect(() => register({ getState: () => current.current, applyState: next => setSnapshot(next) }), [register]);
     useEffect(() => { changed(snapshot); }, [snapshot, changed]);

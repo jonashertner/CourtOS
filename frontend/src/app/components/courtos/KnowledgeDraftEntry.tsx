@@ -17,6 +17,7 @@ export function KnowledgeDraftEntry({ owner, inputRef }: { owner: string; inputR
         const draft = getKnowledgeDraft(owner);
         if (!draft) return;
         if (inputRef.current?.prepareKnowledgeDraft?.(draft.prompt, draft.documents)) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- a stored knowledge draft is read once per owner
             consumeKnowledgeDraft(draft); setStatus("prepared");
         } else setStatus("pending");
     }, [owner, inputRef]);
