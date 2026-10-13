@@ -393,6 +393,9 @@ export class AgentRun extends EventEmitter {
               content = JSON.stringify(out);
               isError = Boolean(out.error);
               for (const r of out.results ?? []) this.guard.allow(`${r.regeste ?? ""} ${r.snippet ?? ""}`);
+              // The results go out as JSON: a name near a snippet's end is checked against the
+              // serialised text around it. Everything in it came from OpenCaseLaw.
+              if (out.results) this.guard.allow(content);
               this.trace("caselaw_search", { query: String(call.input?.query ?? "").slice(0, 200), hits: out.results?.length ?? 0, error: out.error ?? null });
             } else if (call.name === "read_decision" && TASKS[this.task].caseLaw) {
               const out = await this.toolReadDecision(call.input ?? {});

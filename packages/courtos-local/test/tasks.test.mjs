@@ -93,6 +93,25 @@ test("a case-law query that carries a registered name is never sent", async () =
   } finally { await cleanup(); }
 });
 
+test("a registered name at the end of a search snippet is public text and does not block the next request", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    await store.release({ model: "demo", budgetChf: null });
+    const caselaw = mockCaseLaw();
+    // The snippet ends near the name, so the text around it in the request runs into the
+    // JSON that carries the results ("Keller.\"},…"), which the bare snippet does not contain.
+    caselaw.search = async (query) => { caselaw.calls.push(["search", query]); return { total: 1, results: [{ decision_id: "bge_999_II_1", docket: "BGE 999 II 1", date: "2020-01-01", court: "Bundesgericht", language: "de", regeste: "Mängelrüge", snippet: "vertreten durch Rechtsanwalt Hans-Peter Keller." }] }; };
+    const provider = new ScriptedProvider([
+      [toolUse("t1", "search_case_law", { query: "Mängelrüge geheimer Mangel" })],
+      [toolUse("t2", "list_documents", {})],
+    ]);
+    const run = new AgentRun({ store, provider, task: "legal_claims", model: "demo", caselaw });
+    await run.run();
+    assert.notEqual(run.status, "blocked", JSON.stringify(run.error));
+    assert.match(JSON.stringify(provider.calls[1]), /Hans-Peter Keller/);
+  } finally { await cleanup(); }
+});
+
 test("hypothetical_impact uses the user's working note as the assumption", async () => {
   const { store, cleanup } = await freshCase();
   try {
