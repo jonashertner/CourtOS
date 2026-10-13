@@ -27,6 +27,7 @@ import { backupArchive } from "./backup.mjs";
 import { staleness } from "./verify.mjs";
 import { citationRects, pageLayouts } from "./layout.mjs";
 import { CourtosError, randomId, readJson, writeAtomic } from "./util.mjs";
+import { messages, terminalLanguage } from "./terminal.mjs";
 
 const WEB = new URL("../web/", import.meta.url);
 // pdf.js for showing original pages in the browser, served from the installed package.
@@ -106,6 +107,7 @@ function openPath(path) {
 
 export async function startServer({ port = 4311, folder = null, openBrowser = true, samples = [], log = console.log, choose = chooseFolder, show = openPath, certDirs = certificateDirs() } = {}) {
   const tls = await loadCertificates(certDirs);
+  const say = messages(await terminalLanguage());
   const scheme = tls ? "https" : "http";
   const origin = `${scheme}://localhost:${port}`;
   const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`]);
@@ -180,7 +182,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       productsFailed = false;
       if (written || before) { casesChanged(); broadcast("products", {}); }
     } catch (error) {
-      log(`Arbeitsprodukte nicht geschrieben (${error.code ?? "Fehler"})`);
+      log(say("productsFailed", { code: error.code ?? say("error") }));
       productsFailed = true;
       broadcast("products", {});
     }
@@ -707,14 +709,12 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
   });
   if (folder) await openCase(await addCase({ source: folder }));
   const pairUrl = `${origin}/#pair=${pairToken}`;
-  log(`CourtOS läuft auf ${origin}`);
-  log(`Im Browser öffnen (gilt einmal): ${pairUrl}`);
+  log(say("running", { origin }));
+  log(say("pair", { url: pairUrl }));
   if (!tls) {
     // Word loads add-ins over https only; the browser works either way.
-    log("Hinweis: Kein Entwicklerzertifikat für localhost gefunden. Der Browser funktioniert, Word nicht.");
-    log(process.env.COURTOS_APP
-      ? "Für Word im CourtOS-Menü „Zertifikat für Word einrichten …“ wählen."
-      : "Für Word einmal ausführen: npx office-addin-dev-certs install, dann CourtOS neu starten.");
+    log(say("noCert"));
+    log(say(process.env.COURTOS_APP ? "certApp" : "certCli"));
   }
   if (openBrowser) openPath(pairUrl);
   /** A new one-time link for the menu-bar app; an unused earlier link stops working. */

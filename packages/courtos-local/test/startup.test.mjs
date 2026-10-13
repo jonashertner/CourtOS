@@ -1,14 +1,23 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
-import { chmod, mkdtemp, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { certificateDirs, loadCertificates, startServer } from "../src/server.mjs";
+import { MESSAGE_KEYS, terminalLanguage } from "../src/terminal.mjs";
 
 const cli = fileURLToPath(new URL("../bin/courtos-local.mjs", import.meta.url));
+
+/** A home folder whose saved interface language is `language`. */
+async function homeIn(language) {
+  const home = await mkdtemp(join(tmpdir(), "courtos-home-"));
+  await mkdir(join(home, ".config", "courtos"), { recursive: true });
+  await writeFile(join(home, ".config", "courtos", "preferences.json"), JSON.stringify({ language }));
+  return home;
+}
 
 /** A port nothing listens on, so the test never collides with a running CourtOS. */
 async function freePort() {
@@ -20,7 +29,7 @@ async function freePort() {
 }
 
 test("without a localhost certificate the start says that Word will not work, and how to fix it", async (t) => {
-  process.env.HOME = await mkdtemp(join(tmpdir(), "courtos-home-"));
+  process.env.HOME = await homeIn("de");
   const lines = [];
   const app = await startServer({ port: await freePort(), openBrowser: false, log: (l) => lines.push(l), certDirs: certificateDirs({}, "linux") });
   t.after(() => app.close());
@@ -41,13 +50,38 @@ test("a busy port ends the start with a plain message, not a stack trace", async
   await new Promise(resolve => busy.listen(0, "127.0.0.1", resolve));
   t.after(() => busy.close());
   const { port } = busy.address();
-  const home = await mkdtemp(join(tmpdir(), "courtos-home-"));
+  const home = await homeIn("de");
   const result = await new Promise(resolve => execFile(process.execPath, [cli, "--port", String(port), "--no-open"], { env: { ...process.env, HOME: home } },
     (error, stdout, stderr) => resolve({ code: error?.code ?? 0, stderr })));
   assert.equal(result.code, 1);
   assert.match(result.stderr, new RegExp(`Port ${port} ist belegt`));
   assert.match(result.stderr, /--port \d+/);
   assert.doesNotMatch(result.stderr, /\n\s+at /, "no stack trace");
+});
+
+test("the terminal speaks the language chosen in the interface, else the system's, else German", async (t) => {
+  assert.equal(await terminalLanguage({ home: await homeIn("fr"), env: { LANG: "it_CH.UTF-8" } }), "fr", "the saved choice comes first");
+  const none = await mkdtemp(join(tmpdir(), "courtos-home-"));
+  assert.equal(await terminalLanguage({ home: none, env: { LANG: "it_CH.UTF-8" } }), "it");
+  assert.equal(await terminalLanguage({ home: none, env: { LC_ALL: "en_GB.UTF-8", LANG: "fr_CH.UTF-8" } }), "en", "LC_ALL wins over LANG");
+  assert.equal(await terminalLanguage({ home: none, env: { LANG: "C" } }), "de");
+  assert.equal(await terminalLanguage({ home: await homeIn("xx"), env: {} }), "de", "an unknown saved language is ignored");
+  for (const language of ["fr", "it", "en"]) assert.deepEqual(MESSAGE_KEYS[language], MESSAGE_KEYS.de, `every message in ${language}`);
+
+  process.env.HOME = await homeIn("fr");
+  const lines = [];
+  const app = await startServer({ port: await freePort(), openBrowser: false, log: (l) => lines.push(l), certDirs: certificateDirs({}, "linux") });
+  t.after(() => app.close());
+  assert.match(lines.join("\n"), /Ouvrir dans le navigateur \(valable une fois\) : http:\/\/localhost:\d+\/#pair=/);
+  assert.doesNotMatch(lines.join("\n"), /gilt einmal|Word nicht/);
+
+  const busy = createServer();
+  await new Promise(resolve => busy.listen(0, "127.0.0.1", resolve));
+  t.after(() => busy.close());
+  const { port } = busy.address();
+  const italian = await homeIn("it");
+  const stderr = await new Promise(resolve => execFile(process.execPath, [cli, "--port", String(port), "--no-open"], { env: { ...process.env, HOME: italian } }, (_e, _out, err) => resolve(err)));
+  assert.match(stderr, new RegExp(`La porta ${port} è occupata`));
 });
 
 test("started by the menu-bar app, CourtOS gives a fresh one-time link on request and ends with the app", async (t) => {

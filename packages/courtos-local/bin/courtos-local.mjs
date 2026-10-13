@@ -10,14 +10,16 @@ import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { prepareSamples, SAMPLES } from "../src/samples.mjs";
 import { startServer } from "../src/server.mjs";
+import { messages, terminalLanguage } from "../src/terminal.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
 const option = (name, fallback) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : fallback; };
 const port = Number(option("--port", process.env.COURTOS_PORT ?? 4311));
+const say = messages(await terminalLanguage());
 
 if (major() < 22) {
-  console.error("CourtOS benötigt Node.js 22 oder neuer.");
+  console.error(say("node"));
   process.exit(1);
 }
 
@@ -32,20 +34,20 @@ if (args[0] === "install-word") {
     await writeFile(path, manifest);
     const id = /<Id>([^<]+)<\/Id>/.exec(manifest)[1];
     execFileSync("reg.exe", ["add", "HKCU\\Software\\Microsoft\\Office\\16.0\\WEF\\Developer", "/v", id, "/t", "REG_SZ", "/d", path, "/f"], { windowsHide: true });
-    console.log(`Word-Add-in installiert: ${path}`);
-    console.log("Word neu starten, dann Start › Add-ins › CourtOS.");
+    console.log(say("wordInstalled", { path }));
+    console.log(say("wordRestartWin"));
     process.exit(0);
   }
   const target = join(homedir(), "Library", "Containers", "com.microsoft.Word", "Data", "Documents", "wef");
   try {
     await mkdir(target, { recursive: true });
     await writeFile(join(target, "courtos-local.xml"), manifest);
-    console.log(`Word-Add-in installiert: ${join(target, "courtos-local.xml")}`);
-    console.log("Word neu starten, dann Einfügen › Add-ins › Meine Add-ins › CourtOS.");
+    console.log(say("wordInstalled", { path: join(target, "courtos-local.xml") }));
+    console.log(say("wordRestartMac"));
   } catch {
     const fallback = join(process.cwd(), "courtos-local-manifest.xml");
     await writeFile(fallback, manifest);
-    console.log(`Manifest geschrieben: ${fallback} (manuell in Word hochladen).`);
+    console.log(say("manifestWritten", { path: fallback }));
   }
   process.exit(0);
 }
@@ -58,7 +60,7 @@ const sampleId = flag("--demo") ? "alpenblick" : option("--sample", null);
 if (sampleId) {
   const sample = samples.find(s => s.id === sampleId);
   if (!sample) {
-    console.error(`Unbekanntes Beispieldossier: ${sampleId}. Vorhanden: ${SAMPLES.map(s => s.id).join(", ")}`);
+    console.error(say("unknownSample", { id: sampleId, list: SAMPLES.map(s => s.id).join(", ") }));
     process.exit(1);
   }
   folder = sample.path;
@@ -79,9 +81,9 @@ try {
 } catch (error) {
   if (error.code !== "port_in_use") throw error;
   if (control) console.log(`COURTOS_ERROR port_in_use ${port}`);
-  console.error(`Port ${port} ist belegt. Läuft CourtOS schon? Dann dort weiterarbeiten.`);
-  console.error(`Sonst auf einem anderen Port starten: courtos-local --port ${port + 10}`);
-  console.error(`(Für Word danach auch: courtos-local install-word --port ${port + 10})`);
+  console.error(say("portBusy", { port }));
+  console.error(say("otherPort", { next: port + 10 }));
+  console.error(say("otherPortWord", { next: port + 10 }));
   process.exit(1);
 }
 
