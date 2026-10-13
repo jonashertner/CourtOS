@@ -15,7 +15,8 @@ const media = (query) => {
   }
   return blocks.join("\n");
 };
-const rule = (block, selector) => new RegExp(`(?:^|[}\\s,])${selector.replace(/[.]/g, "\\.")}\\s*\\{([^}]*)\\}`, "m").exec(block)?.[1] ?? "";
+const escape = (text) => text.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+const rule = (block, selector) => new RegExp(`(?:^|[}\\s,])${escape(selector)}\\s*\\{([^}]*)\\}`, "m").exec(block)?.[1] ?? "";
 
 test("the Protection tab puts the page under the register below 1260 pixels, in a column that cannot outgrow the window", () => {
   assert.match(rule(media("max-width: 1260px"), ".privacy"), /grid-template-columns:\s*minmax\(0, 1fr\)/);

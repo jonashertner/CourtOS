@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { MENU, messages } from "../src/terminal.mjs";
 
 const source = (path) => readFile(new URL(`../installer/${path}`, import.meta.url), "utf8");
+const escape = (text) => text.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
 const placeholders = (text) => [...text.matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort();
 
 test("every menu text exists in German, French, Italian and English, with the same placeholders", () => {
@@ -24,8 +25,8 @@ test("both apps show only texts from menu.json, which the installed package cont
   for (const [path, call, add] of [["macos/CourtOS.swift", "Strings.t", "add(menu, "], ["windows/CourtOS.cs", "Strings.T", "Add(menu, "]]) {
     const code = await source(path);
     assert.match(code, /app[/"].*node_modules.*@courtos.*local.*src.*menu\.json/, `${path} reads the bundled menu.json`);
-    const keys = [...code.matchAll(new RegExp(`${call.replace(".", "\\.")}\\(([^)]*)\\)`, "g"))].flatMap(m => [...m[1].matchAll(/"(\w+)"/g)].map(k => k[1]))
-      .concat([...code.matchAll(new RegExp(`${add.replace("(", "\\(")}"(\\w+)"`, "g"))].map(m => m[1]));
+    const keys = [...code.matchAll(new RegExp(`${escape(call)}\\(([^)]*)\\)`, "g"))].flatMap(m => [...m[1].matchAll(/"(\w+)"/g)].map(k => k[1]))
+      .concat([...code.matchAll(new RegExp(`${escape(add)}"(\\w+)"`, "g"))].map(m => m[1]));
     const known = new Set([...Object.keys(MENU.de), "port", "name"]);
     for (const key of keys) assert.ok(known.has(key), `${path} uses an unknown text: ${key}`);
     for (const key of ["open", "quit", "certificate", "busy", "running", "stopped", "startFailed", "crashed", "portBusy"]) assert.ok(keys.includes(key), `${path} shows ${key}`);
