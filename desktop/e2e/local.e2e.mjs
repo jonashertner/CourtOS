@@ -166,7 +166,7 @@ try {
     organisation: "Mike Local CI",
   });
   await page
-    .getByRole("button", { name: "Assistant", exact: true })
+    .getByRole("button", { name: "Assistent", exact: true })
     .first()
     .waitFor({ timeout: 20_000 });
   console.log(`✓ signed up + onboarded + auto-signed-in as ${EMAIL} (no network)`);
@@ -303,7 +303,7 @@ try {
       organisation: "Mike Local CI",
     });
     await page
-      .getByRole("button", { name: "Assistant", exact: true })
+      .getByRole("button", { name: "Assistent", exact: true })
       .first()
       .waitFor({ timeout: 20_000 });
     console.log(`✓ guest mode, ${round}: /login → signed-in product`);
@@ -341,7 +341,7 @@ try {
   await page.waitForURL((url) => url.href.startsWith(FRONTEND_URL), { timeout: 120_000 });
   const warmBootMs = Date.now() - relaunchedAt;
   await page
-    .getByRole("button", { name: "Assistant", exact: true })
+    .getByRole("button", { name: "Assistent", exact: true })
     .first()
     .waitFor({ timeout: 30_000 });
   assert(!/\/(login|signup|onboarding)/.test(page.url()),
