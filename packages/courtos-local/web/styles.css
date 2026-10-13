@@ -160,10 +160,14 @@ table.docs th { text-align: left; font-weight: 500; color: var(--muted); font-si
 table.docs td { padding: 9px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
 table.docs td.num { font-variant-numeric: tabular-nums; text-align: right; }
 table.docs select { border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper); padding: 3px 6px; }
+/* On a phone the five columns do not fit: the table scrolls, not the page. */
+@media (max-width: 640px) { table.docs { display: block; overflow-x: auto; } }
 .file { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 
 /* Privacy step ------------------------------------------------------ */
 .privacy { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); gap: 32px; align-items: start; }
+/* The page beside the register needs about 420 pixels; below that it goes underneath. */
+@media (max-width: 1260px) { .privacy { grid-template-columns: minmax(0, 1fr); } .preview { position: static; } }
 .register-group { margin-bottom: 22px; }
 .register-group h2 { font-size: 13px; color: var(--muted); font-weight: 500; padding-bottom: 6px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; }
 .entity { border-bottom: 1px solid var(--rule); }
@@ -197,18 +201,19 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
 
 .preview { position: sticky; top: 64px; }
 .preview-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-.preview-bar select { border: 1px solid var(--rule); border-radius: var(--r); padding: 4px 8px; background: var(--paper); max-width: 260px; }
+.preview-bar select { border: 1px solid var(--rule); border-radius: var(--r); padding: 4px 8px; background: var(--paper); max-width: min(260px, 100%); min-width: 0; }
 .veil-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
 .veil-toggle button { border: 0; background: none; padding: 5px 12px; cursor: pointer; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
 .veil-toggle button[aria-pressed="true"].o { background: var(--local-wash); color: var(--local); }
 .veil-toggle button[aria-pressed="true"].d { background: var(--external-wash); color: var(--external); }
-.page-text { font-family: var(--text); font-size: 15.5px; line-height: 1.58; white-space: pre-wrap; overflow-wrap: anywhere; max-height: calc(100vh - 260px); overflow-y: auto; padding: 22px 26px; border: 1px solid var(--rule); border-radius: var(--r); max-width: 74ch; }
+.page-text { font-family: var(--text); font-size: 15.5px; line-height: 1.58; white-space: pre-wrap; overflow-wrap: anywhere; max-height: calc(100vh - 260px); overflow-y: auto; overflow-x: hidden; padding: 22px 26px; border: 1px solid var(--rule); border-radius: var(--r); max-width: 74ch; }
 .page-text.empty { font-family: var(--ui); font-size: 14px; color: var(--alert); white-space: normal; }
 .page-caption { font-size: 12px; color: var(--faint); margin-top: 8px; }
 
 /* The veil: every replaced span holds both versions. Switching the view
    cross-fades them in place, cascading down the page; the hidden version
-   takes no space, so the line reflows to the visible one. */
+   takes no space, so the line reflows to the visible one. The page clips it
+   sideways, so a hidden name at the end of a line adds no scrollbar. */
 .pz { position: relative; }
 .pz > span { transition: opacity .34s ease, filter .34s ease; transition-delay: min(calc(var(--i, 0) * 10ms), 300ms); }
 .pz .o { color: var(--local); text-decoration: underline 1px var(--local); text-underline-offset: 3px; }
@@ -348,8 +353,6 @@ table.docs select { border: 1px solid var(--rule); border-radius: var(--r); back
   .steps::-webkit-scrollbar { display: none; }
   .steps button { flex: none; white-space: nowrap; }
   .rail { display: none; }
-  .privacy { grid-template-columns: 1fr; }
-  .preview { position: static; }
   .fact-grid, .release .split { grid-template-columns: 1fr; }
   .pane { padding: 22px 16px 60px; }
   .steps { padding: 10px 16px 0; }
@@ -517,7 +520,8 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
 .order-editor textarea { font-family: var(--text); }
 .drawer .regeste { margin-bottom: 12px; color: var(--muted); }
 @media (max-width: 980px) {
-  .research-grid, .q-body, .compare-row { grid-template-columns: 1fr; }
+  .research-grid { grid-template-columns: minmax(0, 1fr); }
+  .q-body, .compare-row { grid-template-columns: 1fr; }
   .compare-row { gap: 12px; }
   .compare-row.head { display: none; }
   .cell-party { display: block; }

@@ -18,8 +18,9 @@ on screen.
   Put a copy of the fixture folder somewhere outside the repository; the work
   folder goes to `$HOME/CourtOS/<case name>`. Set the language in
   `$HOME/.config/courtos/preferences.json` (`{"language":"de"}` or `"fr"`).
-- Browser window at least 1440 pixels wide. Below about 1000 pixels the
-  Protection tab scrolls sideways.
+- Browser window at least 1440 pixels wide. From 1261 pixels the Protection
+  tab shows the list and the page side by side (scene 3); below that the page
+  moves under the list.
 - Both servers can run at the same time on different ports; each keeps its
   own browser session.
 - The full run of 13 October 2026 took about 53 minutes for the German case
