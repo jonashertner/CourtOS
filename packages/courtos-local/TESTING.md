@@ -50,7 +50,7 @@ Without the certificate the start prints a notice: the browser works, Word does 
 2. Under **Schutz**, review the register of names that will be replaced, then release the folder for a model.
 3. Under **Analyse**, run a chronology. Click a quotation to jump to its page in the original. Without a model, the demo runs the chronology, facts and evidence, and a question to the files from a recorded script; the other tasks (party comparison, legal claims, decision draft …) need a model.
 4. In Word, insert a table or the draft at the cursor, and check how it is set.
-5. Switch the interface language, and try dark mode (the moon icon).
+5. Open a sample case in another language: the interface switches to the language of the proceedings. Switch it back if you prefer, and try dark mode (the moon icon).
 
 Things we most want to hear about: a name or identifier that was not replaced; a quotation that leads to the wrong place; anything confusing, slow or hard to read; how the inserted text looks in Word.
 

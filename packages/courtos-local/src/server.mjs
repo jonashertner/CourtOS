@@ -164,12 +164,25 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     broadcast("case", { kind: "opening" });
     await store.ensureLoaded();
     await store.scan({ progress: (p) => broadcast("scan", p) });
+    await followCaseLanguage();
     store.watch();
     runs.clear();
     for (const run of await listRuns(store)) runs.set(run.id, run);
     await saveProducts([...runs.values()]);
     if (!entry.sample) await updateCase(entry.id, { opened: new Date().toISOString() }).catch(() => {});
     broadcast("case", { kind: "opened" });
+  }
+
+  /** One interface language for the browser, Word, the menu-bar apps and the terminal, kept across restarts. */
+  async function setInterfaceLanguage(language) {
+    await mkdir(CONFIG(), { recursive: true, mode: 0o700 });
+    await writeFile(PREFS(), JSON.stringify({ ...(await readJson(PREFS(), {}).catch(() => ({}))), language }));
+    broadcast("language", { language });
+  }
+  /** Opening a case, or correcting its language, puts the interface in the language of the
+   *  proceedings. A case whose language is not known yet leaves the interface as it is. */
+  async function followCaseLanguage() {
+    if (store?.case.language && UI_LANGUAGES.includes(store.lang)) await setInterfaceLanguage(store.lang);
   }
 
   /** The work products of finished runs, as files in the work folder. A folder that cannot be written (a read-only share) leaves the results in CourtOS only. */
@@ -608,9 +621,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       if (path === "/api/language" && req.method === "POST") {
         const { language } = await body(req, 1024);
         if (!UI_LANGUAGES.includes(language)) throw new CourtosError("invalid_language");
-        await mkdir(CONFIG(), { recursive: true, mode: 0o700 });
-        await writeFile(PREFS(), JSON.stringify({ ...(await readJson(PREFS(), {}).catch(() => ({}))), language }));
-        broadcast("language", { language });
+        await setInterfaceLanguage(language);
         return send(res, 200, { ok: true });
       }
       if (path === "/api/show" && req.method === "POST") {
@@ -631,6 +642,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
         const { language } = await body(req);
         if (busy() || queue.length) throw new CourtosError("run_in_progress", undefined, 409);
         await store.setLanguage(String(language ?? ""));
+        await followCaseLanguage();
         return send(res, 200, { ok: true, language: store.lang });
       }
       if (path === "/api/parties" && req.method === "POST") { await store.setParties((await body(req)).parties); return send(res, 200, { ok: true }); }

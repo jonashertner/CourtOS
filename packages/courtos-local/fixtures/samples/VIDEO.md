@@ -16,8 +16,8 @@ on screen.
   language and the case list start clean:
   `HOME=<empty dir> node bin/courtos-local.mjs "<case copy>" --port <port>`.
   Put a copy of the fixture folder somewhere outside the repository; the work
-  folder goes to `$HOME/CourtOS/<case name>`. Set the language in
-  `$HOME/.config/courtos/preferences.json` (`{"language":"de"}` or `"fr"`).
+  folder goes to `$HOME/CourtOS/<case name>`. The interface takes the
+  language of the case when it opens.
 - Browser window at least 1440 pixels wide. From 1261 pixels the Protection
   tab shows the list and the page side by side (scene 3); below that the page
   moves under the list.

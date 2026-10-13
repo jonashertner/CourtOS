@@ -5,8 +5,10 @@
 // the parties' own numbering and stay as written, because the pleadings cite
 // them that way.
 //
-// The interface language is separate: a clerk may read the interface in
-// German while the case is conducted in French.
+// The interface follows it: opening a case, or correcting its language, switches
+// the interface to the language of the proceedings. The clerk can switch the
+// interface back, for instance to read a French case in German, until the next
+// case is opened.
 
 export const CASE_LANGUAGES = ["de", "fr", "it", "en"];
 
