@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { isUncommittedFontMiss } from "./helpers";
 
 test.use({ storageState: { cookies: [], origins: [] }, actionTimeout: 30_000 });
 
@@ -12,7 +13,7 @@ for (const scope of ["assistant", "project", "tabular"] as const) {
             test.setTimeout(600_000);
             const errors: string[] = [];
             page.on("console", (message) => {
-                if (message.type() === "error") errors.push(message.text());
+                if (message.type() === "error" && !isUncommittedFontMiss(message)) errors.push(message.text());
             });
             page.on("pageerror", (error) => errors.push(error.message));
             const cdp = await page.context().newCDPSession(page);
