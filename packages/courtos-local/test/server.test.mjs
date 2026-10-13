@@ -38,6 +38,11 @@ test("the loopback server enforces host, pairing, origin and folder rules", asyn
   assert.equal(paired.status, 200);
   const cookie = paired.headers["set-cookie"][0].split(";")[0];
   assert.match(paired.headers["set-cookie"][0], /HttpOnly/);
+  // Cookies are per host, not per port: the name carries the port, so a second
+  // CourtOS on localhost neither overwrites nor accepts this session.
+  assert.equal(cookie.split("=")[0], `courtos_session_${port}`);
+  const otherPort = `courtos_session_${port + 1}=${cookie.split("=")[1]}`;
+  assert.equal((await call(port, "/api/state", { headers: { Cookie: otherPort } })).status, 401);
   assert.equal((await call(port, "/api/pair", { method: "POST", headers: { Origin: origin, "X-CourtOS": "1" }, body: { token } })).status, 403, "the startup link pairs once");
 
   const state = await call(port, "/api/state", { headers: { Cookie: cookie } });

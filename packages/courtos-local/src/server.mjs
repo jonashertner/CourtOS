@@ -334,7 +334,10 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
     try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch { throw new CourtosError("invalid_json"); }
   }
 
-  const cookie = (req) => /(?:^|;\s*)courtos_session=([A-Za-z0-9_-]+)/.exec(req.headers.cookie ?? "")?.[1];
+  // Browsers keep cookies per host, not per port: a second CourtOS on localhost would
+  // overwrite the first one's session if both used the same name.
+  const sessionCookie = `courtos_session_${port}`;
+  const cookie = (req) => new RegExp(`(?:^|;\\s*)${sessionCookie}=([A-Za-z0-9_-]+)`).exec(req.headers.cookie ?? "")?.[1];
   const securityHeaders = (res, path) => {
     const word = path === "/word.html" || path === "/word.js";
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -412,7 +415,7 @@ export async function startServer({ port = 4311, folder = null, openBrowser = tr
       if (code) codes.delete(code); else pairToken = null;
       const session = randomId(24);
       sessions.add(session);
-      res.setHeader("Set-Cookie", `courtos_session=${session}; Path=/; HttpOnly; SameSite=${tls ? "None; Secure" : "Strict"}`);
+      res.setHeader("Set-Cookie", `${sessionCookie}=${session}; Path=/; HttpOnly; SameSite=${tls ? "None; Secure" : "Strict"}`);
       return send(res, 200, { ok: true });
     }
     if (!sessions.has(cookie(req))) return send(res, 401, { error: "not_paired" });
