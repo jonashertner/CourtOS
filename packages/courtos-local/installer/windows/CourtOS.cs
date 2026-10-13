@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -22,6 +23,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -35,6 +37,44 @@ static class Paths
     public static readonly string UserCertificates = Path.Combine(LocalData, "certs");
     public static readonly string InstalledCertificates = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CourtOS", "certs");
     public static readonly string WordManifest = Path.Combine(LocalData, "courtos-local.xml");
+}
+
+/// Menu and dialog texts in the interface language: the one chosen in CourtOS, else the
+/// Windows display language, else German. The texts are in the package's src/menu.json.
+static class Strings
+{
+    static readonly Dictionary<string, Dictionary<string, string>> Table = Load();
+    // The home folder as the server (Node) reads it.
+    static readonly string Preferences = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE") ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "courtos", "preferences.json");
+    public static string Language = Chosen();
+
+    static Dictionary<string, Dictionary<string, string>> Load()
+    {
+        try { return new JavaScriptSerializer().Deserialize<Dictionary<string, Dictionary<string, string>>>(File.ReadAllText(Path.Combine(Paths.Root, "app", "node_modules", "@courtos", "local", "src", "menu.json"), Encoding.UTF8)); }
+        catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is ArgumentException || error is InvalidOperationException) { return new Dictionary<string, Dictionary<string, string>>(); }
+    }
+
+    /// Read again on every status update, so the menu follows a language change in the browser.
+    public static string Chosen()
+    {
+        try
+        {
+            if (new JavaScriptSerializer().DeserializeObject(File.ReadAllText(Preferences, Encoding.UTF8)) is Dictionary<string, object> saved
+                && saved.TryGetValue("language", out var value) && value is string language && Table.ContainsKey(language)) return language;
+        }
+        catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is ArgumentException || error is InvalidOperationException) { }
+        var system = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        return Table.ContainsKey(system) ? system : "de";
+    }
+
+    public static string T(string key, params (string name, string value)[] values)
+    {
+        string text = null;
+        if (!(Table.TryGetValue(Language, out var strings) && strings.TryGetValue(key, out text))
+            && !(Table.TryGetValue("de", out strings) && strings.TryGetValue(key, out text))) text = key;
+        foreach (var (name, value) in values) text = text.Replace("{" + name + "}", value);
+        return text;
+    }
 }
 
 static class Settings
@@ -251,7 +291,7 @@ sealed class Server
         }
         catch (Exception error) when (error is System.ComponentModel.Win32Exception || error is InvalidOperationException)
         {
-            Fail("CourtOS konnte nicht starten.");
+            Fail(Strings.T("startFailed"));
         }
         Changed?.Invoke();
     }
@@ -309,7 +349,7 @@ sealed class Server
         }
         if (line.StartsWith("COURTOS_ERROR port_in_use", StringComparison.Ordinal))
         {
-            Fail($"Port {Port} ist belegt. Läuft CourtOS schon?");
+            Fail(Strings.T("portBusy", ("port", Port.ToString(CultureInfo.InvariantCulture))));
             return;
         }
         var index = waiting.FindIndex(w => line.StartsWith(w.Key + " ", StringComparison.Ordinal));
@@ -330,7 +370,7 @@ sealed class Server
         queued.Clear();
         Write($"CourtOS beendet ({(process.HasExited ? process.ExitCode : -1)}).");
         if (stopping || Current == State.Failed) { Changed?.Invoke(); return; }
-        Fail("CourtOS wurde unerwartet beendet.");
+        Fail(Strings.T("crashed"));
     }
 
     void Fail(string message)
@@ -358,9 +398,10 @@ sealed class Tray : ApplicationContext
 {
     readonly Server server;
     readonly NotifyIcon icon;
-    readonly ToolStripMenuItem statusLine = new ToolStripMenuItem("CourtOS startet …") { Enabled = false };
+    readonly ToolStripMenuItem statusLine = new ToolStripMenuItem(Strings.T("starting")) { Enabled = false };
     readonly ToolStripMenuItem detailLine = new ToolStripMenuItem("") { Enabled = false, Visible = false };
     readonly ToolStripMenuItem openItem, restartItem;
+    readonly List<(ToolStripMenuItem item, string key)> titled = new List<(ToolStripMenuItem item, string key)>();
     readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer { Interval = 5000 };
 
     public Tray(bool atLogin, EventWaitHandle openRequests)
@@ -370,15 +411,15 @@ sealed class Tray : ApplicationContext
         menu.Items.Add(statusLine);
         menu.Items.Add(detailLine);
         menu.Items.Add(new ToolStripSeparator());
-        openItem = Add(menu, "CourtOS im Browser öffnen", OpenBrowser);
+        openItem = Add(menu, "open", OpenBrowser);
         openItem.Font = new Font(openItem.Font, FontStyle.Bold);
-        restartItem = Add(menu, "CourtOS neu starten", Restart);
-        Add(menu, "Word-Add-in einrichten", InstallWord);
-        Add(menu, "Zertifikat für Word einrichten …", SetUpCertificate);
-        Add(menu, "Protokoll anzeigen", () => { if (File.Exists(Paths.Log)) Process.Start(new ProcessStartInfo(Paths.Log) { UseShellExecute = true }); });
+        restartItem = Add(menu, "restart", Restart);
+        Add(menu, "installWord", InstallWord);
+        Add(menu, "certificate", SetUpCertificate);
+        Add(menu, "log", () => { if (File.Exists(Paths.Log)) Process.Start(new ProcessStartInfo(Paths.Log) { UseShellExecute = true }); });
         menu.Items.Add(new ToolStripSeparator());
-        Add(menu, "CourtOS beenden", Quit);
-        menu.Opening += (s, e) => server.RequestStatus();
+        Add(menu, "quit", Quit);
+        menu.Opening += (s, e) => { Refresh(); server.RequestStatus(); };
 
         icon = new NotifyIcon { Icon = AppIcon(), Text = "CourtOS", ContextMenuStrip = menu, Visible = true };
         icon.MouseDoubleClick += (s, e) => OpenBrowser();
@@ -387,7 +428,7 @@ sealed class Tray : ApplicationContext
         var certificates = Certificate.Folder();
         // First start by hand: offer the certificate before CourtOS starts, so Word works at once.
         if (certificates == null && !atLogin && Settings.Once("CertificateOffered")
-            && Ask("Word lädt CourtOS nur über eine gesicherte Verbindung zu diesem Computer. CourtOS erstellt dafür ein Zertifikat, das nur für „localhost“ gilt. Windows fragt anschliessend, ob Sie es installieren wollen.\n\nZertifikat jetzt einrichten?")
+            && Ask(Strings.T("certOfferWin") + "\n\n" + Strings.T("certOfferTitle"))
             && Certificate.Create(Paths.UserCertificates, StoreLocation.CurrentUser))
             certificates = Paths.UserCertificates;
         server.Start(certificates);
@@ -402,11 +443,12 @@ sealed class Tray : ApplicationContext
         Refresh();
     }
 
-    static ToolStripMenuItem Add(ContextMenuStrip menu, string title, Action action)
+    ToolStripMenuItem Add(ContextMenuStrip menu, string key, Action action)
     {
-        var item = new ToolStripMenuItem(title);
+        var item = new ToolStripMenuItem(Strings.T(key));
         item.Click += (s, e) => action();
         menu.Items.Add(item);
+        titled.Add((item, key));
         return item;
     }
 
@@ -419,19 +461,21 @@ sealed class Tray : ApplicationContext
 
     void Refresh()
     {
+        Strings.Language = Strings.Chosen();
+        foreach (var (item, key) in titled) item.Text = Strings.T(key);
         switch (server.Current)
         {
             case Server.State.Starting:
-                statusLine.Text = "CourtOS startet …";
+                statusLine.Text = Strings.T("starting");
                 detailLine.Visible = false;
                 break;
             case Server.State.Ready:
-                statusLine.Text = server.Busy ? "Ein Auftrag läuft" : "CourtOS läuft";
-                detailLine.Text = (server.Case != null ? $"Fall: {server.Case}" : server.Origin) + (server.WordConnected ? " · Word verbunden" : "");
+                statusLine.Text = Strings.T(server.Busy ? "busy" : "running");
+                detailLine.Text = (server.Case != null ? Strings.T("case", ("name", server.Case)) : server.Origin) + (server.WordConnected ? " · " + Strings.T("wordConnected") : "");
                 detailLine.Visible = true;
                 break;
             case Server.State.Failed:
-                statusLine.Text = "CourtOS ist gestoppt";
+                statusLine.Text = Strings.T("stopped");
                 detailLine.Text = server.Problem;
                 detailLine.Visible = true;
                 break;
@@ -453,13 +497,13 @@ sealed class Tray : ApplicationContext
 
     void SetUpCertificate()
     {
-        if (Certificate.Folder() != null) { Inform("Das Zertifikat ist eingerichtet. Word kann CourtOS laden."); return; }
+        if (Certificate.Folder() != null) { Inform(Strings.T("certReady") + " " + Strings.T("certReadyText")); return; }
         if (Certificate.Create(Paths.UserCertificates, StoreLocation.CurrentUser))
         {
             Restart();
-            Inform("Das Zertifikat ist eingerichtet. CourtOS wurde neu gestartet; Word kann CourtOS jetzt laden.");
+            Inform(Strings.T("certReady") + " " + Strings.T("certRestarted"));
         }
-        else Inform("Das Zertifikat wurde nicht eingerichtet. Ohne Zertifikat funktioniert CourtOS im Browser, aber nicht in Word.");
+        else Inform(Strings.T("certFailed") + " " + Strings.T("certFailedText"));
     }
 
     bool Sideload()
@@ -478,13 +522,13 @@ sealed class Tray : ApplicationContext
 
     void InstallWord()
     {
-        if (Sideload()) Inform("Das Word-Add-in ist eingerichtet. Word neu starten, dann Start › Add-ins › CourtOS.");
-        else Inform("Das Word-Add-in wurde nicht eingerichtet. Die Einzelheiten stehen im Protokoll.");
+        if (Sideload()) Inform(Strings.T("wordReady") + " " + Strings.T("wordReadyWin"));
+        else Inform(Strings.T("wordFailed") + " " + Strings.T("wordFailedText"));
     }
 
     void Quit()
     {
-        if (server.Busy && !Ask("Ein Auftrag läuft. Wenn Sie CourtOS jetzt beenden, wird er abgebrochen und nichts übernommen.\n\nTrotzdem beenden?")) return;
+        if (server.Busy && !Ask(Strings.T("busyTitle") + " " + Strings.T("busyText") + "\n\n" + Strings.T("quitQuestion"))) return;
         timer.Stop();
         server.Stop();
         icon.Visible = false;

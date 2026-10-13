@@ -1,6 +1,7 @@
 // What CourtOS prints in the terminal, in the interface language: the language
-// saved in the interface, else the system locale, else German. The menu-bar
-// apps are German only, so a message that names their menu quotes it as shown.
+// saved in the interface, else the system locale, else German. A message that
+// names a menu item quotes it from menu.json, the menu-bar apps' texts.
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -22,7 +23,7 @@ const MESSAGES = {
     running: "CourtOS läuft auf {origin}",
     pair: "Im Browser öffnen (gilt einmal): {url}",
     noCert: "Hinweis: Kein Entwicklerzertifikat für localhost gefunden. Der Browser funktioniert, Word nicht.",
-    certApp: "Für Word im CourtOS-Menü „Zertifikat für Word einrichten …“ wählen.",
+    certApp: "Für Word im CourtOS-Menü „{menuCertificate}“ wählen.",
     certCli: "Für Word einmal ausführen: npx office-addin-dev-certs install, dann CourtOS neu starten.",
     productsFailed: "Arbeitsprodukte nicht geschrieben ({code})",
     error: "Fehler",
@@ -40,7 +41,7 @@ const MESSAGES = {
     running: "CourtOS fonctionne sur {origin}",
     pair: "Ouvrir dans le navigateur (valable une fois) : {url}",
     noCert: "Remarque : aucun certificat de développement pour localhost. Le navigateur fonctionne, Word non.",
-    certApp: "Pour Word, choisir « Zertifikat für Word einrichten … » dans le menu CourtOS.",
+    certApp: "Pour Word, choisir « {menuCertificate} » dans le menu CourtOS.",
     certCli: "Pour Word, exécuter une fois : npx office-addin-dev-certs install, puis redémarrer CourtOS.",
     productsFailed: "Documents de travail non enregistrés ({code})",
     error: "erreur",
@@ -58,7 +59,7 @@ const MESSAGES = {
     running: "CourtOS è in esecuzione su {origin}",
     pair: "Aprire nel browser (vale una volta): {url}",
     noCert: "Nota: nessun certificato di sviluppo per localhost. Il browser funziona, Word no.",
-    certApp: "Per Word, scegliere «Zertifikat für Word einrichten …» nel menu di CourtOS.",
+    certApp: "Per Word, scegliere «{menuCertificate}» nel menu di CourtOS.",
     certCli: "Per Word, eseguire una volta: npx office-addin-dev-certs install, poi riavviare CourtOS.",
     productsFailed: "Documenti di lavoro non salvati ({code})",
     error: "errore",
@@ -76,7 +77,7 @@ const MESSAGES = {
     running: "CourtOS is running at {origin}",
     pair: "Open in the browser (works once): {url}",
     noCert: "Note: no developer certificate for localhost found. The browser works, Word does not.",
-    certApp: "For Word, choose “Zertifikat für Word einrichten …” in the CourtOS menu.",
+    certApp: "For Word, choose “{menuCertificate}” in the CourtOS menu.",
     certCli: "For Word, run once: npx office-addin-dev-certs install, then restart CourtOS.",
     productsFailed: "Work products not written ({code})",
     error: "error",
@@ -91,8 +92,12 @@ const MESSAGES = {
   },
 };
 
+export const MENU = JSON.parse(readFileSync(new URL("./menu.json", import.meta.url), "utf8"));
+
 /** say("running", { origin }) in the given language; every language has every message. */
-export const messages = (language) => (key, vars = {}) =>
-  (MESSAGES[language] ?? MESSAGES.de)[key].replace(/\{(\w+)\}/g, (_, name) => String(vars[name]));
+export const messages = (language) => {
+  const lang = MESSAGES[language] ? language : "de";
+  return (key, vars = {}) => MESSAGES[lang][key].replace(/\{(\w+)\}/g, (_, name) => String({ menuCertificate: MENU[lang].certificate, ...vars }[name]));
+};
 
 export const MESSAGE_KEYS = Object.fromEntries(Object.entries(MESSAGES).map(([lang, m]) => [lang, Object.keys(m)]));

@@ -53,6 +53,8 @@ The browser works without the certificate (plain HTTP on 127.0.0.1); Word does n
 
 **Afterwards, on both systems:**
 
+The menu is in the language chosen in CourtOS, else in the system language (German, French, Italian or English). Its texts are in `src/menu.json`. The German items:
+
 - **CourtOS im Browser öffnen** in the menu (or a double-click on the tray icon on Windows) opens a new, paired browser tab.
 - **Word-Add-in einrichten** repeats the add-in setup.
 - **Protokoll anzeigen** opens the log.

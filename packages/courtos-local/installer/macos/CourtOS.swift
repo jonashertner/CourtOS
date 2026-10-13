@@ -27,6 +27,33 @@ enum Paths {
   static let wordManifest = wordContainer.appendingPathComponent("Data/Documents/wef/courtos-local.xml")
 }
 
+/// Menu and dialog texts in the interface language: the one chosen in CourtOS, else the
+/// system language, else German. The texts are in the package's src/menu.json.
+enum Strings {
+  static let table: [String: [String: String]] = {
+    let url = Paths.resources.appendingPathComponent("app/node_modules/@courtos/local/src/menu.json")
+    guard let data = try? Data(contentsOf: url) else { return [:] }
+    return (try? JSONSerialization.jsonObject(with: data) as? [String: [String: String]]) ?? [:]
+  }()
+  static let preferences = Paths.home.appendingPathComponent(".config/courtos/preferences.json")
+  static var language = chosenLanguage()
+
+  /// Read again on every status update, so the menu follows a language change in the browser.
+  static func chosenLanguage() -> String {
+    if let data = try? Data(contentsOf: preferences),
+       let saved = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["language"] as? String,
+       table[saved] != nil { return saved }
+    let system = String((Locale.preferredLanguages.first ?? "de").prefix(2))
+    return table[system] != nil ? system : "de"
+  }
+
+  static func t(_ key: String, _ values: [String: String] = [:]) -> String {
+    var text = table[language]?[key] ?? table["de"]?[key] ?? key
+    for (name, value) in values { text = text.replacingOccurrences(of: "{\(name)}", with: value) }
+    return text
+  }
+}
+
 func configuredPort() -> Int {
   if let value = ProcessInfo.processInfo.environment["COURTOS_PORT"], let port = Int(value) { return port }
   let port = UserDefaults.standard.integer(forKey: "Port")
@@ -125,7 +152,7 @@ final class Server {
     }
     openLog()
     do { try process.run() } catch {
-      state = .failed("CourtOS konnte nicht starten.")
+      state = .failed(Strings.t("startFailed"))
       onChange?()
       return
     }
@@ -182,7 +209,7 @@ final class Server {
       return
     }
     if line.hasPrefix("COURTOS_ERROR port_in_use") {
-      state = .failed("Port \(port) ist belegt. Läuft CourtOS schon?")
+      state = .failed(Strings.t("portBusy", ["port": String(port)]))
       onChange?()
       return
     }
@@ -203,7 +230,7 @@ final class Server {
     write("CourtOS beendet (\(code)).")
     if stopping { return }
     if case .failed = state { onChange?(); return }
-    state = .failed("CourtOS wurde unerwartet beendet.")
+    state = .failed(Strings.t("crashed"))
     onChange?()
   }
 
@@ -227,10 +254,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
   let server = Server(port: configuredPort())
   let atLogin = CommandLine.arguments.contains("--login")
   var item: NSStatusItem!
-  let statusLine = NSMenuItem(title: "CourtOS startet …", action: nil, keyEquivalent: "")
+  let statusLine = NSMenuItem(title: Strings.t("starting"), action: nil, keyEquivalent: "")
   let detailLine = NSMenuItem(title: "", action: nil, keyEquivalent: "")
   var openItem: NSMenuItem!
   var restartItem: NSMenuItem!
+  var titled: [(entry: NSMenuItem, key: String)] = []
   var timer: Timer?
 
   func applicationDidFinishLaunching(_ notification: Notification) {
@@ -248,13 +276,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     menu.addItem(statusLine)
     menu.addItem(detailLine)
     menu.addItem(.separator())
-    openItem = add(menu, "CourtOS im Browser öffnen", #selector(openBrowser), "o")
-    restartItem = add(menu, "CourtOS neu starten", #selector(restart), "")
-    add(menu, "Word-Add-in einrichten", #selector(installWord), "")
-    add(menu, "Zertifikat für Word einrichten …", #selector(setUpCertificate), "")
-    add(menu, "Protokoll anzeigen", #selector(showLog), "")
+    openItem = add(menu, "open", #selector(openBrowser), "o")
+    restartItem = add(menu, "restart", #selector(restart), "")
+    add(menu, "installWord", #selector(installWord), "")
+    add(menu, "certificate", #selector(setUpCertificate), "")
+    add(menu, "log", #selector(showLog), "")
     menu.addItem(.separator())
-    add(menu, "CourtOS beenden", #selector(quit), "q")
+    add(menu, "quit", #selector(quit), "q")
     item.menu = menu
 
     server.onChange = { [weak self] in self?.refresh() }
@@ -262,9 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // First start by hand: offer the certificate before CourtOS starts, so Word works at once.
     if certificates == nil && !atLogin && !UserDefaults.standard.bool(forKey: "CertificateOffered") {
       UserDefaults.standard.set(true, forKey: "CertificateOffered")
-      if confirm("Zertifikat für Word einrichten?",
-                 "Word lädt CourtOS nur über eine gesicherte Verbindung zu diesem Mac. CourtOS erstellt dafür ein Zertifikat, das nur für „localhost“ gilt. macOS fragt anschliessend nach Ihrem Passwort.",
-                 "Einrichten", "Später"), Certificate.create() {
+      if confirm(Strings.t("certOfferTitle"), Strings.t("certOfferMac"), Strings.t("setUp"), Strings.t("later")), Certificate.create() {
         certificates = Paths.userCertificates
       }
     }
@@ -282,30 +308,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   func applicationWillTerminate(_ notification: Notification) { server.stop() }
 
-  func menuWillOpen(_ menu: NSMenu) { server.requestStatus() }
+  func menuWillOpen(_ menu: NSMenu) {
+    refresh()
+    server.requestStatus()
+  }
 
   @discardableResult
-  private func add(_ menu: NSMenu, _ title: String, _ action: Selector, _ key: String) -> NSMenuItem {
-    let entry = menu.addItem(withTitle: title, action: action, keyEquivalent: key)
+  private func add(_ menu: NSMenu, _ text: String, _ action: Selector, _ key: String) -> NSMenuItem {
+    let entry = menu.addItem(withTitle: Strings.t(text), action: action, keyEquivalent: key)
     entry.target = self
+    titled.append((entry, text))
     return entry
   }
 
   private func refresh() {
+    Strings.language = Strings.chosenLanguage()
+    for (entry, key) in titled { entry.title = Strings.t(key) }
     switch server.state {
     case .starting:
-      statusLine.title = "CourtOS startet …"
+      statusLine.title = Strings.t("starting")
       detailLine.isHidden = true
     case .ready(let origin):
       let caseName = server.status["case"] as? String
-      statusLine.title = server.busy ? "Ein Auftrag läuft" : "CourtOS läuft"
+      statusLine.title = Strings.t(server.busy ? "busy" : "running")
       let clients = server.status["clients"] as? [String: Int] ?? [:]
-      var detail = caseName.map { "Fall: \($0)" } ?? origin
-      if (clients["word"] ?? 0) > 0 { detail += " · Word verbunden" }
+      var detail = caseName.map { Strings.t("case", ["name": $0]) } ?? origin
+      if (clients["word"] ?? 0) > 0 { detail += " · " + Strings.t("wordConnected") }
       detailLine.title = detail
       detailLine.isHidden = false
     case .failed(let message):
-      statusLine.title = "CourtOS ist gestoppt"
+      statusLine.title = Strings.t("stopped")
       detailLine.title = message
       detailLine.isHidden = false
     }
@@ -326,14 +358,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   @objc func setUpCertificate() {
     if Certificate.folder() != nil {
-      inform("Das Zertifikat ist eingerichtet.", "Word kann CourtOS laden.")
+      inform(Strings.t("certReady"), Strings.t("certReadyText"))
       return
     }
     if Certificate.create() {
       restart()
-      inform("Das Zertifikat ist eingerichtet.", "CourtOS wurde neu gestartet. Word kann CourtOS jetzt laden.")
+      inform(Strings.t("certReady"), Strings.t("certRestarted"))
     } else {
-      inform("Das Zertifikat wurde nicht eingerichtet.", "Ohne Zertifikat funktioniert CourtOS im Browser, aber nicht in Word.")
+      inform(Strings.t("certFailed"), Strings.t("certFailedText"))
     }
   }
 
@@ -353,16 +385,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   @objc func installWord() {
     if sideload() {
-      inform("Das Word-Add-in ist eingerichtet.", "Word neu starten, dann Einfügen › Add-ins › Meine Add-ins › CourtOS.")
+      inform(Strings.t("wordReady"), Strings.t("wordReadyMac"))
     } else {
-      inform("Das Word-Add-in wurde nicht eingerichtet.", "Ist Microsoft Word installiert? Die Einzelheiten stehen im Protokoll.")
+      inform(Strings.t("wordFailed"), Strings.t("wordFailedText"))
     }
   }
 
   @objc func showLog() { NSWorkspace.shared.open(Paths.log) }
 
   @objc func quit() {
-    if server.busy && !confirm("Ein Auftrag läuft.", "Wenn Sie CourtOS jetzt beenden, wird er abgebrochen und nichts übernommen.", "Beenden", "Abbrechen") { return }
+    if server.busy && !confirm(Strings.t("busyTitle"), Strings.t("busyText"), Strings.t("quitAnyway"), Strings.t("cancel")) { return }
     NSApp.terminate(nil)
   }
 

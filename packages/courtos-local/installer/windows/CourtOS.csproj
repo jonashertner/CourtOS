@@ -15,6 +15,8 @@
   <ItemGroup>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
+    <!-- JavaScriptSerializer, for the menu texts in src/menu.json. -->
+    <Reference Include="System.Web.Extensions" />
     <EmbeddedResource Include="..\..\web\icon-32.png" LogicalName="icon.png" />
   </ItemGroup>
   <ItemGroup>
