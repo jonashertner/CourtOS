@@ -426,8 +426,10 @@ sealed class Tray : ApplicationContext
         server.Changed += Refresh;
 
         var certificates = Certificate.Folder();
-        // First start by hand: offer the certificate before CourtOS starts, so Word works at once.
-        if (certificates == null && !atLogin && Settings.Once("CertificateOffered")
+        // A start by hand without a trusted certificate offers one before CourtOS starts, so the
+        // browser opens over https without a warning and Word works at once. "Later" asks again at
+        // the next start by hand; a start at login never interrupts with a dialog.
+        if (certificates == null && !atLogin
             && Ask(Strings.T("certOfferWin") + "\n\n" + Strings.T("certOfferTitle"))
             && Certificate.Create(Paths.UserCertificates, StoreLocation.CurrentUser))
             certificates = Paths.UserCertificates;

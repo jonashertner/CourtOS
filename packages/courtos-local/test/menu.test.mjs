@@ -37,8 +37,8 @@ test("both apps show only texts from menu.json, which the installed package cont
 });
 
 test("the terminal names the certificate menu item as the menu shows it", () => {
-  assert.equal(messages("de")("certApp"), "Für Word im CourtOS-Menü „Zertifikat für Word einrichten …“ wählen.");
-  assert.match(messages("fr")("certApp"), /« Configurer le certificat pour Word … »/);
-  assert.match(messages("it")("certApp"), /«Configurare il certificato per Word …»/);
-  assert.match(messages("en")("certApp"), /“Set up the certificate for Word …”/);
+  assert.equal(messages("de")("certApp"), "Für eine verschlüsselte Verbindung, im Browser ohne Warnung und für Word, im CourtOS-Menü „Sichere Verbindung einrichten …“ wählen.");
+  assert.match(messages("fr")("certApp"), /« Configurer la connexion sécurisée … »/);
+  assert.match(messages("it")("certApp"), /«Configurare la connessione sicura …»/);
+  assert.match(messages("en")("certApp"), /“Set up the secure connection …”/);
 });

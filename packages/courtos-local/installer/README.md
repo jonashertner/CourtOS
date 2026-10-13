@@ -23,7 +23,7 @@ The log never contains a pairing link.
 
 ## Why there is a certificate
 
-Word loads add-ins over HTTPS only, even from this computer. CourtOS therefore needs a certificate for `https://localhost` that the computer trusts.
+Over plain HTTP, browsers may mark CourtOS as not secure, and Word loads add-ins over HTTPS only, even from this computer. CourtOS therefore needs a certificate for `https://localhost` that the computer trusts.
 
 The installers make one:
 
@@ -33,14 +33,17 @@ The installers make one:
 
 Even if someone copied the files, they could not use them to impersonate any other site.
 
-The browser works without the certificate (plain HTTP on 127.0.0.1); Word does not.
+Without the certificate the browser still works, over plain HTTP on 127.0.0.1, and may warn about it; Word does not work.
+
+macOS lets no installer trust a certificate silently: the user confirms it once with their password, or IT deploys a configuration profile (see below). On Windows the installer trusts it for all users.
 
 ## For a tester
 
 **macOS.** Open the `.pkg` and follow the installer.
 
 - CourtOS starts and opens the browser.
-- On the first start it offers **Zertifikat für Word einrichten …**. macOS asks for your password once, to trust the certificate in your login keychain.
+- Before the browser opens, it offers **Sichere Verbindung einrichten …**. macOS asks for your password once, to trust the certificate in your login keychain. The browser then opens CourtOS over HTTPS without a warning.
+- If you choose **Später**, CourtOS runs over plain HTTP and asks again at the next start by hand. The same item is in the CourtOS menu.
 - If Word is installed, the add-in is set up at the same time.
 - Restart Word. **CourtOS › Fallordner** appears on the Home tab.
 

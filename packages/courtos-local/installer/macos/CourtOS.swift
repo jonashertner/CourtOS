@@ -78,7 +78,8 @@ func run(_ path: String, _ arguments: [String], environment: [String: String]? =
 
 // MARK: Certificate
 
-/// Word loads add-ins over https only. A certificate counts once macOS trusts it for localhost.
+/// The browser opens CourtOS without a warning, and Word loads it, only over https. A certificate
+/// counts once macOS trusts it for localhost.
 enum Certificate {
   static func trusted(in dir: URL) -> Bool {
     let cert = dir.appendingPathComponent("localhost.crt").path
@@ -287,9 +288,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     server.onChange = { [weak self] in self?.refresh() }
     var certificates = Certificate.folder()
-    // First start by hand: offer the certificate before CourtOS starts, so Word works at once.
-    if certificates == nil && !atLogin && !UserDefaults.standard.bool(forKey: "CertificateOffered") {
-      UserDefaults.standard.set(true, forKey: "CertificateOffered")
+    // A start by hand without a trusted certificate offers one before CourtOS starts, so the
+    // browser opens over https without a warning and Word works at once. "Later" asks again at
+    // the next start by hand; a start at login never interrupts with a dialog.
+    if certificates == nil && !atLogin {
       if confirm(Strings.t("certOfferTitle"), Strings.t("certOfferMac"), Strings.t("setUp"), Strings.t("later")), Certificate.create() {
         certificates = Paths.userCertificates
       }
