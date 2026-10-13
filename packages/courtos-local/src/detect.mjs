@@ -64,7 +64,8 @@ const TITLES = "(?:(?:Herrn?|Frau|Dr\\.(?:\\s?(?:iur|med|phil|oec)\\.)?|Prof\\.|
 // A name continues on its line only: "Me Antoine Perret⏎Dossier" is not a three-word name.
 const TITLED_PERSON = new RegExp(`(?<![${L}])${TITLES}+(${NAME}(?:[ \\t]+${NAME}){0,2})`, "gu");
 const ROLE_PERSON = new RegExp(`(?<![${L}])(?:Geschäftsführerin|Geschäftsführer|Bauleiterin|Bauleiter|Sachverständigen|Sachverständige|Sachverständiger|Gutachterin|Gutachter|Zeugin|Zeuge|Referentin|Referent|Verwaltungsrätin|Verwaltungsrat|Präsidentin|Präsident|Vertreterin|Vertreter|témoin|experte?|perito|testimone|witness|expert)\\s+(${NAME}[ \\t]+${NAME})`, "gu");
-const STREET = new RegExp(`(?<![${L}])(?:[\\p{Lu}][${L}-]*(?:strasse|straße|str\\.|gasse|weg|platz|rain|halde|quai|allee|ring|matte|graben|steig)|(?:[Rr]ue|[Cc]hemin|[Cc]h\\.|[Aa]venue|[Aa]v\\.|[Rr]oute|[Pp]lace|[Bb]oulevard|[Vv]ia|[Vv]iale|[Pp]iazza|[Vv]icolo)(?:\\s+(?:de\\s+la|de|des|du|del|della|dei|d'))?\\s+[\\p{Lu}][${L}'’-]+)\\s+\\d{1,4}[a-z]?(?![${L}\\d])`, "gu");
+// A street named only by its kind ("Grand-Rue 14", "Grande Rue 7") has no name after the kind.
+const STREET = new RegExp(`(?<![${L}])(?:[Gg]rand(?:e[ \\t]+|[-'’ \\t])[Rr]ue|[\\p{Lu}][${L}-]*(?:strasse|straße|str\\.|gasse|weg|platz|rain|halde|quai|allee|ring|matte|graben|steig)|(?:[Rr]ue|[Cc]hemin|[Cc]h\\.|[Aa]venue|[Aa]v\\.|[Rr]oute|[Pp]lace|[Bb]oulevard|[Vv]ia|[Vv]iale|[Pp]iazza|[Vv]icolo)(?:\\s+(?:de\\s+la|de|des|du|del|della|dei|d'))?\\s+[\\p{Lu}][${L}'’-]+)\\s+\\d{1,4}[a-z]?(?![${L}\\d])`, "gu");
 // A town has two letters at least, after an abbreviation such as "St." or "S." ("9000 St. Gallen",
 // "6592 S. Antonino"): "4A_399/2018 E. 3.2" names a consideration, not the town "E.".
 const PLACE = new RegExp(`(?<![\\d.'’])([1-9]\\d{3})[ \\t\\u00a0]+((?:\\p{Lu}\\p{Ll}{0,2}\\.[ \\t]?)?\\p{Lu}[${L}][${L}.-]*(?:\\s(?:bei|b\\.|am|an der|sur|près|di|im)\\s\\p{Lu}[${L}.-]+)?)(?![${L}])`, "gu");

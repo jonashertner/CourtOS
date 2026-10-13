@@ -56,6 +56,8 @@ test("number plates, dates of birth, initials, foreign VAT numbers, Italian and 
   assert.ok(detected("Officine Meccaniche Varesine S.r.l. a Varese").some(([k, a]) => k === "organisation" && a.includes("Varesine")));
   assert.deepEqual(detected("Raiffeisenbank Rheintal Bahnhofstrasse 9"), [["organisation", "Raiffeisenbank Rheintal"], ["address", "Bahnhofstrasse 9"]]);
   assert.ok(!detected("Aareland Bank AG").some(([k, a]) => a === "Bank AG"), "Bank AG is the company rule's");
+  for (const street of ["Grand-Rue 14", "Grand'Rue 3", "Grande Rue 7", "Grand Rue 2"])
+    assert.ok(detected(`Etude Favre, ${street}, 1003 Lausanne`).some(([k, a]) => k === "address" && a === street), street);
 });
 
 test("a postcode and town stay on one line, and a year before an article is no place", () => {
