@@ -19,6 +19,12 @@ describe("citation pane copy provenance",()=>{
         }
         const unchecked={...value,verified:false};expect(citationQuoteCopy(unchecked,document,0,text,"","https://sandbox.swisslaw.io","de").complete).toBe(false);
     });
+    it("falls back to the version id in the citation line when no version number is recorded",()=>{
+        const value=citation();value.version_number=undefined;
+        const document=panelDocumentFromCitation(value);
+        const result=citationQuoteCopy(value,document,0,text,"","https://sandbox.swisslaw.io","de");
+        expect(result.complete).toBe(true);expect(result.text).toContain(` ${version} · `);
+    });
     it("copies each explicitly verified page of a short cross-page quote and rejects a forged origin",()=>{
         const value=citation();value.quotes![0]={...value.quotes![0],page:"3-4",verification:{...value.quotes![0].verification!,page_hashes:[{page:3,sha256:"b".repeat(64)},{page:4,sha256:"c".repeat(64)}]}};
         const document=panelDocumentFromCitation(value);

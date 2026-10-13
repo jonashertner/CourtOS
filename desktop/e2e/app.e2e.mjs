@@ -142,7 +142,7 @@ try {
   // shell has no sidebar, so this assertion only passes once the wizard has
   // actually released us into the product.
   await page
-    .getByRole("button", { name: "Assistant", exact: true })
+    .getByRole("button", { name: "Assistent", exact: true })
     .first()
     .waitFor({ timeout: 20_000 });
   console.log(`✓ signed up + onboarded + auto-signed-in as ${EMAIL}`);

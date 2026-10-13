@@ -17,6 +17,7 @@ export function LibrarySourceReader({ documentId, versionId, page }: LibrarySour
     const [retry, setRetry] = useState(0);
     useEffect(() => {
         let cancelled = false;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- each source link or retry starts a new version lookup
         setVersion(null); setError(null);
         if (!librarySourcePath(documentId, versionId, page)) { setError(m.invalidLink); return; }
         void listDocumentVersions(documentId).then(data => {

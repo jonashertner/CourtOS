@@ -19,6 +19,7 @@ export function FrontierDraftEntry({ inputRef, chatId }: { inputRef: RefObject<C
         } else setStatus({ owner: user.id, value: "pending" });
     }
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- a stored return draft is read once per user and chat
         setStatus(null);
         if (!user?.id) return;
         const draft = getFrontierReturnDraft(user.id);

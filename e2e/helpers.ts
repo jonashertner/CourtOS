@@ -6,11 +6,22 @@
  * across four specs, so a UI change (a renamed model, a moved fixture) meant
  * editing every copy and silently breaking whichever one was missed.
  */
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type ConsoleMessage, type Page } from "@playwright/test";
 import path from "path";
 
 /** The one-page PDF every upload flow attaches. */
 export const PDF_FIXTURE = path.join(__dirname, "fixtures/test.pdf");
+
+/**
+ * The Timeless web fonts are a licensed embedding that is never committed
+ * (frontend/.gitignore), so a checkout without them logs one 404 per font
+ * file. Specs that fail on browser errors skip exactly these; every other
+ * console error still counts.
+ */
+export function isUncommittedFontMiss(message: ConsoleMessage): boolean {
+    return message.text().startsWith("Failed to load resource") &&
+        new URL(message.location().url, "http://localhost").pathname.startsWith("/fonts/timeless/");
+}
 
 /** Anthropic model available through the CI provider fixture or a local live key. */
 export const CLAUDE_MODEL_LABEL = "Claude Sonnet 5.5";

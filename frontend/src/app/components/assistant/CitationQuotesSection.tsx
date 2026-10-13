@@ -103,10 +103,11 @@ export function CitationQuotesSection({
 }: Props) {
     const {t,locale}=useCourtOSLocale();
     const label=(key:keyof typeof C)=>COURTOS_PILOT_MODE?t(C[key]):C[key].en;
+    const pageLabel = label("page");
     const quotes = useMemo(
         () =>
-            document ? documentQuoteItems(document, label("page")) : (suppliedQuotes ?? []),
-        [document, suppliedQuotes, locale],
+            document ? documentQuoteItems(document, pageLabel) : (suppliedQuotes ?? []),
+        [document, suppliedQuotes, pageLabel],
     );
     const requestedIndex =
         suppliedCurrentIndex ??

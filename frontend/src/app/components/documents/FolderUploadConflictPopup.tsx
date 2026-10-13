@@ -15,6 +15,7 @@ export function FolderUploadConflictPopup({ conflict, onChoose }: {
     const t = useLibraryText();
     const name = useId();
     const [choice, setChoice] = useState<"reuse" | "rename" | null>(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- each conflict starts without a choice
     useEffect(() => { setChoice(null); }, [conflict]);
     return <ConfirmPopup
         open={!!conflict}

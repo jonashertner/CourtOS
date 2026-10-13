@@ -38,6 +38,17 @@ describe("same-tab knowledge draft", () => {
         consumeKnowledgeDraft(draft);
         expect(getKnowledgeDraft("user-a")).toBeNull();
     });
+    it("rejects a non-pdf document with no declared file type", () => {
+        const source = { ...doc, filename: "Quelle.docx", file_type: null };
+        expect(knowledgeAnalysisIssue([source])).toContain("ursprüngliche PDF");
+    });
+    it("does not clear a newer draft when consuming a stale one", () => {
+        expect(prepareKnowledgeDraft("user-a", "Erste Frage", [doc])).toBe(true);
+        const stale = getKnowledgeDraft("user-a")!;
+        expect(prepareKnowledgeDraft("user-a", "Zweite Frage", [doc])).toBe(true);
+        consumeKnowledgeDraft(stale);
+        expect(getKnowledgeDraft("user-a")?.prompt).toContain("Zweite Frage");
+    });
     it("clears across account changes and after five minutes", () => {
         prepareKnowledgeDraft("user-a", "Gehör?", [doc]);
         expect(getKnowledgeDraft("user-b")).toBeNull();

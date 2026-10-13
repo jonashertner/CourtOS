@@ -20,8 +20,11 @@ describe("durable source references", () => {
     it.each([`${path}&url=https://evil.example`, `${path}#private-text`, `${path}&page=2`, path.replace("?page=7", "?page=07"), `https://evil.example${path}`, `${path}\n`])("does not accept extra data or redirects %s", value => {
         expect(parseLibrarySourcePath(value)).toBeNull();
     });
-    it.each(["javascript:alert(1)", "https://user:password@example.org", "https://sandbox.swisslaw.io/extra", "https://sandbox.swisslaw.io?token=x"])("rejects an unsafe origin %s", origin => {
+    it.each(["javascript:alert(1)", "https://user:password@example.org", "https://sandbox.swisslaw.io/extra", "https://sandbox.swisslaw.io?token=x", "not a url"])("rejects an unsafe origin %s", origin => {
         expect(librarySourceUrl(origin, documentId, versionId, 7)).toBeNull();
+    });
+    it("returns null when the underlying source path itself is invalid", () => {
+        expect(librarySourceUrl("https://sandbox.swisslaw.io", "not-a-uuid", versionId, 7)).toBeNull();
     });
 });
 
@@ -60,6 +63,21 @@ describe("explicit public excerpt selection", () => {
         expect(selectedSourcePassage(value.element, value.selection, { ...value.passage, end: 502 })).toBeNull();
         expect(selectedSourcePassage(value.element, null, value.passage)).toBeNull(); value.element.remove();
     });
+    it("rejects a selection boundary that splits a supplementary character's surrogate pair", () => {
+        // Starting mid-emoji makes the DOM Range slice code units, not code
+        // points, so the reconstructed text silently diverges from what the
+        // codepoint-counted offset would read back from the passage.
+        const text = "😀 Ein ausreichend langer Testtext fuer die zwanzig-Zeichen-Grenze.";
+        const element = document.createElement("pre"); element.textContent = text;
+        document.body.append(element);
+        const range = document.createRange();
+        range.setStart(element.firstChild!, 1); // between the emoji's two surrogate code units
+        range.setEnd(element.firstChild!, 31);
+        const selection = window.getSelection()!; selection.removeAllRanges(); selection.addRange(range);
+        const passage = { start: 500, end: 500 + Array.from(text).length, total_chars: 2000, text };
+        expect(selectedSourcePassage(element, selection, passage)).toBeNull();
+        element.remove();
+    });
 });
 describe("unverified browser search at original sources", () => {
     const text = "Ein unveränderter, genauer Wortlaut - mit Zusatz.";
@@ -74,5 +92,8 @@ describe("unverified browser search at original sources", () => {
     });
     it("rejects a known PDF URL even when its pathname has no file extension", () => {
         expect(originalTextSearchUrl("https://example.org/download?id=1", "https://example.org/download?id=1", text)).toBeNull();
+    });
+    it("rejects a source URL that cannot be parsed", () => {
+        expect(originalTextSearchUrl("not a valid url", null, text)).toBeNull();
     });
 });

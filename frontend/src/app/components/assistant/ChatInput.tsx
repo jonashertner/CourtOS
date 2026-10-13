@@ -195,7 +195,7 @@ function ChatInputForChatImpl(
     // Keep the browser return draft until an explicit edit/send. A composer
     // remount during route/profile hydration must not consume the only copy.
     const frontierDraftRef = useRef<{ text: string; onUsed?: () => void } | null>(null);
-    const useFrontierDraft = () => {
+    const consumeFrontierDraft = () => {
         const draft = frontierDraftRef.current;
         frontierDraftRef.current = null;
         draft?.onUsed?.();
@@ -534,14 +534,14 @@ function ChatInputForChatImpl(
         },
         startWorkflow: (workflow, prompt) => {
             setSelectedWorkflow(workflow);
-            if (prompt !== undefined) { useFrontierDraft(); setValue(prompt); }
+            if (prompt !== undefined) { consumeFrontierDraft(); setValue(prompt); }
             requestAnimationFrame(() => textareaRef.current?.focus());
         },
         startWorkflowDocumentSelection: (workflow, prompt, options) => {
             setSelectedWorkflow(workflow);
             setDocSelectorInitialTab(options?.initialDocumentTab ?? "files");
             if (prompt !== undefined) {
-                useFrontierDraft();
+                consumeFrontierDraft();
                 setValue(prompt);
                 requestAnimationFrame(() => {
                     if (!textareaRef.current) return;
@@ -598,7 +598,7 @@ function ChatInputForChatImpl(
     }, [composerOpen, enableGlobalFileDrop, handleDroppedFiles]);
 
     const updateInput = (el: HTMLTextAreaElement) => {
-        useFrontierDraft();
+        consumeFrontierDraft();
         setValue(el.value);
         setActiveSlashIndex(0);
         setSlashMenuDismissed(false);
@@ -637,7 +637,7 @@ function ChatInputForChatImpl(
             setApiKeyModalProvider(getModelProvider(model));
             return;
         }
-        useFrontierDraft();
+        consumeFrontierDraft();
         setValue("");
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";

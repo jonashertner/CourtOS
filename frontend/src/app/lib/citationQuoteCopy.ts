@@ -10,10 +10,9 @@ export function citationQuoteCopy(citation: Citation | undefined, document: Pane
     if (!citation || citation.kind === "case" || citation.kind === "public_decision" || !document || document.type !== "pdf" ||
         citation.document_id !== document.document_id || !citation.version_id || citation.version_id !== document.version_id) return limited;
     const quote = citation.quotes?.[index];
+    const range = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(String(quote?.page));
     if (!quote || !quote.quote || document.quotes[index]?.quote !== quote.quote ||
-        String(document.quotes[index]?.target.page) !== String(quote.page) || !hasCheckedCitationLocation({...citation, quotes:[quote]})) return limited;
-    const range = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(String(quote.page));
-    if (!range) return limited;
+        String(document.quotes[index]?.target.page) !== String(quote.page) || !hasCheckedCitationLocation({...citation, quotes:[quote]}) || !range) return limited;
     const first = Number(range[1]), last = Number(range[2] ?? range[1]);
     const links = Array.from({length:last-first+1},(_,offset)=>({page:first+offset,url:librarySourceUrl(origin,citation.document_id,citation.version_id!,first+offset)}));
     if (links.some(link=>!link.url)) return limited;
