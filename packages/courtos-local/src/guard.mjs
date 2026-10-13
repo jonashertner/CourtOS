@@ -101,7 +101,14 @@ export function compileGuard({ register, realRoot, workRoot = null, relPaths = [
       const visit = (value, authored = false) => {
         if (typeof value === "string") hits.push(...guard.scan(value, { authored }));
         else if (Array.isArray(value)) value.forEach(item => visit(item, authored));
-        else if (value && typeof value === "object") Object.values(value).forEach(item => visit(item, authored || value.role === "assistant"));
+        else if (value && typeof value === "object") {
+          for (const [key, item] of Object.entries(value)) {
+            // A thinking block's signature and a redacted block's data are the provider's
+            // encrypted output, returned unchanged: base64 can spell "+FC/", which is no name.
+            if ((key === "signature" && value.type === "thinking") || (key === "data" && value.type === "redacted_thinking")) continue;
+            visit(item, authored || value.role === "assistant");
+          }
+        }
       };
       visit(body);
       if (hits.length) throw new OutboundBlocked(hits);

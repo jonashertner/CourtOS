@@ -48,6 +48,20 @@ test("names after a line break are caught inside request bodies", async () => {
   } finally { await cleanup(); }
 });
 
+test("a thinking block's signature is not read as text; its thinking is", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    const guard = store.guard();
+    // Base64 can spell a registered name between "+" and "/": "Keller" here.
+    const signature = "EqQBCkYIBRgCKkBx+Keller/9hZ2V0aGlua2luZ3NpZ25hdHVyZQ==";
+    assert.doesNotThrow(() => guard.checkBody({ messages: [{ role: "assistant", content: [{ type: "thinking", thinking: "", signature }, { type: "redacted_thinking", data: signature }] }] }));
+    assert.throws(() => guard.checkBody({ messages: [{ role: "assistant", content: [{ type: "thinking", thinking: "Frau Keller", signature: "abc" }] }] }), { code: "outbound_blocked" });
+    // Only those two fields of those two block types are skipped.
+    assert.throws(() => guard.checkBody({ messages: [{ role: "user", content: [{ type: "text", text: "x", signature }] }] }), { code: "outbound_blocked" });
+    assert.throws(() => guard.checkBody({ messages: [{ role: "user", content: [{ type: "text", data: signature }] }] }), { code: "outbound_blocked" });
+  } finally { await cleanup(); }
+});
+
 test("a question that already uses a neutral label is still pseudonymised", async () => {
   const { store, cleanup } = await freshCase();
   try {
