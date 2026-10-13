@@ -26,6 +26,15 @@ const WINDOW = 24;
 const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const bounded = (text) => new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])${escape(text).replace(/\s+/g, "\\s+")}(?![\\p{L}\\p{N}\\p{M}_])`, "giu");
 
+/** The object or array a string serialises, or undefined when it is plain text. */
+function parseContainer(text) {
+  if (!/^\s*[[{]/.test(text)) return undefined;
+  try {
+    const value = JSON.parse(text);
+    return value && typeof value === "object" ? value : undefined;
+  } catch { return undefined; }
+}
+
 export class OutboundBlocked extends CourtosError {
   constructor(hits) {
     super("outbound_blocked", { hits }, 409);
@@ -99,7 +108,11 @@ export function compileGuard({ register, realRoot, workRoot = null, relPaths = [
     checkBody(body) {
       const hits = [];
       const visit = (value, authored = false) => {
-        if (typeof value === "string") hits.push(...guard.scan(value, { authored }));
+        // A tool result serialised as JSON (search hits, the document list) is read as the
+        // text it carries: escaped, "\nKeller" would hide the name and "\nF." would spell "nF".
+        const parsed = typeof value === "string" ? parseContainer(value) : undefined;
+        if (parsed !== undefined) visitParsed(parsed, authored);
+        else if (typeof value === "string") hits.push(...guard.scan(value, { authored }));
         else if (Array.isArray(value)) value.forEach(item => visit(item, authored));
         else if (value && typeof value === "object") {
           for (const [key, item] of Object.entries(value)) {
@@ -108,6 +121,17 @@ export function compileGuard({ register, realRoot, workRoot = null, relPaths = [
             if ((key === "signature" && value.type === "thinking") || (key === "data" && value.type === "redacted_thinking")) continue;
             visit(item, authored || value.role === "assistant");
           }
+        }
+      };
+      // Inside such a result nothing is skipped: every key and every string is scanned.
+      const visitParsed = (value, authored) => {
+        if (typeof value === "string") {
+          const nested = parseContainer(value);
+          if (nested !== undefined) visitParsed(nested, authored);
+          else hits.push(...guard.scan(value, { authored }));
+        } else if (Array.isArray(value)) value.forEach(item => visitParsed(item, authored));
+        else if (value && typeof value === "object") {
+          for (const [key, item] of Object.entries(value)) { hits.push(...guard.scan(key, { authored })); visitParsed(item, authored); }
         }
       };
       visit(body);

@@ -396,6 +396,9 @@ export class AgentRun extends EventEmitter {
               // The results go out as JSON: a name near a snippet's end is checked against the
               // serialised text around it. Everything in it came from OpenCaseLaw.
               if (out.results) this.guard.allow(content);
+              // The guard reads the results field by field; every field came from OpenCaseLaw too.
+              const allowAll = (v) => { if (typeof v === "string") this.guard.allow(v); else if (v && typeof v === "object") Object.entries(v).forEach(([k, x]) => { this.guard.allow(k); allowAll(x); }); };
+              allowAll(out.results ?? []);
               this.trace("caselaw_search", { query: String(call.input?.query ?? "").slice(0, 200), hits: out.results?.length ?? 0, error: out.error ?? null });
             } else if (call.name === "read_decision" && TASKS[this.task].caseLaw) {
               const out = await this.toolReadDecision(call.input ?? {});

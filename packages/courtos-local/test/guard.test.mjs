@@ -141,3 +141,26 @@ test("paths outside the case folder, into .courtos, or through symlinks are refu
     assert.equal(files.some(f => f.rel_path.startsWith("link-out")), false, "symlinked folders are not followed");
   } finally { await cleanup(); }
 });
+
+test("a tool result serialised as JSON is scanned as the text it carries", async () => {
+  const { store, cleanup } = await freshCase();
+  try {
+    const guard = store.guard();
+    const result = (content) => ({ messages: [{ role: "user", content: [{ type: "tool_result", tool_use_id: "t1", content }] }] });
+    // Escaped, the line break before the name reads "\nKeller": the name must still be found.
+    assert.throws(() => guard.checkBody(result(JSON.stringify({ hits: [{ snippet: "Gruss\nKeller" }] }))), { code: "outbound_blocked" });
+    assert.throws(() => guard.checkBody(result(JSON.stringify({ "Anna Keller": 1 }))), { code: "outbound_blocked" }, "keys are scanned");
+    assert.throws(() => guard.checkBody(result(JSON.stringify({ inner: JSON.stringify(["x\nKeller"]) }))), { code: "outbound_blocked" }, "nested JSON");
+    assert.doesNotThrow(() => guard.checkBody(result(JSON.stringify({ hits: [{ snippet: "Person 1 rügte\ndie Mängel." }] }))));
+    assert.throws(() => guard.checkBody(result("{ kein JSON, Keller")), { code: "outbound_blocked" }, "plain text that only looks like JSON");
+  } finally { await cleanup(); }
+});
+
+test("initials as an alias do not match the escape before a line that starts with a label", async () => {
+  const { compileGuard } = await import("../src/guard.mjs");
+  const register = { entities: [{ id: "E1", decision: "replace", aliases: ["NF"], replacement: "F.________" }, { id: "E2", decision: "replace", aliases: ["Nadja Frei"], replacement: "F.________" }] };
+  const guard = compileGuard({ register, realRoot: "/nonexistent/case" });
+  const body = { messages: [{ role: "user", content: [{ type: "tool_result", tool_use_id: "t1", content: JSON.stringify({ hits: [{ snippet: "Lugano\n\nF.________,\n\nbei meinem Besuch" }] }) }] }] };
+  assert.doesNotThrow(() => guard.checkBody(body));
+  assert.throws(() => guard.checkBody({ messages: [{ role: "user", content: [{ type: "tool_result", tool_use_id: "t1", content: JSON.stringify({ s: "Gruss\nNF" }) }] }] }), { code: "outbound_blocked" });
+});
