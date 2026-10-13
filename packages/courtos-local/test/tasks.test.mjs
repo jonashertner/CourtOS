@@ -286,7 +286,9 @@ test("a quotation gets one correction; if it still fails, the claim is kept as u
 });
 
 test("progress notes are asked for in the reader's language, a draft in the language of the proceedings", () => {
-  assert.match(systemPrompt("chronology", "fr", "de"), /progress note: write it in French\./);
+  assert.match(systemPrompt("chronology", "fr", "de"), /progress note: write it in French,/);
   assert.match(systemPrompt("decision_draft", "fr", "de"), /Write all claim texts in German\./);
-  assert.match(systemPrompt("decision_draft", "fr", "de"), /progress note: write it in French\./);
+  assert.match(systemPrompt("decision_draft", "fr", "de"), /progress note: write it in French,/);
+  // A French note read "les claims et les lignes": schema words are not the reader's language.
+  assert.match(systemPrompt("chronology", "fr"), /not the names of tools or result fields/);
 });
