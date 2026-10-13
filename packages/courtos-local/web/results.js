@@ -65,7 +65,7 @@ export function renderResult(run, ctx) {
           h("span.group-count", {}, trn(rows.length, "{n} Punkt", "{n} Punkte"),
             STATUS_ORDER.map(k => [k, rows.filter(r => status.get(r) === k).length]).filter(([, n]) => n)
               .map(([k, n]) => [" · ", h("span", { class: `tone ${k}` }, `${n} ${label("compareStatus", k)}`)]))),
-        h("div.compare-table", { style: { "--cols": String(parties.length) } },
+        h("div.compare-table", { style: { "--cols": String(parties.length) }, dataset: { cols: String(Math.min(parties.length, 6)) } },
           h("div.compare-row.head", {}, parties.map(p => h("div", { class: partyClass(p) }, partyName(p))), h("div.analysis-head", {}, tr("Einordnung"))),
           rows.map(row => h("div.compare-row", { dataset: { filter: status.get(row) } },
             parties.map(p => {

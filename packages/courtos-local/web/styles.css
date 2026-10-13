@@ -461,6 +461,15 @@ span.tone.both, span.tone.not_found, span.tone.not_found_in_selected_sources { c
 .compare-row .analysis .claim-text { font-size: 14.5px; }
 .row-status { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
 .cell-party { display: none; font-size: 12px; margin-bottom: 4px; }
+/* Each party column needs about 160 pixels. When the table is narrower than its
+   columns need, each row lists the parties one under the other, named. */
+.compare-table { container-type: inline-size; }
+@container (max-width: 345px) { [data-cols="1"] .compare-row { grid-template-columns: minmax(0, 1fr); gap: 12px; } [data-cols="1"] .compare-row.head { display: none; } [data-cols="1"] .cell-party { display: block; } }
+@container (max-width: 531px) { [data-cols="2"] .compare-row { grid-template-columns: minmax(0, 1fr); gap: 12px; } [data-cols="2"] .compare-row.head { display: none; } [data-cols="2"] .cell-party { display: block; } }
+@container (max-width: 717px) { [data-cols="3"] .compare-row { grid-template-columns: minmax(0, 1fr); gap: 12px; } [data-cols="3"] .compare-row.head { display: none; } [data-cols="3"] .cell-party { display: block; } }
+@container (max-width: 903px) { [data-cols="4"] .compare-row { grid-template-columns: minmax(0, 1fr); gap: 12px; } [data-cols="4"] .compare-row.head { display: none; } [data-cols="4"] .cell-party { display: block; } }
+@container (max-width: 1089px) { [data-cols="5"] .compare-row { grid-template-columns: minmax(0, 1fr); gap: 12px; } [data-cols="5"] .compare-row.head { display: none; } [data-cols="5"] .cell-party { display: block; } }
+.compare-table[data-cols="6"] .compare-row { grid-template-columns: minmax(0, 1fr); gap: 12px; } .compare-table[data-cols="6"] .compare-row.head { display: none; } .compare-table[data-cols="6"] .cell-party { display: block; }
 .draft-doc { max-width: 78ch; }
 .draft-doc section { margin-bottom: 18px; }
 .draft-doc h3 { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 6px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
@@ -521,7 +530,7 @@ h2.sub { font-size: 15px; display: flex; gap: 8px; align-items: center; margin: 
 .drawer .regeste { margin-bottom: 12px; color: var(--muted); }
 @media (max-width: 980px) {
   .research-grid { grid-template-columns: minmax(0, 1fr); }
-  .q-body, .compare-row { grid-template-columns: 1fr; }
+  .q-body, .compare-row { grid-template-columns: minmax(0, 1fr); }
   .compare-row { gap: 12px; }
   .compare-row.head { display: none; }
   .cell-party { display: block; }

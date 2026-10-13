@@ -28,3 +28,16 @@ test("the research column and the document table fit a phone", () => {
   assert.match(rule(media("max-width: 980px"), ".research-grid"), /grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(rule(media("max-width: 640px"), "table.docs"), /overflow-x:\s*auto/);
 });
+
+test("a party comparison lists the parties one under the other when its columns would be narrower than 160 pixels", async () => {
+  const results = await readFile(new URL("../web/results.js", import.meta.url), "utf8");
+  assert.match(results, /dataset: \{ cols: String\(Math\.min\(parties\.length, 6\)\) \}/);
+  assert.match(css, /\.compare-table \{ container-type: inline-size; \}/);
+  for (let n = 1; n <= 5; n++) {
+    const width = (n + 1) * 160 + n * 26 - 1;
+    const block = new RegExp(`@container \\(max-width: ${width}px\\) \\{ \\[data-cols="${n}"\\] \\.compare-row \\{ grid-template-columns: minmax\\(0, 1fr\\);[^\\n]*\\[data-cols="${n}"\\] \\.cell-party \\{ display: block; \\}`);
+    assert.match(css, block, `${n} parties`);
+  }
+  assert.match(css, /\.compare-table\[data-cols="6"\] \.compare-row \{ grid-template-columns: minmax\(0, 1fr\);/, "six or more always stack");
+  assert.match(rule(media("max-width: 980px"), ".q-body, .compare-row"), /grid-template-columns:\s*minmax\(0, 1fr\)/);
+});
