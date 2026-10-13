@@ -1,0 +1,92 @@
+[
+  {
+    "task": "source_chat",
+    "claim": {
+      "citations": [
+        {
+          "exact_quote": "Am 5. September 2026 zahlte sie CHF 1250 an die Beklagte.",
+          "section_id": "S1"
+        },
+        {
+          "exact_quote": "Die Beklagte bestreitet den Zahlungseingang von CHF 1250.",
+          "section_id": "S2"
+        },
+        {
+          "exact_quote": "Synthetische Beilage 1: Zahlungsauftrag vom 5. September 2026.",
+          "section_id": "S3"
+        },
+        {
+          "exact_quote": "Status: erfasst; Ausführung nicht bestätigt.",
+          "section_id": "S3"
+        },
+        {
+          "exact_quote": "Die Erfassung eines Zahlungsauftrags allein belegt weder dessen Ausführung noch den Zahlungseingang beim Empfänger.",
+          "section_id": "S5"
+        },
+        {
+          "exact_quote": "Ausdrücklich erfundener Lehrsatz nur für den Funktionstest",
+          "section_id": "S5"
+        }
+      ],
+      "context_references": [],
+      "id": "C6",
+      "text": "Eigene Schlussfolgerung aus den Quellen: Fehlende unabhängige Bestätigung – Beilage 1 verzeichnet zum behaupteten Datum und Betrag nur einen erfassten Zahlungsauftrag und hält ausdrücklich fest, die Ausführung sei nicht bestätigt; eine Bestätigung der Ausführung oder des Zahlungseingangs bei der Beklagten findet sich in dieser Auswahl nicht. Die Beklagte bestreitet den Zahlungseingang, und der ausdrücklich erfundene Testlehrsatz hält fest, die Erfassung eines Zahlungsauftrags allein belege weder Ausführung noch Zahlungseingang. Die behauptete Zahlung bleibt in dieser Auswahl daher unaufgelöst; die fehlende Bestätigung beweist nicht, dass keine Zahlung erfolgte."
+    },
+    "source": {
+      "id": "S3",
+      "kind": "source",
+      "source": {
+        "document": "D3",
+        "format": "pdf",
+        "page": 1,
+        "party": "P1",
+        "role": "exhibit",
+        "version": "V1"
+      },
+      "text": "Synthetische Beilage 1: Zahlungsauftrag vom 5. September 2026. Auftraggeberin: Partei A. Empfängerin: Partei B. Betrag: CHF 1250. Status: erfasst; Ausführung nicht bestätigt."
+    },
+    "provenance": {
+      "synthetic": true,
+      "result_sha256": "7640b39816c7f6ac7c696869597434ee71fff650877970288e9d86791b0b8da6",
+      "request_sha256": "f1a24da81d894bf9fd0e3d3ead2ea8c6a8fec4346ba550cdfbb3667af067d5fd",
+      "scope": "Unmodified retained claim and synthetic S3. Literal quotes remain incomplete for the whole claim; surrounding text is reading context only."
+    }
+  },
+  {
+    "task": "decision_draft",
+    "claim": {
+      "citations": [
+        {
+          "exact_quote": "Status: erfasst; Ausführung nicht bestätigt.",
+          "section_id": "S3"
+        },
+        {
+          "exact_quote": "Die Erfassung eines Zahlungsauftrags allein belegt weder dessen Ausführung noch den Zahlungseingang beim Empfänger.",
+          "section_id": "S5"
+        }
+      ],
+      "context_references": [],
+      "id": "C9",
+      "text": "Unverbindlicher Vorschlag: Die behauptete Zahlung von CHF 1250 nicht allein gestützt auf Beilage 1 als erwiesen zu betrachten, da diese nur einen erfassten Auftrag mit unbestätigter Ausführung ausweist, und vor einer Entscheidung zu prüfen, ob weitere Beweismittel zur Ausführung und zum Zahlungseingang (z.B. eine Ausführungs- oder Eingangsbestätigung) einzuholen bzw. anzubieten sind. Dies ist kein verbindliches Ergebnis."
+    },
+    "source": {
+      "id": "S3",
+      "kind": "source",
+      "source": {
+        "document": "D3",
+        "format": "pdf",
+        "page": 1,
+        "party": "P1",
+        "role": "exhibit",
+        "version": "V1"
+      },
+      "text": "Synthetische Beilage 1: Zahlungsauftrag vom 5. September 2026. Auftraggeberin: Partei A. Empfängerin: Partei B. Betrag: CHF 1250. Status: erfasst; Ausführung nicht bestätigt."
+    },
+    "provenance": {
+      "synthetic": true,
+      "result_sha256": "e4bebb95858bccdad375c1d2dc5c59827d9106b04964741fba6407b0e5b83a1f",
+      "request_sha256": "bca9ced4cb79bc490e8b469ee90b10e74d42f31e5fd424fd5b23d7f5bd6f4cf1",
+      "scope": "Unmodified retained claim and synthetic S3. Literal quotes remain incomplete for the whole claim; surrounding text is reading context only."
+    }
+  }
+]

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The tray app. .NET Framework 4.8 ships with Windows 10 and 11, so the app needs no runtime of its own. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>CourtOS</AssemblyName>
+    <RootNamespace>CourtOS</RootNamespace>
+    <Product>CourtOS</Product>
+    <Company>CourtOS</Company>
+    <Copyright>CourtOS contributors</Copyright>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <!-- JavaScriptSerializer, for the menu texts in src/menu.json. -->
+    <Reference Include="System.Web.Extensions" />
+    <EmbeddedResource Include="..\..\web\icon-32.png" LogicalName="icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Reference assemblies for net48, so the app also builds where no targeting pack is installed. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

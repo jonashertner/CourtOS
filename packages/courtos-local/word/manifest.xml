@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CourtOS case folder for Word. The task pane is served by the local
+     companion (courtos-local) on https://localhost:4311 only. Sideload with
+     `courtos-local install-word` (macOS) or Word's "Upload My Add-in". -->
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+           xsi:type="TaskPaneApp">
+  <Id>6f3d2a8e-4c1b-4e57-9a0d-c0d7f05a1e42</Id>
+  <Version>0.1.0.0</Version>
+  <ProviderName>CourtOS</ProviderName>
+  <DefaultLocale>de-CH</DefaultLocale>
+  <DisplayName DefaultValue="CourtOS Fallordner"/>
+  <Description DefaultValue="Aktenstellen zur Markierung finden und geprüfte Fundstellen einfügen. Arbeitet mit dem lokalen CourtOS-Fallordner."/>
+  <IconUrl DefaultValue="https://localhost:4311/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:4311/icon-64.png"/>
+  <SupportUrl DefaultValue="https://github.com/jonashertner/CourtOS"/>
+  <AppDomains>
+    <AppDomain>https://localhost:4311</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.3">
+      <Set Name="WordApi" MinVersion="1.3"/>
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://localhost:4311/word.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="CourtOS.Group">
+                <Label resid="CourtOS.Group.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16"/>
+                  <bt:Image size="32" resid="Icon.32"/>
+                  <bt:Image size="80" resid="Icon.80"/>
+                </Icon>
+                <Control xsi:type="Button" id="CourtOS.Open">
+                  <Label resid="CourtOS.Open.Label"/>
+                  <Supertip>
+                    <Title resid="CourtOS.Open.Label"/>
+                    <Description resid="CourtOS.Open.Tip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16"/>
+                    <bt:Image size="32" resid="Icon.32"/>
+                    <bt:Image size="80" resid="Icon.80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CourtOS.Pane</TaskpaneId>
+                    <SourceLocation resid="CourtOS.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16" DefaultValue="https://localhost:4311/icon-16.png"/>
+        <bt:Image id="Icon.32" DefaultValue="https://localhost:4311/icon-32.png"/>
+        <bt:Image id="Icon.80" DefaultValue="https://localhost:4311/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="CourtOS.Url" DefaultValue="https://localhost:4311/word.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="CourtOS.Group.Label" DefaultValue="CourtOS"/>
+        <bt:String id="CourtOS.Open.Label" DefaultValue="Fallordner"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="CourtOS.Open.Tip" DefaultValue="Aktenstellen zur Markierung finden und geprüfte Fundstellen einfügen."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

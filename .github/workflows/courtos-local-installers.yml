@@ -1,0 +1,115 @@
+# Installers: CourtOS-<version>-<arch>.pkg for macOS and CourtOS-<version>-<arch>.msi for
+# Windows, built from packages/courtos-local/installer/. Each bundles the official Node
+# runtime from nodejs.org (checksum verified) and the tray or menu-bar app.
+#
+# The packages built here are unsigned: they are for trying an installer change, not for
+# handing out. Signed builds need a Developer ID (macOS) or a code-signing certificate
+# (Windows) and are made with build.sh --sign/--installer-sign/--notary-profile or
+# build.ps1 -CertificateThumbprint on a machine that holds the identity.
+name: courtos-local installers
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "packages/courtos-local/installer/**"
+      - "packages/courtos-local/bin/**"
+      - ".github/workflows/courtos-local-installers.yml"
+
+concurrency:
+  group: courtos-local-installers-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-latest
+    defaults:
+      run:
+        working-directory: packages/courtos-local
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/courtos-local/package-lock.json
+
+      # The package bundles its repository siblings from node_modules.
+      - run: npm ci
+
+      - run: installer/macos/build.sh --arch ${{ matrix.arch }}
+
+      - name: The package installs a signed-valid app
+        run: |
+          pkgutil --expand-full dist/CourtOS-*-${{ matrix.arch }}.pkg "$RUNNER_TEMP/expanded"
+          app=$(find "$RUNNER_TEMP/expanded" -maxdepth 4 -name CourtOS.app | head -1)
+          codesign --verify --deep --strict "$app"
+          HOME="$RUNNER_TEMP/home" COURTOS_PORT=4391 "$app/Contents/MacOS/CourtOS" --check
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: CourtOS-macos-${{ matrix.arch }}
+          path: packages/courtos-local/dist/CourtOS-*.pkg
+          if-no-files-found: error
+
+  windows:
+    name: Windows MSI (${{ matrix.arch }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64]
+    defaults:
+      run:
+        working-directory: packages/courtos-local
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/courtos-local/package-lock.json
+
+      - run: npm ci
+
+      - name: Install WiX 5
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add --global WixToolset.Util.wixext/5.0.2
+
+      - run: installer/windows/build.ps1 -Arch ${{ matrix.arch }}
+
+      - name: The MSI installs, starts CourtOS and uninstalls
+        run: |
+          $msi = (Get-ChildItem dist/CourtOS-*-${{ matrix.arch }}.msi).FullName
+          $log = Join-Path $env:RUNNER_TEMP "install.log"
+          $p = Start-Process msiexec -ArgumentList "/i `"$msi`" /qn /l*v `"$log`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content $log -Tail 80; throw "Installation fehlgeschlagen ($($p.ExitCode))." }
+          $exe = Join-Path $env:ProgramFiles "CourtOS\CourtOS.exe"
+          if (-not (Test-Path (Join-Path $env:ProgramData "CourtOS\certs\localhost.crt"))) { throw "Kein Zertifikat für alle Benutzer." }
+          $env:COURTOS_PORT = "4391"
+          $check = Start-Process $exe -ArgumentList "--check" -Wait -PassThru -RedirectStandardOutput (Join-Path $env:RUNNER_TEMP "check.txt")
+          Get-Content (Join-Path $env:RUNNER_TEMP "check.txt")
+          if ($check.ExitCode -ne 0) { throw "CourtOS --check fehlgeschlagen ($($check.ExitCode))." }
+          $p = Start-Process msiexec -ArgumentList "/x `"$msi`" /qn" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Deinstallation fehlgeschlagen ($($p.ExitCode))." }
+          if (Test-Path (Join-Path $env:ProgramData "CourtOS\certs")) { throw "Das Zertifikat wurde nicht entfernt." }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: CourtOS-windows-${{ matrix.arch }}
+          path: packages/courtos-local/dist/CourtOS-*.msi
+          if-no-files-found: error

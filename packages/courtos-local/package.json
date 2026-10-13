@@ -1,0 +1,50 @@
+{
+  "name": "@courtos/local",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CourtOS case-folder companion: a sanitised mirror of one local case folder, a frontier-model agent confined to that mirror, and verified results in the browser and in Word.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "bin": {
+    "courtos-local": "bin/courtos-local.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "web/",
+    "word/",
+    "scripts/ocr-vision.swift",
+    "fixtures/HG.2026.57 Alpenblick/",
+    "fixtures/HG.2026.112 Rheintal Präzision/",
+    "fixtures/PC.2026.0914 Domaine des Tourelles SA/",
+    "fixtures/PD.2026.184 Lanfranchi/",
+    "fixtures/HG ICC 2026 7 Zytglogge Praezisionsinstrumente AG/",
+    "fixtures/HG260074-O Caffè Distribuzione Sud/",
+    "fixtures/1C_412_2026 Bettex/",
+    "README.md",
+    "TESTING.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "start": "node bin/courtos-local.mjs",
+    "demo": "node bin/courtos-local.mjs --demo",
+    "fixture": "python3 fixtures/build_dossier.py \"fixtures/HG.2026.57 Alpenblick\"",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "prepack": "cp ../../LICENSE LICENSE",
+    "pack:tester": "node -e \"require('fs').mkdirSync('dist', { recursive: true })\" && npm pack --pack-destination dist"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "@courtos/projection": "file:../courtos-projection",
+    "@courtos/workflows": "file:../courtos-workflows",
+    "fflate": "0.8.3",
+    "pdfjs-dist": "6.4.299"
+  },
+  "bundleDependencies": [
+    "@courtos/projection",
+    "@courtos/workflows"
+  ]
+}

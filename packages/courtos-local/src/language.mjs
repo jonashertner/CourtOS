@@ -1,0 +1,94 @@
+// The language of the proceedings. Everything CourtOS itself writes into the
+// anonymised version follows it: neutral document labels ("Klage", "Demande"),
+// page references ("S. 2", "p. 2") and replacement labels ("Adresse 1",
+// "Indirizzo 1"). Exhibit codes taken from file names ("KB 2", "pièce 4") are
+// the parties' own numbering and stay as written, because the pleadings cite
+// them that way.
+//
+// The interface follows it: opening a case, or correcting its language, switches
+// the interface to the language of the proceedings. The clerk can switch the
+// interface back, for instance to read a French case in German, until the next
+// case is opened.
+
+export const CASE_LANGUAGES = ["de", "fr", "it", "en"];
+
+export const ROLE_LABEL = {
+  de: { claim: "Klage", response: "Klageantwort", submission: "Eingabe", exhibit: "Beilage", literature: "Literatur", authority: "Entscheid", internal_note: "Interne Notiz", other: "Dokument", document: "Dokument" },
+  fr: { claim: "Demande", response: "Réponse", submission: "Écriture", exhibit: "Pièce", literature: "Doctrine", authority: "Décision", internal_note: "Note interne", other: "Document", document: "Document" },
+  it: { claim: "Petizione", response: "Risposta", submission: "Allegato", exhibit: "Documento", literature: "Dottrina", authority: "Decisione", internal_note: "Nota interna", other: "Documento", document: "Documento" },
+  en: { claim: "Statement of claim", response: "Statement of defence", submission: "Submission", exhibit: "Exhibit", literature: "Literature", authority: "Decision", internal_note: "Internal note", other: "Document", document: "Document" },
+};
+
+/** Labels for pleadings whose file name says more than the role: an appeal and its answer,
+ *  observations of an authority or a court below, a reply and a rejoinder. */
+export const PLEADING_LABEL = {
+  de: { appeal: { claim: "Beschwerde", response: "Beschwerdeantwort" }, civil_appeal: { claim: "Berufung", response: "Berufungsantwort" }, observations: "Vernehmlassung", reply: "Replik", rejoinder: "Duplik" },
+  fr: { appeal: { claim: "Recours", response: "Réponse" }, civil_appeal: { claim: "Appel", response: "Réponse à l'appel" }, observations: "Observations", reply: "Réplique", rejoinder: "Duplique" },
+  it: { appeal: { claim: "Ricorso", response: "Risposta" }, civil_appeal: { claim: "Appello", response: "Risposta all'appello" }, observations: "Osservazioni", reply: "Replica", rejoinder: "Duplica" },
+  en: { appeal: { claim: "Appeal", response: "Response to the appeal" }, civil_appeal: { claim: "Appeal", response: "Response to the appeal" }, observations: "Observations", reply: "Reply", rejoinder: "Rejoinder" },
+};
+
+/** Replacement labels for identifiers, by kind. Persons and organisations get letters ("A.________"). */
+export const REPLACEMENT_PREFIX = {
+  de: {
+    person: "Person", organisation: "Organisation", address: "Adresse", parcel: "Grundstück", place: "Ort",
+    email: "E-Mail", iban: "Konto", phone: "Telefon", ahv: "AHV", uid: "UID", url: "Link",
+    plate: "Kennzeichen", birthdate: "Geburtsdatum", insured: "Versichertennummer", zemis: "ZEMIS-Nr.", document: "Ausweisnummer", docket: "Verfahrensnummer",
+    account: "Kontonummer", number: "Nummer", identifier: "Kennung",
+  },
+  fr: {
+    person: "Personne", organisation: "Organisation", address: "Adresse", parcel: "Parcelle", place: "Lieu",
+    email: "Courriel", iban: "Compte", phone: "Téléphone", ahv: "AVS", uid: "IDE", url: "Lien",
+    plate: "Plaque", birthdate: "Date de naissance", insured: "N° d’assuré", zemis: "N° SYMIC", document: "N° de pièce d’identité", docket: "N° de procédure",
+    account: "N° de compte", number: "Numéro", identifier: "Identifiant",
+  },
+  it: {
+    person: "Persona", organisation: "Organizzazione", address: "Indirizzo", parcel: "Fondo", place: "Luogo",
+    email: "E-mail", iban: "Conto", phone: "Telefono", ahv: "AVS", uid: "IDI", url: "Link",
+    plate: "Targa", birthdate: "Data di nascita", insured: "N. assicurato", zemis: "N. SIMIC", document: "N. documento d’identità", docket: "N. incarto",
+    account: "N. conto", number: "Numero", identifier: "Identificativo",
+  },
+  en: {
+    person: "Person", organisation: "Organisation", address: "Address", parcel: "Parcel", place: "Place",
+    email: "Email", iban: "Account", phone: "Phone", ahv: "AHV", uid: "UID", url: "Link",
+    plate: "Plate", birthdate: "Date of birth", insured: "Insured no.", zemis: "ZEMIS no.", document: "ID document no.", docket: "Case no.",
+    account: "Account no.", number: "Number", identifier: "Identifier",
+  },
+};
+
+const PAGE_WORD = { de: "S.", fr: "p.", it: "pag.", en: "p." };
+const PARAGRAPH_WORD = { de: "Abs.", fr: "par.", it: "cpv.", en: "para." };
+const NOTE_WORD = { de: "Notiz", fr: "Note", it: "Nota", en: "Note" };
+
+export const caseLanguage = (lang) => (CASE_LANGUAGES.includes(lang) ? lang : "de");
+
+/** Extraction labels pages "S. 3" and paragraph ranges "Abs. 4–9"; this renders them in the case language. */
+export function pageLabel(label, lang) {
+  const l = caseLanguage(lang);
+  return String(label ?? "").replace(/^S\. /, `${PAGE_WORD[l]} `).replace(/^Abs\. /, `${PARAGRAPH_WORD[l]} `);
+}
+
+export const noteLabel = (id, lang) => `${NOTE_WORD[caseLanguage(lang)]} ${id}`;
+
+// Short, frequent function words. Proper names and legal terms are left out on
+// purpose: a German pleading quoting a French contract stays German.
+const STOPWORDS = {
+  de: "der die das und ist nicht mit von zu den des dem für auf ein eine sich auch als wird wurde sind dass oder bei nach aus wie hat haben vom zur zum",
+  fr: "le la les et est pas avec de des du pour sur un une que qui dans par au aux il elle ont été sont ce cette ou être son sa ses",
+  it: "il lo la gli le e è non con di del della dei per su un una che nel nella sono stato stata ha hanno questo questa o essere suo sua",
+  en: "the and is not with of to for that which by at it they have been are this or be his her its were from",
+};
+const WORDS = Object.fromEntries(Object.entries(STOPWORDS).map(([l, s]) => [l, new Set(s.split(" "))]));
+
+/** The most likely language of the given texts, or null if there is too little text to tell. */
+export function detectLanguage(texts) {
+  const score = { de: 0, fr: 0, it: 0, en: 0 };
+  let total = 0;
+  for (const text of texts) {
+    for (const word of String(text).toLocaleLowerCase().match(/\p{L}+/gu) ?? []) {
+      for (const l of CASE_LANGUAGES) if (WORDS[l].has(word)) { score[l]++; total++; }
+    }
+  }
+  if (total < 12) return null;
+  return CASE_LANGUAGES.reduce((best, l) => (score[l] > score[best] ? l : best), "de");
+}

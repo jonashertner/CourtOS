@@ -1,0 +1,62 @@
+<!--
+  CourtOS-<version>-<arch>.msi: CourtOS in Program Files (tray app, Node runtime, CourtOS),
+  started at every login. Built by build.ps1 with WiX 5:
+
+    wix build Package.wxs -arch x64 -d Version=0.1.0 -d Payload=<folder> -ext WixToolset.Util.wixext
+
+  Properties for IT (msiexec /i CourtOS.msi /qn PROPERTY=value):
+    INSTALLCERTIFICATE=1  (default) make a localhost certificate for all users and trust it on this
+                          computer, so Word loads CourtOS without asking anyone. 0 when IT
+                          distributes its own certificate to %ProgramData%\CourtOS\certs.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="CourtOS" Manufacturer="CourtOS" Version="$(var.Version)" UpgradeCode="CD95B54E-B550-48FD-817E-038FB5FA4309" Scope="perMachine" Compressed="yes">
+    <MajorUpgrade DowngradeErrorMessage="Eine neuere Version von CourtOS ist bereits installiert." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="INSTALLCERTIFICATE" Value="1" Secure="yes" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/jonashertner/CourtOS" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="CourtOS" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main">
+      <ComponentGroupRef Id="Payload" />
+      <ComponentRef Id="App" />
+    </Feature>
+
+    <ComponentGroup Id="Payload" Directory="INSTALLFOLDER">
+      <Files Include="$(var.Payload)\**">
+        <Exclude Files="$(var.Payload)\CourtOS.exe" />
+      </Files>
+    </ComponentGroup>
+
+    <Component Id="App" Directory="INSTALLFOLDER">
+      <File Id="CourtOSExe" Source="$(var.Payload)\CourtOS.exe" KeyPath="yes">
+        <Shortcut Id="StartMenu" Directory="ProgramMenuFolder" Name="CourtOS" Description="CourtOS im Browser öffnen" WorkingDirectory="INSTALLFOLDER" />
+      </File>
+      <!-- Every user who signs in gets the tray app; it starts CourtOS and the browser stays closed. -->
+      <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="CourtOS" Type="string" Value="&quot;[INSTALLFOLDER]CourtOS.exe&quot; --login" />
+    </Component>
+
+    <!-- A running CourtOS holds its files open; it is ended before files are replaced or removed.
+         Its server ends with it (it stops when its input closes). -->
+    <util:CloseApplication Id="CloseCourtOS" Target="CourtOS.exe" CloseMessage="yes" TerminateProcess="1" RebootPrompt="no" />
+
+    <!-- Deferred and not impersonated: these run as LocalSystem, which may write the machine's root store. -->
+    <CustomAction Id="InstallCertificate" FileRef="CourtOSExe" ExeCommand="--install-certificate" Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="RemoveCertificate" FileRef="CourtOSExe" ExeCommand="--remove-certificate" Execute="deferred" Impersonate="no" Return="ignore" />
+    <!-- After an interactive install CourtOS starts at once, as the user who ran the installer.
+         Its argument changes nothing: it starts like a double-click, but WiX wants a command line. -->
+    <CustomAction Id="LaunchCourtOS" FileRef="CourtOSExe" ExeCommand="--installed" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+
+    <InstallExecuteSequence>
+      <Custom Action="InstallCertificate" Before="InstallFinalize" Condition="NOT REMOVE AND INSTALLCERTIFICATE = &quot;1&quot;" />
+      <Custom Action="RemoveCertificate" Before="RemoveFiles" Condition="REMOVE ~= &quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="LaunchCourtOS" After="InstallFinalize" Condition="NOT REMOVE AND UILevel &gt;= 4" />
+    </InstallExecuteSequence>
+  </Package>
+</Wix>

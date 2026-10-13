@@ -1,0 +1,478 @@
+{
+  "provenance": {
+    "result_sha256": "e11921ffb008ba29fecb74d38cc3d5edc97c5df4a97fccce92ce0565086d951e",
+    "request_sha256": "8b4d93558304fecf125e38a10628d940111418bd90bcbcfbe033d1480e6b206f",
+    "note": "Unmodified selected claims/rows/neutral source sections from a fictional training matter with genuine published Swiss authority. Historical answer remains semantically unaccepted; added reading links do not repair it."
+  },
+  "result": {
+    "claims": [
+      {
+        "citations": [
+          {
+            "exact_quote": "Partei Alpha habe mit der\nam 12. September 2026 zugestellten Sendung auch die Beschwerdeantwort vom 5. September 2026\nerhalten.",
+            "section_id": "S3"
+          }
+        ],
+        "id": "C10",
+        "text": "Partei Beta behauptet, Partei Alpha habe mit der am 12. September 2026 zugestellten Sendung auch die Beschwerdeantwort vom 5. September 2026 erhalten."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Partei Alpha behauptet, sie habe die Beschwerdeantwort der Partei Beta vom 5. September 2026 und\nden Amtsbericht vom 8. September 2026 vor dem Entscheid vom 22. September 2026 nicht erhalten.",
+            "section_id": "S1"
+          }
+        ],
+        "id": "C12",
+        "text": "Partei Alpha behauptet, sie habe die Beschwerdeantwort der Partei Beta vom 5. September 2026 und den Amtsbericht vom 8. September 2026 vor dem Entscheid vom 22. September 2026 nicht erhalten."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "sie habe die Beschwerdeantwort der Partei Beta vom 5. September 2026",
+            "section_id": "S1"
+          },
+          {
+            "exact_quote": "auch die Beschwerdeantwort vom 5. September 2026",
+            "section_id": "S3"
+          },
+          {
+            "exact_quote": "Das Register enthält keinen\nAusgabevermerk über Kopien beider Eingaben vor dem 22. September 2026.",
+            "section_id": "S5"
+          },
+          {
+            "exact_quote": "Fiktive E-Mail vom 24. September 2026, 09:02 Uhr",
+            "section_id": "S6"
+          },
+          {
+            "exact_quote": "Anbei übermitteln wir Ihnen die Beschwerdeantwort vom 5. September 2026 (4\nSeiten) und den Amtsbericht vom 8. September 2026 (2 Seiten).",
+            "section_id": "S6"
+          }
+        ],
+        "id": "C14",
+        "text": "Zum Erhalt der Beschwerdeantwort vom 5. September 2026 vor dem Entscheid vom 22. September 2026 stehen sich die Behauptung von Partei Alpha (kein Erhalt) und die Gegenbehauptung von Partei Beta (Erhalt mit der Sendung vom 12. September 2026) gegenüber. Der fiktive Registerauszug enthält keinen Ausgabevermerk über Kopien beider Eingaben vor dem 22. September 2026; die fiktive E-Mail vom 24. September 2026 bezeichnet sich als Übermittlung der Beschwerdeantwort und des Amtsberichts. Eigene Schlussfolgerung: Ein fehlender Registervermerk ist kein positiver Nachweis des Nichterhalts; die Frage bleibt in dieser Auswahl streitig."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Die Kopien der beiden Eingaben seien erst mit E-Mail vom 24. September 2026 eingetroffen.",
+            "section_id": "S1"
+          }
+        ],
+        "id": "C16",
+        "text": "Partei Alpha behauptet, die Kopien der beiden Eingaben seien erst mit E-Mail vom 24. September 2026 eingetroffen."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Fiktive E-Mail vom 24. September 2026, 09:02 Uhr",
+            "section_id": "S6"
+          },
+          {
+            "exact_quote": "Anbei übermitteln wir Ihnen die Beschwerdeantwort vom 5. September 2026 (4\nSeiten) und den Amtsbericht vom 8. September 2026 (2 Seiten).",
+            "section_id": "S6"
+          },
+          {
+            "exact_quote": "ein\nseparater Empfangs- oder Öffnungsnachweis liegt nicht vor.",
+            "section_id": "S6"
+          },
+          {
+            "exact_quote": "Die sechs Anlagenseiten selbst sind nicht Teil\ndes Testpakets.",
+            "section_id": "S6"
+          }
+        ],
+        "id": "C17",
+        "text": "Nur Partei Alpha äussert sich in dieser Auswahl zur E-Mail vom 24. September 2026; eine Position von Partei Beta dazu fehlt in dieser Auswahl. Die fiktive E-Mail (D3 S. 2) vom 24. September 2026, 09:02 Uhr, gibt an, die Beschwerdeantwort und den Amtsbericht zu übermitteln. Ein separater Empfangs- oder Öffnungsnachweis liegt laut Beilage nicht vor, und die Anlagenseiten selbst sind nicht im Testpaket; der Empfangszeitpunkt ist damit nicht unabhängig bestätigt."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Beide Eingaben seien in dessen Begründung berücksichtigt worden.",
+            "section_id": "S1"
+          }
+        ],
+        "id": "C18",
+        "text": "Partei Alpha behauptet, beide Eingaben seien in der Begründung des Entscheids vom 22. September 2026 berücksichtigt worden."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Die Behörde berücksichtigt in ihrer Begründung die Beschwerdeantwort vom 5. September 2026 und den\nAmtsbericht vom 8. September 2026.",
+            "section_id": "S6"
+          }
+        ],
+        "id": "C19",
+        "text": "Eine Position von Partei Beta zur Berücksichtigung der Eingaben ist in dieser Auswahl nicht enthalten. Der fiktive Entscheidauszug (D3 S. 2) hält fest, dass die Behörde in ihrer Begründung die Beschwerdeantwort vom 5. September 2026 und den Amtsbericht vom 8. September 2026 berücksichtigt; dies stimmt mit der Behauptung von Partei Alpha überein."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Partei Alpha behauptet, sie habe am 15. September 2026 telefonisch um Kopien beider Eingaben\nersucht.",
+            "section_id": "S1"
+          }
+        ],
+        "id": "C20",
+        "text": "Partei Alpha behauptet, sie habe am 15. September 2026 telefonisch um Kopien beider Eingaben ersucht."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Partei Beta bestreitet das von Partei Alpha behauptete Telefonat vom 15. September 2026 mit\nNichtwissen.",
+            "section_id": "S3"
+          }
+        ],
+        "id": "C21",
+        "text": "Partei Beta bestreitet das von Partei Alpha behauptete Telefonat vom 15. September 2026 mit Nichtwissen."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Es liegt ihr keine Gesprächsaufzeichnung vor.",
+            "section_id": "S1"
+          },
+          {
+            "exact_quote": "Für das behauptete Telefonat F2\nwird kein zusätzlicher Beleg eingereicht.",
+            "section_id": "S2"
+          },
+          {
+            "exact_quote": "Sie behauptet weder, selbst anwesend gewesen zu sein, noch dass das Telefonat\nnachweislich nicht stattgefunden habe.",
+            "section_id": "S3"
+          },
+          {
+            "exact_quote": "Ein Telefonjournal für den 15. September 2026 ist in dieser Lehrakte nicht enthalten.",
+            "section_id": "S5"
+          },
+          {
+            "exact_quote": "Aus diesem\nfehlenden Dokument folgt keine positive Feststellung über das Stattfinden oder Ausbleiben eines\nTelefonats.",
+            "section_id": "S5"
+          }
+        ],
+        "id": "C22",
+        "text": "Partei Alpha behauptet das Telefonat vom 15. September 2026; Partei Beta bestreitet es mit Nichtwissen, ohne zu behaupten, anwesend gewesen zu sein oder dass es nachweislich nicht stattgefunden habe. Eine Gesprächsaufzeichnung oder ein zusätzlicher Beleg liegt nicht vor, und ein Telefonjournal für den 15. September 2026 ist in der Lehrakte nicht enthalten; laut Beilage folgt daraus keine Feststellung über Stattfinden oder Ausbleiben. Ob das Telefonat stattfand, bleibt in dieser Auswahl unabhängig unbestätigt und offen."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Partei Alpha macht geltend, ein blosser Hinweis auf Akteneinsicht heile die unterlassene Zustellung\nnicht.",
+            "section_id": "S2"
+          }
+        ],
+        "id": "C27",
+        "text": "Partei Alpha macht geltend, ein blosser Hinweis auf Akteneinsicht heile die unterlassene Zustellung nicht."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "Partei Beta vertritt die Rechtsauffassung, die blosse Möglichkeit der Akteneinsicht genüge zur Heilung,\nauch wenn keine Kopien der Eingaben zugestellt worden seien.",
+            "section_id": "S4"
+          }
+        ],
+        "id": "C28",
+        "text": "Partei Beta vertritt die Rechtsauffassung, die blosse Möglichkeit der Akteneinsicht genüge zur Heilung, auch wenn keine Kopien der Eingaben zugestellt worden seien."
+      },
+      {
+        "citations": [
+          {
+            "exact_quote": "ein blosser Hinweis auf Akteneinsicht heile die unterlassene Zustellung",
+            "section_id": "S2"
+          },
+          {
+            "exact_quote": "die blosse Möglichkeit der Akteneinsicht genüge zur Heilung",
+            "section_id": "S4"
+          },
+          {
+            "exact_quote": "Sie beruft sich hierfür auf BGE 137 I 195.",
+            "section_id": "S4"
+          },
+          {
+            "exact_quote": "Eine Heilung dieses Mangels durch das Obergericht - das über dieselbe Kognition verfügt wie das Bezirksgericht - hätte nun aber vorausgesetzt, dass diese beiden Eingaben den Beschwerdeführern zugestellt worden wären und sie sich dazu hätten äussern können.",
+            "section_id": "S9"
+          },
+          {
+            "exact_quote": "Das Obergericht durfte die festgestellte Verletzung des Anspruchs auf rechtliches Gehör der Beschwerdeführer nicht mit dem reinen Verweis auf die Möglichkeit der Akteneinsicht heilen.",
+            "section_id": "S9"
+          }
+        ],
+        "id": "C29",
+        "text": "Die Parteien widersprechen sich zur Heilung durch Akteneinsicht. Die ausgewählte Erwägung 2.6 von BGE 137 I 195 verlangt für eine Heilung die Zustellung der Eingaben und die Möglichkeit zur Äusserung und hält fest, die Verletzung habe nicht mit dem reinen Verweis auf die Möglichkeit der Akteneinsicht geheilt werden dürfen. Diese Passage stützt den Standpunkt von Partei Alpha und steht dem Standpunkt von Partei Beta entgegen; Partei Beta nennt keine bestimmte Erwägung. Es handelt sich um ausgewählte Passagen, nicht um eine Prüfung des gesamten Entscheids."
+      }
+    ],
+    "coverage": {
+      "all_claims_extracted": false,
+      "more_claims_reported": false,
+      "scope": "selected_sources_only",
+      "source_inventory": [
+        {
+          "claim_ids": [
+            "C1",
+            "C3",
+            "C4",
+            "C5",
+            "C6",
+            "C8",
+            "C9",
+            "C11",
+            "C12",
+            "C14",
+            "C15",
+            "C16",
+            "C18",
+            "C20",
+            "C22"
+          ],
+          "review": "reviewed",
+          "section_id": "S1"
+        },
+        {
+          "claim_ids": [
+            "C22",
+            "C25",
+            "C26",
+            "C27",
+            "C29",
+            "C30",
+            "C32"
+          ],
+          "review": "reviewed",
+          "section_id": "S2"
+        },
+        {
+          "claim_ids": [
+            "C2",
+            "C3",
+            "C5",
+            "C7",
+            "C8",
+            "C10",
+            "C11",
+            "C13",
+            "C14",
+            "C15",
+            "C21",
+            "C22",
+            "C23",
+            "C24"
+          ],
+          "review": "reviewed",
+          "section_id": "S3"
+        },
+        {
+          "claim_ids": [
+            "C28",
+            "C29",
+            "C31",
+            "C32",
+            "C33",
+            "C34"
+          ],
+          "review": "reviewed",
+          "section_id": "S4"
+        },
+        {
+          "claim_ids": [
+            "C8",
+            "C11",
+            "C14",
+            "C15",
+            "C22"
+          ],
+          "review": "reviewed",
+          "section_id": "S5"
+        },
+        {
+          "claim_ids": [
+            "C14",
+            "C17",
+            "C19",
+            "C24"
+          ],
+          "review": "reviewed",
+          "section_id": "S6"
+        },
+        {
+          "claim_ids": [
+            "C29",
+            "C32",
+            "C34"
+          ],
+          "review": "reviewed",
+          "section_id": "S9"
+        }
+      ]
+    },
+    "rows": [
+      {
+        "analysis": "C14",
+        "category": "fact",
+        "id": "R5",
+        "positions": [
+          {
+            "claim": "C12",
+            "party": "P1",
+            "posture": "allegation"
+          },
+          {
+            "claim": "C10",
+            "party": "P2",
+            "posture": "disputed"
+          }
+        ]
+      },
+      {
+        "analysis": "C17",
+        "category": "fact",
+        "id": "R7",
+        "positions": [
+          {
+            "claim": "C16",
+            "party": "P1",
+            "posture": "allegation"
+          }
+        ]
+      },
+      {
+        "analysis": "C19",
+        "category": "fact",
+        "id": "R8",
+        "positions": [
+          {
+            "claim": "C18",
+            "party": "P1",
+            "posture": "allegation"
+          }
+        ]
+      },
+      {
+        "analysis": "C22",
+        "category": "fact",
+        "id": "R9",
+        "positions": [
+          {
+            "claim": "C20",
+            "party": "P1",
+            "posture": "allegation"
+          },
+          {
+            "claim": "C21",
+            "party": "P2",
+            "posture": "denial"
+          }
+        ]
+      },
+      {
+        "analysis": "C29",
+        "category": "legal",
+        "id": "R12",
+        "positions": [
+          {
+            "claim": "C27",
+            "party": "P1",
+            "posture": "allegation"
+          },
+          {
+            "claim": "C28",
+            "party": "P2",
+            "posture": "disputed"
+          }
+        ]
+      }
+    ],
+    "task": "party_comparison",
+    "version": 1
+  },
+  "sections": [
+    {
+      "id": "S1",
+      "kind": "source",
+      "source": {
+        "document": "D1",
+        "format": "pdf",
+        "page": 1,
+        "party": "P1",
+        "role": "claim",
+        "version": "V1"
+      },
+      "text": "CourtOS Testmaterial | FU.2026.041 | keine echte Gerichtsakte   1 \nBeschwerde - Partei Alpha \nFIKTIVES LEHRBEISPIEL - NICHT EINREICHEN \nFiktives Verfahren FU.2026.041 | 30. September 2026 \nDiese Eingabe ist vollständig erfunden. Sie dient ausschliesslich einem Softwaretest anhand publizierter\nRechtsprechung. Sie ist keine Eingabe aus dem Verfahren BGE 137 I 195. \nAnträge \nA1. Der Entscheid der fiktiven Aufsichtsbehörde Nord vom 22. September 2026 sei aufzuheben und die\nSache zur Gewährung des rechtlichen Gehörs zurückzuweisen. A2. Vor einer neuen Entscheidung seien\ndie Eingaben vom 5. und 8. September 2026 zuzustellen und eine Stellungnahme zu ermöglichen. Es wird\nkein materieller Entscheid über die bestrittene Forderung beantragt. \nTatsachenvorbringen \nF1. Partei Alpha behauptet, sie habe die Beschwerdeantwort der Partei Beta vom 5. September 2026 und\nden Amtsbericht vom 8. September 2026 vor dem Entscheid vom 22. September 2026 nicht erhalten.\nBeide Eingaben seien in dessen Begründung berücksichtigt worden. \nGesondert bestrittenes Ereignis \nF2. Partei Alpha behauptet, sie habe am 15. September 2026 telefonisch um Kopien beider Eingaben\nersucht. Es liegt ihr keine Gesprächsaufzeichnung vor. \nAbgrenzung \nF3. Die am 12. September 2026 eingegangene Sendung habe nur eine Einladung zur Akteneinsicht\nenthalten. Die Kopien der beiden Eingaben seien erst mit E-Mail vom 24. September 2026 eingetroffen.\nEine Frist wird in dieser Lehrakte nicht berechnet. "
+    },
+    {
+      "id": "S2",
+      "kind": "source",
+      "source": {
+        "document": "D1",
+        "format": "pdf",
+        "page": 2,
+        "party": "P1",
+        "role": "claim",
+        "version": "V1"
+      },
+      "text": "CourtOS Testmaterial | FU.2026.041 | keine echte Gerichtsakte   2 \nBeschwerde - Partei Alpha \nFIKTIVES LEHRBEISPIEL - NICHT EINREICHEN \nRechtliche Standpunkte \nL1. Partei Alpha macht geltend, das Replikrecht setze die Zustellung der gegnerischen Eingaben voraus;\ndies gelte auch dann, wenn das Gericht sie für nicht neu oder nicht erheblich halte. Sie verweist auf BGE\n137 I 195 E. 2.3.1 S. 197. \nHeilung und Rechtsfolge \nL2. Partei Alpha macht geltend, ein blosser Hinweis auf Akteneinsicht heile die unterlassene Zustellung\nnicht. Sie verweist auf BGE 137 I 195 E. 2.6 S. 199. Sie behauptet ausdrücklich nicht, dass jede\nGehörsverletzung ausnahmslos zur Rückweisung führen müsse; die Voraussetzungen einer allfälligen\nHeilung seien zu prüfen. \nBeweisangebot \nFür F1 und F3 wird die fiktive Beilage D3, Seiten 1 und 2, angeboten. Für das behauptete Telefonat F2\nwird kein zusätzlicher Beleg eingereicht. Die Partei hält daran fest; ein fehlender Beleg soll nicht als\nBeweis eines Nichtgeschehens behandelt werden. "
+    },
+    {
+      "id": "S3",
+      "kind": "source",
+      "source": {
+        "document": "D2",
+        "format": "pdf",
+        "page": 1,
+        "party": "P2",
+        "role": "response",
+        "version": "V1"
+      },
+      "text": "CourtOS Testmaterial | FU.2026.041 | keine echte Gerichtsakte   1 \nBeschwerdeantwort - Partei Beta \nFIKTIVES LEHRBEISPIEL - NICHT EINREICHEN \nFiktives Verfahren FU.2026.041 | 7. Oktober 2026 \nDiese Antwort ist vollständig erfunden. Personen, Behörde, Daten und Vorgänge sind ein Lehrszenario;\ntatsächliche unveröffentlichte Eingaben wurden weder beschafft noch rekonstruiert. \nAntrag und Gegendarstellung \nA1. Partei Beta beantragt die Abweisung der Beschwerde. F4. Sie behauptet, Partei Alpha habe mit der\nam 12. September 2026 zugestellten Sendung auch die Beschwerdeantwort vom 5. September 2026\nerhalten. Zum Amtsbericht vom 8. September 2026 macht sie keine positive Zustellbehauptung. \nBestreitung \nF5. Partei Beta bestreitet das von Partei Alpha behauptete Telefonat vom 15. September 2026 mit\nNichtwissen. Sie behauptet weder, selbst anwesend gewesen zu sein, noch dass das Telefonat\nnachweislich nicht stattgefunden habe. \nKostenangabe \nF6. Partei Beta verweist auf die im angefochtenen Entscheid ausgewiesenen Kosten von CHF 480.00. Sie\nbehauptet keine Zahlung dieser Kosten. Als Quelle bezeichnet sie ausschliesslich D3 Seite 2; die\nSendungsverfolgung auf Seite 1 enthält keinen Betrag. "
+    },
+    {
+      "id": "S4",
+      "kind": "source",
+      "source": {
+        "document": "D2",
+        "format": "pdf",
+        "page": 2,
+        "party": "P2",
+        "role": "response",
+        "version": "V1"
+      },
+      "text": "CourtOS Testmaterial | FU.2026.041 | keine echte Gerichtsakte   2 \nBeschwerdeantwort - Partei Beta \nFIKTIVES LEHRBEISPIEL - NICHT EINREICHEN \nRechtlicher Einwand \nL3. Partei Beta vertritt die Rechtsauffassung, die blosse Möglichkeit der Akteneinsicht genüge zur Heilung,\nauch wenn keine Kopien der Eingaben zugestellt worden seien. Sie beruft sich hierfür auf BGE 137 I 195. \nHilfsstandpunkt \nL4. Hilfsweise macht Partei Beta geltend, eine nicht besonders schwerwiegende Gehörsverletzung könne\nausnahmsweise vor einer Rechtsmittelinstanz mit freier Prüfung von Sachverhalt und Rechtslage geheilt\nwerden. Sie verweist auf BGE 137 I 195 E. 2.3.2 S. 197 f. Ob diese Voraussetzungen hier tatsächlich\nerfüllt seien, bezeichnet sie als offen. \nNoch zu recherchierende Behauptung \nL5. Partei Beta behauptet zusätzlich, eine kantonale Gerichtsregel verlange, nicht zugestellte Eingaben\ninnerhalb von drei Tagen nach einer Einladung zur Akteneinsicht selbst abzuholen. Sie nennt weder\nKanton noch Erlass, Artikel oder Fundstelle. Ein entsprechender Regeltext ist nicht Teil dieser Lehrakte. "
+    },
+    {
+      "id": "S5",
+      "kind": "source",
+      "source": {
+        "document": "D3",
+        "format": "pdf",
+        "page": 1,
+        "party": null,
+        "role": "exhibit",
+        "version": "V1"
+      },
+      "text": "CourtOS Testmaterial | FU.2026.041 | keine echte Gerichtsakte   1 \nBeilage - Register und Zustellunterlagen \nFIKTIVES LEHRBEISPIEL - NICHT EINREICHEN \nFiktive Beilage | Blatt 1 von 2 \nAlle folgenden Dokumente und Einträge sind erfunden. Sie sind die Originaldateien dieses\nSoftware-Lehrszenarios, keine echten Gerichts-, Post- oder E-Mail-Unterlagen. \nRegisterauszug der fiktiven Aufsichtsbehörde Nord \n5. September 2026: Eingang Beschwerdeantwort Partei Beta, 4 Seiten. 8. September 2026: Eingang\nAmtsbericht, 2 Seiten. 10. September 2026: Ausgang Schreiben an Partei Alpha, Betreff Akteneinsicht; im\nBeilagenfeld steht «keine». Vermerkte Sendungsnummer: TEST-8841. Das Register enthält keinen\nAusgabevermerk über Kopien beider Eingaben vor dem 22. September 2026. \nFiktive Sendungsverfolgung \nSendung TEST-8841: Zustellung an Partei Alpha am 12. September 2026, 10:14 Uhr. Dieser Eintrag\ndokumentiert nur den Zustellzeitpunkt einer Sendung. Er enthält weder ein Inhaltsverzeichnis noch eine\nAngabe zu beigelegten Eingaben. \nDokumentierte Grenze \nEin Telefonjournal für den 15. September 2026 ist in dieser Lehrakte nicht enthalten. Aus diesem\nfehlenden Dokument folgt keine positive Feststellung über das Stattfinden oder Ausbleiben eines\nTelefonats. "
+    },
+    {
+      "id": "S6",
+      "kind": "source",
+      "source": {
+        "document": "D3",
+        "format": "pdf",
+        "page": 2,
+        "party": null,
+        "role": "exhibit",
+        "version": "V1"
+      },
+      "text": "CourtOS Testmaterial | FU.2026.041 | keine echte Gerichtsakte   2 \nBeilage - Register und Zustellunterlagen \nFIKTIVES LEHRBEISPIEL - NICHT EINREICHEN \nFiktive Beilage | Blatt 2 von 2 \nAuch dieses Blatt ist vollständig erfunden. Der Entscheid und die E-Mail sind Testdokumente, keine\nergangenen oder versandten amtlichen Akte. \nAuszug aus dem fiktiven Entscheid vom 22. September 2026 \nDie Behörde berücksichtigt in ihrer Begründung die Beschwerdeantwort vom 5. September 2026 und den\nAmtsbericht vom 8. September 2026. Ziffer 2 des Dispositivs lautet: «Die Verfahrenskosten von CHF\n480.00 werden Partei Alpha auferlegt.» Der Auszug enthält keine Zahlungsbestätigung. \nFiktive E-Mail vom 24. September 2026, 09:02 Uhr \nAbsender: Geschäftsstelle der fiktiven Aufsichtsbehörde Nord. Empfänger: Partei Alpha. Betreff: Kopien\nder Eingaben. Text: «Anbei übermitteln wir Ihnen die Beschwerdeantwort vom 5. September 2026 (4\nSeiten) und den Amtsbericht vom 8. September 2026 (2 Seiten).» Anlagenliste: beschwerdeantwort.pdf;\namtsbericht.pdf. \nDokumentierte Grenze \nDie Anlagenliste und der Versandvermerk belegen den Inhalt dieses fiktiven E-Mail-Dokuments; ein\nseparater Empfangs- oder Öffnungsnachweis liegt nicht vor. Die sechs Anlagenseiten selbst sind nicht Teil\ndes Testpakets. Keine Vollständigkeit des gesamten Verfahrensdossiers wird behauptet. "
+    },
+    {
+      "id": "S9",
+      "kind": "source",
+      "source": {
+        "complete_document": false,
+        "document": "D4",
+        "end": 11285,
+        "format": "public_decision",
+        "party": null,
+        "role": "authority",
+        "start": 9380,
+        "version": "V1"
+      },
+      "text": "2.6\nDas Obergericht hat zutreffend auf eine Verletzung des Anspruchs auf rechtliches Gehör durch das Bezirksgericht geschlossen, da dieses den Beschwerdeführern die Vernehmlassung des Betreibungsamtes und die Beschwerdeantwort der Beschwerdegegnerin nicht zustellte (obwohl es diese Eingaben zudem in seinem Entscheid ausführlich berücksichtigte).\nBGE 137 I 195 S. 199\nEine Heilung dieses Mangels durch das Obergericht - das über dieselbe Kognition verfügt wie das Bezirksgericht - hätte nun aber vorausgesetzt, dass diese beiden Eingaben den Beschwerdeführern zugestellt worden wären und sie sich dazu hätten äussern können. Nur so hätte der aus dem Replikrecht fliessende Anspruch auf Zustellung der Vernehmlassungen gewahrt werden können (vgl. E. 2.3.1 oben). Dies war aber vorliegend nicht der Fall. Das Obergericht durfte die festgestellte Verletzung des Anspruchs auf rechtliches Gehör der Beschwerdeführer nicht mit dem reinen Verweis auf die Möglichkeit der Akteneinsicht heilen.\nDie Argumentation des Obergerichts läuft zudem darauf hinaus, dass die Beschwerdeführer ihr Recht auf Akteneinsicht innerhalb der Rechtsmittelfrist hätten wahrnehmen müssen. Statt einer Replik hätten sie sogleich die Rekursschrift unter Berücksichtigung der Argumente in den beiden Eingaben des Betreibungsamtes und der Beschwerdegegnerin einreichen müssen. Angesichts der Rechtsmittelfrist von zehn Tagen (\nArt. 18 Abs. 1 SchKG\n) wären damit den Beschwerdeführern im Ergebnis nur wenige Tage verblieben, um auf die fraglichen Eingaben reagieren zu können, was ohnehin unzureichend wäre (vgl. Urteil 2C_794/2008 vom 14. April 2009 E. 3.5).\nIndem das Obergericht den Beschwerdeführern die Vernehmlassung und Beschwerdeantwort nicht zustellte, verletzte es (wie bereits das Bezirksgericht) ihren Anspruch auf rechtliches Gehör beziehungsweise hat es die vorangegangene Verletzung durch das Bezirksgericht nicht geheilt."
+    }
+  ]
+}
