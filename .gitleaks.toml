@@ -43,3 +43,7 @@ regexes = [
 [[allowlists]]
 description = "Sentry scrubber unit-test fixture: a fake AWS access key id (the letters A–P) used to prove redactText strips it from event text (backend/src/lib/observability/sentry.test.ts, frontend/src/shared/lib/sentryEvent.test.ts)"
 regexes = ['''^AKIAABCDEFGHIJKLMNOP$''']
+
+[[allowlists]]
+description = "courtos-local provider test fixture: a fake key for a mocked OpenAI-compatible endpoint, used to prove it is sent as the Bearer header (packages/courtos-local/test/providers.test.mjs)"
+regexes = ['''^test-key-123456$''']
