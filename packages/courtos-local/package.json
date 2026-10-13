@@ -34,7 +34,7 @@
     "fixture": "python3 fixtures/build_dossier.py \"fixtures/HG.2026.57 Alpenblick\"",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "prepack": "cp ../../LICENSE LICENSE",
-    "pack:tester": "npm pack --pack-destination dist"
+    "pack:tester": "node -e \"require('fs').mkdirSync('dist', { recursive: true })\" && npm pack --pack-destination dist"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
