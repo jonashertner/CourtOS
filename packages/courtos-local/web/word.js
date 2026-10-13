@@ -24,6 +24,8 @@ async function attempt(fn) {
     toast(errorText(error.code ?? "internal_error"), true);
   }
 }
+/** Server events arrive outside any click: a failure in one shows the pairing page or a message, never an unhandled rejection. */
+const guarded = (handlers) => Object.fromEntries(Object.entries(handlers).map(([type, handler]) => [type, (data) => attempt(() => handler(data))]));
 
 // --- Which case the document belongs to ------------------------------------------
 /** Where the document is saved: a path or file URL on this computer, a web address, or nothing for a new document. */
@@ -491,9 +493,9 @@ function showLive(text) {
 async function boot() {
   try { S.st = await api("/api/state"); } catch (error) { if (error.code === "not_paired") return renderPairing(); throw error; }
   adoptLang(S.st);
-  events({
+  events(guarded({
     // Another case was opened: never offer the previous case's results.
-    case: (change) => { if (change.kind === "opened") { S.latest.clear(); S.run = null; S.selection = ""; S.citecheck = null; } refresh(); },
+    case: (change) => { if (change.kind === "opened") { S.latest.clear(); S.run = null; S.selection = ""; S.citecheck = null; } return refresh(); },
     run: ({ id, event }) => {
       if (S.run?.id === id) { S.run.events.push(event); return render(); }
       const text = traceText(event);
@@ -518,7 +520,7 @@ async function boot() {
       const found = summary.result?.claims.find(c => c.id === claim);
       if (found) await inLanguage(caseLang(), () => insertClaim(found));
     }),
-  }, "word");
+  }), "word");
   await refresh();
 }
 

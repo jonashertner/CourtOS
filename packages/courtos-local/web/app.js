@@ -60,6 +60,8 @@ async function attempt(fn) {
     toast(errorText(error.code ?? "internal_error"), true);
   }
 }
+/** Server events arrive outside any click: a failure in one shows the pairing page or a message, never an unhandled rejection. */
+const guarded = (handlers) => Object.fromEntries(Object.entries(handlers).map(([type, handler]) => [type, (data) => attempt(() => handler(data))]));
 
 async function refresh() {
   S.st = await api("/api/state");
@@ -77,7 +79,7 @@ async function boot() {
     throw error;
   }
   adoptLang(S.st);
-  events({
+  events(guarded({
     scan: (p) => { S.scan = p; renderScanProgress(); },
     case: async (change) => {
       if (change.kind === "opening") return;
@@ -107,7 +109,7 @@ async function boot() {
       if (S.run?.id === id) S.run = summary;
       await refresh();
     },
-  });
+  }));
   await refresh();
 }
 
