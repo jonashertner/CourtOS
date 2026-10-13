@@ -128,7 +128,7 @@ run words a finding differently, change the narration to match the screen.
 
 **scan.** Les pages scannées deviennent lisibles, comme ce procès-verbal écrit à la main. La reconnaissance de texte se fait sur l’ordinateur même.
 
-**schutz.** Ensuite, la protection. CourtOS repère tout ce qui permet d’identifier une personne : noms, sociétés, adresses, numéros de parcelle, téléphones et le numéro de la cause. Ici, soixante-huit données.
+**schutz.** Ensuite, la protection. CourtOS repère tout ce qui permet d’identifier une personne : noms, sociétés, adresses, numéros de parcelle, téléphones et le numéro de la cause. Ici, soixante-neuf données.
 
 **preview.** L’aperçu montre chaque page en original, puis telle qu’un modèle la lit. Les noms y sont remplacés par des lettres neutres.
 
@@ -152,7 +152,7 @@ run words a finding differently, change the narration to match the screen.
 
 **legal.** Puis les arguments juridiques, vérifiés dans les arrêts publiés sur OpenCaseLaw. Seuls des termes de recherche y sont envoyés, aucun nom. Les intimés invoquent une règle qui dispense de mesures coûteuses contre le bruit. Selon le Tribunal fédéral, elle ne vaut que si les valeurs de planification sont respectées. Un clic montre le passage.
 
-**questions.** Enfin, les questions fondamentales. Onze questions que cette affaire doit trancher, de fait comme de droit. Pour chacune : une analyse et les arguments contraires.
+**questions.** Enfin, les questions fondamentales. Neuf questions que cette affaire doit trancher, de fait comme de droit. Pour chacune : une analyse et les arguments contraires.
 
 **word_questions.** Dans Word, les questions fondamentales viennent sous « Droit », en texte avec notes de bas de page. « Vérifier les citations » contrôle chaque arrêt cité sur OpenCaseLaw.
 
