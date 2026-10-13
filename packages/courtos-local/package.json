@@ -4,6 +4,15 @@
   "private": true,
   "description": "CourtOS case-folder companion: a sanitised mirror of one local case folder, a frontier-model agent confined to that mirror, and verified results in the browser and in Word.",
   "license": "AGPL-3.0-only",
+  "homepage": "https://github.com/jonashertner/CourtOS/tree/main/packages/courtos-local#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonashertner/CourtOS.git",
+    "directory": "packages/courtos-local"
+  },
+  "bugs": {
+    "url": "https://github.com/jonashertner/CourtOS/issues"
+  },
   "type": "module",
   "bin": {
     "courtos-local": "bin/courtos-local.mjs"

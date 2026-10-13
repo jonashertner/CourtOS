@@ -86,7 +86,7 @@ There is no telemetry. CourtOS does not report usage to anyone.
 
 ## Reporting a problem
 
-Open an issue at https://github.com/jonashertner/CourtOS/issues. Issues are public. Please include:
+Open an issue at https://github.com/jonashertner/CourtOS/issues/new/choose and choose **courtos-local problem**. Issues are public. Please include:
 
 - macOS / Linux / Windows and version, `node -v`, and whether it happened in the browser or in Word;
 - what you did, what you expected, and what happened;

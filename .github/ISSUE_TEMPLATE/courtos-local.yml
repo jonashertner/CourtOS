@@ -1,0 +1,54 @@
+name: courtos-local problem
+description: Something went wrong or was confusing in the local case-folder tool (browser or Word).
+title: "courtos-local: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues are public. **Never include real case content**: no files from `.courtos/`, no request bodies, no screenshots or copied text from a real case. With the sample dossiers, screenshots are fine.
+
+        A security problem goes privately through **Security › Report a vulnerability**, not here.
+  - type: checkboxes
+    id: no-case-content
+    attributes:
+      label: Case content
+      options:
+        - label: This report contains no names, text or files from a real case.
+          required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Browser
+        - Word
+        - Terminal / start
+        - Installer
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Operating system and version, `node -v`, and the model you used (or the demo without a model).
+      placeholder: macOS 26.1, Node 22.12.0, Claude Opus 5.5
+    validations:
+      required: true
+  - type: input
+    id: case
+    attributes:
+      label: Case folder
+      description: The sample you used (`--demo`, `--sample vd-fiduciaire` …), or "own folder".
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Terminal output
+      description: The error in the terminal, if any. Check that it contains no names from a real case.
+      render: text

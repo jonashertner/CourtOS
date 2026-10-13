@@ -10,3 +10,12 @@ Vendored from https://github.com/jonashertner/citecheck (MIT licence, see MIT-LI
 The anonymisation check is citecheck's: CourtOS feeds it the extracted page
 text of the case folder and turns its people and identifier entries into the
 private pseudonym register.
+
+The vocabulary (`data/vocabulary-*.txt.gz`) is a list of lower-case words that
+the check accepts as unable to identify anyone. `data/vocabulary.json` records
+how it was built: words drawn from 959,038 published rulings of 120 courts in
+the OpenCaseLaw corpus, with the family and given names of the Federal
+Statistical Office's resident statistics and of Wikidata used to keep names
+out. Lines starting with `!` are such names, kept so that a compound such as
+Hof+mann is not accepted as two ordinary words. The file holds no text of the
+rulings and links no name to a person or a case.
