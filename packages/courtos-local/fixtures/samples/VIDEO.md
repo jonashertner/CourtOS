@@ -20,8 +20,8 @@ on screen.
   `$HOME/.config/courtos/preferences.json` (`{"language":"de"}` or `"fr"`).
 - Browser window at least 1440 pixels wide. Below about 1000 pixels the
   Protection tab scrolls sideways.
-- Run one server at a time. A browser session on `localhost` does not depend
-  on the port: pairing a second server disconnects the first.
+- Both servers can run at the same time on different ports; each keeps its
+  own browser session.
 - The full run of 13 October 2026 took about 53 minutes for the German case
   (≈ US$ 14) and about 32 minutes for the French case (≈ US$ 6.50), as
   estimated by the interface from the tokens used. Record the start live, cut,
