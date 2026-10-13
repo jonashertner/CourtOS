@@ -2,14 +2,21 @@
 # Windows, built from packages/courtos-local/installer/. Each bundles the official Node
 # runtime from nodejs.org (checksum verified) and the tray or menu-bar app.
 #
-# The packages built here are unsigned: they are for trying an installer change, not for
-# handing out. Signed builds need a Developer ID (macOS) or a code-signing certificate
-# (Windows) and are made with build.sh --sign/--installer-sign/--notary-profile or
+# The packages built here are unsigned, and their users must confirm a warning to open
+# them. Signed builds need a Developer ID (macOS) or a code-signing certificate (Windows)
+# and are made with build.sh --sign/--installer-sign/--notary-profile or
 # build.ps1 -CertificateThumbprint on a machine that holds the identity.
+#
+# Pushing a tag courtos-local-v<version>, where <version> is the one in
+# packages/courtos-local/package.json, also drafts a GitHub release with both packages,
+# their SHA-256 checksums and installer/RELEASE.md as its notes. A person publishes it.
 name: courtos-local installers
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "courtos-local-v*"
   pull_request:
     paths:
       - "packages/courtos-local/installer/**"
@@ -113,3 +120,42 @@ jobs:
           name: CourtOS-windows-${{ matrix.arch }}
           path: packages/courtos-local/dist/CourtOS-*.msi
           if-no-files-found: error
+
+  release:
+    name: Draft release
+    if: startsWith(github.ref, 'refs/tags/courtos-local-v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: The tag names the package version
+        run: |
+          version=$(node -p "require('./packages/courtos-local/package.json').version")
+          if [ "$GITHUB_REF_NAME" != "courtos-local-v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package version $version."
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: CourtOS-*
+          path: release
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: release
+        run: |
+          sha256sum CourtOS-* > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --draft --verify-tag \
+            --title "CourtOS local ${GITHUB_REF_NAME#courtos-local-v}" \
+            --notes-file packages/courtos-local/installer/RELEASE.md

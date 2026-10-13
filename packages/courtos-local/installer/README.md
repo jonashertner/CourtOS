@@ -204,3 +204,12 @@ installer\windows\build.ps1 -Arch x64 -CertificateThumbprint <SHA-1 of a code-si
 Run `npm ci` in `packages/courtos-local` first: the package bundles its repository siblings from `node_modules`.
 
 The workflow `.github/workflows/courtos-local-installers.yml` builds both packages unsigned. It installs the MSI, checks it and uninstalls it again.
+
+To publish a release, set the version in `package.json`, merge, and push a tag that names it:
+
+```sh
+git tag courtos-local-v0.1.0
+git push origin courtos-local-v0.1.0
+```
+
+The workflow then drafts a GitHub release with both packages, `SHA256SUMS` and [RELEASE.md](RELEASE.md) as its notes. Check the draft and publish it on GitHub. A tag that does not match the package version fails the release job.
