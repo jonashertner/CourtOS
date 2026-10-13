@@ -149,3 +149,13 @@ test("a word opening a numbered paragraph and the formal address stay readable; 
   assert.equal(found.Ihre, "keep");
   assert.equal(found.Weber, "replace");
 });
+
+test("a parcel number before a label, a lettered heading and a French city name are no names", () => {
+  const found = detected("Parcelle n° 1847 Objet Démolition d'une villa\nM. Dans leurs dernières écritures, les recourants persistent.\nM. Bettex habite 1147 Fontanivent.\nOffice fédéral, 3003 Berne. Berne a répondu.");
+  assert.ok(!found.some(([, ...a]) => a.some(x => /Objet|Dans/.test(x))), JSON.stringify(found));
+  assert.ok(found.some(([k, ...a]) => k === "person" && a.includes("Bettex")));
+  assert.ok(found.some(([k, ...a]) => k === "place" && a.some(x => x.includes("Fontanivent"))));
+  const { candidates } = suggestAnonymisation(doc("Office fédéral, 3003 Berne. Berne a répondu. Commune de 1147 Fontanivent. Fontanivent a répondu."));
+  const places = candidates.filter(c => c.kind === "place").flatMap(c => c.aliases);
+  assert.ok(!places.includes("Berne") && places.includes("Fontanivent"), JSON.stringify(places));
+});

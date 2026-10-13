@@ -54,7 +54,7 @@ const TITLED_PERSON = new RegExp(`(?<![${L}])${TITLES}+(${NAME}(?:[ \\t]+${NAME}
 const ROLE_PERSON = new RegExp(`(?<![${L}])(?:Geschäftsführerin|Geschäftsführer|Bauleiterin|Bauleiter|Sachverständigen|Sachverständige|Sachverständiger|Gutachterin|Gutachter|Zeugin|Zeuge|Referentin|Referent|Verwaltungsrätin|Verwaltungsrat|Präsidentin|Präsident|Vertreterin|Vertreter|témoin|experte?|perito|testimone|witness|expert)\\s+(${NAME}[ \\t]+${NAME})`, "gu");
 const STREET = new RegExp(`(?<![${L}])(?:[\\p{Lu}][${L}-]*(?:strasse|straße|str\\.|gasse|weg|platz|rain|halde|quai|allee|ring|matte|graben|steig)|(?:[Rr]ue|[Cc]hemin|[Cc]h\\.|[Aa]venue|[Aa]v\\.|[Rr]oute|[Pp]lace|[Bb]oulevard|[Vv]ia|[Vv]iale|[Pp]iazza|[Vv]icolo)(?:\\s+(?:de\\s+la|de|des|du|del|della|dei|d'))?\\s+[\\p{Lu}][${L}'’-]+)\\s+\\d{1,4}[a-z]?(?![${L}\\d])`, "gu");
 const PLACE = new RegExp(`(?<![\\d.'’])([1-9]\\d{3})[ \\t\\u00a0]+(\\p{Lu}[${L}.-]+(?:\\s(?:bei|b\\.|am|an der|sur|près|di|im)\\s\\p{Lu}[${L}.-]+)?)(?![${L}])`, "gu");
-const MAJOR_PLACES = new Set("Zürich Genève Genf Basel Bern Lausanne Winterthur Luzern Lucerne St.Gallen Lugano Biel Bienne Thun Fribourg Freiburg Neuchâtel Schaffhausen Chur Sion Sitten Zug Aarau Bellinzona Locarno Solothurn Frauenfeld Liestal Delémont Glarus Altdorf Sarnen Stans Schwyz Herisau Appenzell".split(" "));
+const MAJOR_PLACES = new Set("Zürich Genève Genf Basel Bern Lausanne Winterthur Luzern Lucerne St.Gallen Lugano Biel Bienne Thun Berne Berna Bâle Basilea Zurich Zurigo Ginevra Soleure Coire Thoune Saint-Gall Schaffhouse Fribourg Freiburg Neuchâtel Schaffhausen Chur Sion Sitten Zug Aarau Bellinzona Locarno Solothurn Frauenfeld Liestal Delémont Glarus Altdorf Sarnen Stans Schwyz Herisau Appenzell".split(" "));
 // "2025 CHF 210'000" in a table is a year and an amount, not a postcode and a town.
 const CURRENCY = new Set(["CHF", "EUR", "USD", "GBP", "Fr.", "SFr."]);
 const DATE_BEFORE = /(?:\d{1,2}\.\s*|(?:Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|January|February|March|June|July|October|December)\s*)$/u;
@@ -64,7 +64,7 @@ const PARCEL = /(?:Grundstück|Parzelle|Kat\.-?Nr\.|parcelle|bien-fonds|particel
 // Frequent given names (DE/FR/IT/EN/RM). Used only together with a following
 // capitalised surname; a match is a suggestion for human review.
 const GIVEN = new Set(`Adrian Alain Albert Alessandro Alessia Alexander Alexandra Alice Alina Ana Andrea Andreas Angela Anna Anne Annina Antoine Antonio Barbara Beat Beatrice Benjamin Bernhard Bruno Carla Carlo Caroline Catherine Chantal Christian Christine Christoph Claire Claudia Claudio Corinne Cristina Daniel Daniela David Denise Dominik Doris Eliane Elias Elisabeth Elena Emma Eric Erika Esther Fabian Fabienne Federica Felix Florian Francesca Francesco Franziska François Frédéric Gabriel Gabriela Georg Gianluca Giorgio Giovanni Giulia Hans Hanna Hannah Heidi Heinz Helen Isabelle Jacqueline Jan Jana Jean Jeanne Jessica Johanna Johannes Jonas Josef Julia Julian Jürg Karin Katharina Kevin Laura Laurent Lea Leon Lina Linda Lisa Livia Luca Lucas Lukas Luzia Manuel Manuela Mara Marc Marcel Marco Maria Marie Marina Mario Markus Martin Martina Mathias Matteo Matthias Maurice Max Melanie Michael Michel Michèle Monika Nadia Nadine Natalie Nicolas Nicole Nina Noah Nora Olivier Pascal Patricia Patrick Paul Peter Philipp Pierre Rahel Ramona Regula Reto Roberto Roger Roland Roman Rosa Ruth Sabine Samuel Sandra Sara Sarah Silvia Simon Simone Sophie Stefan Stefanie Stéphane Susanne Sven Tamara Thomas Tobias Ursula Urs Valentina Valérie Vanessa Verena Walter Werner Yves`.split(/\s+/));
-const NOT_SURNAME = new Set("Die Der Das Und Oder Am Im In Mit Von Vom Zur Zum Seit Bei Nach Für Gemäss Laut AG GmbH SA Hotel".split(" "));
+const NOT_SURNAME = new Set("Die Der Das Und Oder Am Im In Mit Von Vom Zur Zum Seit Bei Nach Für Gemäss Laut AG GmbH SA Hotel Dans Sur Sous Pour Par Avec Selon Dès Les Des Une Cette Ces Il Elle Ils Elles Lors Quant".split(" "));
 const GENERIC_COMPANY_WORDS = new Set("Hotel Hotels Bau Immobilien Holding Partner Partners Treuhand Group Gruppe Services Service Consulting Management Invest Swiss Schweiz Suisse Svizzera International Verwaltung Handel Technik Bank Legal Rechtsanwälte Versicherung Versicherungen Transport Garage Restaurant Immo Real Estate Capital Finance Pharma Energie Media Software Systems Solutions".split(" "));
 
 const normal = (text) => text.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("de");
@@ -138,10 +138,14 @@ export function detectCandidates(documents) {
       // "12. Mai 2025 Klage": a year after a date is not a postcode.
       if (DATE_BEFORE.test(text.slice(Math.max(0, match.index - 16), match.index))) continue;
       if (CURRENCY.has(town)) continue;
+      // "Parcelle n° 1847 Objet": a number after "n°" or "Nr." is no postcode.
+      if (/(?:n°|no\.|Nr\.|N°|Nr)\s*$/u.test(text.slice(Math.max(0, match.index - 5), match.index))) continue;
       add("place", town, document.id, page.n, match.index, whole);
     }
     for (const hit of collect(TITLED_PERSON, text, 1)) {
       const tokens = hit.value.split(/\s+/);
+      // "M. Dans leurs écritures" is a lettered heading, not Monsieur Dans.
+      if (tokens.length === 1 && NOT_SURNAME.has(tokens[0])) continue;
       if (tokens.length === 1) add("surname", tokens[0], document.id, page.n, hit.start);
       else add("person", hit.value, document.id, page.n, hit.start);
     }
