@@ -8,7 +8,7 @@
   --paper: #ffffff;
   --ink: #191919;
   --muted: #5e5e5e;
-  --faint: #8c8c8c;
+  --faint: #707070; /* 4.5:1 on --wash, for 12-pixel counts and captions */
   --rule: #e3e3e3;
   --wash: #f5f5f4;
   --local: #286249;
@@ -34,7 +34,7 @@
 
 /* Dark, when chosen (theme.js, shared.js). The originals stay white paper. */
 :root[data-theme="dark"] {
-  --paper: #141414; --ink: #ececea; --muted: #a9a9a6; --faint: #7d7d7a; --rule: #2c2c2b; --wash: #1c1c1b;
+  --paper: #141414; --ink: #ececea; --muted: #a9a9a6; --faint: #8e8e8b; --rule: #2c2c2b; --wash: #1c1c1b;
   --local: #7cc0a0; --local-wash: #16251e; --external: #b4a2d6; --external-wash: #211c2b;
   --alert: #e0918a; --alert-wash: #2c1a18; --amber: #d8b65c; --mark: #5a4c16; --p1: #8db5e2; --p2: #e6a362; --p3: #8fcfa0; --p4: #c3a5e3; --p5: #7fcbd0; --focus: #d0d0d0;
   color-scheme: dark;

@@ -41,3 +41,21 @@ test("a party comparison lists the parties one under the other when its columns 
   assert.match(css, /\.compare-table\[data-cols="6"\] \.compare-row \{ grid-template-columns: minmax\(0, 1fr\);/, "six or more always stack");
   assert.match(rule(media("max-width: 980px"), ".q-body, .compare-row"), /grid-template-columns:\s*minmax\(0, 1fr\)/);
 });
+
+test("every text colour reads at 4.5:1 or more on paper and on the wash, in both themes", () => {
+  const tokens = (block) => Object.fromEntries([...block.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})/g)].map(m => [m[1], m[2]]));
+  const light = tokens(/:root \{([^}]*)\}/.exec(css)[1]);
+  const dark = { ...light, ...tokens(/:root\[data-theme="dark"\] \{([^}]*)\}/.exec(css)[1]) };
+  const lum = (hex) => {
+    const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  for (const [theme, t] of [["light", light], ["dark", dark]]) {
+    for (const text of ["ink", "muted", "faint", "local", "external", "alert", "amber"]) {
+      for (const ground of ["paper", "wash"]) {
+        assert.ok(ratio(t[text], t[ground]) >= 4.5, `${theme}: --${text} on --${ground} is ${ratio(t[text], t[ground]).toFixed(2)}:1`);
+      }
+    }
+  }
+});
