@@ -2,30 +2,31 @@
 
 Thank you for testing. This page covers installing, what to try, where your data goes, and how to report a problem. The README explains how the tool works.
 
-> **Open decision — tester group.** Before this goes out, decide which of these it is, and delete the other:
->
-> - **Synthetic material only.** Testers use the demo dossier and public decisions. No real case files. This needs no data-protection review.
-> - **Own case files.** Testers open real folders. This needs the court's or authority's decision that the pseudonymised text may be sent to the chosen model provider (see «Before real case files» in the README), and a model choice that matches it. A model running on the tester's own computer avoids sending case text out at all.
+CourtOS is a pilot. Try it with the sample dossiers that come with it: they are synthetic, so they need no data-protection review. Opening real case files needs the decision of your court or authority that the pseudonymised text may be sent to the model you choose (see «Before real case files» in the README). A model running on your own computer avoids sending case text out at all.
 
-> **Open decision — terms.** A short statement of the terms of the test (no warranty, results are working drafts, who may see reports) belongs here. The wording is for the project to set.
+CourtOS is free software under the AGPL-3.0 and comes without warranty. Its results are working drafts, not decisions.
 
 ## What you need
 
-- **macOS** is the full experience: folder dialog, Word add-in, and text recognition for scanned pages. On Linux or Windows the browser workspace works, but you give the folder on the command line, open the printed link yourself, and scanned pages are recognised only if `tesseract` and `pdftoppm` are installed.
+- **macOS** is the full experience: folder dialog, Word add-in, and text recognition for scanned pages. The Word add-in also works on Windows. On Linux or Windows you give the folder on the command line and open the printed link yourself.
 - **Node.js 22.12 or newer** (`node -v`).
 - **A model.** An Anthropic API key, a key for another OpenAI-compatible service, or a model on your own computer (Ollama, LM Studio). The demo runs without any.
-- **Word for Mac** (optional), for the task pane.
+- **git**, to download the source.
+- **Word for Mac or Windows** (optional), for the task pane.
+- **For scanned pages:** on macOS the Xcode command-line tools (`xcode-select --install`); on Linux or Windows `tesseract` and `pdftoppm`.
 
 ## Install and start
 
-You receive one file, `courtos-local-0.1.0.tgz`.
-
 ```sh
-npm install -g ./courtos-local-0.1.0.tgz
-courtos-local --demo
+git clone https://github.com/jonashertner/CourtOS.git
+cd CourtOS/packages/courtos-local
+npm install
+node bin/courtos-local.mjs --demo
 ```
 
-The terminal prints a link with `#pair=…`; on macOS the browser opens it. The demo opens a synthetic commercial-court dossier (HG.2026.57 Alpenblick), copied to the system's temporary folder so the installed package is never written to.
+No installer is published yet. If you received a packaged build (`courtos-local-0.1.0.tgz`) instead, install it with `npm install -g ./courtos-local-0.1.0.tgz` and start it with `courtos-local --demo`. In a source checkout, write `node bin/courtos-local.mjs` wherever this page says `courtos-local`.
+
+The terminal prints a link with `#pair=…`; on macOS the browser opens it. The demo opens a synthetic commercial-court dossier (HG.2026.57 Alpenblick), copied to the system's temporary folder so the package is never written to. `courtos-local --sample <id>` opens another sample dossier, in German, French, Italian or English; the README lists them.
 
 To open your own folder: `courtos-local ~/path/to/case-folder`, or choose it in the browser.
 
@@ -85,9 +86,7 @@ There is no telemetry. CourtOS does not report usage to anyone.
 
 ## Reporting a problem
 
-> **Open decision — where reports go.** Issues are switched off on the public GitHub repository. Either switch them on (reports are then public) or give testers a private channel (an e-mail address or a form) and put it here.
-
-Please include:
+Open an issue at https://github.com/jonashertner/CourtOS/issues. Issues are public. Please include:
 
 - macOS / Linux / Windows and version, `node -v`, and whether it happened in the browser or in Word;
 - what you did, what you expected, and what happened;

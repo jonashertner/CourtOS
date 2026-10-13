@@ -33,16 +33,36 @@ browser workspace and Word task pane on https://localhost:4311
 
 ## Run it
 
-Node.js 22 or newer. Testers who receive a packaged build (`npm run pack:tester` writes it to `dist/`) follow [TESTING.md](TESTING.md) instead.
+Node.js 22.12 or newer. The package depends on its neighbours in `packages/`, so clone the whole repository. [TESTING.md](TESTING.md) is the step-by-step guide for trying it: what to look at, where your data goes, and how to report a problem.
 
 ```sh
-cd packages/courtos-local
+git clone https://github.com/jonashertner/CourtOS.git
+cd CourtOS/packages/courtos-local
 npm install
-node bin/courtos-local.mjs --demo          # synthetic dossier HG.2026.57, works without an API key
-node bin/courtos-local.mjs ~/Akten/HG.2026.57
+node bin/courtos-local.mjs --demo                   # synthetic dossier HG.2026.57, no API key needed
+node bin/courtos-local.mjs --sample vd-fiduciaire   # another sample dossier, see below
+node bin/courtos-local.mjs ~/Akten/HG.2026.57       # your own folder
 ```
 
-The terminal prints a pairing link; on macOS the browser opens it. Choose a folder with the native dialog, check roles, parties and the language of the proceedings under **Akten**, review the register under **Schutz**, release the folder, then run tasks under **Analyse**. The interface is available in German, French, Italian and English. The Anthropic API key is read from `ANTHROPIC_API_KEY` or saved through the interface to `~/.config/courtos/anthropic-key` (mode 0600).
+`--port <n>` changes the port (default 4311). `--no-open` leaves the browser closed.
+
+Without an API key, the demo replays a recorded sequence of tool calls for three tasks (chronology, facts and evidence, one question to the files) through the same guard, quotation checks and binding to the originals. It is not a model. The other tasks need one. With Claude, the default is Claude Opus 5.5 (`COURTOS_MODEL` changes it). In our runs, a full «Fall erschliessen» on a sample dossier took 30 to 55 minutes and cost about US$ 6 to 14. The interface shows the cost of each run.
+
+The sample dossiers are synthetic: invented parties and facts, set at real courts.
+
+| `--sample` | Language | Court | Matter |
+|---|---|---|---|
+| `alpenblick` (= `--demo`) | de | Handelsgericht Zürich | Werkvertrag, Mängel an einer Abdichtung |
+| `sg-maschine` | de | Handelsgericht St. Gallen | Kaufvertrag, CNC-Fräsmaschine |
+| `zh-vertrieb` | de | Handelsgericht Zürich | Alleinvertrieb, fristlose Kündigung, Widerklage |
+| `vd-fiduciaire` | fr | Chambre patrimoniale cantonale (Vaud) | Mandat, responsabilité de la fiduciaire |
+| `bger-permis` | fr | Tribunal fédéral | Permis de construire, recours de voisins |
+| `ti-lavoro` | it | Pretura di Lugano | Contratto di lavoro, licenziamento abusivo |
+| `be-software` | en | Bern International Commercial Court | ERP implementation, termination for cause |
+
+Scanned pages are read on this computer. On macOS, a checkout compiles a small Vision helper on first use, which needs the Xcode command-line tools (`xcode-select --install`). On Linux and Windows, CourtOS uses `tesseract` (with `deu`, `fra`, `ita` or `eng` language data) and `pdftoppm` from Poppler. Without them, scanned pages are marked as unread and everything else works.
+
+The terminal prints a pairing link; on macOS the browser opens it. On Linux and Windows, give the folder on the command line and open the printed link yourself. On macOS you can also choose a folder with the native dialog, check roles, parties and the language of the proceedings under **Akten**, review the register under **Schutz**, release the folder, then run tasks under **Analyse**. The interface is available in German, French, Italian and English. The Anthropic API key is read from `ANTHROPIC_API_KEY` or saved through the interface to `~/.config/courtos/anthropic-key` (mode 0600).
 
 ### Choosing the model
 
@@ -67,12 +87,14 @@ Local models must support tool calling and need a context window of at least 64,
 
 The quotation checks hold every model to the same standard. A weaker model gets more submissions rejected, and more claims marked «prüfen», but no unverified quotation is presented as verified. Cost is shown only for Claude models; for other services, see the provider's own billing.
 
-Word on macOS:
+Word, on macOS or Windows:
 
 ```sh
 npx office-addin-dev-certs install     # once; trusted certificate for https://localhost
 node bin/courtos-local.mjs install-word
 ```
+
+`office-addin-dev-certs` creates a local certificate authority and adds it to your user's trusted certificates, which asks for your password. It is Microsoft's tool for developing Office add-ins.
 
 Restart Word; the **CourtOS › Fallordner** button appears on the Home tab. Pair it with the six-digit code from **Word verbinden** in the browser. In Word you can find the file passages for a selected sentence, insert a checked reference as a footnote, insert any analysis (tables, decision draft, orders) at the cursor in the language of the proceedings, check the BGE and judgment citations of the draft with citecheck, and see open deadlines.
 
@@ -98,7 +120,7 @@ Without `~/.office-addin-dev-certs` the server falls back to plain HTTP on loopb
 | Parties register (P1, P2 … with roles; names stay local) | done |
 | Notes, questions, assumptions, contradictions with status and sources; selected notes go to the model pseudonymised, as context, never as evidence | done |
 | Procedure: deadlines and steps with sources, order template (no AI) in the language of the proceedings, issued orders | done |
-| Binding to original page offsets, local name restoration, Markdown working notes in `.courtos/wiki/`, backup archive of the workspace | done |
+| Binding to original page offsets, local name restoration, case memory as Markdown in `.courtos/memory/`, backup archive of the workspace | done |
 | Browser workspace and Word task pane, pairing code, live trace, source drawer, audit of every sent request | done |
 | Interface in German, French, Italian, English (`web/i18n.js`, coverage checked by `test/i18n.test.mjs`) | done |
 | Folder watching (new or changed files are picked up, the release is revoked) | done |
@@ -143,11 +165,12 @@ src/guard.mjs             outbound guard
 src/search.mjs            BM25 over the mirror
 src/agent/                tasks, loop, providers, offline demo script
 src/verify.mjs            binding to originals, local name restoration
-src/wiki.mjs              Markdown working notes
+src/memory.mjs            case memory (Markdown, real names stay local)
+src/samples.mjs           the sample dossiers and their working copies
 src/caseStore.mjs         one open case folder
 src/server.mjs            loopback server (pairing, host/origin checks, SSE)
 web/                      browser workspace and Word task pane
 word/manifest.xml         Word add-in manifest
-fixtures/                 synthetic dossier HG.2026.57 and its generator
+fixtures/                 seven synthetic dossiers and their generators (build_dossier.py; build_samples.py from the specs in samples/)
 test/                     node:test suites
 ```
