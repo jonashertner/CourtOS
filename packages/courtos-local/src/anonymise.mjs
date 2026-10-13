@@ -93,7 +93,7 @@ export function consolidatePersons(candidates) {
   for (const c of listed) {
     const kept = c.aliases.filter(a => !listOfNames(c, a));
     if (kept.length === c.aliases.length) continue;
-    const parts = kept.map(a => ({ ...c, aliases: [a], count: Math.max(1, Math.round(c.count / kept.length)), samples: [...c.samples] }));
+    const parts = kept.map(a => ({ ...c, label: a, aliases: [a], count: Math.max(1, Math.round(c.count / kept.length)), samples: [...c.samples] }));
     candidates.splice(candidates.indexOf(c), 1, ...parts);
   }
   const persons = candidates.filter(c => c.kind === "person");
