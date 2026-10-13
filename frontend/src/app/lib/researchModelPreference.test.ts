@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getResearchModelPreference, setResearchModelPreference, useResearchModelPreference } from "./researchModelPreference";
+import { getResearchModelPreference, setResearchModelPreference, useResearchModelPreference, type ResearchModel } from "./researchModelPreference";
 
 beforeEach(() => { localStorage.clear(); });
 afterEach(() => { vi.restoreAllMocks(); localStorage.clear(); });
@@ -27,6 +29,11 @@ describe("owner-bound research model preference", () => {
             localStorage.setItem(key, raw);
             expect(getResearchModelPreference("owner-validation")).toBe("gemma");
         }
+    });
+
+    it("rejects an invalid model value and falls back to local", () => {
+        expect(setResearchModelPreference("owner-bad-model", "invalid" as unknown as ResearchModel)).toBe("gemma");
+        expect(getResearchModelPreference("owner-bad-model")).toBe("gemma");
     });
 
     it("falls back to local when reads fail", () => {
@@ -63,6 +70,8 @@ describe("owner-bound research model preference", () => {
         const key = localStorage.key(0)!;
         const { result } = renderHook(() => useResearchModelPreference("owner-tab"));
         expect(result.current.model).toBe("claude-opus-5-5");
+        act(() => window.dispatchEvent(new StorageEvent("storage", { key: "unrelated-key" })));
+        expect(result.current.model).toBe("claude-opus-5-5");
         act(() => {
             localStorage.removeItem(key);
             window.dispatchEvent(new StorageEvent("storage", { key }));
@@ -78,5 +87,11 @@ describe("owner-bound research model preference", () => {
         act(() => { result.current.setModel("claude-opus-5-5"); });
         expect(result.current.model).toBe("gemma");
         expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it("renders the local model on the server, whatever the browser stored", () => {
+        setResearchModelPreference("server-owner", "claude-opus-5-5");
+        const Probe = () => createElement("span", null, useResearchModelPreference("server-owner").model);
+        expect(renderToString(createElement(Probe))).toBe("<span>gemma</span>");
     });
 });

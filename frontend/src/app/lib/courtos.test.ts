@@ -31,6 +31,36 @@ describe("research entry scope", () => {
         expect(COURTOS_HOME).toBe("/pilot");
         expect(isResearchShellPath("/library")).toBe(false);
     });
+    it("grants self-registration only when pilot mode, Cloudflare auth and the explicit flag all agree", async () => {
+        vi.stubEnv("NEXT_PUBLIC_COURTOS_PILOT_MODE", "true");
+        vi.stubEnv("NEXT_PUBLIC_COURTOS_AUTH_MODE", "cloudflare");
+        vi.stubEnv("NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION", "true");
+        vi.resetModules();
+        const { COURTOS_SELF_REGISTRATION } = await import("./courtos");
+        expect(COURTOS_SELF_REGISTRATION).toBe(true);
+    });
+    it.each([
+        ["false", "cloudflare", "true"],
+        ["true", "other", "true"],
+        ["true", "cloudflare", "false"],
+    ])("withholds self-registration unless pilot mode, Cloudflare auth and the flag all agree (%s/%s/%s)", async (pilot, auth, flag) => {
+        vi.stubEnv("NEXT_PUBLIC_COURTOS_PILOT_MODE", pilot);
+        vi.stubEnv("NEXT_PUBLIC_COURTOS_AUTH_MODE", auth);
+        vi.stubEnv("NEXT_PUBLIC_COURTOS_ACCESS_SELF_REGISTRATION", flag);
+        vi.resetModules();
+        const { COURTOS_SELF_REGISTRATION } = await import("./courtos");
+        expect(COURTOS_SELF_REGISTRATION).toBe(false);
+    });
+    it("limits the settings-is-managed hint to provider and connector pages", async () => {
+        const { isPilotManagedSettingsPath } = await settings(true, true);
+        expect(isPilotManagedSettingsPath("/settings/byok")).toBe(true);
+        expect(isPilotManagedSettingsPath("/settings/byok/openai")).toBe(true);
+        expect(isPilotManagedSettingsPath("/settings/models")).toBe(true);
+        expect(isPilotManagedSettingsPath("/settings/connectors")).toBe(true);
+        expect(isPilotManagedSettingsPath("/settings/connectors/google")).toBe(true);
+        expect(isPilotManagedSettingsPath("/settings")).toBe(false);
+        expect(isPilotManagedSettingsPath("/settings/byok-other")).toBe(false);
+    });
     it("keeps the Word navigation hint scoped to the dedicated route or explicit library URL", async () => {
         const { isWordResearchContext } = await settings(true, true);
         expect(isWordResearchContext("/word/research")).toBe(true);

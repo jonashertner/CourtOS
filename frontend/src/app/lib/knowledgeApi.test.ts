@@ -14,6 +14,10 @@ describe("explicit knowledge requests", () => {
         await expect(searchPublicKnowledge("Gehör", "de")).rejects.toThrow(String(message));
         await expect(searchPublicKnowledge("Gehör", "de")).rejects.not.toThrow("private raw backend details");
     });
+    it("falls back to a generic AbortError when an already-aborted signal carries no reason", async () => {
+        const signal = { aborted: true } as unknown as AbortSignal;
+        await expect(searchPublicKnowledge("Gehör", "de", signal)).rejects.toMatchObject({ name: "AbortError", message: "Aborted" });
+    });
     it("sends only selected IDs and the local query, with the cookie session", async () => {
         const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ results: [] })));
         vi.stubGlobal("fetch", fetch);

@@ -25,9 +25,7 @@ export function hasContinuedToResearch(ownerId: string | null | undefined): bool
 }
 
 /** Only an explicit continue action calls this; opening the guide does not. */
-function rememberContinuation(ownerId: string): void {
-    const key = ownerKey(ownerId);
-    if (!key) return;
+function rememberContinuation(ownerId: string, key: string): void {
     try {
         window.localStorage.setItem(key, JSON.stringify({ version: 1, ownerId, continued: true }));
     } catch { /* The current view still continues when browser storage is unavailable. */ }
@@ -54,9 +52,10 @@ export function useResearchIntroduction(ownerId: string | null | undefined) {
     const snapshot = useCallback(() => hasContinuedToResearch(ownerId), [ownerId]);
     const persisted = useSyncExternalStore(subscribe, snapshot, () => false);
     const continueToResearch = useCallback(() => {
-        if (!ownerId || !ownerKey(ownerId)) return;
+        const key = ownerKey(ownerId);
+        if (!ownerId || !key) return;
         setContinuedOwner(ownerId);
-        rememberContinuation(ownerId);
+        rememberContinuation(ownerId, key);
     }, [ownerId]);
     return { showIntroduction: !persisted && (!ownerId || continuedOwner !== ownerId), continueToResearch };
 }

@@ -1,4 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hasContinuedToResearch, useResearchIntroduction } from "./researchIntroduction";
 
@@ -42,6 +44,31 @@ describe("owner-bound first research encounter", () => {
         expect(hasContinuedToResearch(null)).toBe(false);
     });
 
+    it("ignores continuation when no account is present", () => {
+        const view = renderHook(() => useResearchIntroduction(null));
+        act(() => view.result.current.continueToResearch());
+        expect(view.result.current.showIntroduction).toBe(true);
+        expect(localStorage.length).toBe(0);
+    });
+
+    it("reacts to a matching storage key and a cross-tab clear signal, while ignoring an unrelated key", () => {
+        const view = renderHook(() => useResearchIntroduction("storage-owner"));
+        const key = "courtos:research:introduction:v1:storage-owner";
+        act(() => window.dispatchEvent(new StorageEvent("storage", { key: "unrelated-key" })));
+        expect(view.result.current.showIntroduction).toBe(true);
+        act(() => {
+            localStorage.setItem(key, JSON.stringify({ version: 1, ownerId: "storage-owner", continued: true }));
+            window.dispatchEvent(new StorageEvent("storage", { key }));
+        });
+        expect(view.result.current.showIntroduction).toBe(false);
+        act(() => {
+            localStorage.removeItem(key);
+            window.dispatchEvent(new StorageEvent("storage", { key: null }));
+        });
+        expect(view.result.current.showIntroduction).toBe(true);
+        view.unmount();
+    });
+
     it("notifies only same-account views and stores no reading history or personal content", () => {
         const first = renderHook(() => useResearchIntroduction("shared-reader"));
         const second = renderHook(() => useResearchIntroduction("shared-reader"));
@@ -50,5 +77,12 @@ describe("owner-bound first research encounter", () => {
         expect(second.result.current.showIntroduction).toBe(false);
         expect(other.result.current.showIntroduction).toBe(true);
         expect(JSON.parse(localStorage.getItem(localStorage.key(0)!)!)).toEqual({ version: 1, ownerId: "shared-reader", continued: true });
+    });
+
+    it("shows the introduction in server-rendered markup, whatever the browser stored", () => {
+        const { result } = renderHook(() => useResearchIntroduction("server-reader"));
+        act(() => result.current.continueToResearch());
+        const Probe = () => createElement("span", null, String(useResearchIntroduction("server-reader").showIntroduction));
+        expect(renderToString(createElement(Probe))).toBe("<span>true</span>");
     });
 });

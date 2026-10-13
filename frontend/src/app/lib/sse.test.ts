@@ -101,6 +101,18 @@ describe("readSseFrames", () => {
         expect(ids).toEqual(["7", "9", "10"]);
     });
 
+    it("treats a blank id line as no id", async () => {
+        const ids: string[] = [];
+        const frames: unknown[] = [];
+        for await (const frame of readSseFrames(sseResponse(['id:   \ndata: {"n":1}\n\n']), {
+            onEventId: (id) => ids.push(id),
+        })) {
+            frames.push(frame);
+        }
+        expect(frames).toEqual([{ n: 1 }]);
+        expect(ids).toEqual([]);
+    });
+
     it("drains to EOF, not cancel, when the stream ends with [DONE]", async () => {
         const response = sseResponse(['data: {"n":1}\n\n', "data: [DONE]\n\n"]);
         const reader = response.body!.getReader();

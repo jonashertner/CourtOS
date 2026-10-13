@@ -473,6 +473,41 @@ describe("error frames", () => {
     turn.finish();
   });
 
+  it("reports a closed source issue on the error hook", async () => {
+    const turn = begin();
+    const sink = createTurnEventSink(turn, []);
+    const onErrorFrame = vi.fn();
+    await consumeAssistantTurnStream(
+      sseResponse([
+        frame(1, { type: "error", message: "source failed", code: "source_grounding_failed", source_issue: "changed" }),
+        "data: [DONE]\n\n",
+      ]),
+      { turn, sink, cursor: createTurnCursor("chat-a"), hooks: { onErrorFrame } },
+    );
+    expect(onErrorFrame).toHaveBeenCalledWith({
+      code: "source_grounding_failed",
+      sourceIssue: "changed",
+      message: expect.any(String),
+      safeToDisplay: expect.any(Boolean),
+    });
+    turn.finish();
+  });
+
+  it("omits the code from the error hook when the server sends none", async () => {
+    const turn = begin();
+    const sink = createTurnEventSink(turn, []);
+    const onErrorFrame = vi.fn();
+    await consumeAssistantTurnStream(
+      sseResponse([frame(1, { type: "error", message: "boom" }), "data: [DONE]\n\n"]),
+      { turn, sink, cursor: createTurnCursor("chat-a"), hooks: { onErrorFrame } },
+    );
+    expect(onErrorFrame).toHaveBeenCalledWith({
+      message: expect.any(String),
+      safeToDisplay: expect.any(Boolean),
+    });
+    turn.finish();
+  });
+
   it("finalizes an in-flight content block before appending the error", async () => {
     expect(
       await eventsOf([
@@ -546,6 +581,11 @@ describe("tool placeholders and cancellation", () => {
       { type: "tool_call_complete", name: "search_knowledge", has_evidence: true },
       { type: "content_delta", text: "Antwort" },
     ])).toEqual([{ type: "content", text: "Antwort", isStreaming: true }]);
+  });
+  it("does nothing for a completed tool call that is not the knowledge search", async () => {
+    expect(await eventsOf([
+      { type: "tool_call_complete", name: "other_tool" },
+    ])).toEqual([]);
   });
   it.each([
     ["the tool's name", { name: "search" }, "search"],
@@ -1624,6 +1664,15 @@ describe("citation frames", () => {
     expect(message.citations).toEqual(citations);
     expect(message.citationStatus).toBe("final");
     expect(message.events).toEqual([{ type: "content", text: "answer" }]);
+  });
+
+  it("treats a missing citations list as empty", async () => {
+    const message = await run([
+      { type: "content_delta", text: "A response without a citations list." },
+      { type: "citations", status: "final" },
+    ]);
+    expect(message.citations).toEqual([]);
+    expect(message.citationStatus).toBe("final");
   });
 
   it.each(["final", "halfway"])("retains a completed empty source check (%s), rather than erasing its status", async (status) => {

@@ -33,11 +33,27 @@ describe("frontier browser hand-off", () => {
         expect(getFrontierReturnDraft("user-a")).toBeNull();
         expect(sessionStorage.getItem(FRONTIER_RETURN_KEY)).toBeNull();
     });
+    it("rejects a missing owner id without clearing a stored return", () => {
+        sessionStorage.setItem(FRONTIER_RETURN_KEY, JSON.stringify(payload()));
+        expect(getFrontierReturnDraft("")).toBeNull();
+        expect(sessionStorage.getItem(FRONTIER_RETURN_KEY)).not.toBeNull();
+    });
+    it.each([null, 42, "text", [1, 2, 3]])("rejects non-object stored return state %j", (value) => {
+        sessionStorage.setItem(FRONTIER_RETURN_KEY, JSON.stringify(value));
+        expect(getFrontierReturnDraft("user-a")).toBeNull();
+        expect(sessionStorage.getItem(FRONTIER_RETURN_KEY)).toBeNull();
+    });
     it("rejects invalid JSON and accepts a valid return only for its owner", () => {
         sessionStorage.setItem(FRONTIER_RETURN_KEY, "{broken");
         expect(getFrontierReturnDraft("user-a")).toBeNull();
         sessionStorage.setItem(FRONTIER_RETURN_KEY, JSON.stringify(payload()));
         expect(getFrontierReturnDraft("user-a")).toEqual(payload());
+    });
+    it("accepts a return draft without a chat id", () => {
+        const withoutChat: Partial<ReturnType<typeof payload>> = payload();
+        delete withoutChat.chatId;
+        sessionStorage.setItem(FRONTIER_RETURN_KEY, JSON.stringify(withoutChat));
+        expect(getFrontierReturnDraft("user-a")).toEqual(withoutChat);
     });
     it("consumes only the prepared return and preserves a replacement", () => {
         sessionStorage.setItem(FRONTIER_RETURN_KEY, JSON.stringify(payload()));

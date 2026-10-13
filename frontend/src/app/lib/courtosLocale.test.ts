@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { adoptSignInLanguage, courtOSLanguageHint, courtOSLocaleSnapshot, formatCourtOSText, normaliseCourtOSLocale, setCourtOSLocale } from "./courtosLocale";
+import { adoptSignInLanguage, courtOSLanguageHint, courtOSLocaleSnapshot, formatCourtOSText, normaliseCourtOSLocale, refreshCourtOSLanguageHint, setCourtOSLocale, subscribeCourtOSLocale } from "./courtosLocale";
 import { courtOSMessages } from "./courtosMessages";
 import { readerMessages } from "./courtosReaderMessages";
 import { reviewMessages } from "./reviewMessages";
@@ -76,6 +76,58 @@ describe("CourtOS interface language", () => {
     it("substitutes values as plain text, without recursive interpolation or HTML interpretation", () => {
         const message = { de: "Quelle {name}: {count}", fr: "Source {name} : {count}", it: "Fonte {name}: {count}", en: "Source {name}: {count}" };
         expect(formatCourtOSText("en", message, { name: "<script>{count}</script>", count: 2 })).toBe("Source <script>{count}</script>: 2");
+    });
+    it("leaves an unmatched placeholder literal instead of blank", () => {
+        const message = { de: "Quelle {name}", fr: "Source {name}", it: "Fonte {name}", en: "Source {name}" };
+        expect(formatCourtOSText("en", message, {})).toBe("Source {name}");
+    });
+    it("rejects an empty or over-length owner id without touching storage", () => {
+        expect(setCourtOSLocale("", "fr")).toBe(false);
+        expect(courtOSLocaleSnapshot("")).toBe("de:hint");
+        expect(setCourtOSLocale("a".repeat(129), "fr")).toBe(false);
+        expect(courtOSLocaleSnapshot("a".repeat(129))).toBe("de:hint");
+    });
+    it("ignores a stored array value and falls back to the hint", () => {
+        const key = "courtos:ui-language:v1:account:owner-array";
+        localStorage.setItem(key, JSON.stringify(["de"]));
+        expect(courtOSLocaleSnapshot("owner-array")).toBe("de:hint");
+    });
+    it("falls back to the default locale and a no-op refresh without a window (SSR)", () => {
+        vi.stubGlobal("window", undefined);
+        try {
+            expect(courtOSLanguageHint()).toBe("de");
+            expect(() => refreshCourtOSLanguageHint()).not.toThrow();
+        } finally {
+            vi.unstubAllGlobals();
+        }
+    });
+    it("falls through a nullish navigator.languages list and an unmatched language to the default", () => {
+        Object.defineProperty(navigator, "languages", { configurable: true, value: undefined });
+        Object.defineProperty(navigator, "language", { configurable: true, value: "fr-CH" });
+        expect(courtOSLanguageHint()).toBe("fr");
+        Object.defineProperty(navigator, "languages", { configurable: true, value: ["xx-XX"] });
+        Object.defineProperty(navigator, "language", { configurable: true, value: "yy" });
+        expect(courtOSLanguageHint()).toBe("de");
+    });
+    it("notifies subscribers on a matching storage change and on language/focus events, then stops after unsubscribe", () => {
+        const changed = vi.fn();
+        const unsubscribe = subscribeCourtOSLocale("subscribe-owner", changed);
+        const key = "courtos:ui-language:v1:account:subscribe-owner";
+        window.dispatchEvent(new StorageEvent("storage", { key }));
+        expect(changed).toHaveBeenCalledTimes(1);
+        window.dispatchEvent(new StorageEvent("storage", { key: "unrelated-key" }));
+        expect(changed).toHaveBeenCalledTimes(1);
+        window.dispatchEvent(new StorageEvent("storage", { key: null }));
+        expect(changed).toHaveBeenCalledTimes(2);
+        window.dispatchEvent(new Event("courtos:ui-language"));
+        expect(changed).toHaveBeenCalledTimes(3);
+        window.dispatchEvent(new Event("languagechange"));
+        expect(changed).toHaveBeenCalledTimes(4);
+        window.dispatchEvent(new Event("focus"));
+        expect(changed).toHaveBeenCalledTimes(5);
+        unsubscribe();
+        window.dispatchEvent(new Event("focus"));
+        expect(changed).toHaveBeenCalledTimes(5);
     });
     it("provides all four complete catalog variants with equal placeholders and Swiss German spelling", () => {
         for (const message of [...Object.values(courtOSMessages), ...Object.values(readerMessages)]) {

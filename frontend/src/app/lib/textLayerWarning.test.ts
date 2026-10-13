@@ -24,4 +24,13 @@ describe("textLayerWarning", () => {
             "1 of 12 pages has no text layer (likely scanned), so the assistant cannot read it.",
         );
     });
+
+    it("falls back to a bare page count when the total page count is unknown", () => {
+        expect(textLayerWarning(null, 5)).toBe(
+            "5 pages have no text layer (likely scanned), so the assistant cannot read them.",
+        );
+        expect(textLayerWarning(undefined, 1)).toBe(
+            "1 page has no text layer (likely scanned), so the assistant cannot read it.",
+        );
+    });
 });
