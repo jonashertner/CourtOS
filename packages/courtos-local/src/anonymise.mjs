@@ -267,8 +267,13 @@ export function suggestAnonymisation(documents) {
   };
   const sentenceInitial = (m) => {
     const before = where[m.part].text.slice(Math.max(0, m.start - 3), m.start);
-    return m.start === 0 || /(?:^|[.!?:]\s|\n)\s*$/.test(before) || /\n\s*$/.test(where[m.part].text.slice(0, m.start));
+    const head = where[m.part].text.slice(0, m.start);
+    // "Rz. 18 Eine langjährige Kundin": a numbered paragraph opens a sentence.
+    return m.start === 0 || /(?:^|[.!?:]\s|\n)\s*$/.test(before) || /\n\s*$/.test(head) || /(?:^|\n)[ \t]*(?:Rz\.?|N)[ \t]*\d+[a-z]?[ \t]+$/u.test(head);
   };
+  // The formal address ("dass Ihre Gesellschaft") is written capitalised anywhere in a sentence
+  // and is no surname.
+  const FORMAL = new Set(["ihre", "ihren", "ihrem", "ihrer", "ihres", "ihnen"]);
 
   // A heading opens with a letter and an ordinary word ("C. Sur l'objection", "B. Zum Schaden"):
   // that is no initial and surname.
@@ -286,7 +291,7 @@ export function suggestAnonymisation(documents) {
     let decision = "replace";
     // A lone capitalised word may simply open a sentence ("Eine Rüge …"). It stays readable only
     // if it is an ordinary word in the vocabulary and not a known surname; otherwise it is replaced.
-    if (single && (forms.every(f => f.length <= 3) || person.mentions.every(sentenceInitial)) && forms.every(ordinary)) { decision = "keep"; notes.push("check_word"); }
+    if (single && (forms.every(f => f.length <= 3 || FORMAL.has(f.toLocaleLowerCase("de"))) || person.mentions.every(sentenceInitial)) && forms.every(ordinary)) { decision = "keep"; notes.push("check_word"); }
     else if (single && forms.every(f => LABEL_WORDS.has(f.toLocaleLowerCase("de")))) { decision = "keep"; notes.push("label_word"); }
     else if (single && forms.every(f => MONTHS.has(f.toLocaleLowerCase("de"))) && person.mentions.every(inDate)) { decision = "keep"; notes.push("date_word"); }
     // Text recognition drops umlauts ("Ruge" for "Rüge"). Such a word is flagged, but still
@@ -342,13 +347,19 @@ export function suggestAnonymisation(documents) {
     } else if (c.kind === "organisation") {
       // Replace the distinctive part of a company name; keep the legal form ("A.________ AG").
       const words = c.label.split(/\s+/).filter(t => !LEGAL_FORM.test(t));
-      const cores = words.filter(t => /^\p{Lu}/u.test(t) && t.length >= 4 && !t.includes(".") && !GENERIC.has(t.toLocaleLowerCase("de")) && !LABEL_WORDS.has(t.toLocaleLowerCase("de")) && !covered.has(normal(t)));
+      const named = words.filter(t => /^\p{Lu}/u.test(t) && t.length >= 4 && !t.includes(".") && !GENERIC.has(t.toLocaleLowerCase("de")) && !LABEL_WORDS.has(t.toLocaleLowerCase("de")));
+      const cores = named.filter(t => !covered.has(normal(t)));
       if (!cores.length) continue;
+      // "Montina Kaffeemaschinen AG" where "Montina" is replaced already: what is left is
+      // a long ordinary word, so the whole name is replaced and "Kaffeemaschinen" alone
+      // stays readable. A short ordinary word may be a surname too ("Frei", "Richter")
+      // and is still replaced on its own.
+      const leftover = cores.length < named.length && cores.every(t => t.length >= 8 && ordinary(t));
       // A firm named after a person ("Weber Legal AG" of counsel "Thomas Weber"):
       // the core alone would overlap the person's name, so the whole name
       // without its legal form is replaced.
       const shared = cores.some(t => [...covered].some(a => a.split(" ").includes(normal(t))));
-      const alias = shared ? words.join(" ") : cores.join(" ");
+      const alias = shared || leftover ? words.join(" ") : cores.join(" ");
       if (covered.has(normal(alias))) continue;
       covered.add(normal(alias));
       candidates.push({ key: `organisation:${normal(alias)}`, kind: "organisation", label: c.label, aliases: [alias], count: c.count, samples: c.samples, notes: ["company_name"], decision: "replace", source: "courtos", style: "letter" });

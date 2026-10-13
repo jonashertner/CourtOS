@@ -55,6 +55,8 @@ const ROLE_PERSON = new RegExp(`(?<![${L}])(?:Geschäftsführerin|Geschäftsfüh
 const STREET = new RegExp(`(?<![${L}])(?:[\\p{Lu}][${L}-]*(?:strasse|straße|str\\.|gasse|weg|platz|rain|halde|quai|allee|ring|matte|graben|steig)|(?:[Rr]ue|[Cc]hemin|[Cc]h\\.|[Aa]venue|[Aa]v\\.|[Rr]oute|[Pp]lace|[Bb]oulevard|[Vv]ia|[Vv]iale|[Pp]iazza|[Vv]icolo)(?:\\s+(?:de\\s+la|de|des|du|del|della|dei|d'))?\\s+[\\p{Lu}][${L}'’-]+)\\s+\\d{1,4}[a-z]?(?![${L}\\d])`, "gu");
 const PLACE = new RegExp(`(?<![\\d.'’])([1-9]\\d{3})[ \\t\\u00a0]+(\\p{Lu}[${L}.-]+(?:\\s(?:bei|b\\.|am|an der|sur|près|di|im)\\s\\p{Lu}[${L}.-]+)?)(?![${L}])`, "gu");
 const MAJOR_PLACES = new Set("Zürich Genève Genf Basel Bern Lausanne Winterthur Luzern Lucerne St.Gallen Lugano Biel Bienne Thun Fribourg Freiburg Neuchâtel Schaffhausen Chur Sion Sitten Zug Aarau Bellinzona Locarno Solothurn Frauenfeld Liestal Delémont Glarus Altdorf Sarnen Stans Schwyz Herisau Appenzell".split(" "));
+// "2025 CHF 210'000" in a table is a year and an amount, not a postcode and a town.
+const CURRENCY = new Set(["CHF", "EUR", "USD", "GBP", "Fr.", "SFr."]);
 const DATE_BEFORE = /(?:\d{1,2}\.\s*|(?:Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|January|February|March|June|July|October|December)\s*)$/u;
 const COMPANY_PREFIX = /^(?:(?:in\s+)?Sachen|Firma|Klägerin|Kläger|Beklagte|Beklagten|Bestellerin|Unternehmerin|Auftraggeberin|Auftragnehmerin|Begünstigte|Gesellschaft|Mandantin|Partei|Gegen|Betreff|Von|An|Für|Zwischen|Und|Die|Der|Das|La|Le|Les|Il|Lo|The)\s+/u;
 const PARCEL = /(?:Grundstück|Parzelle|Kat\.-?Nr\.|parcelle|bien-fonds|particella|fondo)\s*(?:Nr\.|n°|no\.|n\.)?\s*\d{1,6}(?:\s*,?\s*(?:Grundbuch|GB|registre foncier|RF|registro fondiario|RFD)\s+[\p{Lu}][\p{L}-]+)?/gu;
@@ -135,6 +137,7 @@ export function detectCandidates(documents) {
       const town = end, whole = match[0].slice(0, match[0].length - (match[2].length - end.length));
       // "12. Mai 2025 Klage": a year after a date is not a postcode.
       if (DATE_BEFORE.test(text.slice(Math.max(0, match.index - 16), match.index))) continue;
+      if (CURRENCY.has(town)) continue;
       add("place", town, document.id, page.n, match.index, whole);
     }
     for (const hit of collect(TITLED_PERSON, text, 1)) {

@@ -66,6 +66,12 @@ test("a postcode and town stay on one line, and a year before an article is no p
   assert.ok(!places.some(a => a.some(x => /les/i.test(x))));
 });
 
+test("a year before a currency is no place", () => {
+  const found = detected("Umsatz\n2024 CHF 180'000\n2025 CHF 210'000\n2026 EUR 12'000\nSitz in 8005 Zürich");
+  assert.ok(!found.some(([k, ...a]) => k === "place" && a.some(x => /CHF|EUR/.test(x))));
+  assert.ok(found.some(([k, ...a]) => k === "place" && a.some(x => x.includes("Zürich"))));
+});
+
 test("in the samples, headings, document labels and words written in lower case stay readable", async () => {
   const mirrorOf = async (folder) => {
     const work = await mkdtemp(join(tmpdir(), "courtos-readable-"));
@@ -126,4 +132,20 @@ test("a name in a flattened e-mail header is shown without the header word, and 
   assert.equal(vogel.label, "Urs Vogel");
   assert.ok(vogel.aliases.includes("An Urs Vogel"), "the form with the header word stays an alias");
   assert.ok(candidates.every(c => !/^(An|Cc) /u.test(c.label)));
+});
+
+test("a firm named after a person is replaced whole when what is left is a long ordinary word", () => {
+  const replaced = (firm) => suggestAnonymisation(doc(`Klägerin ist die ${firm}. Geschäftsführer ist Thomas Brändli. Herr Brändli verkauft Kaffeemaschinen. Die Firma ${firm} liefert.`))
+    .candidates.filter(c => c.decision === "replace" && c.kind === "organisation").flatMap(c => c.aliases);
+  assert.deepEqual(replaced("Brändli Kaffeemaschinen AG"), ["Brändli Kaffeemaschinen"]);
+  // A short ordinary word can be a surname: "Richter" is still replaced on its own.
+  assert.deepEqual(replaced("Brändli Richter AG"), ["Richter"]);
+});
+
+test("a word opening a numbered paragraph and the formal address stay readable; a surname there is replaced", () => {
+  const decisions = (text) => Object.fromEntries(suggestAnonymisation(doc(text)).candidates.map(c => [c.aliases[0], c.decision]));
+  const found = decisions("Rz. 18 Eine langjährige Kundin bestätigte dies.\nRz. 20a Eine Mahnung blieb aus.\nWir stellten fest, dass Ihre Gesellschaft liefert.\nRz. 21 Weber hat bezahlt.");
+  assert.equal(found.Eine, "keep");
+  assert.equal(found.Ihre, "keep");
+  assert.equal(found.Weber, "replace");
 });
