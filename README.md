@@ -4,6 +4,12 @@ A compact research window for OpenCaseLaw and a personal document library. Find 
 
 CourtOS is a fork of [MikeOSS](https://github.com/open-legal-products/mike), developed by Jonas Hertner in connection with [OpenCaseLaw](https://opencaselaw.ch). Mike's contributors built the underlying document workspace. CourtOS adds an authenticated research surface, local search of personal source copies and a separate channel for explicitly approved external analysis. See the [upstream README](README.upstream.md) for the original project's features and documentation.
 
+## Try CourtOS on a case folder
+
+[`packages/courtos-local`](packages/courtos-local/) is a separate tool that runs on your own computer. It reads one case folder in place, replaces names and identifiers before a language model reads anything, and binds every result to the original pages, in the browser and in Word. It works with Claude, any OpenAI-compatible service, or an open model on the same computer. It does not use the hosted pilot described below.
+
+To try it, follow [TESTING.md](packages/courtos-local/TESTING.md). A demo on a synthetic dossier runs without an API key. How it works is in its [README](packages/courtos-local/README.md).
+
 ## Current pilot
 
 The browser entry is `/research`. The header offers research, the personal library, the guide and account sign-out. Existing `/knowledge` links remain valid; `/` and `/pilot` lead to research when the knowledge feature is enabled. The inherited assistant and specialised workspaces remain reachable through their existing routes, without making users adopt them to research or copy a source.
@@ -21,7 +27,7 @@ The pilot runs on the operator's separate Switchboard Hetzner VPS in Germany, re
 
 Search results and model answers are working materials. A missing result does not establish exhaustive research, and a matching citation does not establish substantive support. This pilot does not establish legal accuracy, institutional approval or readiness for confidential case files.
 
-The current library stores uploaded copies on the CourtOS server. It does not read ordinary folders in place or maintain a case wiki beside local originals. A local filesystem companion and per-case memory beside untouched originals remain proposed next steps. The shared browser/Word research panel is implemented as a candidate; native host acceptance remains incomplete.
+The current library stores uploaded copies on the CourtOS server. It does not read ordinary folders in place or maintain a case wiki beside local originals; the local tool in `packages/courtos-local` does. The shared browser/Word research panel is implemented as a candidate; native host acceptance remains incomplete.
 
 The concrete design, existing Citecheck/Word interfaces and acceptance boundaries are set out in [Local case work in Word and the browser](docs/architecture/local-case-memory.md).
 
