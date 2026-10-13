@@ -33,7 +33,7 @@ browser workspace and Word task pane on https://localhost:4311
 
 ## Run it
 
-Node.js 22.12 or newer. The package depends on its neighbours in `packages/`, so clone the whole repository. [TESTING.md](TESTING.md) is the step-by-step guide for trying it: what to look at, where your data goes, and how to report a problem.
+Installers for macOS (Apple silicon) and Windows, which need no Node or git, are on the [release page](https://github.com/jonashertner/CourtOS/releases/tag/courtos-local-v0.1.0). From the source: Node.js 22.12 or newer. The package depends on its neighbours in `packages/`, so clone the whole repository. [TESTING.md](TESTING.md) is the step-by-step guide for trying it: what to look at, where your data goes, and how to report a problem.
 
 ```sh
 git clone https://github.com/jonashertner/CourtOS.git
