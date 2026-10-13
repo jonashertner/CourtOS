@@ -71,8 +71,32 @@ const GENERIC = new Set("hotel hotels bau immobilien holding partner partners tr
  * several entries share stays separate and is decided by the user.
  */
 export function consolidatePersons(candidates) {
-  const persons = candidates.filter(c => c.kind === "person");
   const bare = (alias) => alias.split(/\s+/).filter((t, i, all) => !(NOT_NAME.has(t.toLocaleLowerCase("de")) && i < all.length - 1)).join(" ");
+  // A flattened line of signatures ("Georges Bettex Marianne Bettex Werner Stucki") is several
+  // people, not one. A name made up entirely of the full names of two or more other entries is
+  // dropped; each part is still replaced by its own entry. Any word left over keeps the name.
+  // The other names of that entry were grouped only through the line, so each stands alone
+  // and joins its own person below.
+  const listed = candidates.filter(c => c.kind === "person");
+  const full = new Map(listed.map(c => [c, c.aliases.map(bare).filter(a => a.includes(" ")).map(a => a.split(" "))]));
+  const listOfNames = (c, alias) => {
+    const tokens = bare(alias).split(" ");
+    const reach = (at, used) => {
+      if (at === tokens.length) return used.size >= 2;
+      for (const other of listed) if (other !== c) for (const name of full.get(other)) {
+        if (name.every((t, i) => tokens[at + i] === t) && reach(at + name.length, new Set([...used, other]))) return true;
+      }
+      return false;
+    };
+    return tokens.length >= 4 && reach(0, new Set());
+  };
+  for (const c of listed) {
+    const kept = c.aliases.filter(a => !listOfNames(c, a));
+    if (kept.length === c.aliases.length) continue;
+    const parts = kept.map(a => ({ ...c, aliases: [a], count: Math.max(1, Math.round(c.count / kept.length)), samples: [...c.samples] }));
+    candidates.splice(candidates.indexOf(c), 1, ...parts);
+  }
+  const persons = candidates.filter(c => c.kind === "person");
   const cores = new Map(persons.map(c => [c, [...new Set(c.aliases.map(bare))]]));
   const group = new Map(persons.map(c => [c, c]));
   const root = (c) => { while (group.get(c) !== c) c = group.get(c); return c; };

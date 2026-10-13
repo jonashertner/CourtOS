@@ -159,3 +159,13 @@ test("a parcel number before a label, a lettered heading and a French city name 
   const places = candidates.filter(c => c.kind === "place").flatMap(c => c.aliases);
   assert.ok(!places.includes("Berne") && places.includes("Fontanivent"), JSON.stringify(places));
 });
+
+test("a flattened line of signatures is several people, not one", () => {
+  const person = (aliases) => ({ kind: "person", label: aliases[0], aliases, count: 1, samples: [], notes: [], decision: "replace" });
+  const joined = consolidatePersons([person(["Georges Bettex"]), person(["Marianne Bettex"]), person(["Werner Stucki"]),
+    person(["Georges Bettex Marianne Bettex Werner Stucki", "M. Stucki"])]);
+  assert.deepEqual(joined.map(c => c.aliases), [["Georges Bettex"], ["Marianne Bettex"], ["Werner Stucki", "M. Stucki"]]);
+  // A word that belongs to no other entry keeps the line as one name.
+  const kept = consolidatePersons([person(["Georges Bettex"]), person(["Werner Stucki"]), person(["Georges Bettex Werner Stucki Zbinden"])]);
+  assert.ok(kept.some(c => c.aliases.includes("Georges Bettex Werner Stucki Zbinden")));
+});
