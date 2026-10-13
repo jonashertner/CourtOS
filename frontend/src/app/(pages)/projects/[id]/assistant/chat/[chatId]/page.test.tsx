@@ -765,6 +765,15 @@ describe("project chat workspace lifecycle", () => {
             filename: "Draft.docx",
             page: 1,
             quote: "Relevant language",
+            // Only a verified quote is highlighted in the viewer; the backend
+            // sends each quote's verification in `quotes`.
+            quotes: [
+                {
+                    page: 1,
+                    quote: "Relevant language",
+                    verification: { verified: true },
+                },
+            ],
         };
         state.getChat.mockResolvedValueOnce({
             chat: {
