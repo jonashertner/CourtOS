@@ -77,7 +77,8 @@ export function systemPrompt(task, language, caseLanguage = language) {
 
 Requested task: ${task}. ${TASKS[task].brief}
 The proceedings are conducted in ${LANGUAGE[caseLanguage] ?? "German"}; document labels and page references are in that language.
-Write all claim texts in ${LANGUAGE[output] ?? "German"}. Exact quotations stay in the source language.`;
+Write all claim texts in ${LANGUAGE[output] ?? "German"}. Exact quotations stay in the source language.
+The user sees any text you write between tool calls as a progress note: write it in ${LANGUAGE[language] ?? "German"}.`;
 }
 
 export function tools(task) {
