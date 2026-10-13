@@ -23,7 +23,7 @@ export function pinpointInText(text, pinpoint) {
   if (!pinpoint || !text) return null;
   const base = pinpoint.split("/")[0].replace(/[a-z]+$/i, "");
   if (!base) return null;
-  const escaped = base.replace(/\./g, "\\.");
+  const escaped = base.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
   return new RegExp(`(?:^|\\n)\\s*(?:E\\.\\s*|Erw\\.\\s*|consid\\.\\s*)?${escaped}\\.?(?:[a-z]{1,2})?\\s+\\S`, "m").test(text);
 }
 
