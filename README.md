@@ -8,7 +8,7 @@ CourtOS is a fork of [MikeOSS](https://github.com/open-legal-products/mike), dev
 
 [`packages/courtos-local`](packages/courtos-local/) is a separate tool that runs on your own computer. It reads one case folder in place, replaces names and identifiers before a language model reads anything, and binds every result to the original pages, in the browser and in Word. It works with Claude, any OpenAI-compatible service, or an open model on the same computer. It does not use the hosted pilot described below.
 
-To try it, follow [TESTING.md](packages/courtos-local/TESTING.md). A demo on a synthetic dossier runs without an API key. How it works is in its [README](packages/courtos-local/README.md).
+To try it, follow [TESTING.md](packages/courtos-local/TESTING.md). Installers for macOS (Apple silicon) and Windows are on the [release page](https://github.com/jonashertner/CourtOS/releases/tag/courtos-local-v0.1.0). A demo on a synthetic dossier runs without an API key. How it works is in its [README](packages/courtos-local/README.md).
 
 ## Current pilot
 
