@@ -141,6 +141,13 @@ test("a name in a flattened e-mail header is shown without the header word, and 
   assert.ok(candidates.every(c => !/^(An|Cc) /u.test(c.label)));
 });
 
+test("the letter of a judgment's section is not part of the name that follows it", () => {
+  const { candidates } = suggestAnonymisation(doc("Vu les faits suivants : A. Michel Dubosson et Caroline Dubosson sont propriétaires. B. Le 15 janvier 2025, Michel Dubosson dépose une demande."));
+  const michel = candidates.find(c => c.kind === "person" && c.aliases.some(a => a.endsWith("Michel Dubosson")));
+  assert.equal(michel.label, "Michel Dubosson");
+  for (const form of michel.aliases.filter(a => a.startsWith("A. "))) assert.ok(michel.aliases.includes(form.slice(3)), "the lettered form stays an alias");
+});
+
 test("a firm named after a person is replaced whole when what is left is a long ordinary word", () => {
   const replaced = (firm) => suggestAnonymisation(doc(`Klägerin ist die ${firm}. Geschäftsführer ist Thomas Brändli. Herr Brändli verkauft Kaffeemaschinen. Die Firma ${firm} liefert.`))
     .candidates.filter(c => c.decision === "replace" && c.kind === "organisation").flatMap(c => c.aliases);

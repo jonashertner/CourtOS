@@ -54,9 +54,12 @@ const LABEL_WORDS = new Set([
 // Words that open an e-mail header or an address line ("An Urs Vogel", "Cc Anna Meier"). They are
 // no part of the name a result shows; the form with them stays an alias, so the mirror is unchanged.
 const HEADER_WORDS = new Set("an cc bcc kopie to from".split(" "));
+// A judgment's facts are lettered: "A. Michel Dubosson et Caroline Dubosson sont …".
+const SECTION_LETTER = /^(?:\p{Lu}|[IVX]+)\.$/u;
 const withoutHeader = (form) => {
   const tokens = form.split(/\s+/);
-  return tokens.length > 2 && HEADER_WORDS.has(tokens[0].replace(/:$/u, "").toLocaleLowerCase("de")) && tokens.slice(1).every(t => /^\p{Lu}/u.test(t)) ? tokens.slice(1).join(" ") : form;
+  const header = HEADER_WORDS.has(tokens[0].replace(/:$/u, "").toLocaleLowerCase("de")) || (SECTION_LETTER.test(tokens[0]) && /^\p{Lu}\p{Ll}{2,}/u.test(tokens[1] ?? ""));
+  return tokens.length > 2 && header && tokens.slice(1).every(t => /^\p{Lu}/u.test(t)) ? tokens.slice(1).join(" ") : form;
 };
 const FUNCTION_WORDS = new Set("le la les l des du de d par pour sur sous dans en et ou au aux un une il lo gli i del della dei di da per con su tra fra e o un una the and of in on at for to by der die das den dem des und oder im am an auf bei mit von vom zu zum zur ein eine".split(" "));
 const GENERIC = new Set("hotel hotels bau immobilien holding partner partners treuhand group gruppe services service consulting management invest swiss schweiz suisse svizzera international verwaltung handel technik bank legal rechtsanwälte versicherung versicherungen transport garage restaurant immo real estate capital finance pharma energie media software systems solutions".split(" "));
