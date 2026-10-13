@@ -4,7 +4,7 @@ import { connectWordResearchHost, createWordResearchHost, getWordResearchDocumen
 
 function fixture(text = "Nur die markierte Passage") {
     const inserted = { font: { name: "Times New Roman", size: 11 } };
-    const selection = { text, font: { name: "Aptos", size: 12 }, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn((_html: string, _location: "End") => inserted) };
+    const selection = { text, font: { name: "Aptos", size: 12 }, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn<(html: string, location: "End") => typeof inserted>(() => inserted) };
     const getSelection = vi.fn(() => selection);
     const bodyRead = vi.fn(() => { throw new Error("Whole document must never be accessed"); });
     const document = { getSelection, get body() { return bodyRead(); } };
@@ -36,6 +36,26 @@ describe("Word document-local reload scope", () => {
     it("does not invent a persistent scope for unsaved or unavailable documents", async () => {
         expect(await getWordResearchDocumentScope({})).toBeNull();
         expect(await getWordResearchDocumentScope({ Office: { onReady: vi.fn(), context: { document: { url: "" } } } })).toBeNull();
+    });
+    it("treats a hashing failure as no durable scope rather than throwing", async () => {
+        const crypt = { subtle: { digest: vi.fn().mockRejectedValue(new Error("hashing unavailable")) } } as unknown as Pick<Crypto, "subtle">;
+        const env: WordResearchEnvironment = { Office: { onReady: vi.fn(), context: { document: { url: "file:///private/one.docx" } } } };
+        expect(await getWordResearchDocumentScope(env, crypt)).toBeNull();
+    });
+    it("resolves the environment and crypto default from the global scope when called without arguments", async () => {
+        await expect(connectWordResearchHost()).rejects.toMatchObject({ code: "not_available" });
+        expect(await getWordResearchDocumentScope()).toBeNull();
+    });
+    it("defaults to an empty environment in a non-browser runtime", async () => {
+        const win = globalThis.window;
+        // @ts-expect-error simulate SSR
+        delete globalThis.window;
+        try {
+            await expect(connectWordResearchHost()).rejects.toMatchObject({ code: "not_available" });
+            expect(await getWordResearchDocumentScope()).toBeNull();
+        } finally {
+            globalThis.window = win;
+        }
     });
 });
 
@@ -130,10 +150,19 @@ describe("CourtOS Word selection boundary", () => {
         expect(f.selection.insertText).not.toHaveBeenCalled();
     });
 
+    it.each([
+        { label: "a non-array value", notes: "not an array" as unknown as string[] },
+        { label: "an array containing a non-string entry", notes: ["ok", 5] as unknown as string[] },
+    ])("rejects citation notes that are not a plain string array ($label)", async ({ notes }) => {
+        const f = fixture();
+        await expect(createWordResearchHost(f.runtime).insertCitationAfterSelection({ quote: "Zitat", source: "Quelle", pinpoint: "Seite 1", notes })).rejects.toMatchObject({ code: "empty_text" });
+        expect(f.run).not.toHaveBeenCalled();
+    });
+
     it("uses the current selection on insertion, not a stale range from the earlier search", async () => {
         const f = fixture(); const host = createWordResearchHost(f.runtime);
         await host.readSelection();
-        const current = { text: 'Neue Auswahl', font: { name: "Arial", size: 10 }, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn((_html: string, _location: "End") => f.inserted) };
+        const current = { text: 'Neue Auswahl', font: { name: "Arial", size: 10 }, load: vi.fn(), insertText: vi.fn(), insertHtml: vi.fn<(html: string, location: "End") => typeof f.inserted>(() => f.inserted) };
         f.getSelection.mockReturnValue(current);
         await host.insertCitationAfterSelection({ quote: 'Zitat', source: 'Quelle', pinpoint: 'Seite 1' });
         expect(current.insertHtml).toHaveBeenCalledExactlyOnceWith(expect.any(String), 'End');
@@ -171,6 +200,13 @@ describe("CourtOS Word selection boundary", () => {
         await expect(host.insertTextAfterSelection("Quelle")).rejects.toMatchObject({ code: "busy" });
         expect(f.selection.insertText).toHaveBeenCalledOnce();
         finish(); await first;
+    });
+
+    it("does not override the inserted citation's font when the selection's font is unreadable", async () => {
+        const f = fixture();
+        f.selection.font = { name: "", size: NaN };
+        await createWordResearchHost(f.runtime).insertCitationAfterSelection({ quote: "Zitat", source: "Quelle", pinpoint: "Seite 1" });
+        expect(f.inserted.font).toEqual({ name: "Times New Roman", size: 11 });
     });
 
     it("does not retry an uncertain insertion or expose Office errors containing document text", async () => {
@@ -216,6 +252,13 @@ describe("CourtOS Word host connection", () => {
         const result = expect(connectWordResearchHost(env)).rejects.toMatchObject({ code: "not_available" });
         await vi.advanceTimersByTimeAsync(10_000); await result;
         expect(f.run).not.toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it("skips clearing a timer that was never scheduled when Office rejects before readiness starts", async () => {
+        vi.useFakeTimers(); const f = fixture(); const env = environment(f);
+        env.Office!.onReady = () => { throw new Error("Office failed to initialize"); };
+        await expect(connectWordResearchHost(env)).rejects.toMatchObject({ code: "not_available" });
         expect(vi.getTimerCount()).toBe(0);
     });
 });

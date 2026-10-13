@@ -154,10 +154,10 @@ test.describe("logout (isolated user)", () => {
     await expect(userMenuButton).toBeVisible({ timeout: 10_000 });
     await userMenuButton.click();
 
-    /* The dropdown that appears contains a "Settings" menu item which
-       navigates to /settings via router.push("/settings"). */
+    /* The dropdown that appears contains an "Einstellungen" (settings) menu
+       item which navigates to /settings via router.push("/settings"). */
     const accountSettingsItem = page.getByRole("menuitem", {
-        name: "Settings",
+        name: "Einstellungen",
     });
     await expect(accountSettingsItem).toBeVisible({ timeout: 5_000 });
     await accountSettingsItem.click();
@@ -175,7 +175,7 @@ test.describe("logout (isolated user)", () => {
     await expect(userMenuButton).toBeVisible({ timeout: 10_000 });
     await userMenuButton.click();
     const signOutButton = page.getByRole("menuitem", {
-        name: "Sign out",
+        name: "Abmelden",
         exact: true,
     });
     await expect(signOutButton).toBeVisible({ timeout: 5_000 });

@@ -19,6 +19,7 @@ vi.mock("@/app/lib/errorReporting", () => ({
 }));
 import {
     errorCode,
+    isOnAuthRoute,
     knownErrorCodeMessage,
     notifyError,
     notifyInfo,
@@ -378,6 +379,17 @@ describe("notifyError options", () => {
             });
             expect(href).not.toContain("Page:");
             expect(href).toContain("Client");
+        } finally {
+            globalThis.window = win;
+        }
+    });
+
+    it("isOnAuthRoute reads as not an auth route without a window to inspect", () => {
+        const win = globalThis.window;
+        // @ts-expect-error simulate a non-browser runtime
+        delete globalThis.window;
+        try {
+            expect(isOnAuthRoute()).toBe(false);
         } finally {
             globalThis.window = win;
         }

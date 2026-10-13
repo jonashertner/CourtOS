@@ -37,6 +37,17 @@ describe("formal citation API",()=>{
         if(change==="overLimit")value.coverage.extracted_text_bytes=1048577;
         expect(()=>parseCitationCheckReport(value,input)).toThrow("unavailable");
     });
+    it("accepts populated issues, notes and suggestions carrying null, text or mixed written content",()=>{
+        const value=fixture();const finding=value.findings[0];
+        finding.issues=[{kind:"court",written:null,listed:["BGer"],nearby:[]},{kind:"pinpoint",written:[2,3],listed:[],nearby:["context"]}];
+        finding.notes=[{kind:"spelling",written:"BGE 137 I 195",parent:null},{kind:"merge",written:null,parent:"root-id"}];
+        finding.suggestions=[{reason:"closest match",decision:{decision_id:"bge137I195",label:"BGE 137 I 195",court:"BGer",canton:"CH",date:"2011-03-18",numbered_sections:["2.3"]}}];
+        const parsed=parseCitationCheckReport(value,input);
+        expect(parsed.findings[0].issues[0].written).toBeNull();
+        expect(parsed.findings[0].issues[1].written).toEqual([2,3]);
+        expect(parsed.findings[0].notes[1].parent).toBe("root-id");
+        expect(parsed.findings[0].suggestions[0].decision.decision_id).toBe("bge137I195");
+    });
     it("accepts Unicode offsets, full deterministic scope and an honest empty result",()=>{
         const value=fixture();value.findings[0].source.quote="😀 BGE 137 I 195";value.findings[0].source.end=value.findings[0].source.start+Array.from(value.findings[0].source.quote).length;
         value.coverage.pages=200;value.coverage.extracted_text_bytes=1048576;
@@ -52,5 +63,13 @@ describe("formal citation API",()=>{
         await expect(checkCitations({sources:[...input.sources,...input.sources]})).rejects.toMatchObject({code:"scope"});expect(fetch).not.toHaveBeenCalled();
         const controller=new AbortController(),error=new DOMException("Cancelled","AbortError");fetch.mockImplementation(()=>{controller.abort();throw error;});
         await expect(checkCitations(input,controller.signal)).rejects.toBe(error);
+    });
+    it("propagates a parse failure from a malformed successful response unchanged",async()=>{
+        vi.stubGlobal("fetch",vi.fn().mockResolvedValue(new Response(JSON.stringify({not:"a report"}),{status:200})));
+        await expect(checkCitations(input)).rejects.toMatchObject({code:"unavailable"});
+    });
+    it("falls back to the generic error for an unrecognised thrown failure",async()=>{
+        vi.stubGlobal("fetch",vi.fn(async()=>{throw new Error("boom");}));
+        await expect(checkCitations(input)).rejects.toMatchObject({code:"unavailable"});
     });
 });

@@ -44,6 +44,7 @@ function CopySource({ text, label, wordHost, wordCitation }: { text: string; lab
     const { t } = useCourtOSLocale();
     const [insertStatus, setInsertStatus] = useState<"idle" | "inserting" | "inserted" | "error">("idle");
     const [status, setStatus] = useState<"idle" | "copied" | "manual">("idle");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- feedback belongs to the text it was given for
     useEffect(() => { setStatus("idle"); setInsertStatus("idle"); }, [text]);
     return <div className="min-w-0">
         <button type="button" className={link} onClick={async () => {

@@ -23,6 +23,16 @@ describe("local research hand-off", () => {
         expect(getResearchDraft("user-a")).toBeNull();
         expect(sessionStorage.getItem(RESEARCH_DRAFT_KEY)).toBeNull();
     });
+    it("rejects a missing owner id without touching a stored draft", () => {
+        sessionStorage.setItem(RESEARCH_DRAFT_KEY, JSON.stringify(payload()));
+        expect(getResearchDraft("")).toBeNull();
+        expect(sessionStorage.getItem(RESEARCH_DRAFT_KEY)).not.toBeNull();
+    });
+    it.each([null, 42, "text", [1, 2, 3]])("rejects non-object stored state %j", (value) => {
+        sessionStorage.setItem(RESEARCH_DRAFT_KEY, JSON.stringify(value));
+        expect(getResearchDraft("user-a")).toBeNull();
+        expect(sessionStorage.getItem(RESEARCH_DRAFT_KEY)).toBeNull();
+    });
     it("claims only the prepared text, preserving a newer replacement", () => {
         prepareResearchDraft("user-a", "first"); const first = getResearchDraft("user-a")!;
         prepareResearchDraft("user-a", "second"); consumeResearchDraft(first);

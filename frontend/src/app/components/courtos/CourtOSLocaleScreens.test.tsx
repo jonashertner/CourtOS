@@ -20,9 +20,10 @@ beforeEach(() => {
 });
 it("changes Word settings copy while leaving unavailable AI controls and model preference intact", () => {
     render(<CourtOSLocaleProvider ownerId="word-french"><ResearchSettings open onClose={vi.fn()} userId="word-french" onSignOut={vi.fn()} modelsAvailable={false} /></CourtOSLocaleProvider>);
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "fr" } });
+    fireEvent.click(screen.getByRole("button", { name: "Français" }));
+    expect(screen.getByRole("button", { name: "Français" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("dialog", { name: "Paramètres" })).toBeVisible();
-    expect(screen.getByText(/Les requêtes IA ne sont pas encore disponibles/)).toBeVisible();
+    expect(screen.getByText(/Les requêtes IA depuis la recherche ne sont pas encore disponibles/)).toBeVisible();
     expect(screen.getByRole("radio", { name: /Gemma/ })).toBeDisabled();
     expect(screen.getByRole("radio", { name: /Claude/ })).toBeDisabled();
     expect(getResearchModelPreference("word-french")).toBe("gemma");
@@ -31,7 +32,8 @@ it("changes Word settings copy while leaving unavailable AI controls and model p
 });
 it("keeps the precise authenticated continuation when using Italian sign-in controls", async () => {
     render(<CourtOSLocaleProvider ownerId={null}><CourtOSAccessGate /></CourtOSLocaleProvider>);
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "it" } });
+    fireEvent.click(screen.getByRole("button", { name: "Italiano" }));
+    expect(screen.getByRole("button", { name: "Italiano" })).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(screen.getByRole("button", { name: "Apri CourtOS" }));
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/research?handoff=11111111-1111-4111-8111-111111111111"));
     expect(mocks.login).toHaveBeenCalledExactlyOnceWith();
@@ -41,7 +43,8 @@ it("localizes a displayed safe auth error on language change without another log
     render(<CourtOSLocaleProvider ownerId={null}><CourtOSAccessGate /></CourtOSLocaleProvider>);
     fireEvent.click(screen.getByRole("button", { name: "CourtOS öffnen" }));
     await screen.findByRole("alert");
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "en" } });
+    fireEvent.click(screen.getByRole("button", { name: "English" }));
+    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("alert")).toHaveTextContent("CourtOS is currently unreachable");
     expect(screen.getByRole("alert")).not.toHaveTextContent("untrusted-server-detail");
     expect(mocks.login).toHaveBeenCalledOnce();

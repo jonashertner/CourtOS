@@ -92,6 +92,7 @@ describe("loadActiveVersion", () => {
             size_bytes: 1024,
             page_count: 12,
             textless_page_count: 2,
+            content_sha256: "a".repeat(64),
         });
     });
 
@@ -171,6 +172,7 @@ describe("loadActiveVersion", () => {
             size_bytes: null,
             page_count: null,
             textless_page_count: null,
+            content_sha256: null,
         });
     });
 });

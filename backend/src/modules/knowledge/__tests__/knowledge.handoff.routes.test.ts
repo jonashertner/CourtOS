@@ -44,7 +44,8 @@ describe("authenticated research handoff routes",()=>{
   it("metadata polling excludes state and rejects permissive query or path variants",async()=>{
     calls.rpc.mockResolvedValue({data:{status:"ok",record:{...metadata,state}},error:null});
     const result=await request(app).get(`/knowledge/handoffs/${handle}?metadata=true`).set("x-test-owner",owner);
-    expect(result.body).toEqual(metadata);expect(calls.rpc).toHaveBeenCalledWith("courtos_research_handoff",expect.objectContaining({p_metadata_only:true,p_user_id:owner}));
+    // The RPC returns the full record so the chat reference can be rechecked; the route strips the state.
+    expect(result.body).toEqual(metadata);expect(calls.rpc).toHaveBeenCalledWith("courtos_research_handoff",expect.objectContaining({p_action:"read",p_metadata_only:false,p_user_id:owner}));
     calls.rpc.mockClear();
     for(const path of [`${handle}?metadata=false`,`${handle}?metadata=true&secret=text`,`not-a-uuid`]){
       expect((await request(app).get(`/knowledge/handoffs/${path}`).set("x-test-owner",owner)).status).toBe(400);

@@ -1,11 +1,12 @@
 import { expect, test } from "./fixtures";
+import { isUncommittedFontMiss } from "./helpers";
 
 test.use({ storageState: { cookies: [], origins: [] }, actionTimeout: 30_000 });
 
 test("tabular chat keeps the latest of sixteen selections when long histories arrive backwards", async ({ page }) => {
     test.setTimeout(180_000);
     const errors: string[] = [];
-    page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+    page.on("console", (message) => { if (message.type() === "error" && !isUncommittedFontMiss(message)) errors.push(message.text()); });
     page.on("pageerror", (error) => errors.push(error.message));
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });

@@ -26,6 +26,7 @@ describe("resolveDocumentViewType", () => {
       "pdf",
     ],
     [null, "application/pdf", "pdf"],
+    [null, "text/plain", "pdf"],
   ] as const)(
     "resolves filename %s and file type %s to %s",
     (filename, fileType, expected) => {

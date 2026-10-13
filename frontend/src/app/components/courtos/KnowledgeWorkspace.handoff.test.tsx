@@ -85,7 +85,8 @@ describe("restored source research", () => {
         expect(screen.getByTestId("source-viewer")).toHaveAttribute("data-version", version);
         expect(screen.getByTestId("source-viewer")).toHaveAttribute("data-page", "7");
         expect(api.local).not.toHaveBeenCalled(); expect(api.read).not.toHaveBeenCalled(); expect(api.insert).not.toHaveBeenCalled();
-        expect(api.list).toHaveBeenCalledOnce();
+        // The library listing loads after the restored query renders.
+        await waitFor(() => expect(api.list).toHaveBeenCalledOnce());
         await act(async () => {});
     });
 });

@@ -455,6 +455,29 @@ describe("direct upload sessions", () => {
         ).toBe(false);
     });
 
+    it("retries a file completion call that failed below the API layer", async () => {
+        // A transport failure (no HTTP response at all) is not a MikeApiError,
+        // so it falls to the retry policy's default of "retry it anyway".
+        let completionAttempts = 0;
+        installSuccessfulSessionServer({
+            fileCompletion: (url) => {
+                if (!url.includes("/files/flaky/")) return null;
+                completionAttempts += 1;
+                if (completionAttempts === 1) throw new TypeError("network error");
+                return null;
+            },
+        });
+
+        const outcomes = await uploadFilesWithSession<{ id: string }>({
+            purpose: "document_create",
+            destination: { scope: "standalone" },
+            files: [{ clientId: "flaky", file: new File(["a"], "a.pdf") }],
+        });
+
+        expect(completionAttempts).toBe(2);
+        expect(outcomes).toMatchObject([{ filename: "a.pdf", status: "completed" }]);
+    });
+
     it("reports only the file the server never accounted for as unconfirmed", async () => {
         // The confirmed file completes; the unconfirmed one is still
         // pending_upload when the session reaches a terminal state.

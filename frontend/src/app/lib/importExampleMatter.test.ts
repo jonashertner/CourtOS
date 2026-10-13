@@ -148,4 +148,132 @@ describe("explicit structured example import",()=>{
     it("cancels before any request after an already-aborted signal",async()=>{
         const controller=new AbortController();controller.abort();await expect(importExampleMatter(matter,controller.signal)).rejects.toMatchObject({name:"AbortError"});expect(api.upload).not.toHaveBeenCalled();expect(fetch).not.toHaveBeenCalled();
     });
+    it("rejects a catalogue entry whose path does not match the expected static pattern",async()=>{
+        const malformed={...matter,documents:[{...matter.documents[0],path:"/examples/wrong/path.pdf"}]};
+        await expect(importExampleMatter(malformed,new AbortController().signal)).rejects.toMatchObject({code:"asset",stage:"asset_integrity",uploadAttempted:false});
+        expect(fetch).not.toHaveBeenCalled();
+    });
+    it("passes through a mid-flight abort error from a stage operation without wrapping it",async()=>{
+        const controller=new AbortController();
+        vi.mocked(fetch).mockImplementationOnce(async()=>{controller.abort();throw new DOMException("Aborted","AbortError");});
+        await expect(importExampleMatter(matter,controller.signal)).rejects.toMatchObject({name:"AbortError"});
+        expect(console.warn).not.toHaveBeenCalled();
+    });
+    it("rejects a concurrent import of the same matter as already locked",async()=>{
+        const controller=new AbortController();
+        const first=importExampleMatter(matter,controller.signal);
+        await expect(importExampleMatter(matter,controller.signal)).rejects.toMatchObject({code:"existing",stage:"lock",uploadAttempted:false});
+        await first;
+    });
+    it("serialises a successful import through the Web Locks API callback",async()=>{
+        const request=vi.fn((_name:string,_opts:unknown,callback:()=>Promise<unknown>)=>callback());
+        Object.defineProperty(navigator,"locks",{configurable:true,value:{request}});
+        try{
+            const result=await importExampleMatter(matter,new AbortController().signal);
+            expect(request).toHaveBeenCalledOnce();expect(result.folderId).toBeTruthy();
+        }finally{
+            delete (navigator as {locks?:unknown}).locks;
+        }
+    });
+    it("serialises through the Web Locks API when available, wrapping an unexpected acquisition failure",async()=>{
+        const request=vi.fn(()=>{throw new Error("Locks API disabled");});
+        Object.defineProperty(navigator,"locks",{configurable:true,value:{request}});
+        try{
+            await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({code:"existing",stage:"lock"});
+            expect(request).toHaveBeenCalledWith(`courtos-example-import:${matter.id}`,expect.objectContaining({mode:"exclusive"}),expect.any(Function));
+        }finally{
+            delete (navigator as {locks?:unknown}).locks;
+        }
+    });
+    it("refuses to reconcile a matched folder that the backend reports as non-root",async()=>{
+        const folders=legacyTree();const root=folders.find(f=>f.id==="case-old")!;
+        api.root.mockResolvedValue({folders:[{...root,parent_folder_id:"unexpected-parent"}],documents:[],documentsHasMore:false});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+        expect(api.children).not.toHaveBeenCalled();
+    });
+    it("rejects a duplicated folder listing within the same legacy subtree",async()=>{
+        const folders=legacyTree();folders.push({...folders.find(f=>f.id==="party-0")!});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+    });
+    it("rejects an incompletely paginated legacy subtree",async()=>{
+        legacyTree();api.children.mockImplementation(async()=>({folders:[],documents:[],documentsHasMore:true}));
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+    });
+    it("refuses to reconcile a child folder whose reported parent does not match its listing",async()=>{
+        api.root.mockResolvedValue({folders:[{id:"case-old",name:matter.legacyFiling.caseNumber,parent_folder_id:null,updated_at:"2026-10-10T14:00:00Z"}],documents:[],documentsHasMore:false});
+        api.children.mockImplementation(async(_kind,id:string)=>id==="case-old"
+            ?{folders:[{id:"child-x",name:matter.legacyFiling.sharedFolder,parent_folder_id:"not-case-old",updated_at:"2026-10-10T14:00:00Z"}],documents:[],documentsHasMore:false}
+            :{folders:[],documents:[],documentsHasMore:false});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+    });
+    it("refuses to reconcile a root-level legacy folder with an unrecognised name",async()=>{
+        const folders=legacyTree();folders.push({id:"mystery",name:"Unexpected Folder",parent_folder_id:"case-old",updated_at:"2026-10-10T14:00:00Z"} as LibraryFolder);
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+    });
+    it("refuses to reconcile a party-level legacy folder with an unrecognised name",async()=>{
+        const folders=legacyTree();folders.push({id:"mystery",name:"Unexpected Subfolder",parent_folder_id:"party-0",updated_at:"2026-10-10T14:00:00Z"} as LibraryFolder);
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+    });
+    it("rejects a legacy document whose metadata changed since the initial match",async()=>{
+        legacyTree();let calls=0;
+        api.get.mockImplementation(async(id:string)=>{calls++;const doc={...documents.find(item=>item.id===id)};if(calls===7)doc.current_version_id="tampered-version";return doc;});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+    });
+    it("refuses to rename an empty legacy-named folder with no matching documents",async()=>{
+        api.root.mockResolvedValue({folders:[{id:"empty-case",name:matter.legacyFiling.caseNumber,parent_folder_id:null,updated_at:"2026-10-10T14:00:00Z"}],documents:[],documentsHasMore:false});
+        api.children.mockResolvedValue({folders:[],documents:[],documentsHasMore:false});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+        expect(api.renameFolder).not.toHaveBeenCalled();
+    });
+    it("stops before renaming a legacy folder whose revision stamp is missing",async()=>{
+        const folders=legacyTree();const root=folders.find(f=>f.id==="case-old")!;delete (root as {updated_at?:string}).updated_at;
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+        expect(api.renameFolder).not.toHaveBeenCalled();
+    });
+    it("stops when a folder rename response does not match the expected result",async()=>{
+        legacyTree();api.renameFolder.mockImplementation(async(_kind,id:string,name:string)=>({id,name,updated_at:"2026-10-10T14:01:00Z",parent_folder_id:"wrong-parent"}));
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_reconcile"});
+    });
+    it("stops a plain rename when the document changes between the inventory check and the rename",async()=>{
+        documents=[{...fixture(0,true),filename:matter.documents[0].previousFilenames[0],library_folder_id:null}];
+        let calls=0;
+        api.get.mockImplementation(async(id:string)=>{calls++;const doc={...documents.find(item=>item.id===id)};if(calls===2)doc.current_version_id="changed-version";return doc;});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"file_rename",code:"existing"});
+        expect(api.rename).not.toHaveBeenCalled();
+    });
+    it("stops a plain rename when the post-rename document does not reflect the new name",async()=>{
+        documents=[{...fixture(0,true),filename:matter.documents[0].previousFilenames[0],library_folder_id:null}];
+        api.rename.mockImplementation(async(_kind,id:string)=>{const doc=documents.find(item=>item.id===id)!;doc.updated_at="2026-10-10T14:00:01Z";return {...doc};});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"file_rename",code:"existing"});
+    });
+    it("stops when resolving a case/party folder path reports a conflict",async()=>{
+        api.folder.mockImplementation(async(_kind,segments:string[])=>segments.length===1?{conflict:true,folder_id:null,folders:[]}:{conflict:false,folder_id:segments.join("/"),folders:[]});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"folder_resolve"});
+        expect(api.upload).not.toHaveBeenCalled();
+    });
+    it("stops a plain move when the document changes between selection and the move",async()=>{
+        documents=[fixture(0,true)];documents[0].library_folder_id="somewhere-else";
+        let calls=0;
+        api.get.mockImplementation(async(id:string)=>{calls++;const doc={...documents.find(item=>item.id===id)};if(calls===2)doc.current_version_id="changed-version";return doc;});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"file_move",code:"existing"});
+        expect(api.move).not.toHaveBeenCalled();
+    });
+    it("stops a plain move when the moved document fails re-validation",async()=>{
+        documents=[fixture(0,true)];documents[0].library_folder_id="elsewhere";
+        api.move.mockImplementation(async(_kind,id:string,folderId:string)=>{const doc=documents.find(item=>item.id===id)!;doc.library_folder_id=folderId;doc.status="processing";doc.updated_at="2026-10-10T14:01:00Z";return {...doc};});
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({stage:"file_move",code:"existing"});
+    });
+    it("recognises the moved document's folder through the legacy folder_id field",async()=>{
+        documents=[fixture(0,true)];documents[0].library_folder_id="elsewhere";
+        api.move.mockImplementation(async(_kind,id:string,folderId:string)=>{
+            const doc=documents.find(item=>item.id===id)!;doc.library_folder_id=null;(doc as unknown as {folder_id?:string|null}).folder_id=folderId;doc.updated_at="2026-10-10T14:01:00Z";
+            return {...doc};
+        });
+        const result=await importExampleMatter(matter,new AbortController().signal);
+        expect(result.reusedCount).toBe(1);
+    });
+    it("rejects an individual upload item that did not complete",async()=>{
+        api.upload.mockImplementation(async(_kind,files:{clientId:string;file:File}[])=>files.map(({clientId,file})=>({clientId,filename:file.name,status:"failed",errorCode:"virus_scan_failed",result:null})));
+        await expect(importExampleMatter(matter,new AbortController().signal)).rejects.toMatchObject({code:"upload",stage:"upload_confirm",uploadAttempted:true});
+    });
 });

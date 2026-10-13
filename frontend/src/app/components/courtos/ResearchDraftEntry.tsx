@@ -18,6 +18,7 @@ export function ResearchDraftEntry({ inputRef }: { inputRef: RefObject<ChatInput
         setStatus({ owner: user.id, prepared });
     }
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- a stored research draft is read once per user
         setStatus(null);
         if (!user?.id) return;
         const draft = getResearchDraft(user.id);

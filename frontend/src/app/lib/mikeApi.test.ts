@@ -101,6 +101,8 @@ import {
     getWorkflowAddon,
     getWorkflowFilterOptions,
     isMfaRequiredError,
+    isConnectorSetupError,
+    CONNECTOR_SETUP_REQUIRED_CODE,
     acceptOrgInvitation,
     cancelOrgInvitation,
     createOrg,
@@ -304,6 +306,26 @@ describe("MikeApiError / isMfaRequiredError", () => {
             ),
         ).toBe(false);
         expect(isMfaRequiredError(new Error("plain"))).toBe(false);
+    });
+});
+
+describe("isConnectorSetupError", () => {
+    it("recognizes exactly a MikeApiError carrying the connector-setup-required code", () => {
+        expect(
+            isConnectorSetupError(
+                new MikeApiError({
+                    message: "x",
+                    status: 400,
+                    code: CONNECTOR_SETUP_REQUIRED_CODE,
+                }),
+            ),
+        ).toBe(true);
+        expect(
+            isConnectorSetupError(
+                new MikeApiError({ message: "x", status: 400, code: "other" }),
+            ),
+        ).toBe(false);
+        expect(isConnectorSetupError(new Error("plain"))).toBe(false);
     });
 });
 
@@ -596,6 +618,18 @@ describe("apiRequest plumbing (via thin wrappers)", () => {
         fetchMock.mockResolvedValue(new Response("nope", { status: 404 }));
         await expect(getUserProfile()).rejects.toMatchObject({ status: 404 });
         expect(reportApiFailure).not.toHaveBeenCalled();
+    });
+
+    it("defaults the reported method to GET for a transport failure without an explicit method", async () => {
+        const failure = new TypeError("Failed to fetch");
+        fetchMock.mockRejectedValueOnce(failure);
+
+        await expect(getUserProfile()).rejects.toBe(failure);
+
+        expect(reportNetworkFailure).toHaveBeenCalledWith(failure, {
+            method: "GET",
+            url: "/api/user/profile",
+        });
     });
 
     it("synthesizes a message when the error body is empty", async () => {
@@ -1520,6 +1554,16 @@ describe("searchProjectDirectory", () => {
         );
         expect(init.signal).toBe(controller.signal);
     });
+
+    it("omits limit and offset when not given", async () => {
+        fetchMock.mockResolvedValue(jsonResponse([]));
+
+        await searchProjectDirectory({ search: "agreement" });
+
+        expect(lastFetchCall().url).toBe(
+            "/api/projects?view=directory-search&search=agreement",
+        );
+    });
 });
 
 describe("getProjectDirectoryLevel", () => {
@@ -2190,6 +2234,26 @@ describe("query and payload defaults", () => {
         expect(call.url).toBe("/api/library/files/documents/d1/folder");
         expect(call.init.method).toBe("PATCH");
         expect(JSON.parse(call.init.body as string)).toEqual({folder_id:"folder-1",expected});
+    });
+
+    it("sends an optional precondition with a library folder rename", async () => {
+        fetchMock.mockResolvedValue(jsonResponse({id:"f1"}));
+        const expected={name:"Old name",updated_at:"2026-10-10T14:00:00Z",parent_folder_id:null};
+        await renameLibraryFolder("files","f1","Precedents",expected);
+        const call=lastFetchCall();
+        expect(call.url).toBe("/api/library/files/folders/f1");
+        expect(call.init.method).toBe("PATCH");
+        expect(JSON.parse(call.init.body as string)).toEqual({name:"Precedents",expected});
+    });
+
+    it("sends an optional precondition with a library document rename", async () => {
+        fetchMock.mockResolvedValue(jsonResponse({id:"d1"}));
+        const expected={version_id:"v1",content_sha256:"a".repeat(64),updated_at:"2026-10-10T14:00:00Z",filename:"old.docx"};
+        await renameLibraryDocument("files","d1","renamed.docx",expected);
+        const call=lastFetchCall();
+        expect(call.url).toBe("/api/library/files/documents/d1");
+        expect(call.init.method).toBe("PATCH");
+        expect(JSON.parse(call.init.body as string)).toEqual({filename:"renamed.docx",expected});
     });
 
     it("resolves project and library upload paths with conflict choices", async () => {
@@ -3338,5 +3402,23 @@ describe("unwrapping and blob wrappers", () => {
         expect(lastFetchCall().url).toBe("/api/user/exports/exp%2F1/download");
         expect(filename).toBe("history.csv");
         expect(await blob.text()).toBe("csv-bytes");
+    });
+});
+
+describe("development-only diagnostics", () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+        vi.resetModules();
+    });
+
+    it("suppresses the mike-api diagnostic console line in production", async () => {
+        vi.stubEnv("NODE_ENV", "production");
+        vi.resetModules();
+        const log = vi.spyOn(console, "log").mockImplementation(() => {});
+        fetchMock.mockResolvedValueOnce(new Response("not json", { status: 404 }));
+        const fresh = await import("./mikeApi");
+        await expect(fresh.getUserProfile()).rejects.toMatchObject({ status: 404 });
+        expect(log).not.toHaveBeenCalled();
+        log.mockRestore();
     });
 });
