@@ -1,0 +1,2661 @@
+{
+  "id": "bger-permis",
+  "folder": "1C_412_2026 Bettex",
+  "language": "fr",
+  "court": "Tribunal fédéral, Ire Cour de droit public",
+  "banner": "Dossier d'exercice synthétique – toutes les données sont fictives",
+  "page_word": "Page {n} sur {total}",
+  "documents": [
+    {
+      "path": "01 Recours en matière de droit public Bettex et Stucki.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "pleading": true,
+      "title": "Recours en matière de droit public",
+      "letterhead": {
+        "name": "Moret & Associés",
+        "lines": [
+          "Avocats",
+          "Rue Centrale 8, 1003 Lausanne",
+          "Tél. +41 21 319 44 10 – etude@moret-associes.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "right",
+          "Lausanne, le 4 mai 2026"
+        ],
+        [
+          "p",
+          "Tribunal fédéral"
+        ],
+        [
+          "p",
+          "Ire Cour de droit public"
+        ],
+        [
+          "p",
+          "1000 Lausanne 14"
+        ],
+        [
+          "space"
+        ],
+        [
+          "p",
+          "Par voie électronique et en deux exemplaires papier"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "RECOURS EN MATIÈRE DE DROIT PUBLIC"
+        ],
+        [
+          "p",
+          "contre l'arrêt de la Cour de droit administratif et public du Tribunal cantonal du canton de Vaud (CDAP) du 2 avril 2026, cause AC.2025.0398, notifié le 7 avril 2026 (Pièce 1)"
+        ],
+        [
+          "space"
+        ],
+        [
+          "p",
+          "**Recourants :** Monsieur Georges Bettex et Madame Marianne Bettex, Chemin des Vignes 8, 1147 Fontanivent ; Monsieur Werner Stucki, Route de la Combe 21, 1147 Fontanivent ; tous représenté(e)s par Me Catherine Moret, avocate, Moret & Associés, Rue Centrale 8, 1003 Lausanne,"
+        ],
+        [
+          "p",
+          "**contre**"
+        ],
+        [
+          "p",
+          "**1. Monsieur Michel Dubosson et Madame Caroline Dubosson**, Avenue de la Gare 12, 1110 Morges, intimés, représentés par Me Thierry Jaccoud, avocat, Jaccoud & Partenaires, Grand-Rue 14, 1110 Morges,"
+        ],
+        [
+          "p",
+          "**2. la Municipalité de Fontanivent**, Place du Village 1, 1147 Fontanivent, autorité intimée,"
+        ],
+        [
+          "p",
+          "**Autorité précédente :** Cour de droit administratif et public du Tribunal cantonal du canton de Vaud, Avenue Eugène-Rambert 15, 1014 Lausanne."
+        ],
+        [
+          "pagebreak"
+        ],
+        [
+          "h",
+          "Conclusions"
+        ],
+        [
+          "rz",
+          "1.",
+          "Le présent recours est déclare recevable."
+        ],
+        [
+          "rz",
+          "2.",
+          "Principalement : l'arrêt de la Cour de droit administratif et public du 2 avril 2026 (AC.2025.0398) est annulé, de même que la décision de la Municipalité de Fontanivent du 18 septembre 2025 levant l'opposition des recourants et délivrant le permis de construire à Michel Dubosson et Caroline Dubosson pour la démolition de la villa et la construction de deux villas jumelées sur la parcelle n° 1847 de la Commune de Fontanivent ; le permis de construire est refusé."
+        ],
+        [
+          "rz",
+          "3.",
+          "Subsidiairement : la cause est renvoyée à la Cour de droit administratif et public pour nouvelle instruction et nouvelle décision, notamment sur le droit d'être entendu des recourants et sur la conformité de l'installation de pompes à chaleur à l'ordonnance sur la protection contre le bruit (OPB)."
+        ],
+        [
+          "rz",
+          "4.",
+          "L'effet suspensif est accordé au présent recours ; il est fait interdiction aux intimés Dubosson de procéder à la mise en service des pompes à chaleur, voire de poursuivre les travaux, jusqu'à droit connu."
+        ],
+        [
+          "rz",
+          "5.",
+          "Les frais et dépens de la procédure fédérale et des instances cantonales sont mis à la charge des intimés."
+        ],
+        [
+          "pagebreak"
+        ],
+        [
+          "h",
+          "I. Recevabilité"
+        ],
+        [
+          "rz",
+          "6.",
+          "L'arrêt attaqué est une décision finale (art. 90 LTF) rendue en dernière instance cantonale par un tribunal supérieur statuant en tant que juridiction unique en matière de droit public (art. 86 al. 1 let. d et al. 2 LTF). La voie du recours en matière de droit public est ouverte (art. 82 let. a LTF), aucune des exceptions de l'art. 83 LTF n'étant réalisée."
+        ],
+        [
+          "rz",
+          "7.",
+          "L'arrêt attaqué a été notifié aux recourants le 7 avril 2026. Le délai de trente jours de l'art. 100 al. 1 LTF échéait le 7 mai 2026. Le présent recours, déposé le 4 mai 2026, est donc formé en temps utile."
+        ],
+        [
+          "rz",
+          "8.",
+          "Monsieur et Madame Bettex, propriétaires de la parcelle n° 1846 directement voisine et contiguë à la parcelle n° 1847, ont pris part à la procédure devant l'autorité précédente et sont particulièrement atteints par la décision attaquée au sens de l'art. 89 al. 1 LTF ; leur qualité pour recourir n'est à juste titre contestée par personne."
+        ],
+        [
+          "rz",
+          "9.",
+          "Monsieur Stucki, propriétaire de la parcelle n° 1852, située de l'autre côté de la route de la Combe à une distance d'environ 45 mètres de la construction litigieuse, a également pris part à la procédure cantonale. La Cour de droit administratif et public a laissé la question de sa qualité pour agir indécise, le recours devant de toute manière être rejeté sur le fond (Pièce 1, consid. 1b). Il appartient au Tribunal fédéral d'examiner librement cette condition de recevabilité (art. 89 al. 1 LTF), qu'il ne saurait laisser ouverte s'il entre en matière sur le fond. Or M. Stucki est particulièrement touché par le bruit nocturne des pompes à chaleur, qui se propage au-delà du seul voisinage immédiat ainsi que l'admet le rapport même de l'ingénieur Hofstetter (Pièce 209) : sa qualité pour recourir doit être reconnue à tout le moins sur ce grief (ATF 133 II 249 consid. 1.3.1 et 1.3.2, à propos des exigences de l'atteinte particulière du voisin)."
+        ],
+        [
+          "rz",
+          "10.",
+          "Les griefs sont motivés conformément à l'art. 42 al. 2 LTF ; s'agissant de la violation du droit cantonal et communal, seule l'invocation de l'arbitraire (art. 9 Cst.) entre en ligne de compte (art. 95 LTF a contrario) et les recourants satisfont aux exigences de motivation accrues de l'art. 106 al. 2 LTF."
+        ],
+        [
+          "h",
+          "II. Les faits essentiels"
+        ],
+        [
+          "rz",
+          "11.",
+          "La parcelle n° 1847 de la Commune de Fontanivent, Chemin des Vignes 6, portait une villa ancienne construite en 1962. Le 15 janvier 2025, Michel Dubosson et Caroline Dubosson ont déposé une demande de permis de construire pour la démolition de cette villa et la construction de deux villas jumelées, équipées chacune d'une pompe à chaleur air-eau extérieure (Pièce 201)."
+        ],
+        [
+          "rz",
+          "11a.",
+          "La parcelle n° 1847 mesure 1'050 m2 et se trouve, comme les parcelles voisines n° 1846 (812 m2, recourants Bettex) et n° 1852 (940 m2, recourant Stucki), en zone villas au sens de l'art. 43 RPGA (Pièce 211). Le quartier des Vignes est bâti de manière homogène depuis le début des années 1960 ; le projet litigieux est la première démolition-reconstruction de cette ampleur qui y soit entreprise, ce qui explique l'attention particulière que lui ont portée les voisins."
+        ],
+        [
+          "rz",
+          "12.",
+          "La mise à l'enquête publique a été publiée dans la Feuille des avis officiels du canton de Vaud (FAO) du 20 mars 2025, pour un délai courant du 20 mars au 18 avril 2025 (Pièce 202)."
+        ],
+        [
+          "rz",
+          "13.",
+          "Par acte du 15 avril 2025, les recourants ont formé opposition, contestant notamment la distance à la limite, la hauteur du bâtiment projeté et le bruit prévisible des pompes à chaleur (Pièce 205)."
+        ],
+        [
+          "rz",
+          "14.",
+          "Par décision du 18 septembre 2025, la Municipalité de Fontanivent a levé l'opposition des recourants et délivré le permis de construire, moyennant les conditions de la synthèse CAMAC du 30 juin 2025 (Pièces 206 et 207)."
+        ],
+        [
+          "rz",
+          "14a.",
+          "Cette synthèse CAMAC, établie par les services cantonaux consultés, subordonnait expressément la délivrance du permis à la production, avant toute mise en service des pompes à chaleur, d'une attestation de conformité acoustique à l'ordonnance sur la protection contre le bruit (Pièce 206). Cette condition n'a, à la connaissance des recourants, jamais été formellement levée par le service cantonal compétent, le dossier ne contenant que le rapport privé du bureau Hofstetter."
+        ],
+        [
+          "rz",
+          "15.",
+          "Saisie d'un recours des trois voisins, la Cour de droit administratif et public a tenu une inspection locale le 10 mars 2026 (Pièce 208). À cette occasion, un doute est apparu sur le modèle exact des pompes à chaleur effectivement destinées à être installées. Le 18 mars 2026, le bureau Hofstetter Ingenieurbureau AG a adressé directement à la cour de céans, en langue allemande, une note technique récapitulant les caractéristiques acoustiques des appareils (Pièce 209). Cette note a été versée au dossier cantonal."
+        ],
+        [
+          "rz",
+          "15a.",
+          "Il résulte du procès-verbal de l'inspection locale (Pièce 208) que ce doute a été soulevé par le conseil des recourants elle-même, qui a constaté sur place que le modèle des appareils ne semblait pas correspondre en tous points à celui figurant au dossier de mise à l'enquête. L'architecte Lambert a alors indiqué qu'il ferait vérifier ce point par l'ingénieur acousticien et transmettrait une note complémentaire à la cour – ce qui s'est fait huit jours plus tard, sans jamais repasser par les recourants."
+        ],
+        [
+          "rz",
+          "16.",
+          "Par arrêt du 2 avril 2026, la Cour de droit administratif et public a rejeté le recours dans la mesure de sa recevabilité et confirme le permis de construire (Pièce 1). L'arrêt retient expressément, dans son état de fait, que la note du 18 mars 2026 « a été versée au dossier postérieurement à l'inspection locale, sans détermination complémentaire des parties » (Pièce 1, p. 2, let. H in fine) – confirmant ainsi elle-même que les recourants n'ont jamais pu se prononcer sur cette pièce avant que l'arrêt ne soit rendu."
+        ],
+        [
+          "h",
+          "III. Griefs"
+        ],
+        [
+          "h",
+          "A. Violation du droit d'être entendu (art. 29 al. 2 Cst.)"
+        ],
+        [
+          "rz",
+          "17.",
+          "Le droit d'être entendu garantit à chaque partie la faculté de se prononcer sur les pièces du dossier propres à influer sur le sort de la cause, avant que la décision ne soit rendue. Lorsqu'une autorité entend fonder sa décision sur un moyen de preuve recueilli après la clôture formelle de l'instruction, elle doit le communiquer aux parties et leur donner l'occasion de se déterminer."
+        ],
+        [
+          "rz",
+          "18.",
+          "En l'espèce, la note technique du bureau Hofstetter du 18 mars 2026 (Pièce 209) a été adressée directement à la Cour de droit administratif et public, hors la présence et sans la connaissance des recourants, puis citée par l'arrêt attaqué pour retenir la conformité acoustique de l'installation (Pièce 1, consid. 4c). Les recourants n'ont jamais reçu cette pièce ni été invités à se déterminer à son sujet ; ils n'en ont eu connaissance qu'à la lecture de l'arrêt. Il y a là une violation caractérisée de l'art. 29 al. 2 Cst."
+        ],
+        [
+          "rz",
+          "19.",
+          "Ce vice ne saurait être réparé devant le Tribunal fédéral. Selon la jurisprudence constante, la réparation d'une violation du droit d'être entendu devant l'instance de recours suppose que celle-ci dispose d'un pouvoir d'examen aussi étendu que l'autorité inférieure, en fait comme en droit (ATF 137 I 195 consid. 2.3.2). Le Tribunal fédéral ne revoit les constatations de fait que sous l'angle restreint de l'art. 97 LTF et n'a donc pas le même pouvoir d'examen que la Cour de droit administratif et public. La cause doit par conséquent être annulée et renvoyée à l'autorité précédente, qui devra communiquer la pièce litigieuse aux recourants et leur permettre de se déterminer."
+        ],
+        [
+          "rz",
+          "19a.",
+          "La gravité du vice est accrue par le fait que la note du 18 mars 2026 n'est pas restée sans conséquence : elle constitue l'unique fondement sur lequel l'autorité précédente a retenu la conformité acoustique de l'installation (Pièce 1, consid. 4c). Si les recourants avaient pu se déterminer à son sujet, ils auraient pu faire valoir, comme ils le font aujourd'hui devant le Tribunal fédéral, que la distance retenue par le rapport est contredite par le plan de situation produit par les intimés eux-mêmes (cf. ch. 26 ci-dessous). Le vice n'est donc pas de nature purement formelle."
+        ],
+        [
+          "rz",
+          "19b.",
+          "Le Tribunal fédéral dispose, en vertu de l'art. 107 al. 2 LTF, de la faculté de statuer lui-même sur le fond ou de renvoyer l'affaire à l'autorité précédente ou à une autre autorité pour nouvelle décision. Les recourants estiment qu'en l'espèce, seul le renvoi entre en ligne de compte : la détermination de la conformité acoustique d'une installation technique suppose des constatations de fait et, au besoin, une expertise que le Tribunal fédéral, qui n'est pas une instance d'appel, n'est pas en mesure d'établir lui-même sur la base du seul dossier écrit. Il en va de même de la question de la hauteur exacte du bâtiment depuis le terrain naturel, qui suppose, si nécessaire, un nouveau relevé topographique contradictoire."
+        ],
+        [
+          "rz",
+          "19c.",
+          "Les recourants relèvent enfin que le renvoi qu'ils sollicitent ne préjuge en rien de l'issue sur le fond : il permettrait seulement à l'autorité précédente de statuer à nouveau en connaissance de cause, après avoir entendu l'ensemble des parties sur la pièce déterminante qui lui a été soumise hors procédure contradictoire."
+        ],
+        [
+          "h",
+          "B. Application arbitraire du règlement communal sur la distance et la hauteur (art. 9 Cst.)"
+        ],
+        [
+          "rz",
+          "20.",
+          "L'art. 24 al. 2 du Règlement sur le plan général d'affectation et la police des constructions de la Commune de Fontanivent (RPGA) impose une distance minimale de 6 mètres à la limite de propriété pour les façades comportant des balcons, sous réserve que les saillies de moins de 1,50 m ne soient pas prises en compte dans ce calcul."
+        ],
+        [
+          "rz",
+          "21.",
+          "Le plan de situation visé par la Municipalité (Pièce 203) indique une distance de 6,10 m entre le nu de la façade nord et la limite de la parcelle n° 1846, et une saillie du balcon de 1,50 m. Les recourants considèrent cette cotation comme sous-évaluée : le balcon dépasse en réalité d'environ 1,80 m, comme en atteste une photographie prise sur place le 20 avril 2025 (Pièce 4), de sorte que, même en appliquant la clause d'exonération de l'art. 24 al. 2 RPGA, la distance utile à la limite tombe sous le minimum légal. Au surplus, ce balcon, par ses dimensions et son usage habitable, s'apparente à une véritable façade avec ouverture et ne saurait être traité comme une simple saillie négligeable : le qualifier ainsi procède d'une application arbitraire du règlement communal."
+        ],
+        [
+          "rz",
+          "21a.",
+          "Même à supposer que la saillie du balcon ne soit effectivement que de 1,50 m, les recourants font valoir qu'un balcon de cette profondeur, aménagé, accessible et destiné à l'usage courant des habitants, ne se distingue en rien, du point de vue de la protection du voisinage que vise l'art. 24 RPGA, d'une véritable façade avec ouverture. Traiter une telle surface comme une simple saillie négligeable videndrait de son sens la distinction opérée par le règlement communal entre façades aveugles et façades ouvertes, et reviendrait à permettre, par un artifice de dénomination, ce que le règlement entend précisément prévenir."
+        ],
+        [
+          "rz",
+          "22.",
+          "Le procès-verbal de l'inspection locale du 10 mars 2026 (Pièce 208) confirme le bien-fondé de ce doute : la greffière y a elle-même consigné une mesure prise sur place de 4,60 m environ entre le nez du balcon et la limite parcellaire, « à vérifier si cette cote est conforme à l'art. 24 RPGA ». L'arrêt attaqué ne discute cependant pas cette mesure et se contente d'entériner la cotation de l'architecte, sans justifier pourquoi le doute consigné par sa propre greffière serait sans pertinence."
+        ],
+        [
+          "rz",
+          "22a.",
+          "Les recourants relèvent qu'il n'appartenait pas à eux de refaire eux-mêmes la mesure sur place avant l'inspection locale : c'est précisément le rôle de cette inspection que de permettre à la cour de vérifier, de manière contradictoire, les cotes figurant sur les plans. Le fait que la mesure de la greffière s'écarte sensiblement de celle de l'architecte aurait dû conduire l'autorité précédente à instruire plus avant ce point, plutôt qu'à l'écarter sans discussion."
+        ],
+        [
+          "rz",
+          "23.",
+          "L'art. 31 al. 1 RPGA limite la hauteur au faîte à 9,50 m, mesurée depuis le terrain naturel. Le profil topographique annexé à la demande de permis (Pièce 201) situe le niveau du terrain naturel à 0,55 m sous le niveau du terrain aménagé après travaux. Le plan de façade nord (Pièce 204) cote la hauteur au faîte à 9,40 m depuis le terrain aménagé, soit 9,95 m depuis le terrain naturel – ce qui excède le maximum réglementaire de 0,45 m."
+        ],
+        [
+          "rz",
+          "23a.",
+          "Le profil topographique du 3 décembre 2024, établi avant tout début des travaux, constitue la seule mesure fiable du terrain naturel au sens de l'art. 31 al. 1 RPGA. Admettre qu'un maître de l'ouvrage puisse, par un simple remblai lié à l'aménagement d'un accès, rehausser artificiellement le point de référence depuis lequel la hauteur maximale se mesure, viderait cette limite réglementaire de toute portée pratique et ouvrirait la voie à un contournement systématique des règles de police des constructions."
+        ],
+        [
+          "rz",
+          "24.",
+          "L'autorité précédente a retenu que « la configuration du terrain n'a pas été modifiée de manière significative par les travaux » (Pièce 1, consid. 3e), sans mentionner le profil topographique du dossier de permis qui établit pourtant un écart de 0,55 m, ni expliquer pourquoi cet écart serait négligeable. Cette constatation est manifestement inexacte au sens de l'art. 97 al. 1 LTF, puisqu'elle ignore une pièce déterminante et non contestée du dossier ; corrigée, elle commande d'admettre le dépassement de la hauteur maximale autorisée."
+        ],
+        [
+          "rz",
+          "24a.",
+          "Les deux griefs qui précédent, pris ensemble, démontrent que l'autorité précédente a statué sur la base d'un état de fait incomplet et favorable aux seuls intérêts des constructeurs, sans jamais confronter les pièces du dossier qui auraient pu la conduire à une autre conclusion. Il ne s'agit pas d'une simple divergence d'appréciation, mais d'une omission de pièces déterminantes, ce qui caractérise précisément l'arbitraire au sens de l'art. 9 Cst."
+        ],
+        [
+          "h",
+          "C. Le bruit des pompes à chaleur (art. 11 LPE, art. 7 et annexe 6 OPB)"
+        ],
+        [
+          "rz",
+          "25.",
+          "La zone d'habitation dans laquelle se trouve la parcelle n° 1847 est colloquée en degré de sensibilité II (art. 43 al. 1 let. b OPB), ce qui entraîne, pour le bruit de l'industrie et des arts et métiers au sens de l'annexe 6 OPB, une valeur de planification de 45 dB(A) la nuit au droit des locaux à usage sensible au bruit les plus proches."
+        ],
+        [
+          "rz",
+          "26.",
+          "Le rapport acoustique du bureau Hofstetter du 18 mars 2026 (Pièce 209) retient un niveau d'immission nocturne de 44 dB(A) à la fenêtre de chambre la plus proche de la parcelle Bettex, sur la base d'une distance source-récepteur de 9,5 m. Or le plan de situation visé par la Municipalité (Pièce 203) situe l'emplacement effectif des deux pompes à chaleur à seulement 8,0 m de cette même fenêtre. Appliquée à la distance réelle, la correction de propagation conduit à un niveau d'immission nettement supérieur à la valeur de planification."
+        ],
+        [
+          "rz",
+          "27.",
+          "Le Tribunal fédéral examine librement si le droit fédéral de l'environnement a été correctement appliqué (art. 95 let. a LTF). En confirmant la conformité acoustique du projet sur la seule foi d'un rapport dont la prémisse de distance est contredite par le propre plan du projet, l'autorité précédente a fait une application erronée des art. 11 LPE et 7 OPB. Il appartiendra, à tout le moins, à l'autorité précédente ou aux intimés de produire un rapport acoustique corrigé avant toute mise en service des installations."
+        ],
+        [
+          "rz",
+          "27a.",
+          "Les recourants rappellent enfin que la synthèse CAMAC du 30 juin 2025 subordonnait elle-même la délivrance du permis à la production d'une attestation de conformité acoustique avant la mise en service (ch. 14a ci-dessus) ; cette condition n'a à ce jour pas été formellement levée par le service cantonal compétent, de sorte que la mise en service des installations serait en tout état prématuré."
+        ],
+        [
+          "h",
+          "D. Synthèse"
+        ],
+        [
+          "rz",
+          "27b.",
+          "Les trois griefs qui précédent se renforcent mutuellement : c'est précisément parce que les recourants n'ont pas pu se déterminer sur la note Hofstetter qu'ils n'ont pu faire valoir en temps utile la contradiction entre cette note et le plan de situation du projet, contradiction qui aurait pourtant pu conduire l'autorité précédente à une autre appréciation sur la hauteur comme sur le bruit. Le renvoi de la cause à l'autorité précédente, avec instruction de communiquer la pièce litigieuse et d'instruire à nouveau les points de fait contestés, constitue la conséquence nécessaire de ces manquements."
+        ],
+        [
+          "rz",
+          "27c.",
+          "Les recourants soulignent enfin que l'affaire n'a rien d'exotique : elle porte sur les questions les plus courantes du contentieux des permis de construire dans le canton de Vaud, à savoir la distance aux limites, la hauteur des constructions et le bruit des installations techniques désormais répandues dans les nouvelles constructions, telles les pompes à chaleur. C'est précisément parce que ces questions se reposeront dans d'innombrables autres dossiers communaux que la rigueur dans l'établissement des faits et le respect du droit d'être entendu revêtent une importance particulière, y compris pour les autorités communales appelées à statuer sur des projets similaires à l'avenir."
+        ],
+        [
+          "h",
+          "IV. Mesures provisionnelles – effet suspensif"
+        ],
+        [
+          "rz",
+          "28.",
+          "Les travaux de construction sont achevés pour l'essentiel ; seule la mise en service des pompes à chaleur reste à intervenir. L'intérêt des recourants à ce que celle-ci n'intervienne pas avant droit connu sur la conformité acoustique du projet l'emporte manifestement sur l'intérêt des intimés à une mise en service immédiate, laquelle ne leur causerait qu'un préjudice temporaire et réparable."
+        ],
+        [
+          "rz",
+          "28a.",
+          "À l'inverse, si l'effet suspensif devait être refusé et que les pompes à chaleur étaient mises en service avant que le Tribunal fédéral ne statue, les recourants subiraient une atteinte difficilement réparable à leur tranquillité nocturne pendant toute la durée de la procédure, alors même que la condition posée par la synthèse CAMAC n'est, à ce jour, pas démontrée être remplie."
+        ],
+        [
+          "h",
+          "V. Moyens de preuve"
+        ],
+        [
+          "rz",
+          "29.",
+          "Pièces 1 à 3 du présent recours ; dossier cantonal complet (Pièces 201 ss) ; au besoin, nouvelle inspection locale."
+        ],
+        [
+          "rz",
+          "29a.",
+          "Les recourants offrent au surplus de produire, si la cour l'estime utile, un relevé contradictoire de la saillie du balcon nord, effectué par un géomètre indépendant, afin de lever définitivement le doute sur ce point."
+        ],
+        [
+          "h",
+          "VI. Frais et dépens"
+        ],
+        [
+          "rz",
+          "30.",
+          "Les intimés Dubosson et, subsidiairement, la Municipalité de Fontanivent, qui succombent, doivent supporter les frais judiciaires de la présente procédure ainsi que les dépens des recourants, pour l'ensemble des instances cantonale et fédérale."
+        ],
+        [
+          "rz",
+          "30a.",
+          "Les recourants relèvent enfin que l'issue de la présente cause intéresse, au-delà du seul cas d'espèce, l'ensemble des propriétaires voisins de projets similaires dans le canton, dans la mesure où la pratique consistant à mesurer la hauteur réglementaire depuis un terrain aménagé après coup est, selon leurs informations, répandue dans plusieurs communes vaudoises confrontées à des terrains en pente."
+        ],
+        [
+          "rz",
+          "30b.",
+          "Il n'y a en revanche pas lieu de mettre de frais ou de dépens à la charge de la Municipalité de Fontanivent en tant qu'autorité intimée, celle-ci n'ayant fait qu'exercer sa compétence légale, ce que les recourants ne lui reprochent pas en tant que telle ; seule l'application qu'elle a faite du RPGA, et la décision qui en résulte, sont ici remises en cause."
+        ],
+        [
+          "p",
+          "Nous vous remercions de l'attention que vous porterez au présent recours et vous prions d'agréer, Madame la Présidente, Mesdames et Messieurs les Juges, l'assurance de notre considération distinguée."
+        ],
+        [
+          "sign",
+          [
+            "Me Catherine Moret",
+            "Avocate des recourants"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "02 Réponse Dubosson.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "pleading": true,
+      "title": "Réponse",
+      "letterhead": {
+        "name": "Jaccoud & Partenaires",
+        "lines": [
+          "Avocats",
+          "Grand-Rue 14, 1110 Morges",
+          "Tél. +41 21 802 56 90 – info@jaccoud-partenaires.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "right",
+          "Morges, le 15 juin 2026"
+        ],
+        [
+          "p",
+          "Tribunal fédéral, Ire Cour de droit public, 1000 Lausanne 14"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "RÉPONSE"
+        ],
+        [
+          "p",
+          "dans la cause 1C_412/2026, Bettex et consorts contre Dubosson et consorts et Municipalité de Fontanivent"
+        ],
+        [
+          "space"
+        ],
+        [
+          "p",
+          "Pour Michel Dubosson et Caroline Dubosson, intimés, agissant par leur conseil Me Thierry Jaccoud."
+        ],
+        [
+          "pagebreak"
+        ],
+        [
+          "h",
+          "Conclusions"
+        ],
+        [
+          "rz",
+          "1.",
+          "Le recours est rejeté, dans la mesure où il est recevable."
+        ],
+        [
+          "rz",
+          "2.",
+          "La requête d'effet suspensif est rejetée."
+        ],
+        [
+          "rz",
+          "3.",
+          "Les frais et dépens sont mis à la charge des recourants, solidairement entre eux."
+        ],
+        [
+          "h",
+          "I. Sur la recevabilité"
+        ],
+        [
+          "rz",
+          "4.",
+          "La qualité pour recourir de Monsieur Stucki doit être niée. Sa parcelle n° 1852 est séparée du projet par la route de la Combe et se trouve à quelque 45 mètres de la construction litigieuse ; il n'est ni voisin direct ni exposé à des nuisances qui le distingueraient de la population en général (ATF 133 II 249 consid. 1.3.1 et 1.3.2). La simple affirmation, non étayée par une mesure acoustique le concernant spécifiquement, qu'il entendrait le bruit des pompes à chaleur ne suffit pas à fonder un intérêt digne de protection au sens de l'art. 89 al. 1 LTF."
+        ],
+        [
+          "rz",
+          "4a.",
+          "Le rapport du bureau Hofstetter (Pièce 209) ne porte que sur l'immission à la fenêtre de chambre la plus proche de la parcelle Bettex, à 8 ou 9,5 m des appareils selon la source retenue. À 45 mètres, et de l'autre côté d'une voie de circulation dont le bruit de fond propre n'est pas négligeable, M. Stucki ne peut se prévaloir d'aucune mesure ni d'aucun calcul spécifique à sa situation. Sa participation à la procédure cantonale, par simple solidarité de voisinage avec les époux Bettex, ne saurait suffire à fonder sa qualité pour agir devant le Tribunal fédéral."
+        ],
+        [
+          "rz",
+          "4b.",
+          "Les intimés rappellent que la jurisprudence fédérale exige, pour reconnaître la qualité pour recourir d'un voisin non immédiatement contigu, une atteinte réellement distincte de celle subie par le public en général, et non une simple gêne théorique dont l'intensité reste à démontrer. À défaut d'une telle démonstration, le recours de M. Stucki devrait être déclare irrecevable, indépendamment du sort réserve au recours des époux Bettex."
+        ],
+        [
+          "h",
+          "II. Sur le droit d'être entendu"
+        ],
+        [
+          "rz",
+          "5.",
+          "Les intimés ne contestent pas que la note du bureau Hofstetter du 18 mars 2026 n'a pas été formellement communiquée aux recourants avant le prononcé de l'arrêt attaqué. Ils soulignent toutefois que cette note ne faisait que confirmer, sans rien y changer sur le fond, les caractéristiques acoustiques déjà exposées dans le dossier de mise à l'enquête et discutées lors de l'inspection locale du 10 mars 2026, à laquelle les recourants étaient présents et ont pu s'exprimer."
+        ],
+        [
+          "rz",
+          "6.",
+          "Les intimés laissent néanmoins au Tribunal fédéral le soin d'apprécier si, dans ces circonstances particulières, un renvoi s'impose ; ils rappellent seulement que celui-ci ne devrait porter que sur ce point précis et non remettre en cause l'ensemble du permis de construire, les autres griefs des recourants étant pour le reste mal fondés."
+        ],
+        [
+          "rz",
+          "6a.",
+          "Les intimés observent au surplus que les recourants ont eux-mêmes sollicité, par lettre du 25 mars 2026 (Pièce 2), la communication de toute pièce versée au dossier depuis l'inspection locale, de sorte qu'ils savaient qu'une note était attendue et auraient pu, s'ils l'estimaient nécessaire, relancer la cour de céans avant que celle-ci ne statue, ce qu'ils n'ont pas fait."
+        ],
+        [
+          "rz",
+          "6b.",
+          "À supposer même que le Tribunal fédéral retienne une violation du droit d'être entendu, les intimés font valoir qu'un renvoi devrait, conformément au principe de l'économie de la procédure, se limiter strictement à la question du bruit des pompes à chaleur sur laquelle porte la note litigieuse, et ne saurait justifier de remettre en cause les points, distincts, de la distance à la limite et de la hauteur du bâtiment, qui ont été discutés de manière contradictoire à chaque étape de la procédure, y compris devant la Municipalité puis lors de l'inspection locale."
+        ],
+        [
+          "h",
+          "III. Sur la distance et la hauteur"
+        ],
+        [
+          "rz",
+          "7.",
+          "Le plan de situation du 10 janvier 2025 (Pièce 203), établi par l'architecte Philippe Lambert du bureau Lambert & Crivelli architectes SA et visé sans réserve par la Municipalité, cote sans ambiguïté la saillie du balcon nord à 1,50 m et la distance du nu de la façade à la limite à 6,10 m. L'allégué des recourants selon lequel ce balcon dépasserait de 1,80 m ne repose sur aucune mesure ni aucun plan ; il est au demeurant contredit par leurs propres déclarations antérieures, Madame Bettex ayant elle-même indiqué au préposé communal, dans un courriel du 2 avril 2025, que le balcon « dépasse d'environ 1,50 m » (Pièce 3)."
+        ],
+        [
+          "rz",
+          "7a.",
+          "Quant à la qualification du balcon, celle-ci correspond à la pratique constante en droit des constructions vaudois, qui distingue la saillie, non habitable au sens strict et ouverte sur l'extérieur sur trois côtés, de la véritable pièce habitable fermée. Le balcon litigieux, large de 3,60 m et profond de 1,50 m, est d'une taille tout à fait usuelle pour ce type de construction et ne saurait être assimilé à une extension de la surface habitable du bâtiment."
+        ],
+        [
+          "rz",
+          "8.",
+          "La mesure consignée de manière informelle par la greffière lors de l'inspection locale ne porte au surplus pas sur la distance pertinente au sens du règlement communal, qui se calculé depuis le nu de la façade et non depuis le bord d'une saillie exonérée ; elle ne contredit donc en rien le plan officiel."
+        ],
+        [
+          "rz",
+          "8a.",
+          "Il convient de surcroît de relativiser la portée d'une mesure prise au ruban métrique lors d'une inspection locale, par définition moins précise qu'un relevé topographique établi par un géomètre ou un architecte sur la base des plans d'exécution. Le procès-verbal lui-même qualifie cette mesure d'« environ », ce qui exclut qu'elle puisse l'emporter sur la cotation précise du plan visé par l'autorité."
+        ],
+        [
+          "rz",
+          "9.",
+          "S'agissant de la hauteur, la pratique constante de la Municipalité de Fontanivent consiste à mesurer la hauteur réglementaire depuis le terrain aménagé lorsque les mouvements de terre sont de minime importance et nécessaires à l'accès au bien-fonds, ce qui est le cas en l'espèce : le léger rehaussement de 0,55 m ne concerne que la rampe d'accès au garage et ne modifie pas la configuration générale de la parcelle. La hauteur au faîte de 9,40 m retenue par la décision municipale et par l'arrêt attaqué est donc conforme à l'art. 31 RPGA, tel qu'appliqué de manière constante par l'autorité communale."
+        ],
+        [
+          "rz",
+          "9a.",
+          "Le profil topographique du 3 décembre 2024 invoqué par les recourants figurait déjà au dossier de la demande de permis et a été examiné par l'ensemble des autorités saisies, y compris l'autorité précédente lors de son inspection locale ; il ne s'agit donc nullement d'une pièce ignorée, mais d'un élément dont la portée juridique est simplement appréciée différemment par les recourants."
+        ],
+        [
+          "rz",
+          "9b.",
+          "Les intimés rappellent à cet égard que le droit vaudois de la construction reconnaît de longue date aux communes une certaine latitude dans la détermination du point de référence pour le calcul des hauteurs, précisément afin de tenir compte des particularités topographiques de chaque parcelle et des aménagements nécessaires à son exploitation normale, tels que les rampes d'accès, les escaliers extérieurs ou les terrasses de niveau. Refuser toute marge d'appréciation à la Municipalité sur ce point reviendrait à priver cette dernière de la faculté, reconnue par la jurisprudence cantonale, d'apprécier au cas par cas si un aménagement de terrain constitue une modification significative de la topographie du site ou un simple complément technique à la construction projetée."
+        ],
+        [
+          "rz",
+          "9c.",
+          "En l'occurrence, la rampe d'accès au garage souterrain des deux villas constitue un aménagement usuel et nécessaire, dont l'ampleur – un rehaussement localisé de 0,55 m sur une surface restreinte – n'a aucune commune mesure avec les cas, cités par la doctrine, ou un maître d'ouvrage aurait artificiellement remblayé l'ensemble d'une parcelle pour gagner plusieurs mètres de hauteur constructible. Les intimés estiment que la comparaison que les recourants tentent d'établir entre ces deux situations n'est pas pertinente."
+        ],
+        [
+          "h",
+          "IV. Sur le bruit des pompes à chaleur"
+        ],
+        [
+          "rz",
+          "10.",
+          "Le rapport du bureau Hofstetter Ingenieurbureau AG, spécialisé en acoustique du bâtiment, atteste d'un niveau d'immission nocturne de 44 dB(A), inférieur à la valeur de planification de 45 dB(A) de l'annexe 6 OPB. À supposer même que la distance effective soit de 8,0 m plutôt que 9,5 m, l'art. 7 al. 3 OPB dispense l'exploitant de toute réduction supplémentaire des émissions lorsque celle-ci ne peut être obtenue qu'au prix de plus de 1 % des coûts d'investissement de l'installation : le devis établi par l'architecte (Pièce 101) chiffre à CHF 14'500.- le coût d'un capotage acoustique renforcé, pour un coût total d'installation des pompes à chaleur de CHF 38'000.-, soit plus de 38 % – largement au-delà du seuil légal de disproportion."
+        ],
+        [
+          "rz",
+          "10a.",
+          "Les intimés contestent au demeurant que l'écart entre les deux distances évoquées (8,0 m et 9,5 m) soit déterminant. Le plan de situation indique l'axe des appareils, non le point précis d'émission du bruit, qui dépend de l'orientation du ventilateur de chaque unité ; le rapport Hofstetter, lui, a été établi sur la base d'un relevé effectué sur place par l'ingénieur, méthode plus fiable qu'une simple lecture de plan."
+        ],
+        [
+          "rz",
+          "11.",
+          "Les intimés rappellent enfin que la synthèse CAMAC du 30 juin 2025 (Pièce 206) a expressément subordonné la délivrance du permis à la production d'une attestation de conformité acoustique avant la mise en service, garantie qui demeure acquise indépendamment du présent recours."
+        ],
+        [
+          "rz",
+          "11a.",
+          "Si, par impossible, le Tribunal fédéral devait retenir que la valeur de planification est dépassée, les intimés offrent de produire un rapport acoustique complémentaire, établi sur la base de l'implantation définitive des appareils, avant toute mise en service ; une telle mesure, moins incisive qu'une annulation du permis, suffirait à sauvegarder les intérêts de toutes les parties."
+        ],
+        [
+          "rz",
+          "11b.",
+          "Les intimés rappellent enfin qu'ils ont engagé des investissements conséquents sur la foi d'un permis de construire délivré par l'autorité communale compétente, confirmé par l'autorité judiciaire cantonale spécialisée en droit de la construction, et qu'une annulation du permis à ce stade avance des travaux leur causerait un préjudice hors de proportion avec les griefs, pour l'essentiel procédural et technique, soulevés par les recourants. Une solution mesurée, limitée le cas échéant à l'exigence d'un rapport acoustique complémentaire, respecterait tant les intérêts légitimes des recourants que la sécurité du droit dont bénéficient les intimés."
+        ],
+        [
+          "h",
+          "V. Sur l'effet suspensif"
+        ],
+        [
+          "rz",
+          "12.",
+          "Les intimés ont investi des sommes considérables dans la construction, pratiquement achevée ; seule la mise en service, aisément réversible, des pompes à chaleur reste en suspens. L'octroi de l'effet suspensif ne présente aucune utilité pratique et doit être rejeté."
+        ],
+        [
+          "rz",
+          "12a.",
+          "À titre subsidiaire, si l'effet suspensif devait être accordé, les intimés demandent qu'il soit limite à la seule mise en service des pompes à chaleur et n'affecte pas l'occupation des logements, déjà achevée, par les futurs habitants."
+        ],
+        [
+          "h",
+          "VI. Sur les frais et dépens"
+        ],
+        [
+          "rz",
+          "13.",
+          "Les recourants, qui succombent sur l'ensemble de leurs griefs, doivent supporter les frais judiciaires de la procédure fédérale et verser aux intimés une indemnité équitable à titre de dépens, conformément aux art. 66 al. 1 et 68 al. 1 et 2 LTF."
+        ],
+        [
+          "rz",
+          "13a.",
+          "Les intimés rappellent, pour conclure, que les trois instances successivement saisies de cette affaire – la Municipalité, puis la Cour de droit administratif et public, puis désormais le Tribunal fédéral – ont toutes eu l'occasion d'examiner les mêmes pièces et les mêmes plans, et qu'aucune d'elles n'a, jusqu'ici, retenu l'existence d'une irrégularité déterminante pour l'issue du litige. Il n'y a pas de raison de s'écarter de cette appréciation concordante."
+        ],
+        [
+          "p",
+          "Nous vous remercions de l'attention que vous porterez à la présente réponse et vous prions d'agréer, Madame la Présidente, Mesdames et Messieurs les Juges, l'assurance de notre considération distinguée."
+        ],
+        [
+          "sign",
+          [
+            "Me Thierry Jaccoud",
+            "Avocat des intimés Dubosson"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "03 Observations Municipalité de Fontanivent.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "pleading": true,
+      "title": "Observations",
+      "letterhead": {
+        "name": "Municipalité de Fontanivent",
+        "lines": [
+          "Place du Village 1, 1147 Fontanivent",
+          "Tél. +41 21 807 14 20 – greffe@fontanivent.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "right",
+          "Fontanivent, le 15 juin 2026"
+        ],
+        [
+          "p",
+          "Tribunal fédéral, Ire Cour de droit public, 1000 Lausanne 14"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "OBSERVATIONS"
+        ],
+        [
+          "p",
+          "dans la cause 1C_412/2026"
+        ],
+        [
+          "rz",
+          "1.",
+          "La Municipalité de Fontanivent conclut au rejet du recours et à la confirmation de sa décision du 18 septembre 2025."
+        ],
+        [
+          "rz",
+          "2.",
+          "La synthèse CAMAC du 30 juin 2025, établie sur la base des préavis des services cantonaux concernés, dont le Service du développement territorial (conformité à l'affectation de la zone) et la Direction générale de l'environnement (conditions relatives au bruit des installations techniques), ne soulève aucune objection de principe au projet, moyennant la condition relative à l'attestation de conformité acoustique rappelée par les intimés."
+        ],
+        [
+          "rz",
+          "3.",
+          "La Municipalité observe que l'appréciation des données acoustiques, de nature technique, relève au premier chef des services cantonaux spécialisés et, à ce stade, de l'Office fédéral de l'environnement, dont les observations sont demandées séparément. Elle n'entend pas se substituer à ces autorités sur ce point."
+        ],
+        [
+          "rz",
+          "3a.",
+          "Elle rappelle néanmoins que la condition posée par la synthèse CAMAC, à savoir la production d'une attestation de conformité acoustique avant la mise en service, demeure pleinement applicable et que les services communaux n'autoriseront pas la mise en service des installations avant que cette condition ne soit formellement remplie, quelle que soit l'issue de la présente procédure."
+        ],
+        [
+          "rz",
+          "4.",
+          "S'agissant de la distance et de la hauteur, la Municipalité confirme que sa pratique constante consiste à mesurer la hauteur réglementaire depuis le terrain aménagé lorsque les travaux de terrassement sont de minime importance, et que cette pratique a été appliquée de manière identique à l'ensemble des permis délivrés dans le quartier des Vignes au cours des dix dernières années. Monsieur Olivier Chappuis, préposé aux affaires d'urbanisme, qui a instruit le dossier, confirme ce point."
+        ],
+        [
+          "rz",
+          "4a.",
+          "La Municipalité relève à cet égard que si la jurisprudence cantonale impose une certaine prudence lorsque le nivellement du terrain vise principalement à gagner en hauteur constructible, ce n'est manifestement pas le cas en l'espèce : le rehaussement de 0,55 m, localisé à la seule rampe d'accès, a été dicté par des considérations d'accessibilité indépendantes du gabarit du bâtiment, dont l'implantation et les dimensions étaient arrêtées avant même que ce détail d'exécution ne soit précise."
+        ],
+        [
+          "rz",
+          "4b.",
+          "Elle souligne enfin que le préposé Chappuis a lui-même assisté à l'inspection locale du 10 mars 2026 et n'a, à cette occasion, relevé aucun élément de nature à remettre en cause l'appréciation municipale sur ce point."
+        ],
+        [
+          "rz",
+          "5.",
+          "Pour le surplus, la Municipalité se réfère aux développements de sa décision du 18 septembre 2025 et de l'arrêt attaqué."
+        ],
+        [
+          "sign",
+          [
+            "Daniel Perret, syndic",
+            "Nicole Froidevaux, secrétaire municipale"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "04 Observations Tribunal cantonal.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "pleading": true,
+      "title": "Observations",
+      "letterhead": {
+        "name": "Tribunal cantonal",
+        "lines": [
+          "Cour de droit administratif et public",
+          "Avenue Eugène-Rambert 15, 1014 Lausanne"
+        ]
+      },
+      "blocks": [
+        [
+          "right",
+          "Lausanne, le 10 juin 2026"
+        ],
+        [
+          "p",
+          "Tribunal fédéral, Ire Cour de droit public, 1000 Lausanne 14"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "OBSERVATIONS"
+        ],
+        [
+          "p",
+          "dans la cause 1C_412/2026"
+        ],
+        [
+          "rz",
+          "1.",
+          "La Cour de droit administratif et public se réfère intégralement aux motifs de son arrêt AC.2025.0398 du 2 avril 2026 (Pièce 1) et conclut au rejet du recours."
+        ],
+        [
+          "rz",
+          "2.",
+          "Elle relève, pour le surplus, que la note du bureau Hofstetter du 18 mars 2026 a été versée au dossier dans le prolongement direct des constatations faites lors de l'inspection locale du 10 mars 2026, à laquelle les recourants ont participe et se sont exprimés sur les caractéristiques des installations litigieuses."
+        ],
+        [
+          "sign",
+          [
+            "Nathalie Pidoux, Présidente",
+            "Lea Burnier, greffière"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "05 Observations OFEV.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "pleading": true,
+      "title": "Observations",
+      "letterhead": {
+        "name": "Office fédéral de l'environnement OFEV",
+        "lines": [
+          "Division Bruit et vibrations",
+          "3003 Berne"
+        ]
+      },
+      "blocks": [
+        [
+          "right",
+          "Berne, le 1 juillet 2026"
+        ],
+        [
+          "p",
+          "Tribunal fédéral, Ire Cour de droit public, 1000 Lausanne 14"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "OBSERVATIONS"
+        ],
+        [
+          "p",
+          "dans la cause 1C_412/2026, à la demande du Tribunal fédéral du 12 mai 2026"
+        ],
+        [
+          "rz",
+          "1.",
+          "L'Office fédéral de l'environnement (OFEV) a été invité à se prononcer sur les aspects relevant du droit fédéral de la protection contre le bruit (art. 11 LPE, art. 7 et annexe 6 OPB)."
+        ],
+        [
+          "rz",
+          "2.",
+          "La zone dans laquelle se trouve le projet est colloquée en degré de sensibilité II. S'agissant du bruit de l'industrie et des arts et métiers au sens de l'annexe 6 OPB, la valeur de planification applicable est de 45 dB(A) de nuit au droit des locaux à usage sensible au bruit les plus proches, la valeur limite d'immission de 50 dB(A) et la valeur d'alarme de 55 dB(A). Les pompes à chaleur air-eau extérieures constituent des installations fixés au sens de l'art. 7 OPB, dont le bruit s'apprécie, en pratique, par analogie avec les critères de l'annexe 6 OPB."
+        ],
+        [
+          "rz",
+          "2a.",
+          "L'OFEV rappelle que l'évaluation du bruit d'une installation technique de ce type dépend de trois paramètres principaux : la puissance acoustique de la source, telle qu'indiquée par le fabricant, la distance entre la source et le local à protéger, et les corrections liées au mode de fonctionnement de l'appareil (tonalité, caractère impulsif, durée de fonctionnement nocturne). Une erreur sur l'un de ces paramètres, en particulier sur la distance, se répercute directement et de manière significative sur le résultat du calcul."
+        ],
+        [
+          "rz",
+          "3.",
+          "Le rapport du bureau Hofstetter Ingenieurbureau AG du 18 mars 2026 (Pièce 209) retient un niveau d'immission de 44 dB(A) de nuit, sur la base d'une distance source-récepteur de 9,5 m. L'OFEV constate toutefois que le plan de situation du dossier cantonal (Pièce 203) situe l'implantation effective des appareils à 8,0 m du point de réception retenu, et non à 9,5 m. En corrigeant le calcul de propagation pour cette distance plus courte, le niveau d'immission nocturne doit être estimé à environ 47 dB(A), soit une dépassement de 2 dB(A) de la valeur de planification."
+        ],
+        [
+          "rz",
+          "3a.",
+          "Cet écart n'est pas négligeable : un dépassement de 2 dB(A) au-delà de la valeur de planification signifie, en pratique, que l'installation ne satisfait pas aux exigences du principe de précaution de l'art. 11 al. 2 LPE, indépendamment de toute question de proportionnalité. L'OFEV ne peut donc pas confirmer, en l'état du dossier, la conformité acoustique du projet telle que retenue par l'autorité précédente."
+        ],
+        [
+          "rz",
+          "4.",
+          "L'art. 7 al. 3 OPB, entre en vigueur en 2023, dispense l'exploitant d'une nouvelle pompe à chaleur air-eau de réduire ses émissions d'au moins 3 dB(A) lorsque cette réduction ne peut être obtenue qu'au prix de plus de 1 % des coûts d'investissement de l'installation. Cette exception ne trouve toutefois application que pour autant que les immissions respectent par ailleurs la valeur de planification ; si celle-ci est dépassée, comme le calcul au point 3 ci-dessus le suggère, c'est le régime ordinaire de limitation des émissions à la source (art. 11 al. 2 LPE, art. 7 al. 1 let. a OPB) qui s'applique pleinement, sans que le seuil de disproportion de l'art. 7 al. 3 OPB puisse être invoqué pour s'y soustraire."
+        ],
+        [
+          "rz",
+          "4a.",
+          "Le devis produit par les intimés (Pièce 101), relatif au coût d'un capotage acoustique renforcé, n'est ainsi déterminant que dans l'hypothèse où la valeur de planification serait respectée. Dans le cas contraire, la question n'est plus de savoir si une réduction supplémentaire, au sens de l'art. 7 al. 3 OPB, serait disproportionnée, mais bien si l'installation, dans sa configuration actuelle, peut être autorisée en l'état."
+        ],
+        [
+          "rz",
+          "5.",
+          "L'OFEV ne dispose pas des éléments nécessaires pour déterminer avec certitude laquelle des deux distances (8,0 m ou 9,5 m) correspond à l'implantation définitive des appareils, ni si d'autres mesures d'atténuation (écran acoustique, choix d'un appareil moins bruyant, orientation différente) seraient disponibles à un coût proportionné. Il recommande qu'un rapport acoustique actualisé, fondé sur l'implantation réellement exécutée, soit établi avant toute mise en service, et que sa conformité à l'annexe 6 OPB soit vérifiée par le service cantonal compétent."
+        ],
+        [
+          "rz",
+          "5a.",
+          "L'OFEV n'a pas de position à prendre sur les autres griefs soulevés par les recourants, qui relèvent du droit cantonal et constitutionnel, et laisse au Tribunal fédéral le soin d'apprécier les conséquences procédurales du point qui précède sur l'issue de la cause."
+        ],
+        [
+          "sign",
+          [
+            "Barbara Steiner",
+            "Cheffe de la section Bruit industriel et des chantiers, OFEV"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "06 Réplique Bettex et Stucki.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "pleading": true,
+      "title": "Réplique",
+      "letterhead": {
+        "name": "Moret & Associés",
+        "lines": [
+          "Avocats",
+          "Rue Centrale 8, 1003 Lausanne",
+          "Tél. +41 21 319 44 10 – etude@moret-associes.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "right",
+          "Lausanne, le 20 juillet 2026"
+        ],
+        [
+          "p",
+          "Tribunal fédéral, Ire Cour de droit public, 1000 Lausanne 14"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "RÉPLIQUE"
+        ],
+        [
+          "p",
+          "dans la cause 1C_412/2026"
+        ],
+        [
+          "rz",
+          "1.",
+          "Les recourants persistent intégralement dans les conclusions de leur recours du 4 mai 2026."
+        ],
+        [
+          "rz",
+          "2.",
+          "Les observations de l'Office fédéral de l'environnement du 1 juillet 2026 (ci-après : les observations OFEV) confirment ce que les recourants faisaient valoir : le rapport du bureau Hofstetter repose sur une distance source-récepteur de 9,5 m contredite par le plan de situation officiel, et la correction de ce paramètre conduit à un dépassement de la valeur de planification de 45 dB(A). Les recourants relèvent que les intimés eux-mêmes ont produit ce plan de situation (Pièce 203) ; ils ne sauraient aujourd'hui s'en distancier pour défendre la conclusion inverse de leur propre rapport acoustique (Pièce 209)."
+        ],
+        [
+          "rz",
+          "2a.",
+          "L'argument des intimés selon lequel le plan de situation n'indiquerait que l'axe des appareils, et non leur point précis d'émission, ne convainc pas : c'est aux intimés qu'il appartenait, s'ils entendaient se prévaloir d'une distance plus favorable, de produire un plan ou un relevé cohérent avec le rapport acoustique sur lequel ils fondent toute leur défense. Il ne saurait être reproché aux recourants de s'appuyer sur la pièce officielle versée au dossier par les intimés eux-mêmes."
+        ],
+        [
+          "rz",
+          "3.",
+          "Les observations OFEV confirment également que l'exception de l'art. 7 al. 3 OPB, sur laquelle les intimés fondent toute leur argumentation relative au devis de capotage acoustique (Pièce 101), ne s'applique qu'en-dessous de la valeur de planification. Le devis invoqué par les intimés est ainsi sans pertinence pour la question déterminante, qui est de savoir si la valeur de planification est respectée, et non si sa réduction supplémentaire serait disproportionnée."
+        ],
+        [
+          "rz",
+          "3a.",
+          "Les recourants relèvent que l'offre des intimés de produire un rapport acoustique complémentaire après coup, formulée dans leur réponse, confirme à elle seule que le dossier actuel ne permet pas de retenir la conformité acoustique du projet avec la certitude nécessaire pour confirmer un permis de construire déjà litigieux à d'autres titres."
+        ],
+        [
+          "rz",
+          "4.",
+          "Sur la qualité pour recourir de M. Stucki, les observations OFEV confirment que le bruit nocturne des installations se propage au-delà du seul voisinage immédiat, ce qui conforte l'atteinte particulière dont il se plaint."
+        ],
+        [
+          "rz",
+          "5.",
+          "Sur le droit d'être entendu, les intimés ne contestent pas, dans leur réponse, que la note du 18 mars 2026 n'a pas été communiquée aux recourants ; ils se bornent à en relativiser la portée. Cela ne change rien à la violation de l'art. 29 al. 2 Cst., dont la gravité est au contraire accrue par le fait que cette note s'est avérée déterminante pour l'issue du litige sur le point précisément mis en doute par l'OFEV."
+        ],
+        [
+          "rz",
+          "5a.",
+          "Le fait que les recourants aient sollicité, par lettre du 25 mars 2026, la communication des pièces versées au dossier (Pièce 2) ne les dispensait nullement de recevoir une réponse ; à défaut de réponse de la cour de céans avant le prononcé de l'arrêt, ils ne pouvaient que présumer qu'aucune pièce déterminante n'avait été versée, ce qui s'est révélé inexact."
+        ],
+        [
+          "rz",
+          "6.",
+          "Sur la distance et la hauteur, les recourants maintiennent que le courriel du 2 avril 2025 de Madame Bettex (Pièce 3), rédigé avant toute mesure précise et avant l'assistance d'un avocat, ne saurait leur être opposé comme une reconnaissance définitive de la cotation de l'architecte."
+        ],
+        [
+          "rz",
+          "6a.",
+          "S'agissant de la hauteur, les recourants relèvent que la pratique communale invoquée par la Municipalité et les intimés, aussi constante soit-elle, ne saurait l'emporter sur le texte clair de l'art. 31 al. 1 RPGA, qui se réfère sans ambiguïté au terrain naturel. Une pratique administrative contraire au texte réglementaire ne crée pas un droit à sa perpétuation et peut, elle-même, être qualifiée d'arbitraire si elle revient systématiquement à neutraliser une limite légale."
+        ],
+        [
+          "rz",
+          "7.",
+          "Les recourants persistent dans leurs conclusions, y compris quant à l'effet suspensif, les travaux de mise en service des pompes à chaleur n'ayant, à leur connaissance, pas encore été entrepris."
+        ],
+        [
+          "sign",
+          [
+            "Me Catherine Moret",
+            "Avocate des recourants"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Pièces/Pièce 1 Arrêt CDAP AC.2025.0398 du 2026-04-02.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "pleading": true,
+      "title": "Arrêt",
+      "letterhead": {
+        "name": "Tribunal cantonal",
+        "lines": [
+          "Cour de droit administratif et public",
+          "Avenue Eugène-Rambert 15, 1014 Lausanne"
+        ]
+      },
+      "blocks": [
+        [
+          "p",
+          "AC.2025.0398"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "ARRÊT"
+        ],
+        [
+          "p",
+          "du 2 avril 2026"
+        ],
+        [
+          "space"
+        ],
+        [
+          "h",
+          "Composition"
+        ],
+        [
+          "p",
+          "Mme Nathalie Pidoux, présidente ; M. Marc Antonioli et Mme Sophie Ruchti, juges ; Mme Lea Burnier, greffière."
+        ],
+        [
+          "h",
+          "Parties"
+        ],
+        [
+          "p",
+          "**Georges Bettex et Marianne Bettex**, à Fontanivent, et **Werner Stucki**, à Fontanivent, recourants,"
+        ],
+        [
+          "p",
+          "contre"
+        ],
+        [
+          "p",
+          "**Municipalité de Fontanivent**, intimée,"
+        ],
+        [
+          "p",
+          "et"
+        ],
+        [
+          "p",
+          "**Michel Dubosson et Caroline Dubosson**, à Morges, constructeurs, parties intéressées."
+        ],
+        [
+          "h",
+          "Objet"
+        ],
+        [
+          "p",
+          "Permis de construire – recours contre la décision de la Municipalité de Fontanivent du 18 septembre 2025 levant l'opposition des recourants et délivrant le permis de construire pour la démolition d'une villa et la construction de deux villas jumelées sur la parcelle n° 1847."
+        ],
+        [
+          "pagebreak"
+        ],
+        [
+          "h",
+          "Vu les faits suivants :"
+        ],
+        [
+          "rz",
+          "A.",
+          "Michel Dubosson et Caroline Dubosson sont propriétaires de la parcelle n° 1847 de la Commune de Fontanivent, sise Chemin des Vignes 6, sur laquelle se trouve une villa construite en 1962. Le 15 janvier 2025, ils ont déposé une demande de permis de construire portant sur la démolition de cette villa et la construction de deux villas jumelées, équipées de pompes à chaleur air-eau extérieures. Le dossier comprenait notamment un plan de situation, un plan de façade nord et un profil topographique du terrain établi le 3 décembre 2024."
+        ],
+        [
+          "rz",
+          "B.",
+          "La mise à l'enquête publique a été publiée dans la Feuille des avis officiels du 21 mars 2025, pour un délai courant du 21 mars au 19 avril 2025. Le dossier mis à l'enquête pouvait être consulté au bureau technique communal pendant toute cette durée."
+        ],
+        [
+          "rz",
+          "C.",
+          "Georges et Marianne Bettex, propriétaires de la parcelle contiguë n° 1846, et Werner Stucki, propriétaire de la parcelle n° 1852 sise de l'autre côté de la route de la Combe, ont formé opposition le 15 avril 2025, invoquant la distance à la limite, la hauteur du bâtiment projeté et le bruit prévisible des installations techniques."
+        ],
+        [
+          "rz",
+          "D.",
+          "Dans le cadre de l'instruction de la demande, la Centrale des autorisations en matière de construction (CAMAC) a recueilli les préavis des services cantonaux concernés. Par synthèse du 30 juin 2025, le Service du développement territorial a préavisé favorablement sans réserve, tandis que la Direction générale de l'environnement a subordonné la délivrance du permis à la production, avant la mise en service des pompes à chaleur, d'une attestation de conformité acoustique à l'ordonnance sur la protection contre le bruit (OPB)."
+        ],
+        [
+          "rz",
+          "E.",
+          "Par décision du 18 septembre 2025, la Municipalité de Fontanivent a levé les oppositions et délivré le permis de construire, moyennant les conditions de la synthèse CAMAC. Elle a retenu que la hauteur au faîte de 9,40 m, mesurée depuis le terrain aménagé conformément à sa pratique constante, et la distance à la limite de 6,10 m indiquée sur le plan de situation, étaient conformes au Règlement sur le plan général d'affectation et la police des constructions (RPGA)."
+        ],
+        [
+          "rz",
+          "F.",
+          "Les trois opposants ont recouru contre cette décision devant la Cour de droit administratif et public le 17 octobre 2025, concluant à l'annulation de la décision municipale et au refus du permis, subsidiairement au renvoi du dossier pour complément d'instruction. La Municipalité et les constructeurs, appelés en cause, ont conclu au rejet du recours."
+        ],
+        [
+          "rz",
+          "G.",
+          "La cour de céans a tenu une inspection locale le 10 mars 2026, en présence des parties et de leurs conseils. Les mesures prises sur place par la greffière ont fait l'objet d'un procès-verbal, qui consigne notamment une distance d'environ 4,60 m entre le nez du balcon de la villa nord et la limite de la parcelle n° 1846, avec la mention qu'il y aurait lieu de vérifier la conformité de cette cote à l'art. 24 RPGA. À cette occasion, un doute est également apparu sur le modèle exact des pompes à chaleur destinées à être installées, différent en apparence de celui figurant au dossier de mise à l'enquête. L'architecte Lambert a indiqué qu'il ferait vérifier ce point par l'ingénieur acousticien mandaté par les constructeurs."
+        ],
+        [
+          "rz",
+          "H.",
+          "Le 18 mars 2026, le bureau Hofstetter Ingenieurbureau AG, mandaté par les constructeurs, a adressé à la cour de céans une note technique, en langue allemande, récapitulant les caractéristiques acoustiques des appareils et concluant au respect de la valeur de planification applicable. Cette note a été versée au dossier postérieurement à l'inspection locale, sans détermination complémentaire des parties, la cour de céans estimant qu'elle ne faisait que confirmer des éléments déjà discutés lors de l'inspection locale."
+        ],
+        [
+          "rz",
+          "I.",
+          "La cause a été gardée à juger à l'issue de l'instruction qui précède."
+        ],
+        [
+          "rz",
+          "J.",
+          "Dans leur recours et leurs écritures ultérieures, les recourants ont fait valoir, en substance, que la note du bureau Hofstetter ne leur avait jamais été communiquée, que la saillie du balcon nord excéderait en réalité 1,80 m, que la hauteur du bâtiment, mesurée depuis le terrain naturel documenté par le profil topographique du dossier, excéder la limite réglementaire de 9,50 m, et que le niveau d'immission sonore des pompes à chaleur aurait été sous-estimé faute d'avoir été calculé sur la base de la distance effective séparant les appareils de la fenêtre de chambre la plus proche de la parcelle Bettex. Ils ont conclu à l'annulation de la décision municipale et au refus du permis, subsidiairement au renvoi de la cause pour complément d'instruction."
+        ],
+        [
+          "rz",
+          "K.",
+          "La Municipalité de Fontanivent a conclu au rejet du recours, rappelant sa pratique constante consistant à mesurer la hauteur réglementaire depuis le terrain aménagé lorsque les mouvements de terre sont de minime importance, pratique qu'elle dit appliquer de manière identique à l'ensemble des permis délivrés dans le quartier des Vignes depuis dix ans."
+        ],
+        [
+          "rz",
+          "L.",
+          "Les constructeurs ont également conclu au rejet du recours, soutenant que le plan de situation cotait sans ambiguïté la saillie du balcon à 1,50 m, que cette cotation était corroborée par un courriel antérieur de Madame Bettex elle-même, et que le rapport acoustique du bureau Hofstetter démontrait le respect de la valeur de planification applicable."
+        ],
+        [
+          "rz",
+          "M.",
+          "Dans leurs dernières écritures, les recourants ont maintenu l'ensemble de leurs griefs, en relevant notamment que le procès-verbal de l'inspection locale consignait une mesure sur place sensiblement différente de celle figurant sur les plans, et que ni la Municipalité ni les constructeurs n'avaient expliqué de manière convaincante cette divergence. Ils ont également souligne que la condition posée par la synthèse CAMAC relative à l'attestation de conformité acoustique n'avait, à leur connaissance, pas encore été formellement levée par le service cantonal compétent au jour du dépôt de leurs dernières observations."
+        ],
+        [
+          "rz",
+          "N.",
+          "La Municipalité et les constructeurs ont, pour leur part, persisté dans leurs conclusions respectives, en soulignant que les griefs des recourants portaient sur des cotes de détail dont l'incidence sur la situation concrète des voisins demeurait, selon eux, limitée, et que l'ensemble des autorités compétentes, communale puis cantonale spécialisée, avaient eu l'occasion d'examiner le projet à plusieurs reprises sans y déceler d'irrégularité déterminante."
+        ],
+        [
+          "pagebreak"
+        ],
+        [
+          "h",
+          "Considérant en droit :"
+        ],
+        [
+          "rz",
+          "1.",
+          "a) Interjeté dans le délai et les formes prescrites par la loi du 28 octobre 2008 sur la procédure administrative (LPA-VD), le recours est recevable en tant qu'il émane de Georges et Marianne Bettex, propriétaires de la parcelle directement voisine n° 1846, qui sont manifestement touchés de manière directe par le projet litigieux et disposent d'un intérêt digne de protection à son annulation ou à sa modification au sens de l'art. 75 let. a LPA-VD."
+        ],
+        [
+          "rz",
+          "b)",
+          "La qualité pour agir de M. Stucki, dont la parcelle n° 1852 se trouve à une distance d'environ 45 mètres du projet, de l'autre côté d'une voie publique, apparaît plus douteuse : l'atteinte qu'il invoque, essentiellement liée au bruit des pompes à chaleur, n'est étayée par aucune mesure spécifique à sa situation. Il n'est toutefois pas nécessaire de trancher définitivement cette question, le recours devant de toute manière être rejeté sur le fond pour chacun des recourants, de sorte que la qualité pour recourir de M. Stucki peut rester indécise."
+        ],
+        [
+          "rz",
+          "2.",
+          "a) Les recourants se plaignent, en premier lieu, d'une violation de leur droit d'être entendus (art. 29 al. 2 Cst.) en lien avec la note du bureau Hofstetter du 18 mars 2026, qui aurait été versée au dossier sans leur être communiquée."
+        ],
+        [
+          "rz",
+          "b)",
+          "Le droit d'être entendu comprend le droit, pour le justiciable, de prendre connaissance de toute pièce du dossier susceptible d'influer sur l'issue du litige et de se déterminer à son sujet avant que la décision ne soit rendue. Il est vrai que la note litigieuse n'a pas été formellement transmise aux recourants avant le présent arrêt."
+        ],
+        [
+          "rz",
+          "c)",
+          "Cette note, toutefois, ne fait que confirmer, sans en modifier la teneur, les données acoustiques déjà exposées dans le dossier de mise à l'enquête et discutées lors de l'inspection locale du 10 mars 2026, à laquelle les recourants ont pu s'exprimer librement sur les installations litigieuses et sur le doute alors soulevé quant au modèle des appareils. Dans ces circonstances particulières, la cour de céans estime que les recourants ont eu une occasion suffisante de faire valoir leur point de vue sur la question, de sorte que le grief, pour regrettable que soit l'absence de transmission formelle de la note, doit être écarté."
+        ],
+        [
+          "rz",
+          "d)",
+          "La cour de céans observe au demeurant que les recourants, par leur conseil, ont eux-mêmes sollicité le 25 mars 2026 la communication de toute pièce versée au dossier depuis l'inspection locale, sans toutefois relancer la cour avant le prononcé du présent arrêt ; ils disposaient ainsi de la faculté de requérir formellement l'accès au dossier avant que la cause ne soit gardée à juger."
+        ],
+        [
+          "rz",
+          "3.",
+          "a) Les recourants se plaignent en second lieu d'une application arbitraire du RPGA en tant que la décision attaquée admet la conformité du projet aux règles sur la distance aux limites (art. 24 RPGA) et sur la hauteur des constructions (art. 31 RPGA)."
+        ],
+        [
+          "rz",
+          "b)",
+          "Une décision est arbitraire lorsqu'elle est manifestement insoutenable, en contradiction claire avec la situation de fait, ou qu'elle viole gravement une norme ou un principe juridique clair et indiscuté, ou qu'elle heurte de manière choquante le sentiment de la justice et de l'équité ; il ne suffit pas que sa motivation soit insoutenable, il faut encore que la décision apparaisse arbitraire dans son résultat."
+        ],
+        [
+          "rz",
+          "c)",
+          "S'agissant de la distance, le plan de situation visé sans réserve par la Municipalité cote la saillie du balcon nord à 1,50 m et la distance du nu de la façade à la limite à 6,10 m, ce qui respecte l'art. 24 al. 2 RPGA, aux termes duquel les saillies de moins de 1,50 m ne sont pas prises en compte dans le calcul de la distance réglementaire. Cette cotation, établie par un architecte, correspond à celle retenue par la Municipalité depuis le dépôt de la demande et n'a été remise en cause par aucune mesure contradictoire établie dans les règles de l'art ; la mesure approximative consignée par la greffière lors de l'inspection locale, elle-même qualifiée d'environ dans le procès-verbal, ne saurait l'emporter sur la cotation précise du plan officiel."
+        ],
+        [
+          "rz",
+          "d)",
+          "Les recourants font valoir que le balcon, par ses dimensions, s'apparenterait à une véritable façade ouverte et ne pourrait être traité comme une simple saillie. La cour de céans relève que le RPGA, à son art. 24 al. 2, a précisément pour objet de distinguer, parmi les éléments en saillie d'une construction, ceux qui doivent être pris en compte dans le calcul de la distance de ceux qui peuvent en être exonérés en raison de leur faible emprise ; le seuil de 1,50 m retenu par le règlement communal constitue à cet égard un critère objectif et aisément vérifiable, dont l'application au cas d'espèce, sur la base d'un plan visé sans réserve par l'autorité compétente, n'apparaît pas arbitraire du seul fait que le balcon en question est aménagé et accessible, ces deux caractéristiques étant communes à la grande majorité des balcons d'habitation."
+        ],
+        [
+          "rz",
+          "e)",
+          "S'agissant de la hauteur, celle-ci, cotée à 9,35 m au faîte depuis le terrain aménagé, respecte la limite de 9,50 m de l'art. 31 RPGA. La configuration du terrain n'a pas été modifiée de manière significative par les travaux, les mouvements de terre se limitant à l'aménagement de la rampe d'accès au garage ; cette manière de mesurer, qui correspond à la pratique constante de la Municipalité pour ce type d'aménagement de minime importance, n'apparaît pas insoutenable."
+        ],
+        [
+          "rz",
+          "f)",
+          "Les recourants soutiennent que le profil topographique du 3 décembre 2024, versé au dossier de la demande de permis, situerait le terrain naturel 0,55 m sous le niveau retenu par les plans. Cette pièce figurait toutefois déjà au dossier soumis à la Municipalité, qui en a tenu compte dans son appréciation densemble du projet et de la pratique applicable aux aménagements de minime importance ; le fait que la cour de céans n'ait pas repris dans le détail chacune des cotes de ce profil dans la motivation qui précède ne signifie pas qu'elle les a ignorées."
+        ],
+        [
+          "rz",
+          "g)",
+          "La cour de céans rappelle à cet égard que le droit vaudois de la construction reconnaît aux communes une certaine latitude dans la détermination du point de référence pour le calcul des hauteurs, afin de tenir compte des particularités topographiques de chaque parcelle et des aménagements nécessaires à son exploitation normale. Le rehaussement litigieux, limite à la seule rampe d'accès au garage souterrain sur une surface restreinte de la parcelle, demeure dans les limites de ce qui peut être considéré comme un aménagement de minime importance au sens de cette pratique, à la différence de situations ou l'ensemble d'une parcelle aurait été remblayé pour gagner artificiellement de la hauteur constructible."
+        ],
+        [
+          "rz",
+          "h)",
+          "Dans ces conditions, et compte tenu de la retenue dont le juge doit faire preuve dans l'appréciation de questions relevant pour une large part de l'application du droit communal et de la pratique locale, les griefs tirés d'une application arbitraire du RPGA doivent être écartés. La cour de céans relève au demeurant que les recourants ne contestent pas l'implantation générale du projet ni son volume, mais uniquement des cotes de détail dont l'incidence sur leur situation, déjà atténuée par la végétation existante en limite de parcelle, demeure limitée."
+        ],
+        [
+          "rz",
+          "4.",
+          "a) Les recourants se plaignent enfin d'une violation du droit fédéral de l'environnement, faisant valoir que le bruit des pompes à chaleur extérieures excéderait la valeur de planification applicable."
+        ],
+        [
+          "rz",
+          "b)",
+          "La zone villas dans laquelle se trouve le projet est colloquée en degré de sensibilité II au sens de l'art. 43 OPB, ce qui entraîne, pour le bruit de l'industrie et des arts et métiers au sens de l'annexe 6 OPB, une valeur de planification de 45 dB(A) la nuit au droit des locaux à usage sensible au bruit les plus proches. Les pompes à chaleur air-eau extérieures constituent des installations fixés au sens de l'art. 7 OPB."
+        ],
+        [
+          "rz",
+          "c)",
+          "Le rapport du bureau Hofstetter retient un niveau d'immission nocturne de 44 dB(A), inférieur à cette valeur de planification, sur la base d'une distance source-récepteur de 9,5 m entre les appareils et la fenêtre de chambre la plus proche de la parcelle Bettex. Ce rapport, établi par un bureau spécialisé en acoustique du bâtiment mandaté par les constructeurs, n'est contredit par aucune contre-expertise versée au dossier cantonal ; il n'y a pas lieu de s'écarter de cette appréciation technique."
+        ],
+        [
+          "rz",
+          "d)",
+          "Les recourants objectent que cette distance ne correspondrait pas à celle figurant sur le plan de situation. La cour de céans, qui ne dispose pas des compétences techniques pour trancher elle-même ce point de détail, considère qu'il appartient en premier lieu au bureau spécialisé mandaté par les constructeurs d'en répondre, et qu'aucun élément objectif du dossier ne permet, en l'état, de préférer une lecture du plan à celle, chiffrée et motivée, du rapport acoustique."
+        ],
+        [
+          "rz",
+          "e)",
+          "Il suit de ce qui précède que le grief tiré d'une violation du droit fédéral de l'environnement doit également être écarté. La cour de céans rappelle au surplus que la condition posée par la synthèse CAMAC du 30 juin 2025, à savoir la production d'une attestation de conformité acoustique avant toute mise en service, demeure en tout état de cause applicable et offre une garantie supplémentaire aux recourants."
+        ],
+        [
+          "rz",
+          "5.",
+          "Il résulte de l'ensemble de ce qui précède que le recours doit être rejeté dans la mesure où il est recevable, et la décision de la Municipalité de Fontanivent du 18 septembre 2025 confirmée."
+        ],
+        [
+          "rz",
+          "6.",
+          "a) Les recourants, qui succombent, supportent les frais de la présente procédure, fixés forfaitairement à CHF 2'000.-, solidairement entre eux. Il n'y a pas lieu d'allouer de dépens, la Municipalité n'y ayant pas droit en sa qualité d'autorité et les constructeurs n'ayant pas chiffré de note d'honoraires."
+        ],
+        [
+          "rz",
+          "b)",
+          "La cour de céans précise, pour le surplus, que la présente décision ne dispense pas les constructeurs de produire, avant toute mise en service des pompes à chaleur, l'attestation de conformité acoustique exigée par la synthèse CAMAC du 30 juin 2025, dont le contrôle incombe au service cantonal compétent et non à la présente juridiction."
+        ],
+        [
+          "rz",
+          "c)",
+          "La cour de céans relève enfin qu'elle n'a pas été saisie d'une demande de mesures provisionnelles tendant à interdire la poursuite des travaux ou la mise en service des installations litigieuses pendant la présente procédure, de sorte qu'il n'y a pas lieu de statuer sur ce point dans le cadre du présent arrêt."
+        ],
+        [
+          "rz",
+          "d)",
+          "S'agissant de la répartition des frais entre les trois recourants, la cour de céans rappelle qu'une solidarité passive se justifie en l'espèce dans la mesure où les époux Bettex et M. Stucki ont agi conjointement, par les mêmes conseils, et ont présente des conclusions identiques tout au long de la procédure cantonale, sans que l'un ou l'autre n'ait limite son recours à un grief distinct. Il n'y a partant pas lieu de distinguer, dans la fixation des frais, la situation des époux Bettex, dont la qualité pour agir n'a soulevé aucune discussion, de celle de M. Stucki, dont la légitimation a fait l'objet d'un examen plus approfondi au considérant 1b ci-dessus sans devoir être définitivement tranchée, le recours étant de toute manière rejeté sur le fond pour chacun des recourants."
+        ],
+        [
+          "rz",
+          "e)",
+          "Le présent arrêt sera notifié en expédition complète aux parties, soit pour les recourants à leur conseil, Me Catherine Moret, pour les constructeurs intimés à leur conseil, Me Thierry Jaccoud, ainsi qu'à la Municipalité de Fontanivent et, pour information, à l'Office fédéral de l'environnement qui a déposé des observations dans la présente procédure."
+        ],
+        [
+          "h",
+          "Par ces motifs,"
+        ],
+        [
+          "p",
+          "la Cour de droit administratif et public arrêté :"
+        ],
+        [
+          "rz",
+          "I.",
+          "Le recours est rejeté dans la mesure où il est recevable."
+        ],
+        [
+          "rz",
+          "II.",
+          "La décision de la Municipalité de Fontanivent du 18 septembre 2025 est confirmée."
+        ],
+        [
+          "rz",
+          "III.",
+          "Les frais de la procédure, par CHF 2'000.-, sont mis à la charge des recourants, solidairement entre eux."
+        ],
+        [
+          "rz",
+          "IV.",
+          "Il n'est pas alloue de dépens."
+        ],
+        [
+          "h",
+          "Voie de recours"
+        ],
+        [
+          "p",
+          "Conformément aux art. 82 ss de la loi du 17 juin 2005 sur le Tribunal fédéral (LTF), le présent arrêt peut faire l'objet d'un recours en matière de droit public devant le Tribunal fédéral. Le recours doit être déposé devant le Tribunal fédéral dans les trente jours qui suivent la notification de l'expédition complète."
+        ],
+        [
+          "sign",
+          [
+            "Nathalie Pidoux, Présidente",
+            "Lea Burnier, greffière"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Pièces/Pièce 2 Lettre Moret à CDAP 2026-03-25.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "title": "Lettre",
+      "letterhead": {
+        "name": "Moret & Associés",
+        "lines": [
+          "Avocats",
+          "Rue Centrale 8, 1003 Lausanne",
+          "Tél. +41 21 319 44 10 – etude@moret-associes.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "address",
+          [
+            "Cour de droit administratif et public",
+            "Avenue Eugène-Rambert 15",
+            "1014 Lausanne"
+          ]
+        ],
+        [
+          "right",
+          "Lausanne, le 25 mars 2026"
+        ],
+        [
+          "p",
+          "Cause AC.2025.0398 – Bettex et consorts c. Municipalité de Fontanivent"
+        ],
+        [
+          "space"
+        ],
+        [
+          "p",
+          "Madame la Présidente,"
+        ],
+        [
+          "p",
+          "Mes clients m'informent qu'une note technique du bureau Hofstetter relative aux pompes à chaleur litigieuses aurait été évoquée lors de l'inspection locale du 10 mars 2026 sans leur avoir été formellement remise."
+        ],
+        [
+          "p",
+          "Je vous saurais gré de me faire parvenir copie de toute pièce versée au dossier depuis cette date, afin que mes clients puissent exercer leur droit d'être entendus avant que la cause ne soit mise en délibération."
+        ],
+        [
+          "p",
+          "Je vous remercie d'avance de votre réponse et vous prie d'agréer, Madame la Présidente, mes salutations distinguées."
+        ],
+        [
+          "sign",
+          [
+            "Me Catherine Moret"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Pièces/Pièce 3 Courriel Bettex Chappuis 2025-04-02.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Courriel",
+      "blocks": [
+        [
+          "kv",
+          [
+            [
+              "De",
+              "Marianne Bettex <georges.bettex@bluewin.ch>"
+            ],
+            [
+              "A",
+              "Olivier Chappuis <o.chappuis@fontanivent.ch>"
+            ],
+            [
+              "Date",
+              "02.04.2025 19:42"
+            ],
+            [
+              "Objet",
+              "Projet Dubosson – Chemin des Vignes"
+            ]
+          ]
+        ],
+        [
+          "p",
+          "Bonjour Olivier,"
+        ],
+        [
+          "p",
+          "On a regardé les plans affichés à l'enquête avec Georges. Le balcon du côté nord nous inquiète : il dépasse d'environ 1,50 m vers notre jardin, et avec la pompe à chaleur juste à côté on se demande si on va encore pouvoir profiter de la terrasse le soir."
+        ],
+        [
+          "p",
+          "Est-ce qu'on peut passer au bureau cette semaine pour en discuter avant de déposer une opposition en bonne et due forme ?"
+        ],
+        [
+          "p",
+          "Merci d'avance, et à bientôt,"
+        ],
+        [
+          "p",
+          "Marianne"
+        ]
+      ]
+    },
+    {
+      "path": "Pièces/Pièce 101 Devis capotage acoustique 2026-05-20.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Devis",
+      "letterhead": {
+        "name": "Lambert & Crivelli architectes SA",
+        "lines": [
+          "Rue de la Gare 22, 1110 Morges",
+          "CHE-109.845.221",
+          "Tél. +41 21 801 33 50 – info@lambert-crivelli.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "address",
+          [
+            "Michel et Caroline Dubosson",
+            "Avenue de la Gare 12",
+            "1110 Morges"
+          ]
+        ],
+        [
+          "right",
+          "Morges, le 20 mai 2026"
+        ],
+        [
+          "p",
+          "Objet : devis – capotage acoustique renforcé des pompes à chaleur, parcelle n° 1847"
+        ],
+        [
+          "table",
+          {
+            "columns": [
+              "Poste",
+              "Montant CHF"
+            ],
+            "rows": [
+              [
+                "Coût total installation des deux pompes à chaleur air-eau (fourniture et pose)",
+                "38'000.00"
+              ],
+              [
+                "Capotage acoustique renforcé (réduction visée : 3,2 dB(A))",
+                "14'500.00"
+              ],
+              [
+                "Part du capotage par rapport au coût d'installation",
+                "38.2 %"
+              ]
+            ],
+            "widths": [
+              0.7,
+              0.3
+            ],
+            "align": [
+              "l",
+              "r"
+            ]
+          }
+        ],
+        [
+          "p",
+          "Le capotage proposé permettrait une réduction d'environ 3,2 dB(A) des émissions sonores des appareils. Son coût représente plus de 38 % du coût d'installation, soit un montant largement disproportionné au sens de l'art. 7 al. 3 de l'ordonnance sur la protection contre le bruit."
+        ],
+        [
+          "sign",
+          [
+            "Philippe Lambert",
+            "Architecte"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 201 Demande de permis de construire 2025-01-15.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Demande de permis de construire",
+      "blocks": [
+        [
+          "h",
+          "Commune de Fontanivent – Demande de permis de construire"
+        ],
+        [
+          "kv",
+          [
+            [
+              "N° de dossier",
+              "2025-CAMAC-0147"
+            ],
+            [
+              "Propriétaires",
+              "Michel Dubosson et Caroline Dubosson, Avenue de la Gare 12, 1110 Morges"
+            ],
+            [
+              "Parcelle",
+              "n° 1847, Chemin des Vignes 6, 1147 Fontanivent"
+            ],
+            [
+              "Architecte",
+              "Philippe Lambert, Lambert & Crivelli architectes SA, Rue de la Gare 22, 1110 Morges"
+            ],
+            [
+              "Nature des travaux",
+              "Démolition d'une villa existante et construction de deux villas jumelées avec deux pompes à chaleur air-eau extérieures"
+            ],
+            [
+              "Profil topographique",
+              "levé du 3 décembre 2024 ; niveau du terrain naturel pris comme référence 0,00 ; terrain aménagé après travaux : +0,55 m au droit de la rampe d'accès"
+            ],
+            [
+              "Hauteur au faîte projetée",
+              "9,40 m depuis le terrain aménagé"
+            ],
+            [
+              "Date de dépôt",
+              "15 janvier 2025"
+            ]
+          ]
+        ],
+        [
+          "p",
+          "La présente demande est accompagnée des plans de situation, de façades et de coupes, ainsi que du formulaire CAMAC usuel."
+        ],
+        [
+          "sign",
+          [
+            "Michel Dubosson",
+            "Requérant"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 202 Avis d'enquête FAO 2025-03-21.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "title": "Avis d'enquête publique",
+      "blocks": [
+        [
+          "h",
+          "Feuille des avis officiels du canton de Vaud"
+        ],
+        [
+          "p",
+          "Édition du 21 mars 2025"
+        ],
+        [
+          "space"
+        ],
+        [
+          "title",
+          "Commune de Fontanivent"
+        ],
+        [
+          "p",
+          "Enquête publique du 21 mars au 19 avril 2025"
+        ],
+        [
+          "kv",
+          [
+            [
+              "Propriétaires",
+              "Michel Dubosson et Caroline Dubosson"
+            ],
+            [
+              "Parcelle",
+              "n° 1847"
+            ],
+            [
+              "Objet",
+              "Démolition d'une villa et construction de deux villas jumelées avec pompes à chaleur air-eau extérieures"
+            ],
+            [
+              "Référence",
+              "2025-CAMAC-0147"
+            ]
+          ]
+        ],
+        [
+          "p",
+          "Le dossier peut être consulté au bureau technique communal, Place du Village 1, 1147 Fontanivent, aux heures d'ouverture. Les oppositions, dûment motivées, doivent être adressées par écrit à la Municipalité pendant le délai d'enquête."
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 203 Plan de situation 2025-01-10.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Plan de situation",
+      "blocks": [
+        [
+          "drawing",
+          {
+            "width": 170,
+            "height": 160,
+            "frame": true,
+            "items": [
+              [
+                "rect",
+                12,
+                4,
+                146,
+                10,
+                {}
+              ],
+              [
+                "text",
+                15,
+                10.5,
+                "Plan de situation – Transformation parcelle 1847, Commune de Fontanivent",
+                {
+                  "size": 6.5
+                }
+              ],
+              [
+                "text",
+                15,
+                6.5,
+                "Lambert & Crivelli architectes SA – Échelle 1:200 – Plan n° 203-A – 10 janvier 2025",
+                {
+                  "size": 6.5
+                }
+              ],
+              [
+                "poly",
+                [
+                  [
+                    60,
+                    17
+                  ],
+                  [
+                    120,
+                    17
+                  ],
+                  [
+                    120,
+                    35
+                  ],
+                  [
+                    60,
+                    35
+                  ]
+                ],
+                {}
+              ],
+              [
+                "text",
+                90,
+                28,
+                "parcelle n° 1852",
+                {
+                  "size": 7.5,
+                  "bold": true,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "text",
+                90,
+                23,
+                "Stucki",
+                {
+                  "size": 7,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "line",
+                10,
+                35,
+                160,
+                35,
+                {
+                  "width": 1
+                }
+              ],
+              [
+                "line",
+                10,
+                43,
+                160,
+                43,
+                {
+                  "width": 1
+                }
+              ],
+              [
+                "text",
+                85,
+                39,
+                "Route de la Combe",
+                {
+                  "size": 7,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "poly",
+                [
+                  [
+                    20,
+                    43
+                  ],
+                  [
+                    150,
+                    43
+                  ],
+                  [
+                    150,
+                    110
+                  ],
+                  [
+                    20,
+                    110
+                  ]
+                ],
+                {}
+              ],
+              [
+                "text",
+                23,
+                108,
+                "parcelle n° 1847",
+                {
+                  "size": 7.5,
+                  "bold": true,
+                  "anchor": "l"
+                }
+              ],
+              [
+                "text",
+                23,
+                103,
+                "Dubosson",
+                {
+                  "size": 7,
+                  "anchor": "l"
+                }
+              ],
+              [
+                "rect",
+                45,
+                58,
+                65,
+                35,
+                {
+                  "fill": "light"
+                }
+              ],
+              [
+                "line",
+                77.5,
+                58,
+                77.5,
+                93,
+                {
+                  "width": 0.6
+                }
+              ],
+              [
+                "text",
+                60,
+                74,
+                "villa nord",
+                {
+                  "size": 7,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "text",
+                95,
+                74,
+                "villa sud",
+                {
+                  "size": 7,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "rect",
+                52,
+                93,
+                18,
+                6,
+                {
+                  "fill": "mid"
+                }
+              ],
+              [
+                "text",
+                61,
+                95.5,
+                "balcon",
+                {
+                  "size": 6.5,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "dim",
+                74,
+                93,
+                74,
+                99,
+                "1,50 m",
+                {
+                  "size": 6.5
+                }
+              ],
+              [
+                "dim",
+                108,
+                93,
+                108,
+                110,
+                "6,10 m",
+                {
+                  "size": 6.5
+                }
+              ],
+              [
+                "rect",
+                123.5,
+                102,
+                3,
+                3,
+                {
+                  "fill": "dark"
+                }
+              ],
+              [
+                "rect",
+                131.5,
+                102,
+                3,
+                3,
+                {
+                  "fill": "dark"
+                }
+              ],
+              [
+                "text",
+                125,
+                106.5,
+                "PAC 1",
+                {
+                  "size": 6,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "text",
+                133,
+                106.5,
+                "PAC 2",
+                {
+                  "size": 6,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "dim",
+                140,
+                105,
+                140,
+                123,
+                "8,0 m",
+                {
+                  "size": 6.5
+                }
+              ],
+              [
+                "text",
+                140,
+                126,
+                "fenêtre chambre Bettex",
+                {
+                  "size": 6,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "poly",
+                [
+                  [
+                    20,
+                    110
+                  ],
+                  [
+                    150,
+                    110
+                  ],
+                  [
+                    150,
+                    155
+                  ],
+                  [
+                    20,
+                    155
+                  ]
+                ],
+                {}
+              ],
+              [
+                "text",
+                30,
+                148,
+                "parcelle n° 1846",
+                {
+                  "size": 7.5,
+                  "bold": true,
+                  "anchor": "l"
+                }
+              ],
+              [
+                "text",
+                30,
+                143,
+                "Bettex",
+                {
+                  "size": 7,
+                  "anchor": "l"
+                }
+              ],
+              [
+                "north",
+                155,
+                145
+              ]
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 204 Plan de façade nord 2025-01-10.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Plan de façade nord",
+      "blocks": [
+        [
+          "drawing",
+          {
+            "width": 170,
+            "height": 100,
+            "frame": true,
+            "items": [
+              [
+                "line",
+                15,
+                20,
+                155,
+                20,
+                {
+                  "width": 1
+                }
+              ],
+              [
+                "text",
+                140,
+                21.5,
+                "terrain naturel (profil du 03.12.2024) – 0,00",
+                {
+                  "size": 6.5,
+                  "anchor": "r"
+                }
+              ],
+              [
+                "line",
+                15,
+                24,
+                155,
+                24,
+                {
+                  "width": 0.8,
+                  "dash": true
+                }
+              ],
+              [
+                "text",
+                140,
+                25.5,
+                "terrain aménagé – +0,55 m",
+                {
+                  "size": 6.5,
+                  "anchor": "r"
+                }
+              ],
+              [
+                "dim",
+                20,
+                20,
+                20,
+                24,
+                "+0,55 m",
+                {
+                  "size": 6
+                }
+              ],
+              [
+                "rect",
+                50,
+                24,
+                50,
+                35,
+                {
+                  "fill": "light"
+                }
+              ],
+              [
+                "poly",
+                [
+                  [
+                    50,
+                    59
+                  ],
+                  [
+                    75,
+                    75
+                  ],
+                  [
+                    100,
+                    59
+                  ]
+                ],
+                {
+                  "fill": "mid"
+                }
+              ],
+              [
+                "text",
+                75,
+                40,
+                "façade nord",
+                {
+                  "size": 7,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "dim",
+                108,
+                24,
+                108,
+                75,
+                "9,40 m",
+                {
+                  "size": 7
+                }
+              ],
+              [
+                "rect",
+                55,
+                30,
+                10,
+                14,
+                {
+                  "fill": "mid"
+                }
+              ],
+              [
+                "text",
+                60,
+                44,
+                "fenêtre",
+                {
+                  "size": 6,
+                  "anchor": "c"
+                }
+              ],
+              [
+                "rect",
+                17,
+                4,
+                136,
+                10,
+                {}
+              ],
+              [
+                "text",
+                20,
+                10.5,
+                "Plan de façade nord – Transformation parcelle 1847, Commune de Fontanivent",
+                {
+                  "size": 6.5
+                }
+              ],
+              [
+                "text",
+                20,
+                6.5,
+                "Lambert & Crivelli architectes SA – Échelle 1:100 – Plan n° 204-A – 10 janvier 2025",
+                {
+                  "size": 6.5
+                }
+              ]
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 205 Lettre d'opposition 2025-04-15.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "title": "Opposition",
+      "blocks": [
+        [
+          "address",
+          [
+            "Municipalité de Fontanivent",
+            "Place du Village 1",
+            "1147 Fontanivent"
+          ]
+        ],
+        [
+          "right",
+          "Fontanivent, le 15 avril 2025"
+        ],
+        [
+          "p",
+          "Concerne : mise à l'enquête du 21 mars au 19 avril 2025, parcelle n° 1847, Dubosson"
+        ],
+        [
+          "space"
+        ],
+        [
+          "p",
+          "Madame, Monsieur,"
+        ],
+        [
+          "p",
+          "Les soussignés, Georges et Marianne Bettex, Chemin des Vignes 8, et Werner Stucki, Route de la Combe 21, forment par la présente opposition contre le projet mis à l'enquête le 21 mars 2025 pour la parcelle n° 1847."
+        ],
+        [
+          "p",
+          "Nous considérons que la distance entre la façade nord du bâtiment projeté, avec son balcon, et la limite de la parcelle n° 1846 ne respecte pas le règlement communal. Nous estimons également que la hauteur annoncée de 9,40 m ne correspond pas au terrain naturel du fonds, qui sera manifestement rehausse par les travaux."
+        ],
+        [
+          "p",
+          "Enfin, nous nous inquiétons du bruit que produiront les deux pompes à chaleur extérieures prévues, notamment la nuit, à proximité immédiate de nos chambres à coucher."
+        ],
+        [
+          "p",
+          "Nous vous demandons de refuser le permis de construire en l'état, ou à tout le moins de subordonner sa délivrance à la production d'une étude acoustique complète."
+        ],
+        [
+          "p",
+          "Veuillez agréer, Madame, Monsieur, nos salutations distinguées."
+        ],
+        [
+          "sign",
+          [
+            "Georges Bettex",
+            "Marianne Bettex",
+            "Werner Stucki"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 206 Synthèse CAMAC 2025-06-30.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Synthèse CAMAC",
+      "blocks": [
+        [
+          "h",
+          "Centrale des autorisations en matière de construction (CAMAC)"
+        ],
+        [
+          "kv",
+          [
+            [
+              "Référence",
+              "2025-CAMAC-0147"
+            ],
+            [
+              "Commune",
+              "Fontanivent"
+            ],
+            [
+              "Parcelle",
+              "n° 1847"
+            ],
+            [
+              "Date de synthèse",
+              "30 juin 2025"
+            ]
+          ]
+        ],
+        [
+          "h",
+          "Service du développement territorial (SDT)"
+        ],
+        [
+          "p",
+          "Le projet est conforme à l'affectation de la zone. Favorable sans réserve."
+        ],
+        [
+          "h",
+          "Direction générale de l'environnement (DGE) – division bruit"
+        ],
+        [
+          "p",
+          "Les pompes à chaleur air-eau extérieures devront respecter les valeurs de planification de l'annexe 6 de l'ordonnance sur la protection contre le bruit (degré de sensibilité II) au droit des locaux à usage sensible au bruit les plus proches. Une attestation de conformité acoustique, établie par un bureau spécialisé, devra être produite avant la mise en service des installations. Favorable sous cette condition."
+        ],
+        [
+          "h",
+          "Conclusion"
+        ],
+        [
+          "p",
+          "Sous réserve des conditions ci-dessus, le projet peut être autorisé."
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 207 Décision municipale 2025-09-18.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Décision",
+      "letterhead": {
+        "name": "Municipalité de Fontanivent",
+        "lines": [
+          "Place du Village 1, 1147 Fontanivent",
+          "Tél. +41 21 807 14 20 – greffe@fontanivent.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "right",
+          "Fontanivent, le 18 septembre 2025"
+        ],
+        [
+          "title",
+          "DÉCISION"
+        ],
+        [
+          "p",
+          "Levée d'opposition et délivrance du permis de construire – parcelle n° 1847"
+        ],
+        [
+          "rz",
+          "1.",
+          "L'opposition formée le 15 avril 2025 par Georges Bettex, Marianne Bettex et Werner Stucki est levée."
+        ],
+        [
+          "rz",
+          "2.",
+          "Le permis de construire est délivré à Michel Dubosson et Caroline Dubosson pour la démolition de la villa existante et la construction de deux villas jumelées avec pompes à chaleur air-eau extérieures sur la parcelle n° 1847, aux conditions de la synthèse CAMAC du 30 juin 2025."
+        ],
+        [
+          "rz",
+          "3.",
+          "La hauteur au faîte de 9,40 m, mesurée depuis le terrain aménagé conformément à la pratique constante de la Municipalité, et la distance à la limite de 6,10 m indiquée sur le plan de situation sont conformes au Règlement sur le plan général d'affectation et la police des constructions (RPGA)."
+        ],
+        [
+          "rz",
+          "4.",
+          "Voie de droit : la présente décision peut faire l'objet d'un recours à la Cour de droit administratif et public du Tribunal cantonal dans les trente jours."
+        ],
+        [
+          "sign",
+          [
+            "Daniel Perret, syndic",
+            "Nicole Froidevaux, secrétaire municipale"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 208 Procès-verbal inspection locale 2026-03-10.pdf",
+      "type": "scan",
+      "font": "sans",
+      "title": "Procès-verbal d'inspection locale",
+      "blocks": [
+        [
+          "h",
+          "Cour de droit administratif et public – Inspection locale"
+        ],
+        [
+          "p",
+          "Cause AC.2025.0398, le 10 mars 2026, sur la parcelle n° 1847, Chemin des Vignes, Fontanivent."
+        ],
+        [
+          "p",
+          "Présents : Mme Pidoux, présidente ; Mme Burnier, greffière ; Me Moret et ses clients Bettex et Stucki ; Me Jaccoud et M. Dubosson ; M. Lambert, architecte."
+        ],
+        [
+          "p",
+          "La cour se rend sur place et procède aux constatations suivantes."
+        ],
+        [
+          "p",
+          "Distance mesurée sur place entre le nez du balcon de la villa nord et la limite de la parcelle 1846 : 4,60 m environ. À vérifier si cette cote est conforme à l'art. 24 RPGA (5 m / 6 m selon ouverture)."
+        ],
+        [
+          "p",
+          "Un doute est soulevé par Me Moret sur le modèle exact des pompes à chaleur installées, qui ne semble pas correspondre en tous points au modèle figurant dans le dossier de mise à l'enquête. M. Lambert indique qu'il fera vérifier ce point par l'ingénieur acousticien et transmettra une note complémentaire à la cour."
+        ],
+        [
+          "p",
+          "L'inspection est close à 11h45."
+        ],
+        [
+          "sign",
+          [
+            "Lea Burnier, greffière"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 209 Lärmschutzbericht Hofstetter 2026-03-18.pdf",
+      "type": "pdf",
+      "font": "sans",
+      "title": "Lärmschutzbericht",
+      "letterhead": {
+        "name": "Hofstetter Ingenieurbüro AG",
+        "lines": [
+          "Bauakustik und Lärmschutz",
+          "Industriestrasse 14, 3600 Thun",
+          "Tel. +41 33 222 45 10 – m.hofstetter@hofstetter-ing.ch"
+        ]
+      },
+      "blocks": [
+        [
+          "address",
+          [
+            "Cour de droit administratif et public",
+            "Avenue Eugène-Rambert 15",
+            "1014 Lausanne"
+          ]
+        ],
+        [
+          "right",
+          "Thun, 18. März 2026"
+        ],
+        [
+          "title",
+          "LÄRMSCHUTZBERICHT"
+        ],
+        [
+          "p",
+          "Betrifft: Wärmepumpenanlage Parzelle Nr. 1847, Fontanivent (VD)"
+        ],
+        [
+          "p",
+          "Auf Ersuchen von Herrn Michel Dubosson und in Ergänzung zum Augenschein vom 10. März 2026 erstatten wir nachfolgend eine zusammenfassende Stellungnahme zu den akustischen Eigenschaften der vorgesehenen Wärmepumpenanlage."
+        ],
+        [
+          "kv",
+          [
+            [
+              "Anlage",
+              "2 Luft-Wasser-Wärmepumpen, Modell Climatherma CTA-9, aussen aufgestellt"
+            ],
+            [
+              "Schallleistungspegel LWA (Hersteller)",
+              "58 dB(A) je Gerät"
+            ],
+            [
+              "Abstand Quelle – Immissionsort",
+              "9,5 m (Schlafzimmerfenster, Parzelle Nr. 1846)"
+            ],
+            [
+              "Betriebsart",
+              "Normalbetrieb, kein tonaler oder impulshaltiger Anteil feststellbar"
+            ],
+            [
+              "Berechneter Beurteilungspegel Lr, nachts",
+              "44 dB(A)"
+            ],
+            [
+              "Planungswert Empfindlichkeitsstufe II (Anhang 6 LSV)",
+              "45 dB(A) nachts"
+            ]
+          ]
+        ],
+        [
+          "p",
+          "Der berechnete Beurteilungspegel von 44 dB(A) liegt unter dem massgebenden Planungswert von 45 dB(A) gemäss Anhang 6 der Lärmschutz-Verordnung (LSV). Die Anlage ist aus unserer Sicht lufttechnisch und akustisch bewilligungsfähig."
+        ],
+        [
+          "p",
+          "Mit freundlichen Grüssen"
+        ],
+        [
+          "sign",
+          [
+            "Markus Hofstetter, dipl. Ing. FH"
+          ]
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 210 Extrait RPGA Fontanivent.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "title": "Extrait du RPGA",
+      "blocks": [
+        [
+          "h",
+          "Règlement sur le plan général d'affectation et la police des constructions de la Commune de Fontanivent (RPGA)"
+        ],
+        [
+          "h",
+          "Art. 24 Distance aux limites"
+        ],
+        [
+          "p",
+          "1. La distance des constructions à la limite de la propriété voisine est de 5 m au moins pour les façades sans baie ni balcon."
+        ],
+        [
+          "p",
+          "2. Elle est de 6 m au moins pour les façades comportant des baies habitables ou des balcons. Les balcons, auvents, perrons et autres saillies de moins de 1,50 m ne sont pas pris en compte dans le calcul de cette distance."
+        ],
+        [
+          "h",
+          "Art. 31 Hauteur"
+        ],
+        [
+          "p",
+          "1. La hauteur totale des constructions, mesurée depuis le niveau du terrain naturel au droit de chaque façade jusqu'au faîte, ne peut excéder 9,50 m."
+        ],
+        [
+          "p",
+          "2. La hauteur à la corniche ne peut excéder 6,50 m."
+        ],
+        [
+          "h",
+          "Art. 43 Zone villas"
+        ],
+        [
+          "p",
+          "La zone villas est destinée à l'habitation de faible densité. Elle est colloquée en degré de sensibilité II au sens de la législation fédérale sur la protection contre le bruit."
+        ]
+      ]
+    },
+    {
+      "path": "Dossier cantonal/Pièce 211 Extrait du registre foncier.pdf",
+      "type": "pdf",
+      "font": "serif",
+      "title": "Extrait du registre foncier",
+      "blocks": [
+        [
+          "h",
+          "Registre foncier du canton de Vaud – Extrait"
+        ],
+        [
+          "table",
+          {
+            "columns": [
+              "Parcelle",
+              "Commune",
+              "Surface",
+              "Propriétaire(s)"
+            ],
+            "rows": [
+              [
+                "1846",
+                "Fontanivent",
+                "812 m2",
+                "Georges Bettex et Marianne Bettex"
+              ],
+              [
+                "1847",
+                "Fontanivent",
+                "1'050 m2",
+                "Michel Dubosson et Caroline Dubosson"
+              ],
+              [
+                "1852",
+                "Fontanivent",
+                "940 m2",
+                "Werner Stucki"
+              ]
+            ],
+            "widths": [
+              0.15,
+              0.25,
+              0.2,
+              0.4
+            ],
+            "align": [
+              "l",
+              "l",
+              "r",
+              "l"
+            ]
+          }
+        ],
+        [
+          "p",
+          "Aucune servitude de distance ou de vue n'est inscrite entre les parcelles n° 1846 et 1847."
+        ]
+      ]
+    },
+    {
+      "path": "Note interne.docx",
+      "type": "docx",
+      "blocks": [
+        [
+          "title",
+          "Note interne"
+        ],
+        [
+          "h",
+          "Cause 1C_412/2026, Bettex et consorts c. Dubosson et consorts et Municipalité de Fontanivent"
+        ],
+        [
+          "p",
+          "Résumé : recours de trois voisins contre un arrêt de la CDAP confirmant un permis de construire pour deux villas jumelées avec pompes à chaleur extérieures. Quatre griefs : qualité pour recourir de M. Stucki ; violation du droit d'être entendu (note Hofstetter du 18 mars 2026 non communiquée) ; application arbitraire du RPGA sur la distance et la hauteur ; conformité des pompes à chaleur à l'OPB."
+        ],
+        [
+          "h",
+          "Recevabilité"
+        ],
+        [
+          "p",
+          "Qualité pour recourir de M. Georges et Marianne Bettex non contestée. Celle de M. Stucki discutable (45 m, de l'autre côté de la route) ; la CDAP l'a laissée ouverte, ce que le Tribunal fédéral ne peut pas faire s'il entre en matière sur le fond."
+        ],
+        [
+          "h",
+          "Points ouverts"
+        ],
+        [
+          "p",
+          "1. Le vice du droit d'être entendu paraît établi par l'arrêt attaqué lui-même (p. 2, let. H) : la note du 18 mars 2026 a été versée au dossier sans détermination des parties. À examiner si un renvoi partiel suffit ou si l'ensemble de l'arrêt doit être annulé."
+        ],
+        [
+          "p",
+          "2. Les observations de l'OFEV relativisent la fiabilité du rapport acoustique Hofstetter (distance de 9,5 m contredite par le plan de situation, qui indique 8,0 m)."
+        ],
+        [
+          "p",
+          "3. La question de la hauteur (terrain naturel / terrain aménagé) soulève une question de fait (art. 97 LTF) que l'arrêt attaqué ne discute pas de manière satisfaisante."
+        ],
+        [
+          "h",
+          "Options de décision"
+        ],
+        [
+          "p",
+          "a) Admission pour violation du droit d'être entendu, annulation et renvoi à la CDAP, qui devra aussi instruire à nouveau la question du bruit et de la hauteur."
+        ],
+        [
+          "p",
+          "b) Rejet si la cour estime la note Hofstetter sans caractère déterminant et les constatations de fait de la CDAP soutenables."
+        ],
+        [
+          "h",
+          "Prochaine étape"
+        ],
+        [
+          "p",
+          "Mettre la cause en délibération après réception de la réplique des recourants, reçue le 20 juillet 2026."
+        ]
+      ]
+    },
+    {
+      "path": "Doctrine/Le bruit des pompes à chaleur extérieures sous l'angle de l'OPB (synthétique).md",
+      "type": "md",
+      "text": "# Le bruit des pompes à chaleur extérieures sous l'angle de l'ordonnance sur la protection contre le bruit\n\nNote synthétique d'exercice – toutes les données sont fictives, à des fins de démonstration uniquement. Ce texte n'est pas un commentaire ou une doctrine existante et ne doit pas être cite comme telle.\n\n## Le cadre légal\n\nUne pompe à chaleur air-eau installée à l'extérieur d'un bâtiment d'habitation constitue une installation fixe au sens de l'art. 7 de l'ordonnance du 15 décembre 1986 sur la protection contre le bruit (OPB). Le bruit qu'elle produit relève du bruit de l'industrie et des arts et métiers au sens de l'annexe 6 OPB, dont les valeurs limites d'exposition (valeur de planification, valeur limite d'immission, valeur d'alarme) varient selon le degré de sensibilité attribué à la zone d'affectation (art. 43 OPB).\n\n## L'article 7 alinéa 3 OPB\n\nDepuis sa modification entrée en vigueur en 2023, l'art. 7 al. 3 OPB prévoit un régime particulier pour les nouvelles pompes à chaleur air-eau utilisées principalement pour le chauffage : une réduction supplémentaire des émissions, au sens de l'art. 7 al. 1 let. a OPB, n'est exigée que si elle permet une diminution d'au moins 3 dB(A) et que son coût ne dépasse pas 1 % du coût d'investissement de l'installation.\n\nCe régime particulier ne dispense cependant pas l'installation de respecter, en tout état de cause, la valeur de planification applicable selon l'annexe 6 OPB et l'art. 25 de la loi sur la protection de l'environnement (LPE). Il n'intervient que pour la question, distincte, de savoir si une réduction supplémentaire doit être imposée en sus du respect de cette valeur.\n\n## Le point de vigilance pratique\n\nLe calcul du niveau d'immission dépend directement de la distance entre la source et le local à protéger : une distance sous-estimée dans un rapport acoustique conduit à un niveau d'immission sous-estimé. Le contrôle de la cohérence entre les plans d'implantation et les rapports acoustiques est donc une étape essentielle avant toute mise en service, et relève en pratique autant du service cantonal compétent que, le cas échéant, de l'Office fédéral de l'environnement lorsqu'il est appelé à se prononcer.\n"
+    }
+  ],
+  "traps": [
+    {
+      "kind": "fact_supported_by_exhibit",
+      "where": "Recours en matière de droit public, rz 16, confirmé par Pièce 1 (arrêt CDAP), let. H",
+      "what": "Le recours allègue que la note Hofstetter du 18 mars 2026 a été versée au dossier après l'inspection locale sans être communiquée aux recourants ; l'arrêt attaqué lui-même (Pièce 1, état de fait let. H) le confirme expressément."
+    },
+    {
+      "kind": "disputed_fact_contradicted",
+      "where": "Recours rz 21 (balcon 'plus de 1,80 m') contredit par le plan de situation, Pièce 203 (dimension '1,50 m')",
+      "what": "Les recourants allègent que le balcon nord dépasse de plus de 1,80 m ; le plan de situation officiel visé par la Municipalité cote cette saillie à 1,50 m exactement, ce que reprend la Réponse des intimés."
+    },
+    {
+      "kind": "exhibit_undermines_own_party",
+      "where": "Pièce 3 (courriel de Marianne Bettex du 2 avril 2025) cite dans la Réponse Dubosson, rz 7",
+      "what": "Le courriel produit par les recourants eux-mêmes, rédigé avant l'opposition formelle, indique que le balcon 'dépasse d'environ 1,50 m' – ce qui affaiblit leur allégation ultérieure, dans le recours, d'un dépassement de plus de 1,80 m."
+    },
+    {
+      "kind": "exhibit_cited_but_missing",
+      "where": "Recours rz 21 (cite 'Pièce 4', une photographie du balcon du 20 avril 2025) ; bordereau des recourants, rz 29, limite aux Pièces 1 à 3",
+      "what": "Le recours invoque une photographie du balcon prise le 20 avril 2025 comme 'Pièce 4' pour étayer l'allégué d'un dépassement de 1,80 m, mais le bordereau des recourants (rz 29) ne produit que les Pièces 1 à 3 ; cette pièce n'existe pas dans le dossier."
+    },
+    {
+      "kind": "amount_mismatch",
+      "where": "Pièce 1 (arrêt CDAP, considérant 3e : '9,35 m') contre Pièce 204 (plan de façade nord : '9,40 m')",
+      "what": "L'arrêt attaqué indique une hauteur au faîte de 9,35 m dans ses considérants, alors que le plan de façade officiel (Pièce 204) et la décision municipale (Pièce 207) retiennent tous deux 9,40 m."
+    },
+    {
+      "kind": "date_mismatch",
+      "where": "Recours rz 12 ('du 20 mars au 18 avril 2025') contre Pièce 202, avis d'enquête FAO ('du 21 mars au 19 avril 2025')",
+      "what": "Le recours situe l'enquête publique du 20 mars au 18 avril 2025, alors que l'avis publié dans la FAO (Pièce 202) la fixe du 21 mars au 19 avril 2025."
+    },
+    {
+      "kind": "scan_fact",
+      "where": "Pièce 208, procès-verbal d'inspection locale (scan, sans couche de texte)",
+      "what": "Le procès-verbal manuscrit de l'inspection locale du 10 mars 2026 consigne une mesure sur place de '4,60 m environ' entre le balcon et la limite parcellaire, fait déterminant pour le grief d'arbitraire sur la distance, visible seulement à la lecture de l'image scannée."
+    },
+    {
+      "kind": "foreign_language_exhibit",
+      "where": "Pièce 209, Lärmschutzbericht du bureau Hofstetter Ingenieurbüro AG, en allemand",
+      "what": "Le rapport acoustique déterminant pour le grief relatif au bruit des pompes à chaleur est rédigé entièrement en allemand par l'ingénieur acousticien bernois des constructeurs."
+    },
+    {
+      "kind": "privacy_traps",
+      "where": "L'ensemble du dossier",
+      "what": "Personnes nommées avec et sans titre, par le seul nom de famille, par le prénom dans un courriel, par initiales dans les plans ; adresses électroniques contenant les noms des personnes (georges.bettex@bluewin.ch, o.chappuis@fontanivent.ch, m.hofstetter@hofstetter-ing.ch) ; adresses postales et numéros de téléphone complets ; un numéro UID d'une société privée (Lambert & Crivelli architectes SA) ; trois parcelles du registre foncier (n° 1846, 1847, 1852) ; des tiers (architecte, ingénieur acousticien, préposé communal, syndic, secrétaire municipale, greffière) nommés au même titre que les parties."
+    }
+  ],
+  "planted": {
+    "person": [
+      "Georges Bettex",
+      "Monsieur Georges Bettex",
+      "Bettex",
+      "Georges",
+      "Marianne Bettex",
+      "Madame Marianne Bettex",
+      "Madame Bettex",
+      "Marianne",
+      "Werner Stucki",
+      "Monsieur Werner Stucki",
+      "M. Stucki",
+      "Stucki",
+      "Werner",
+      "Catherine Moret",
+      "Me Catherine Moret",
+      "Moret",
+      "Michel Dubosson",
+      "Monsieur Michel Dubosson",
+      "Dubosson",
+      "Michel",
+      "Caroline Dubosson",
+      "Madame Caroline Dubosson",
+      "Caroline",
+      "Thierry Jaccoud",
+      "Me Thierry Jaccoud",
+      "Jaccoud",
+      "Philippe Lambert",
+      "Lambert",
+      "Markus Hofstetter",
+      "Hofstetter",
+      "Daniel Perret",
+      "Perret",
+      "Nicole Froidevaux",
+      "Froidevaux",
+      "Olivier Chappuis",
+      "Monsieur Olivier Chappuis",
+      "Chappuis",
+      "Olivier",
+      "Nathalie Pidoux",
+      "Pidoux",
+      "Marc Antonioli",
+      "Sophie Ruchti",
+      "Lea Burnier",
+      "Burnier",
+      "Barbara Steiner",
+      "Steiner"
+    ],
+    "organisation": [
+      "Lambert & Crivelli architectes SA",
+      "Hofstetter Ingenieurbüro AG"
+    ],
+    "address": [
+      "Chemin des Vignes 8, 1147 Fontanivent",
+      "Chemin des Vignes 6, 1147 Fontanivent",
+      "Route de la Combe 21, 1147 Fontanivent",
+      "Place du Village 1, 1147 Fontanivent",
+      "Avenue de la Gare 12, 1110 Morges",
+      "Rue de la Gare 22, 1110 Morges",
+      "Industriestrasse 14, 3600 Thun",
+      "Rue Centrale 8, 1003 Lausanne",
+      "Grand-Rue 14, 1110 Morges"
+    ],
+    "email": [
+      "georges.bettex@bluewin.ch",
+      "o.chappuis@fontanivent.ch",
+      "m.hofstetter@hofstetter-ing.ch"
+    ],
+    "phone": [
+      "+41 21 807 14 20",
+      "+41 21 319 44 10",
+      "+41 21 802 56 90",
+      "+41 33 222 45 10"
+    ],
+    "uid": [
+      "CHE-109.845.221"
+    ],
+    "parcel": [
+      "parcelle n° 1846",
+      "parcelle n° 1847",
+      "parcelle n° 1852"
+    ]
+  },
+  "citations": [
+    {
+      "citation": "ATF 133 II 249",
+      "use": "Qualité pour recourir du voisin devant le Tribunal fédéral (art. 89 al. 1 LTF) et motifs de recours admissibles contre une décision cantonale sur un permis de construire, invoqué pour contester et défendre la qualité pour agir de M. Stucki."
+    },
+    {
+      "citation": "ATF 137 I 195",
+      "use": "Consid. 2.3.2 : la réparation d'une violation du droit d'être entendu devant l'instance de recours suppose un pouvoir d'examen aussi étendu que l'autorité inférieure ; invoqué pour exclure une guérison du vice devant le Tribunal fédéral, dont le pouvoir d'examen des faits est limite par l'art. 97 LTF."
+    }
+  ]
+}
