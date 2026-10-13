@@ -2,8 +2,13 @@
 // the mirror is located by codepoint offsets, mapped through the private span
 // map to the original page, and re-checked against the original page hash.
 // Real names are restored for display only; nothing here is sent anywhere.
+import { REPLACEMENT_PREFIX } from "./language.mjs";
 import { resolveDerivativeSpan } from "./mirror.mjs";
-import { aliasExpression, codepoints, sha256, toCodepointIndex, toUnitIndex } from "./util.mjs";
+import { aliasExpression, codepoints, escapeRegex, LEGAL_FORM, sha256, toCodepointIndex, toUnitIndex } from "./util.mjs";
+
+// "n° Parcelle 2" stands for "n° 1846"; "la Parcelle 2" for "la parcelle 1846".
+const NUMBER_WORD = /(?:n°|no\.|nr\.|n\.|nummer|numéro|numero|number)\s*$/iu;
+const SENTENCE_START = /(?:^|[.!?:]\s+|\n\s*)$/u;
 
 /** Replace neutral labels with the real names, for local display. */
 export function rehydrator(register) {
@@ -11,11 +16,30 @@ export function rehydrator(register) {
   // result stays "Rüge" rather than turning back into the damaged "Ruge".
   const entries = register.entities.filter(e => e.decision === "replace" && e.replacement && !e.read_as)
     .sort((a, b) => b.replacement.length - a.replacement.length)
-    .map(e => ({ pattern: aliasExpression(e.replacement, "gu"), label: e.label, replacement: e.replacement }));
+    .map(e => {
+      let pattern = aliasExpression(e.replacement, "gu");
+      // The mirror keeps a company's legal form after its letter ("AZ.________ AG"), and a
+      // model may add one; the name restored already ends in it.
+      const form = e.kind === "organisation" ? e.label.trim().split(/\s+/u).at(-1) : null;
+      if (form && LEGAL_FORM.test(form)) pattern = new RegExp(`${pattern.source}(?:[ \\t]+${escapeRegex(form)}(?![\\p{L}\\p{N}\\p{M}_]))?`, "gu");
+      // A parcel registered by its number alone: its label stands for the word as well.
+      const word = e.kind === "parcel" && !/\p{L}/u.test(e.label) ? /^(\p{L}+)\s+\d+$/u.exec(e.replacement)?.[1] : null;
+      return { pattern, label: e.label, replacement: e.replacement, word };
+    });
+  const parcelLabel = (entry, before) => {
+    if (!entry.word || NUMBER_WORD.test(before) || new RegExp(`${escapeRegex(entry.word)}\\s+$`, "iu").test(before)) return entry.label;
+    const word = entry.word === REPLACEMENT_PREFIX.de.parcel || SENTENCE_START.test(before) ? entry.word : entry.word.toLocaleLowerCase();
+    return `${word} ${entry.label}`;
+  };
   return (text) => {
     const marks = [];
     let out = text;
-    for (const entry of entries) out = out.replace(entry.pattern, () => `\u0000${marks.push({ label: entry.label, replacement: entry.replacement }) - 1}\u0001`);
+    for (const entry of entries) {
+      out = out.replace(entry.pattern, (...args) => {
+        const label = parcelLabel(entry, args.at(-1).slice(Math.max(0, args.at(-2) - 16), args.at(-2)));
+        return `\u0000${marks.push({ label, replacement: entry.replacement }) - 1}\u0001`;
+      });
+    }
     const segments = [];
     let plain = "";
     for (const part of out.split(/(\u0000\d+\u0001)/)) {

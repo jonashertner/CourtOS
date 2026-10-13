@@ -25,7 +25,7 @@ import { check } from "./vendor/citecheck/anon.mjs";
 import { Vocabulary } from "./vendor/citecheck/vocabulary.mjs";
 import { detectCandidates } from "./detect.mjs";
 import { PASSES } from "./mirror.mjs";
-import { aliasExpression } from "./util.mjs";
+import { aliasExpression, LEGAL_FORM } from "./util.mjs";
 import { ROLE_LABEL } from "./language.mjs";
 
 const DATA = new URL("./vendor/citecheck/data/", import.meta.url);
@@ -41,7 +41,6 @@ export function citecheckVocabulary() {
 
 const IDENTIFIER_KIND = { address: "address", ahv: "ahv", iban: "iban", email: "email", phone: "phone", parcel: "parcel", plate: "plate", birthdate: "birthdate", insured: "insured", zemis: "zemis", document: "document", account: "account", profile: "url" };
 const normal = (text) => text.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("de");
-const LEGAL_FORM = /^(AG|GmbH|SA|S\.A\.?|Sàrl|SARL|Sarl|SAS|Sagl|Srl|S\.r\.l\.?|SpA|S\.p\.A\.?|Ltd\.?|plc|PLC|LLP|LLC|Inc\.?|B\.V\.?|BV|N\.V\.?|NV|KG|KlG|Genossenschaft|Stiftung)$/u;
 // Month names: in a date ("6 gennaio 2025", "March 1975") a month is not a name.
 const MONTHS = new Set("januar februar märz april mai juni juli august september oktober november dezember janvier février mars avril juin juillet août septembre octobre décembre gennaio febbraio marzo aprile maggio giugno luglio agosto settembre ottobre dicembre january february march may june july october december".split(" "));
 // Words before a name that are not part of it: titles and greetings.

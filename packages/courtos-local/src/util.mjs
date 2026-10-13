@@ -57,6 +57,9 @@ export function canonicalText(text) {
 export const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Same word-boundary semantics as the projection kernel's alias matcher. */
+/** A company's legal form, as the last word of its name. */
+export const LEGAL_FORM = /^(AG|GmbH|SA|S\.A\.?|Sàrl|SARL|Sarl|SAS|Sagl|Srl|S\.r\.l\.?|SpA|S\.p\.A\.?|Ltd\.?|plc|PLC|LLP|LLC|Inc\.?|B\.V\.?|BV|N\.V\.?|NV|KG|KlG|Genossenschaft|Stiftung)$/u;
+
 export function aliasExpression(alias, flags = "giu") {
   const escaped = alias.trim().split(/\s+/u).map(escapeRegex).join("\\s+");
   return new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${escaped})(?![\\p{L}\\p{N}\\p{M}_])`, flags);

@@ -128,3 +128,23 @@ test("a damaged OCR word can be read as its repaired form after review, never as
   const plain = mergeDetections(emptyRegister(), [{ kind: "person", label: "Muller", aliases: ["Muller"], count: 1, samples: [], notes: [], decision: "replace" }], "Herr Muller kam.");
   assert.throws(() => applyChange(plain, { op: "read_as_word", id: plain.entities[0].id, reading: "Müller" }, "Herr Muller kam."), { code: "invalid_reading" });
 });
+
+test("restored names neither double a company's legal form nor drop the word before a parcel number", async () => {
+  const { rehydrator } = await import("../src/verify.mjs");
+  const entity = (kind, label, replacement) => ({ kind, label, replacement, decision: "replace" });
+  const restore = (text) => rehydrator({ entities: [
+    entity("organisation", "Hofstetter Ingenieurbureau AG", "AZ.________"),
+    entity("organisation", "Caffè Distribuzione Sud SA", "B.________"),
+    entity("parcel", "1846", "Parcelle 2"),
+    entity("parcel", "512", "Grundstück 1"),
+  ] })(text).text;
+  assert.equal(restore("le bureau AZ.________ AG a adressé"), "le bureau Hofstetter Ingenieurbureau AG a adressé");
+  assert.equal(restore("Die B.________ SA und die B.________ bestreiten"), "Die Caffè Distribuzione Sud SA und die Caffè Distribuzione Sud SA bestreiten");
+  assert.equal(restore("die B.________ AG"), "die Caffè Distribuzione Sud SA AG", "only the name's own legal form is absorbed");
+  assert.equal(restore("propriétaires de la Parcelle 2 directement voisine"), "propriétaires de la parcelle 1846 directement voisine");
+  assert.equal(restore("Parcelle 2 : 812 m2"), "Parcelle 1846 : 812 m2");
+  assert.equal(restore("la parcelle voisine n° Parcelle 2"), "la parcelle voisine n° 1846");
+  assert.equal(restore("la parcelle Parcelle 2"), "la parcelle 1846");
+  assert.equal(restore("auf dem Grundstück 1 steht"), "auf dem Grundstück 512 steht");
+  assert.equal(restore("Grundstück Nr. Grundstück 1"), "Grundstück Nr. 512");
+});
