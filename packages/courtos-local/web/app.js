@@ -575,6 +575,9 @@ function veiledText(page, mode) {
   return el;
 }
 
+/** Two of the neutral labels the model reads for documents, in the language of the proceedings ("Demande, Pièce 1"). */
+const neutralExamples = (c) => (c.sources ?? []).filter(s => s.include && s.label).map(s => s.label).slice(0, 2).join(", ");
+
 function renderRelease(c, replaced) {
   if (c.consent_valid) {
     return h("div.release.done", {},
@@ -609,7 +612,7 @@ function renderRelease(c, replaced) {
       h("ul", {}, ocrWords.map(e => h("li", {}, h("button.link", { type: "button", onclick: () => showEntity(e) }, `${e.label} → ${e.readings.join(", ")}?`))))) : null,
     h("div.split", {},
       h("div", {}, h("h3.external", {}, icon("out"), tr("Das Modell darf lesen")), h("ul", {},
-        h("li", {}, trn(c.mirror.sections, "{n} Seite der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)", "{n} Seiten der anonymisierten Fassung, mit neutralen Bezeichnungen (Klage, KB 1 …)")),
+        h("li", {}, trn(c.mirror.sections, "{n} Seite der anonymisierten Fassung, mit neutralen Bezeichnungen ({examples} …)", "{n} Seiten der anonymisierten Fassung, mit neutralen Bezeichnungen ({examples} …)", { examples: neutralExamples(c) })),
         h("li", {}, tr("Ihre Fragen und ausgewählten Notizen, ebenfalls anonymisiert")),
         mem ? h("li", {}, memorySummary(c.memory), " ", h("button.link", { type: "button", onclick: () => openMemory("model") }, tr("Ansehen"))) : null,
         h("li", {}, tr("Für Rechtsfragen: Suchbegriffe an OpenCaseLaw und veröffentlichte Entscheide")))),
@@ -1155,10 +1158,11 @@ async function renderDrawer() {
     try {
       const d = await api(`/api/caselaw/decision/${encodeURIComponent(S.drawer.decision)}`);
       drawer.querySelector("h2").textContent = `${d.court ?? ""} ${d.docket ?? d.decision_id}`;
-      drawer.querySelector(".bar").replaceChildren(h("span.faint", {}, formatDate(d.date)), h("span", { style: { flex: 1 } }),
+      // replaceChildren writes a null as the text "null": absent parts are left out.
+      drawer.querySelector(".bar").replaceChildren(...[h("span.faint", {}, formatDate(d.date)), h("span", { style: { flex: 1 } }),
         h("a.btn.small", { href: d.opencaselaw_url, target: "_blank", rel: "noopener noreferrer" }, icon("out"), "OpenCaseLaw"),
-        d.source_url ? h("a.btn.small", { href: d.source_url, target: "_blank", rel: "noopener noreferrer" }, tr("Original")) : null);
-      body.replaceChildren(d.regeste ? h("p.regeste", {}, d.regeste) : null, h("div.page-text", {}, d.text_available ? d.text : tr("Der Volltext ist nicht verfügbar.")));
+        d.source_url ? h("a.btn.small", { href: d.source_url, target: "_blank", rel: "noopener noreferrer" }, tr("Original")) : null].filter(Boolean));
+      body.replaceChildren(...[d.regeste ? h("p.regeste", {}, d.regeste) : null, h("div.page-text", {}, d.text_available ? d.text : tr("Der Volltext ist nicht verfügbar."))].filter(Boolean));
     } catch (error) {
       body.replaceChildren(h("p.alert", {}, errorText(error.code)));
     }
@@ -1219,10 +1223,11 @@ async function renderDrawer() {
       cursor = to;
     }
     text.append(chars.slice(cursor).join(""));
-    body.replaceChildren(text,
+    // replaceChildren writes a null as the text "null": absent parts are left out.
+    body.replaceChildren(...[text,
       page.mirror?.ocr ? h("p.page-caption.alert", {}, tr("Text per Texterkennung aus dem Scan. Mit dem Original vergleichen.")) : null,
       ...group.map(x => h("p.sent", {}, tr("An das Modell ging diese Stelle so:"), " «", x.quote_pseudonymised, "»")),
-      source ? h("p.page-caption", {}, tr("{p}, Fassung {v}", { p: source.rel_path, v: source.version })) : null);
+      source ? h("p.page-caption", {}, tr("{p}, Fassung {v}", { p: source.rel_path, v: source.version })) : null].filter(Boolean));
     body.querySelector("mark")?.scrollIntoView({ block: "center" });
   } catch {
     body.replaceChildren(h("p.alert", {}, tr("Die Originalseite ist nicht verfügbar. Wurde die Datei verändert oder verschoben?")));

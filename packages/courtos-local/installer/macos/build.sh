@@ -120,11 +120,14 @@ pkgbuild --analyze --root "$build/root" "$build/components.plist" >/dev/null
 plutil -replace 0.BundleIsRelocatable -bool NO "$build/components.plist"
 pkgbuild --quiet --root "$build/root" --component-plist "$build/components.plist" --scripts "$here/scripts" \
   --identifier ch.courtos.local --version "$version" --install-location / "$build/CourtOS-component.pkg"
+# A distribution with a title, so the Installer window reads "Install CourtOS", not "Install ".
+productbuild --synthesize --package "$build/CourtOS-component.pkg" "$build/synthesized.xml"
+awk '{ print } /<installer-gui-script/ { print "    <title>CourtOS</title>" }' "$build/synthesized.xml" > "$build/distribution.xml"
 out="$package/dist/CourtOS-$version-$arch.pkg"
 if [ -n "$installer_sign" ]; then
-  productbuild --quiet --package "$build/CourtOS-component.pkg" --sign "$installer_sign" "$out"
+  productbuild --quiet --distribution "$build/distribution.xml" --package-path "$build" --sign "$installer_sign" "$out"
 else
-  productbuild --quiet --package "$build/CourtOS-component.pkg" "$out"
+  productbuild --quiet --distribution "$build/distribution.xml" --package-path "$build" "$out"
 fi
 
 if [ -n "$notary" ]; then

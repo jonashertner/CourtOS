@@ -35,3 +35,31 @@ test("translations keep their placeholders", () => {
     }
   }
 });
+
+test("no translation shows German document labels as an example", () => {
+  for (const lang of ["fr", "it", "en"]) {
+    const german = Object.entries(TRANSLATIONS[lang]).filter(([, text]) => /\b(?:Klage|KB \d)\b/.test(text)).map(([source]) => source);
+    assert.deepEqual(german, [], `${lang} names German labels`);
+  }
+});
+
+test("a native DOM call never receives a null, which it would write as the text \"null\"", () => {
+  const offenders = [];
+  for (const file of FILES.filter(f => f.pathname.includes("/web/"))) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(/\.(?:replaceChildren|append|prepend|before|after)\(/g)) {
+      // The top-level arguments of the call; nulls inside h(…) are dropped by h itself.
+      let depth = 1, i = m.index + m[0].length, arg = "";
+      const args = [];
+      for (; i < src.length && depth; i++) {
+        const c = src[i];
+        if ("([{".includes(c)) depth++;
+        if (")]}".includes(c)) depth--;
+        if (depth === 1 && c === ",") { args.push(arg); arg = ""; } else if (depth) arg += c;
+      }
+      args.push(arg);
+      if (args.some(a => /:\s*null\s*$|^\s*null\s*$/.test(a))) offenders.push(`${file.pathname.split("/").pop()}: ${src.slice(m.index, m.index + 60)}`);
+    }
+  }
+  assert.deepEqual(offenders, []);
+});

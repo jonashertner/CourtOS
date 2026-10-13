@@ -454,7 +454,7 @@ function renderInserts() {
       : h("p.hint", {}, tr("Analysen erstellen Sie im Browser. Danach können Sie sie hier einfügen.")),
     orders.length ? [h("h2", {}, tr("Verfügungen")), h("ul.inserts", {}, orders.map(o => h("li", {}, h("button", { type: "button", onclick: () => attempt(() => insertOutline({ kind: "outline", blocks: o.text.split(/\n{2,}/).map(text => ({ text })) })) },
         h("span.i-title", {}, o.title), h("span.i-meta", {}, o.status === "issued" ? tr("erlassen") : tr("Entwurf")), icon("insert")))))] : null,
-    h("p.hint", {}, tr("Eingefügt wird mit echten Namen; Fundstellen werden zu Fussnoten. Der Text bleibt in Ihrem Dokument; CourtOS speichert nichts darin.")),
+    h("p.hint", {}, tr("Eingefügt wird mit echten Namen. Im Text werden Fundstellen zu Fussnoten, in einer Tabelle stehen sie in einer eigenen Spalte. Der Text bleibt in Ihrem Dokument; CourtOS speichert nichts darin.")),
   );
 }
 
