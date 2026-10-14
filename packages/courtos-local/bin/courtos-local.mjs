@@ -10,7 +10,7 @@ import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { prepareSamples, SAMPLES } from "../src/samples.mjs";
 import { startServer } from "../src/server.mjs";
-import { messages, terminalLanguage } from "../src/terminal.mjs";
+import { messages, supportedNode, terminalLanguage } from "../src/terminal.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -18,7 +18,7 @@ const option = (name, fallback) => { const i = args.indexOf(name); return i >= 0
 const port = Number(option("--port", process.env.COURTOS_PORT ?? 4311));
 const say = messages(await terminalLanguage());
 
-if (major() < 22) {
+if (!supportedNode()) {
   console.error(say("node"));
   process.exit(1);
 }
@@ -86,5 +86,3 @@ try {
   console.error(say("otherPortWord", { next: port + 10 }));
   process.exit(1);
 }
-
-function major() { return Number(process.versions.node.split(".")[0]); }

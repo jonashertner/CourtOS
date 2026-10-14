@@ -8,6 +8,12 @@ import { join } from "node:path";
 
 const LANGUAGES = ["de", "fr", "it", "en"];
 
+/** Whether this Node meets package.json's engines (>=22.12). */
+export function supportedNode(version = process.versions.node) {
+  const [major, minor] = version.split(".").map(Number);
+  return major > 22 || (major === 22 && minor >= 12);
+}
+
 export async function terminalLanguage({ home = homedir(), env = process.env } = {}) {
   try {
     const { language } = JSON.parse(await readFile(join(home, ".config", "courtos", "preferences.json"), "utf8"));
@@ -19,7 +25,7 @@ export async function terminalLanguage({ home = homedir(), env = process.env } =
 
 const MESSAGES = {
   de: {
-    node: "CourtOS benötigt Node.js 22 oder neuer.",
+    node: "CourtOS benötigt Node.js 22.12 oder neuer.",
     running: "CourtOS läuft auf {origin}",
     pair: "Im Browser öffnen (gilt einmal): {url}",
     noCert: "Hinweis: Kein Entwicklerzertifikat für localhost gefunden. Der Browser funktioniert, Word nicht.",
@@ -37,7 +43,7 @@ const MESSAGES = {
     otherPortWord: "(Für Word danach auch: courtos-local install-word --port {next})",
   },
   fr: {
-    node: "CourtOS nécessite Node.js 22 ou plus récent.",
+    node: "CourtOS nécessite Node.js 22.12 ou plus récent.",
     running: "CourtOS fonctionne sur {origin}",
     pair: "Ouvrir dans le navigateur (valable une fois) : {url}",
     noCert: "Remarque : aucun certificat de développement pour localhost. Le navigateur fonctionne, Word non.",
@@ -55,7 +61,7 @@ const MESSAGES = {
     otherPortWord: "(Pour Word ensuite aussi : courtos-local install-word --port {next})",
   },
   it: {
-    node: "CourtOS richiede Node.js 22 o più recente.",
+    node: "CourtOS richiede Node.js 22.12 o più recente.",
     running: "CourtOS è in esecuzione su {origin}",
     pair: "Aprire nel browser (vale una volta): {url}",
     noCert: "Nota: nessun certificato di sviluppo per localhost. Il browser funziona, Word no.",
@@ -73,7 +79,7 @@ const MESSAGES = {
     otherPortWord: "(Per Word poi anche: courtos-local install-word --port {next})",
   },
   en: {
-    node: "CourtOS needs Node.js 22 or newer.",
+    node: "CourtOS needs Node.js 22.12 or newer.",
     running: "CourtOS is running at {origin}",
     pair: "Open in the browser (works once): {url}",
     noCert: "Note: no developer certificate for localhost found. The browser works, Word does not.",
