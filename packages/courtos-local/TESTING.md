@@ -8,14 +8,22 @@ CourtOS is free software under the AGPL-3.0 and comes without warranty. Its resu
 
 ## What you need
 
-- **macOS** is the full experience: folder dialog, Word add-in, and text recognition for scanned pages. The Word add-in also works on Windows. On Linux or Windows you give the folder on the command line and open the printed link yourself.
-- **Node.js 22.12 or newer** (`node -v`).
+- **macOS** is the full experience: folder dialog, Word add-in, and text recognition for scanned pages. The Word add-in also works on Windows. On Linux, or on Windows without the installer, you give the folder on the command line and open the printed link yourself.
 - **A model.** An Anthropic API key, a key for another OpenAI-compatible service, or a model on your own computer (Ollama, LM Studio). The demo runs without any.
-- **git**, to download the source.
+- **Without the installer:** Node.js 22.12 or newer (`node -v`) and git.
 - **Word for Mac or Windows** (optional), for the task pane.
 - **For scanned pages:** on macOS the Xcode command-line tools (`xcode-select --install`); on Linux or Windows `tesseract` and `pdftoppm`.
 
 ## Install and start
+
+**With the installer** (macOS 13 or later on Apple silicon, or Windows 64-bit): download `CourtOS-0.1.0-arm64.pkg` or `CourtOS-0.1.0-x64.msi` from the [release page](https://github.com/jonashertner/CourtOS/releases/tag/courtos-local-v0.1.0) and open it. The packages are not signed, so the system warns:
+
+- **macOS:** the package "cannot be opened". Open **System Settings › Privacy & Security** and choose **Open Anyway**.
+- **Windows:** SmartScreen. Choose **More info › Run anyway**. The installer needs administrator rights.
+
+The installer brings its own Node, starts CourtOS at login, opens the browser and sets up the Word add-in. On macOS it first offers to trust the certificate for `https://localhost` that Word needs, which takes your password once. Choose a case under **Beispieldossiers** on the start page; the one marked «kurzer Fall, läuft auch ohne Modell» runs without a model. The CourtOS icon in the menu bar or notification area opens CourtOS again. [installer/README.md](installer/README.md) explains what is installed and how to remove it. The `courtos-local` commands below are for a source checkout.
+
+**From the source** (any system with Node.js 22.12 or newer):
 
 ```sh
 git clone https://github.com/jonashertner/CourtOS.git
@@ -24,7 +32,7 @@ npm install
 node bin/courtos-local.mjs --demo
 ```
 
-No installer is published yet. If you received a packaged build (`courtos-local-0.1.0.tgz`) instead, install it with `npm install -g ./courtos-local-0.1.0.tgz` and start it with `courtos-local --demo`. In a source checkout, write `node bin/courtos-local.mjs` wherever this page says `courtos-local`.
+If you received a packaged build (`courtos-local-0.1.0.tgz`) instead, install it with `npm install -g ./courtos-local-0.1.0.tgz` and start it with `courtos-local --demo`. In a source checkout, write `node bin/courtos-local.mjs` wherever this page says `courtos-local`.
 
 The terminal prints a link with `#pair=…`; on macOS the browser opens it. The demo opens a synthetic commercial-court dossier (HG.2026.57 Alpenblick), copied to the system's temporary folder so the package is never written to. `courtos-local --sample <id>` opens another sample dossier, in German, French, Italian or English; the README lists them.
 
@@ -86,7 +94,7 @@ There is no telemetry. CourtOS does not report usage to anyone.
 
 ## Reporting a problem
 
-Open an issue at https://github.com/jonashertner/CourtOS/issues. Issues are public. Please include:
+Open an issue at https://github.com/jonashertner/CourtOS/issues/new/choose and choose **courtos-local problem**. Issues are public. Please include:
 
 - macOS / Linux / Windows and version, `node -v`, and whether it happened in the browser or in Word;
 - what you did, what you expected, and what happened;

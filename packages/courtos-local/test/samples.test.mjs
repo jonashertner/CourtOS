@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { request } from "node:http";
-import { mkdtemp, realpath, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -96,4 +96,28 @@ test("choosing a case puts the interface in the language of the proceedings", as
   assert.equal((await state()).settings.language, "it");
   assert.equal((await post("/api/folder", { sample: "vd-fiduciaire" })).status, 200);
   assert.equal((await state()).settings.language, "fr");
+});
+
+test("a sample the package changes is copied again on the next start, and the work in it is kept", async (t) => {
+  const base = await realpath(await mkdtemp(join(tmpdir(), "courtos-samples-")));
+  t.after(() => rm(base, { recursive: true, force: true }));
+  const path = (await prepareSamples(base)).find(s => s.id === "alpenblick").path;
+  const note = join(path, "Instruktionsnotiz.docx");
+  const shipped = await readFile(note);
+  await mkdir(join(path, ".courtos"), { recursive: true });
+  await writeFile(join(path, ".courtos", "work"), "kept");
+  await writeFile(note, "stale");
+
+  await prepareSamples(base);
+  assert.equal(await readFile(note, "utf8"), "stale", "an unchanged sample is not copied again");
+
+  // The record says the copy came from an older package.
+  const record = join(base, ".samples.json");
+  await writeFile(record, JSON.stringify({ ...JSON.parse(await readFile(record, "utf8")), alpenblick: "older" }));
+  await prepareSamples(base);
+  assert.deepEqual(await readFile(note), shipped, "the changed sample replaces the old copy");
+  assert.equal(await readFile(join(path, ".courtos", "work"), "utf8"), "kept", "CourtOS's work in the folder survives");
+
+  await writeFile(record, "not json");
+  assert.equal((await prepareSamples(base)).length, SAMPLES.length, "an unreadable record copies the samples again");
 });
