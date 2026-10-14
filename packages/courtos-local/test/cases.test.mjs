@@ -38,6 +38,7 @@ test("a new case keeps its work in its own folder under ~/CourtOS; the originals
   await store.scan();
   store.close();
   assert.ok(await exists(join(entry.work, ".courtos", "private", "register.json")), "the register is in the work folder");
+  assert.equal(await exists(join(entry.work, ".courtos", "wiki")), false, "no folder that nothing writes to");
   assert.equal(await exists(join(source, ".courtos")), false, "nothing is written next to the originals");
   assert.deepEqual(await originalHashes(source), before);
 

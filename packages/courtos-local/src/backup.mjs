@@ -1,5 +1,5 @@
 // A backup of the working state, without original files: register, notes,
-// procedure, sources list, mirror, runs and wiki. The extraction cache and the
+// procedure, sources list, mirror, runs and memory. The extraction cache and the
 // cached public decisions are left out; both are rebuilt from the folder.
 import { readdir, readFile, lstat } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
