@@ -50,7 +50,7 @@ export class CaseStore extends EventEmitter {
     store.dir = join(realWork, WORKSPACE_DIR);
     // The workspace must be real directories inside the work folder. A planted
     // symlink (e.g. from an unpacked archive) would redirect writes elsewhere.
-    for (const part of ["", "private", "private/extract", "mirror", "runs", "wiki", "memory", "memory/released", "public"]) {
+    for (const part of ["", "private", "private/extract", "mirror", "runs", "memory", "memory/released", "public"]) {
       const path = join(store.dir, ...part.split("/").filter(Boolean));
       const info = await lstat(path).catch(() => null);
       if (info && (info.isSymbolicLink() || !info.isDirectory())) throw new CourtosError("workspace_unsafe", undefined, 409);
@@ -64,7 +64,6 @@ export class CaseStore extends EventEmitter {
       "private/  extraction cache and pseudonym register - stays on this computer\n" +
       "mirror/   the sanitised text the model may read after you release it\n" +
       "runs/     every model run with its exact outgoing requests and results\n" +
-      "wiki/     readable working notes produced from verified results\n" +
       "memory/   the case memory: memory.md to read, released/ what a model may read\n" +
       "public/   cached published decisions from OpenCaseLaw\n");
     store.case = await readJson(join(store.dir, "case.json"), null) ?? {

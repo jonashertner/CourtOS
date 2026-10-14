@@ -1,13 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
-import { chmod, mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { certificateDirs, loadCertificates, startServer } from "../src/server.mjs";
-import { MESSAGE_KEYS, terminalLanguage } from "../src/terminal.mjs";
+import { MESSAGE_KEYS, supportedNode, terminalLanguage } from "../src/terminal.mjs";
 
 const cli = fileURLToPath(new URL("../bin/courtos-local.mjs", import.meta.url));
 
@@ -43,6 +43,13 @@ test("without a localhost certificate the start says that Word will not work, an
   delete process.env.COURTOS_APP;
   app2.close();
   assert.match(inApp.join("\n"), /im CourtOS-Menü/, "the app's own menu sets the certificate up");
+});
+
+test("the start refuses a Node older than the 22.12 that package.json requires", async () => {
+  const engines = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")).engines.node;
+  assert.equal(engines, ">=22.12", "the check below follows package.json");
+  for (const version of ["22.12.0", "22.20.1", "23.0.0", "24.3.0"]) assert.equal(supportedNode(version), true, version);
+  for (const version of ["20.19.0", "22.0.0", "22.11.0", "21.99.0"]) assert.equal(supportedNode(version), false, version);
 });
 
 test("a busy port ends the start with a plain message, not a stack trace", async (t) => {
