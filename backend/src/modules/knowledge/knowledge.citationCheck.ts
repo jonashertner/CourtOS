@@ -74,7 +74,7 @@ export async function checkSelectedCitations(db: Db, userId: string, raw: unknow
     findings.forEach(finding => { counts[finding.status]++; });
     return ok({ version: 1, checked_at: new Date().toISOString(), engine: { name: "citecheck", commit: CITECHECK_COMMIT },
       index: { generated: citationIndexManifest.generated, sha256: citationIndexManifest.sha256, decisions: citationIndexManifest.decisions, labels: citationIndexManifest.labels, with_numbering: citationIndexManifest.with_numbering },
-      coverage: { documents: sources.length, pages: sources.reduce((n, source) => n + source.pages.length, 0), extracted_text_bytes: sources.reduce((n, source) => n + source.pages.reduce((size, page) => size + Buffer.byteLength(page.text, "utf8"), 0), 0), complete_selected_extracted_text: true, all_citation_forms_recognised: false, images_checked: false, multiple_pinpoints: "first_only" },
+      coverage: { documents: sources.length, pages: sources.reduce((n, source) => n + source.pages.length, 0), extracted_text_bytes: sources.reduce((n, source) => n + source.pages.reduce((size, page) => size + Buffer.byteLength(page.text, "utf8"), 0), 0), complete_selected_extracted_text: true, all_citation_forms_recognised: false, images_checked: false, multiple_pinpoints: "all" },
       counts, findings, semantic_support: "not_assessed" });
   } catch (error) {
     if (error instanceof CitationCheckScopeError) return failure("validation", "Die Auswahl enthält mehr als 500 erkannte Zitate. Bitte einen kleineren Teilbestand auswählen. Es wurde kein Teilergebnis freigegeben.", "citation_check_scope");

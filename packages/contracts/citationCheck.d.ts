@@ -20,7 +20,7 @@ export type CitationCheckReport = {
   checked_at: string;
   engine: { name: "citecheck"; commit: string };
   index: { generated: string; sha256: string; decisions: number; labels: number; with_numbering: number };
-  coverage: { documents: number; pages: number; extracted_text_bytes: number; complete_selected_extracted_text: true; all_citation_forms_recognised: false; images_checked: false; multiple_pinpoints: "first_only" };
+  coverage: { documents: number; pages: number; extracted_text_bytes: number; complete_selected_extracted_text: true; all_citation_forms_recognised: false; images_checked: false; multiple_pinpoints: "all" };
   counts: Record<FormalCitationStatus, number>;
   findings: CitationCheckFinding[];
   semantic_support: "not_assessed";

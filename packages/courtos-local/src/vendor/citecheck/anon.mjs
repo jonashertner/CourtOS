@@ -156,7 +156,7 @@ function germanByLine(text) {
 // ── the check ─────────────────────────────────────────────────────────────
 // The text in composed form and, per character of it, where it starts in `s`;
 // [s, null] when it is composed already.
-function compose(s) {
+export function compose(s) {
   if (s.normalize('NFC') === s) return [s, null];
   let out = '';
   const where = [];
@@ -246,19 +246,22 @@ function whose(text, start, width) {
 const isPublic = (text, start, width = 80) => test('not_a_person', whose(text, start, width));
 const bump = (o, k) => { o[k] = (o[k] || 0) + 1; };
 
-function identifiers(t, taken, explained, pub) {
+function identifiers(t, taken, explained, pub, sites) {
   const text = t.text;
   const out = [];
   for (const name of IDENTIFIERS) {
     for (const m of all(name, text)) {
       const group = VALUE_GROUP.has(name) ? 1 : 0;
-      const value = m[group];
-      const [a, b] = m.indices[group];
+      let value = m[group];
+      let [a, b] = m.indices[group];
+      // A web address ends before the punctuation of the sentence: "www.x.ch;" is "www.x.ch".
+      if (name === 'url') { value = value.replace(/[.,;:!?)\]»"'’]+$/, ''); b = a + value.length; }
       if (taken.overlaps(a, b) || explained.overlaps(a, b)) continue;
       const label = LABEL[name] || name;
       if (name === 'ahv' && !ahvValid(value)) continue;
       if (name === 'iban') {
-        if (!ibanValid(value)) continue;
+        // A Swiss or Liechtenstein IBAN with a wrong check digit is still someone's account, mistyped.
+        if (!ibanValid(value) && !(/^(?:CH|LI)/.test(value) && value.replace(/\s/g, '').length === 21)) continue;
         if (test('not_a_person', whose(text, a, 170) + text.slice(b, b + 40).split(/[\n,;.]/)[0])) { explained.add(a, b); bump(pub, 'iban'); continue; }
       }
       if (name === 'account' && isPublic(text, m.index, 120)) { explained.add(a, b); bump(pub, 'account'); continue; }
@@ -268,7 +271,7 @@ function identifiers(t, taken, explained, pub) {
         const domain = value.slice(at + 1);
         if (test('masked_local', local) || test('masked_domain', domain) || (!test('freemail', domain) && (test('public_mail', domain) || isPublic(text, a)))) { explained.add(a, b); bump(pub, 'email'); continue; }
       }
-      if (name === 'url' && !test('social', value)) { explained.add(a, b); continue; }
+      if (name === 'url' && !test('social', value)) { explained.add(a, b); sites.push([a, b, value]); continue; }
       // A landline in a letterhead or beside an office: "Postfach … Telefon … Fax …".
       if (name === 'phone' && !matchStart('mobile', value) && (isPublic(text, a) || matchStart('letterhead', text.slice(b, b + 40)))) { explained.add(a, b); bump(pub, 'phone'); continue; }
       if (name === 'plate' && !test('plate_context', text.slice(Math.max(0, a - 60), a))) continue;
@@ -425,7 +428,8 @@ export function check(parts, vocabulary) {
   let initials = 0;
   for (const _ of all('initial', text)) initials++;      // eslint-disable-line no-unused-vars
 
-  const shown = identifiers(t, taken, explained, pub);
+  const sites = [];
+  const shown = identifiers(t, taken, explained, pub, sites);
   const germanAt = germanByLine(text);
   const [byOffice, officeSurnames, anonymizedRoles, officeSpans, publicGiven] = roles(t, has);
   for (const [a, b] of officeSpans) explained.add(a, b);
@@ -528,6 +532,13 @@ export function check(parts, vocabulary) {
     if (j > i) for (const [x, y, w] of unknown.slice(i, j + 1)) shown.push({ kind: 'word', label: null, start: x, end: y, text: w });
     else { counts.unassessed++; counts.unassessedWords.add(unknown[i][2]); }
     i = j + 1;
+  }
+
+  // A web address with a name shown here in it ("www.hans-mueller.ch") is that person's.
+  const names = [...new Set(shown.filter((x) => x.kind === 'word' && x.text.length >= 4).map((x) => fold(x.text)))];
+  for (const [a, b, value] of sites) {
+    const site = fold(value);
+    if (names.some((n) => site.includes(n))) shown.push({ kind: 'identifier', label: 'profile', start: a, end: b, text: value });
   }
 
   for (const m of all('code', text)) {

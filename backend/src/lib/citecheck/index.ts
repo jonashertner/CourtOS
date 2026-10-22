@@ -6,7 +6,7 @@ import { isAbsolute, join } from "node:path";
 import pinned from "./index-manifest.json";
 import { CiteIndex } from "./vendor/index";
 
-export const CITECHECK_COMMIT = "ae73c86e706f45c75f1e58561304dbea5ff4cbf9";
+export const CITECHECK_COMMIT = "534ef7f91fda72d62650d6b8d626260e89110a84";
 export const citationIndexManifest = pinned;
 const inflate = promisify(gunzip);
 const hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");

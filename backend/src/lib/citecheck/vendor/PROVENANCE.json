@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/jonashertner/citecheck",
-  "commit": "ae73c86e706f45c75f1e58561304dbea5ff4cbf9",
+  "commit": "534ef7f91fda72d62650d6b8d626260e89110a84",
   "license": "MIT",
   "files": {
     "keys": {
@@ -19,9 +19,9 @@
     },
     "check": {
       "upstream_path": "addin/js/check.js",
-      "upstream_sha256": "d0c1ad0eaa344c43eb1a79810f966ef434d8eafb6cf148ecfb82665df06b94d0",
+      "upstream_sha256": "763f24f26582a242caf91701f9576692c2e8c0c106cc305eb550309e9d90f871",
       "vendored_path": "check.ts",
-      "vendored_sha256": "08ad88fa5582d61561d4b15c1a4ebd07a4c0d9f8281e2f91c85c46ea55639ed4",
+      "vendored_sha256": "cd481c3de8b40229fe74667a49ed8fb8ce52e64c29b65c39a4d44a8c918a732d",
       "transform": "prepend TypeScript no-check marker; local import extensions removed"
     },
     "index": {
