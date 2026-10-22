@@ -39,10 +39,19 @@ describe("deterministic citation check",()=>{
     expect(formalCitationFindings(evidence("BGE 140 III 115 E. 2.3a"),parentOnly)[0]).toMatchObject({status:"found",pinpoint:"parent_only"});
     expect(formalCitationFindings(evidence("BGE 999 III 100 E. 2.3"),index)[0]).toMatchObject({status:"missing",pinpoint:"not_checked"});
   });
+  it("checks every named Erwägung and passes engine findings without a parsed reference",()=>{
+    const [several]=formalCitationFindings(evidence("BGE 140 III 115 E. 2.3 und 2.9"),index);
+    expect(several).toMatchObject({status:"differs",pinpoint:"absent",source:{quote:"BGE 140 III 115 E. 2.3 und 2.9"}});
+    expect(several.issues).toEqual([expect.objectContaining({kind:"pinpoint",written:"2.9"})]);
+    const echr=new CiteIndex(new TextEncoder().encode("#ocl-cite-index 1 synthetic-test-only\n4723/13\thudoc_ch\tCH\t2015-02-10\t\thudoc_4723_13\n"));
+    const findings=formalCitationFindings(evidence("EGMR, X. gegen Schweiz, Nr. 4723/13 und 9999/19."),echr);
+    expect(findings.map(f=>[f.source.quote,f.status,f.pinpoint])).toEqual([["4723/13","found","not_requested"],["9999/19","unchecked","not_requested"]]);
+    expect(findings[1].notes).toEqual([{kind:"echr_not_listed",written:null,parent:null}]);
+  });
   it("uses owner-bound exact-version admission twice and returns index provenance, not support assurance",async()=>{
     const response=await checkSelectedCitations(db,"owner",input);expect(response.ok).toBe(true);
     expect(mocks.load).toHaveBeenCalledTimes(2);expect(mocks.load).toHaveBeenLastCalledWith(db,"owner",input.sources,"citation_check");
-    if(response.ok){expect(response.data.engine.commit).toMatch(/^[a-f0-9]{40}$/);expect(response.data.coverage).toMatchObject({all_citation_forms_recognised:false,images_checked:false,multiple_pinpoints:"first_only"});expect(response.data.counts.found).toBe(1);}
+    if(response.ok){expect(response.data.engine.commit).toMatch(/^[a-f0-9]{40}$/);expect(response.data.coverage).toMatchObject({all_citation_forms_recognised:false,images_checked:false,multiple_pinpoints:"all"});expect(response.data.counts.found).toBe(1);}
   });
   it.each([{sources:[]},{sources:[...input.sources,...input.sources]},{...input,user_id:"other"},{sources:[{...input.sources[0],filename:"secret"}]}])("rejects invalid/client-authority input before reading",async raw=>{
     expect(await checkSelectedCitations(db,"owner",raw)).toMatchObject({ok:false,code:"citation_check_invalid"});expect(mocks.load).not.toHaveBeenCalled();

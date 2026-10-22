@@ -155,19 +155,20 @@ function checkOne(index, parsed) {
   }
   // 1 January is how the corpus writes a decision of which only the year is known.
   const dated = rows.filter((r) => r.date && !r.date.endsWith('-01-01'));
-  if (parsed.date && !useBge && dated.length === rows.length && dated.every((r) => r.date !== parsed.date)) {
+  if (parsed.date && dated.length === rows.length && dated.every((r) => r.date !== parsed.date)) {
     result.status = 'differs';
     result.issues.push({ kind: 'date', written: parsed.date, listed: [...new Set(rows.map((r) => r.date))] });
     // The number may be the typing error, not the date: neighbours decided on the written date.
-    result.suggestions = suggestDockets(index, key, parsed, { dateOnly: true });
+    if (!useBge) result.suggestions = suggestDockets(index, key, parsed, { dateOnly: true });
   }
-  if (parsed.pinpoint) {
-    const pin = checkPinpoint(parsed.pinpoint, rows);
+  // Every Erwägung the draft names ("E. 2.3 und 2.4", "consid. 3-5"), not only the first.
+  for (const pinpoint of parsed.pinpoints || (parsed.pinpoint ? [parsed.pinpoint] : [])) {
+    const pin = checkPinpoint(pinpoint, rows);
     if (pin.state === 'absent') {
       result.status = 'differs';
-      result.issues.push({ kind: 'pinpoint', written: parsed.pinpoint, ...pin });
+      result.issues.push({ kind: 'pinpoint', written: pinpoint, ...pin });
     } else if (pin.state !== 'exists') {
-      result.notes.push({ kind: 'pinpoint_' + pin.state, written: parsed.pinpoint, parent: pin.parent });
+      result.notes.push({ kind: 'pinpoint_' + pin.state, written: pinpoint, parent: pin.parent });
     }
   }
   if (useBge && parsed.pages.length) {
@@ -218,19 +219,84 @@ function collapse(text) {
 // "S. 118" before the Erwägung), a date ("vom 6. April 2013"); separated by ordinary,
 // non-breaking or narrow non-breaking spaces. One qualifier at a time, at most four.
 const GAP = String.raw`[\s  ]`;
+const MARK = String.raw`(?:E\.|Erw\.|Erwägung|Erwaegung|consid\.|consid|cons\.|considérant|considerando|c\.)`;
+const PIN = String.raw`\d+(?:\.\d+)*[a-z]{0,2}(?:\/[a-z]{1,2})?(?![\d.]\d)`;
+// Further Erwägungen after the first: "2.3 und 2.4", "2.1–2.4", "3, 4 et 5". A number that
+// starts another reference ("und 141 III 569", "und 4A_1/2020") or a year is not one of them.
+const PIN_SEPARATOR = String.raw`${GAP}*[-–—,]${GAP}*|${GAP}+(?:bis|und|u\.|sowie|à|et|e|a|and|to)${GAP}+`;
+const MORE_PINS = String.raw`(?:(?:${PIN_SEPARATOR})` +
+  String.raw`\d{1,2}(?:\.\d+)*[a-z]{0,2}(?:\/[a-z]{1,2})?(?![\dA-Z_\/]|\.\d|${GAP}*(?:Ia|Ib|III|II|IV|I|V)${GAP}+\d))*`;
 const QUALIFIER = new RegExp(String.raw`^,?${GAP}*(?:` +
-  String.raw`(?:E\.|Erw\.|Erwägung|Erwaegung|consid\.|consid|cons\.|considérant|considerando|c\.)${GAP}*\d+(?:\.\d+)*[a-z]{0,2}(?:\/[a-z]{1,2})?(?![\d.]\d)` +
+  String.raw`${MARK}${GAP}*${PIN}${MORE_PINS}` +
   String.raw`|(?:S\.|SS\.|p\.|pp\.|pag\.|pagg\.)${GAP}*\d{1,4}(?:${GAP}*(?:ff?\.|ss?\.))?(?!\d)` +
-  String.raw`|(?:vom|du|del|de|of)${GAP}+(?:\d{1,2}(?:\.|er)?${GAP}*[A-Za-zÀ-ÿ]+${GAP}+\d{4}|\d{1,2}\.${GAP}?\d{1,2}\.${GAP}?\d{4})(?!\d))`, 'i');
+  String.raw`|(?:(?:vom|du|del|de|of)${GAP}+|dell['’]${GAP}*)(?:\d{1,2}(?:\.|er|°|º)?${GAP}*[A-Za-zÀ-ÿ]+${GAP}+\d{4}|\d{1,2}\.${GAP}?\d{1,2}\.${GAP}?\d{4})(?!\d))`, 'i');
+const ENDS_WITH_PIN = new RegExp(String.raw`${MARK}${GAP}*${PIN}$`, 'i');
+const CONTINUES = new RegExp('^' + MORE_PINS, 'i');
+const PINPOINTS = new RegExp(String.raw`(?:^|[\s,;(])${MARK}${GAP}*(${PIN}${MORE_PINS})`, 'i');
 
-function qualifiers(rest) {
-  let n = 0;
+const CONTINUED_BGE = new RegExp(String.raw`^(?:${GAP}*[;,]${GAP}*|${GAP}+(?:und|et|e|sowie|and|bzw\.|resp\.)${GAP}+)` +
+  String.raw`(?:(?:vgl\.|cf\.|siehe|voir|v\.)${GAP}+)?(\d{1,3}${GAP}+(?:Ia|Ib|III|II|IV|I|V)${GAP}+\d{1,4})(?![\d\/]|\.\d)`);
+
+function qualifiers(rest, afterPin) {
+  let n = afterPin ? CONTINUES.exec(rest)[0].length : 0;
   for (let i = 0; i < 4; i++) {
     const m = QUALIFIER.exec(rest.slice(n));
     if (!m) break;
     n += m[0].length;
   }
   return n;
+}
+
+// The Erwägungen a reference names, in its order; a range by its two ends.
+function pinpointsOf(text) {
+  const m = PINPOINTS.exec(text);
+  if (!m) return [];
+  return [...new Set(m[1].split(new RegExp(PIN_SEPARATOR, 'i')).map((p) => p.toLowerCase()))];
+}
+
+// Two kinds of number the research client's finder does not read. An application number of the
+// European Court of Human Rights ("Nr. 4723/13") counts only after the court is named: cantonal
+// files are numbered the same way, so the number must stand in the clause that names the court. A Ticino file number ("12.2002.183") is listed when the list
+// has it, or when a court or decision is named just before it.
+const ECHR_COURTS = new Set(['ecthr_chamber', 'ecthr_grand_chamber', 'hudoc_ch']);
+const ECHR_NAMED = /(?<![A-Za-z])(?:EGMR|EKMR|EuGMR|CourEDH|Cour EDH|CEDH|Corte ?EDU|CtEDU|ECtHR|ECHR|Gerichtshof(?:s|es)? für Menschenrechte|Cour européenne des droits de l['’]homme|Corte europea dei diritti dell['’]uomo|European Court of Human Rights)(?![A-Za-z])/g;
+const APPLICATION = /(?<![\d\/.])\d{1,6}\/\d{2}(?![\d\/])/g;
+const TICINO = /(?<![\w.\/])\d{1,2}\.(?:19|20)\d{2}\.\d{1,6}(?![\w]|[.,]\d)/g;
+const TICINO_CONTEXT = /(?:sentenza|decisione|giudizio|Tribunale|Pretura|Camera|Corte|TRAM|CDP|CRP|incarto|inc\.)(?:[^.;\n]|\.(?=\d)){0,60}$/i;
+
+function findOther(texts, taken) {
+  const out = [];
+  texts.forEach((text, paragraph) => {
+    const plain = text.replace(/[\u00a0\u202f]/g, ' ');
+    const free = (start, end) => !taken.some((f) => f.paragraph === paragraph && start < f.end && end > f.start) &&
+      !out.some((f) => f.paragraph === paragraph && start < f.end && end > f.start);
+    const named = [...plain.matchAll(ECHR_NAMED)].map((m) => m.index + m[0].length);
+    for (const m of plain.matchAll(APPLICATION)) {
+      // In the same clause as the court's name: no semicolon between them.
+      if (!named.some((at) => at <= m.index && m.index - at <= 160 && !plain.slice(at, m.index).includes(';')) || !free(m.index, m.index + m[0].length)) continue;
+      out.push({ text: text.slice(m.index, m.index + m[0].length), paragraph, start: m.index, end: m.index + m[0].length, kind: 'echr' });
+    }
+    for (const m of plain.matchAll(TICINO)) {
+      if (!free(m.index, m.index + m[0].length)) continue;
+      out.push({ text: m[0], paragraph, start: m.index, end: m.index + m[0].length, kind: 'ticino', named: TICINO_CONTEXT.test(plain.slice(Math.max(0, m.index - 80), m.index)) });
+    }
+  });
+  return out;
+}
+
+function checkOther(index, f) {
+  if (f.kind === 'echr') {
+    const all = index.lookup(f.text);
+    let rows = all.filter((r) => ECHR_COURTS.has(r.court));
+    if (all.length && !rows.length) return null;                 // a cantonal file numbered alike
+    // Joined applications are listed under their numbers together: "1007/20_21022/21".
+    const next = !rows.length && index.neighbours(f.text + '_').after;
+    if (next && next.key.startsWith(f.text + '_') && ECHR_COURTS.has(next.court)) rows = [next];
+    return { key: f.text, rows, status: rows.length ? 'found' : 'unchecked', notes: rows.length ? [] : [{ kind: 'echr_not_listed' }] };
+  }
+  const rows = index.lookup(f.text).filter((r) => r.court.startsWith('ti_'));
+  if (!rows.length && !f.named) return null;
+  return { key: f.text, rows, status: rows.length ? 'found' : 'unchecked', notes: rows.length ? [] : [{ kind: 'unknown_shape' }] };
 }
 
 // paragraphs: [{text, where}] in reading order; `where` is opaque to this module.
@@ -253,14 +319,36 @@ export function checkDocument(paragraphs, index) {
     return { ...f, start, end, text: texts[f.paragraph].slice(start, end) };
   };
   const found = findCitations(collapsed.map((c) => c.text)).map(back);
-  for (const f of found) {
-    const n = qualifiers(texts[f.paragraph].slice(f.end));
-    if (!n) continue;
-    const text = texts[f.paragraph].slice(f.start, f.end + n);
-    const parsed = parseReference(text);
-    if (parsed.bge && f.parsed.bge ? parsed.bge.page !== f.parsed.bge.page : parsed.dockets[0] !== f.parsed.dockets[0]) continue;
-    Object.assign(f, { end: f.end + n, text, parsed });
+  // `prefix` reads a BGE the draft writes without its collection ("…; 141 III 569") as one.
+  const extend = (f, prefix = '') => {
+    const n = qualifiers(texts[f.paragraph].slice(f.end), ENDS_WITH_PIN.test(f.text));
+    if (n) {
+      const text = texts[f.paragraph].slice(f.start, f.end + n);
+      const parsed = { ...parseReference(prefix + text), written: text };
+      if (!(parsed.bge && f.parsed.bge ? parsed.bge.page !== f.parsed.bge.page : parsed.dockets[0] !== f.parsed.dockets[0])) Object.assign(f, { end: f.end + n, text, parsed });
+    }
+    if (f.parsed.pinpoint) {
+      const pinpoints = pinpointsOf(f.text);
+      if (pinpoints[0] === f.parsed.pinpoint) f.parsed = { ...f.parsed, pinpoints };
+    }
+  };
+  for (const f of [...found]) {
+    extend(f);
+    // "BGE 140 III 115 E. 2; 141 III 569 E. 3": the BGE that follow without the collection.
+    if (!f.parsed.bge || !f.parsed.bgeFirst) continue;
+    const prefix = f.parsed.bge.collection + ' ';
+    for (let last = f, m; (m = CONTINUED_BGE.exec(texts[f.paragraph].slice(last.end)));) {
+      const start = last.end + m[0].length - m[1].length;
+      const end = last.end + m[0].length;
+      if (found.some((o) => o.paragraph === f.paragraph && start < o.end && end > o.start)) break;
+      const text = texts[f.paragraph].slice(start, end);
+      const next = { text, paragraph: f.paragraph, start, end, parsed: { ...parseReference(prefix + text), written: text } };
+      extend(next, prefix);
+      found.push(next);
+      last = next;
+    }
   }
+  found.sort((a, b) => a.paragraph - b.paragraph || a.start - b.start);
   // "BGE 129 III 320, 324": the page after a comma is the pinpoint page. Read here, not
   // in the finder, which stays the research client's; a number that cannot be a page
   // of the decision (a year, another volume) is left alone.
@@ -285,6 +373,14 @@ export function checkDocument(paragraphs, index) {
       status: rows.length ? 'found' : 'unchecked',
       notes: rows.length ? [] : [{ kind: loose.collection ? 'collection' : 'unknown_shape' }],
     });
+  }
+
+  for (const other of findOther(texts, findings)) {
+    const result = checkOther(index, other);
+    if (!result) continue;
+    const { kind, named, ...place } = other;
+    findings.push({ ...place, parsed: null, label: 'docket', issues: [], ...result });
+    if (result.rows.length > 1 && new Set(result.rows.map((r) => r.court + r.date)).size > 1) result.notes.push({ kind: 'several', rows: result.rows });
   }
 
   findings.sort((a, b) => a.paragraph - b.paragraph || a.start - b.start);

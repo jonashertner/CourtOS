@@ -43,7 +43,7 @@ export function parseCitationCheckReport(value: unknown, input: CitationCheckInp
             report.engine?.name !== "citecheck" || !/^[a-f0-9]{40}$/i.test(report.engine.commit) || !report.index || !text(report.index.generated, 100) || !SHA.test(report.index.sha256) ||
             !integer(report.index.decisions) || !integer(report.index.labels) || !integer(report.index.with_numbering) ||
             report.coverage?.documents !== input.sources.length || !integer(report.coverage.pages, 1, 200) || !integer(report.coverage.extracted_text_bytes, 1, 1048576) ||
-            report.coverage.complete_selected_extracted_text !== true || report.coverage.all_citation_forms_recognised !== false || report.coverage.images_checked !== false || report.coverage.multiple_pinpoints !== "first_only" ||
+            report.coverage.complete_selected_extracted_text !== true || report.coverage.all_citation_forms_recognised !== false || report.coverage.images_checked !== false || report.coverage.multiple_pinpoints !== "all" ||
             report.semantic_support !== "not_assessed" || !Array.isArray(report.findings) || report.findings.length > 500 || report.findings.some(finding => !validFinding(finding, input)) ||
             new Set(report.findings.map(finding => finding.id)).size !== report.findings.length || !report.counts ||
             statuses.some(status => !integer(report.counts[status]) || report.counts[status] !== report.findings.filter(finding => finding.status === status).length)) throw new Error();

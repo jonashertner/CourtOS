@@ -1,7 +1,7 @@
 # Formal citation checks
 
 The pure Citecheck engine is pinned to commit
-[`ae73c86e706f45c75f1e58561304dbea5ff4cbf9`](https://github.com/jonashertner/citecheck/tree/ae73c86e706f45c75f1e58561304dbea5ff4cbf9).
+[`534ef7f91fda72d62650d6b8d626260e89110a84`](https://github.com/jonashertner/citecheck/tree/534ef7f91fda72d62650d6b8d626260e89110a84).
 `vendor/PROVENANCE.json` records source hashes and the mechanical TypeScript
 packaging changes. The MIT notice is retained. No checker rules were rewritten.
 The original network/cache portion of `index.js` is deliberately excluded.
@@ -39,8 +39,8 @@ Each finding includes the original PDF version/hash, page/hash, exact citation
 wording and Unicode-codepoint offsets on that page. The adapter explicitly
 converts the upstream parser's UTF-16 offsets. Status is only `found`, `differs`,
 `missing` or `unchecked`. Missing means absent from this list; unchecked and
-missing numbering remain unresolved. With multiple written pinpoints the
-upstream engine checks the first. Images and unrecognised citation forms are
+missing numbering remain unresolved. Every Erwägung a
+reference names is checked ("E. 2.3 und 2.4", "consid. 3-5"). Images and unrecognised citation forms are
 outside coverage. Neither a correct label nor a valid pinpoint verifies the
 wording attributed to a decision or whether it supports a legal proposition.
 Those separate result fields remain `not_checked` and `not_assessed`.

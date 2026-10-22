@@ -5,7 +5,7 @@ vi.mock("@/app/lib/errorReporting",()=>({trackPendingRequest:()=>()=>{},markErro
 const id="11111111-1111-4111-8111-111111111111",version="22222222-2222-4222-8222-222222222222";
 const input:CitationCheckInput={sources:[{document_id:id,version_id:version}]};
 const quote="BGE 137 I 195 E. 2.3";
-function fixture():CitationCheckReport{return {version:1,checked_at:"2026-10-10T16:00:00Z",engine:{name:"citecheck",commit:"e".repeat(40)},index:{generated:"2026-10-10",sha256:"a".repeat(64),decisions:100,labels:120,with_numbering:80},coverage:{documents:1,pages:2,extracted_text_bytes:400,complete_selected_extracted_text:true,all_citation_forms_recognised:false,images_checked:false,multiple_pinpoints:"first_only"},counts:{found:1,differs:0,missing:0,unchecked:0},semantic_support:"not_assessed",findings:[{id:"citation-1",source:{document_id:id,version_id:version,version_number:2,filename:"Klage.pdf",pdf_sha256:"b".repeat(64),page_sha256:"c".repeat(64),page:2,start:7,end:7+Array.from(quote).length,quote},status:"found",pinpoint:"exists",decisions:[{decision_id:"bge137I195",label:"BGE 137 I 195",court:"BGer",canton:"CH",date:"2011-03-18",numbered_sections:["2.3"]}],decisions_omitted:0,issues:[],notes:[],suggestions:[],semantic_support:"not_assessed",quoted_decision_wording:"not_checked"}]};}
+function fixture():CitationCheckReport{return {version:1,checked_at:"2026-10-10T16:00:00Z",engine:{name:"citecheck",commit:"e".repeat(40)},index:{generated:"2026-10-10",sha256:"a".repeat(64),decisions:100,labels:120,with_numbering:80},coverage:{documents:1,pages:2,extracted_text_bytes:400,complete_selected_extracted_text:true,all_citation_forms_recognised:false,images_checked:false,multiple_pinpoints:"all"},counts:{found:1,differs:0,missing:0,unchecked:0},semantic_support:"not_assessed",findings:[{id:"citation-1",source:{document_id:id,version_id:version,version_number:2,filename:"Klage.pdf",pdf_sha256:"b".repeat(64),page_sha256:"c".repeat(64),page:2,start:7,end:7+Array.from(quote).length,quote},status:"found",pinpoint:"exists",decisions:[{decision_id:"bge137I195",label:"BGE 137 I 195",court:"BGer",canton:"CH",date:"2011-03-18",numbered_sections:["2.3"]}],decisions_omitted:0,issues:[],notes:[],suggestions:[],semantic_support:"not_assessed",quoted_decision_wording:"not_checked"}]};}
 afterEach(()=>vi.unstubAllGlobals());
 describe("formal citation API",()=>{
     it("links validated index IDs only to the existing fixed viewer, preserving literal hashes as data",()=>{
@@ -32,7 +32,7 @@ describe("formal citation API",()=>{
         if(change==="count")value.counts.found=2;
         if(change==="coverage")value.coverage.documents=2;
         if(change==="image")Object.assign(value.coverage,{images_checked:true});
-        if(change==="pinpoints")Object.assign(value.coverage,{multiple_pinpoints:"all"});
+        if(change==="pinpoints")Object.assign(value.coverage,{multiple_pinpoints:"first_only"});
         if(change==="duplicate"){value.findings.push(finding);value.counts.found=2;}
         if(change==="overLimit")value.coverage.extracted_text_bytes=1048577;
         expect(()=>parseCitationCheckReport(value,input)).toThrow("unavailable");
